@@ -685,7 +685,8 @@ apps/web/src/
    `tables`, из которых выводятся `userData` и `systemTables`) из `docs/CAPABILITIES.md`, генератор правил
    dependency-cruiser (+ `typescript@6` рядом), `deps-guard` (порог числа файлов), фикстуры нарушений с тестом
    «каждое правило ловит своё», `make capabilities`, области коммитов из карты. T-056: `isolation.mjs`,
-   `no-raw-colors.mjs`, `calc-no-clock.mjs`, `bundle-size.mjs`, проверка литералов в JSX.
+   `no-raw-colors.mjs`, `calc-no-clock.mjs`, `jsx-literals.mjs` (литералы в JSX), `floor.mjs` («Пол» `CONSTRAINTS.md`)
+   — цель `make static-checks` в `make check` и `check-quick`; `bundle-size.mjs` — для `check-full` (T-011).
 3. **Общие пакеты (T-003).** `kernel` (Money, LocalDate, Period, Scope с брендом, бренды id, TraceNode), `calc`
    (`Calc<T>`, помощники трассы, `freeBalance` с тестами-примерами), `contract` (каталог ошибок, общие схемы,
    `health`, `PageContext`, части сообщений чата, `events.stream`), `i18n` (ru, типизированные ключи, форматы),

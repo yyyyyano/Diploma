@@ -18,9 +18,10 @@ import { checkResult, findAll, listFiles, report, splitSource } from "./source-t
 
 /**
  * Сколько файлов должно попасть в обход — по реально существующим файлам корней apps, packages, e2e, tooling
- * (без фикстур); задачи, добавляющие код, поднимают его. Опускать порог, чтобы прошло, нельзя (CONSTRAINTS «Пол»).
+ * (без фикстур и самого floor): 39 на конец T-056; задачи, добавляющие код, поднимают его. Опускать порог, чтобы
+ * прошло, нельзя (CONSTRAINTS «Пол»).
  */
-export const MIN_FILES = 30;
+export const MIN_FILES = 39;
 
 /** Сам floor и его тест содержат то, что ищут, — как образцы; их не проверяем. */
 const SELF = new Set(["tooling/checks/floor.mjs", "tooling/checks/floor.test.ts"]);

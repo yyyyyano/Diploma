@@ -70,7 +70,7 @@
 | Запуск | `dev` (БД и модели в контейнерах, код на хосте), `up` (всё в контейнерах), `down`, `restart`, `ps`, `build`, `db-up` (только Postgres) |
 | Логи | `logs`, `log-find id=<requestId>` |
 | БД и демо | `migrate`, `db-generate`, `db-shell`, `db-reset` (спросит `yes`), `demo-reset`, `backup`, `restore file=…` |
-| Качество | `fmt`, `fmt-check`, `format-file FILE=…` и `lint-file FILE=…` (для хука правки файла), `lint`, `typecheck`, `deps-check`, `test`, `test-int`, `e2e`, `check`, `check-quick`, `check-full`, `check-commits`, `audit`, `bench` |
+| Качество | `fmt`, `fmt-check`, `format-file FILE=…` и `lint-file FILE=…` (для хука правки файла), `lint`, `typecheck`, `deps-check`, `static-checks`, `test`, `test-int`, `e2e`, `check`, `check-quick`, `check-full`, `check-commits`, `audit`, `bench` |
 | ИИ | `ai-record SCENARIO=…` (перезапись кассет, тратит лимиты; имплементатор запускает сам, ключи из `.env` читает программа, не агент), `eval` (QA-10, тратит лимиты) |
 | Заготовки | `new-module id=…`, `new-feature id=…`, `new-table module=… name=…`, `capabilities` (таблица CAPABILITIES из `modules.ts`) |
 

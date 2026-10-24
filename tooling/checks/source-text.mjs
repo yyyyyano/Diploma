@@ -249,10 +249,14 @@ export function listFiles(baseDir, roots, { extensions, skip = () => false }) {
  * Итог проверки по общим правилам: корень есть, а файлов в нём 0 — код 2 («молчаливый ноль», ARCHITECTURE §15:
  * проверка, скорее всего, пуста из-за исключений); есть нарушения — код 1; иначе 0. Корня нет вовсе — это
  * чистый результат: код ещё не написан.
+ * Нарушения упорядочиваются по файлу, затем по строке: проверке не нужно сортировать их самой.
  * @param {{ roots: string[], files: string[], findings: Finding[] }} input
  * @returns {CheckResult}
  */
-export function checkResult({ roots, files, findings }) {
+export function checkResult({ roots, files, findings: found }) {
+  const findings = found.toSorted((a, b) =>
+    a.file === b.file ? a.line - b.line : a.file < b.file ? -1 : 1,
+  );
   const empty = roots.filter((root) => !files.some((file) => file.startsWith(`${root}/`)));
   const messages = findings.map((f) => `${f.file}:${f.line} — ${f.message}`);
   if (empty.length > 0) {

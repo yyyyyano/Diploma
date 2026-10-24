@@ -102,7 +102,6 @@ export function runJsxLiterals({ baseDir, oxlint = oxlintBin }) {
       }
     });
   }
-  findings.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file < b.file ? -1 : 1));
   return checkResult({ roots, files, findings });
 }
 

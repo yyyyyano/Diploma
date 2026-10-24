@@ -169,6 +169,20 @@ describe("checkResult: код выхода по общим правилам", ()
     expect(result.messages).toContain("packages/calc/a.ts:3 — уберите Date.now()");
   });
 
+  it("нарушения упорядочены по файлу, затем по строке, — в каком бы порядке их ни нашли", () => {
+    const at = (file: string, line: number) => ({ file, line, rule: "r", message: "m" });
+    const result = checkResult({
+      roots: ["packages"],
+      files: ["packages/a.ts", "packages/b.ts"],
+      findings: [at("packages/b.ts", 1), at("packages/a.ts", 9), at("packages/a.ts", 2)],
+    });
+    expect(result.messages).toEqual([
+      "packages/a.ts:2 — m",
+      "packages/a.ts:9 — m",
+      "packages/b.ts:1 — m",
+    ]);
+  });
+
   it("корней нет вовсе — код 0 и 0 файлов: код ещё не написан", () => {
     expect(checkResult({ roots: [], files: [], findings: [] })).toMatchObject({
       code: 0,

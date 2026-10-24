@@ -41,5 +41,4 @@
 
 ## Ссылки
 
-`research/architecture/03-data-search-jobs.md` (pg-boss, расписания, `background_job_run`, напоминания),
-`13-code-architecture.md` §2.5, `14-data-isolation.md` §6 п. 9–10, п. 17; ADR-0004, ADR-0006.
+`research/architecture/03-data-search-jobs.md`, `13-code-architecture.md`, `14-data-isolation.md`; ADR-0004, ADR-0006.

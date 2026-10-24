@@ -24,6 +24,9 @@ paths:
 - Обработчик — тонкий: `authed` (сессия) / `localOnly` (только локальный вход: первый запуск, ящик, демо-вход) /
   `admin` (роль) / `publicProc` (гость: «База законов», вход) → сценарий. Выбор middleware — осознанный, в паспорте.
 - Потоки — итератор событий (чат, `events.stream`); тело события — схема из контракта.
+- Списки-таблицы (операции, TXN-02) — страница + размер + `total`: `page` ≥ 1, `pageSize` ≤ 100 (по умолчанию 50),
+  устойчивая сортировка (последний ключ — `id`); сайт рисует страницы, телефон — «Показать ещё». Курсор — только
+  для лент без номера страницы (уведомления).
 - Каждая новая процедура попадает в реестр тестов изоляции автоматически; публичная или админская — помечается
   явно с причиной.
 
@@ -32,8 +35,8 @@ paths:
 ```ts
 export const transactionsContract = {
   list: oc.route({ method: "GET", path: "/transactions" })
-    .input(TransactionListInput)                       // period, filters (enum), cursor, limit ≤ 100
-    .output(z.object({ items: z.array(TransactionListItem), nextCursor: Cursor.nullable(), total: Money }))
+    .input(TransactionListInput)                       // period, filters (enum), page, pageSize ≤ 100
+    .output(z.object({ items: z.array(TransactionListItem), page: PageNumber, pageSize: PageSize, total: RowCount }))
     .errors(pickErrors("VALIDATION")),
 };
 ```

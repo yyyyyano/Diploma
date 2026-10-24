@@ -24,10 +24,9 @@
   для русских тем, `scope-enum` — id модулей и служебные области, область необязательна) + `tooling/check-commit-size.mjs`
   (предупреждение от 400 строк/20 файлов, отказ от 800/40 без трейлера `Large-Commit:`, меньше 3 строк — только
   `docs/chore/style/fix/revert` или трейлер `Small-Commit:`; lock-файл, миграционные снимки, кассеты не считаются);
-  `pre-push` — `make check-quick`. Хук `commit-msg` отклоняет подписи ИИ (`Co-Authored-By: …`, «Generated with …»,
-  упоминания модели): подписи ИИ в коммитах запрещены.
+  `pre-push` — `make check-quick`. Запрет подписей ИИ — корневой `CLAUDE.md` («Git»).
 - **Makefile** — тонкая обёртка над `pnpm`, `docker compose` и `scripts/*.sh`; цели с `##` формируют `make help`;
-  опасные цели спрашивают `yes`. Список целей — корневой `CLAUDE.md`.
+  опасные цели спрашивают `yes`. Список целей — `make help` (обзор групп — корневой `CLAUDE.md`).
 
 ## Альтернативы
 
@@ -45,5 +44,4 @@
 
 ## Ссылки
 
-`research/architecture/01-monorepo-tooling.md` (§1–3, §7–10, приложение А), `09-agent-dev-process.md` §4,
-`10-consensus.md`; ADR-0002.
+`research/architecture/01-monorepo-tooling.md`, `09-agent-dev-process.md`, `10-consensus.md`; ADR-0002.

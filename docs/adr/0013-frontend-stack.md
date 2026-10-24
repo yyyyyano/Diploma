@@ -44,5 +44,4 @@
 
 ## Ссылки
 
-`research/architecture/07-frontend.md` (итог), `11-chat-ui.md` (итог), `13-code-architecture.md` §3,
-`10-consensus.md` («Фронтенд», «Чат-ассистент», «Дизайн»); SPEC DES-00, R42; ADR-0014.
+`research/architecture/07-frontend.md`, `11-chat-ui.md`, `13-code-architecture.md`, `10-consensus.md`; SPEC DES-00, R42; ADR-0014.

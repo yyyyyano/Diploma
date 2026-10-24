@@ -54,5 +54,4 @@
 
 ## Ссылки
 
-`research/architecture/06-documents-integrations.md` (итог; §1–9), `10-consensus.md` («Документы», «Выписки», «Excel»);
-SPEC R43, R44; ADR-0008, ADR-0009.
+`research/architecture/06-documents-integrations.md`, `10-consensus.md`; SPEC R43, R44; ADR-0008, ADR-0009.

@@ -14,7 +14,7 @@ cmd=$(hook_get '.tool_input.command')
 [ -n "$cmd" ] || exit 0
 
 refuse() {
-  deny "Роли $agent разрешены только команды чтения и проверки (git diff/log/show/status, make check|lint|typecheck|test…, pnpm test|lint|typecheck|vitest run, ls/cat/head/tail/wc/grep/rg/jq/find…), без записи в файлы. $1
+  deny "Роли $agent разрешены только команды чтения и проверки (git diff/log/show/status, make check|check-quick|check-full|check-commits|deps-check|e2e|lint|typecheck|test…, pnpm test|lint|typecheck|vitest run, ls/cat/head/tail/wc/grep/rg/jq/find…), без записи в файлы. $1
 Для поиска по коду удобнее инструменты Grep, Glob и Read."
 }
 
@@ -67,7 +67,8 @@ check_make() {
       -s|-k|--no-print-directory|-j|-j[0-9]*|[0-9]*) ;;
       *FIX*=*|*WRITE*=*|*UPDATE*=*) refuse "Переменная $x меняет файлы." ;;
       [A-Z_]*=*) ;;
-      check|lint|typecheck|test|test-*|deps-check|arch-check|format-check|fmt-check|lint-check) ;;
+      # Только читающие проверки (решение пользователя 2026-10-24); check/test-int сами поднимают тестовый Postgres.
+      check|check-quick|check-full|check-commits|e2e|lint|typecheck|test|test-*|deps-check|arch-check|format-check|fmt-check|lint-check) ;;
       *) refuse "make $x не входит в разрешённые цели проверки." ;;
     esac
   done

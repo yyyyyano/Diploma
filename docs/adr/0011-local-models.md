@@ -42,4 +42,4 @@
 
 ## Ссылки
 
-`research/architecture/05-local-inference.md` (итог), `10-consensus.md` («Локальные модели»); ADR-0009, ADR-0015.
+`research/architecture/05-local-inference.md`, `10-consensus.md`; ADR-0009, ADR-0015.

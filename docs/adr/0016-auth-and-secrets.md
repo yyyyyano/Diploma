@@ -49,5 +49,4 @@
 
 ## Ссылки
 
-`research/architecture/02-backend.md` (вход, ловушки плагина `admin` и `X-Forwarded-For`, секреты),
-`08-runtime-observability-security.md` (решения 5, 6, 9), `10-consensus.md` («Вход и секреты», умолчания D1–D9).
+`research/architecture/02-backend.md`, `08-runtime-observability-security.md`, `10-consensus.md`.

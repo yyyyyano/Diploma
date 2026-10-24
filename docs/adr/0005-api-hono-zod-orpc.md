@@ -42,5 +42,4 @@
 
 ## Ссылки
 
-`research/architecture/02-backend.md` (§ контракт, ошибки, итог), `13-code-architecture.md` §2.3, §2.8, §2.9, §8.4;
-ADR-0009 (поток агента).
+`research/architecture/02-backend.md`, `13-code-architecture.md`; ADR-0009.

@@ -5,6 +5,7 @@
 > генерируются правила dependency-cruiser и таблица ниже (`make capabilities`); ручная правка таблиц
 > после этого запрещена — правится `modules.ts`, и в том же коммите перегенерируется этот файл.
 > Как модули устроены и общаются — `docs/ARCHITECTURE.md` §4–5; почему так — ADR-0003, ADR-0004.
+> Сверено со SPEC 2026-10-24: у каждого раздела §6 и сущности §5 есть модуль-владелец, у каждого модуля — требования.
 
 ## Как читать
 
@@ -26,7 +27,7 @@
 |---|---|---|---|---|---|
 | `files` | SEC-03, RCPT-11, STMT-10, PRIV-05/06 | приём файлов (тип по содержимому, лимиты), хранение `data/files/<householdId>/`, выдача владельцу, удаление | — | user | — |
 | `explain` | EXPL-01/02, P2 | хранит трассы `{value, trace}` рядом с результатом, отдаёт объяснение по `traceId` | — | user | — |
-| `actions` | P5, AGT-05/07, TXN-03/04, TG-07 `/undo`, NOTIF-05 | журнал отменяемых действий, «ожидающие подтверждения»; реестры обработчиков отмены и подтверждения | — | user | — |
+| `actions` | P5, AGT-05/07, TXN-03/04, TXN-10 (вопрос «одна покупка?»), TG-07 `/undo`, NOTIF-05 | журнал отменяемых действий; ожидающие решения «Да/Нет» — подтверждения удаления и массовых действий, вопрос «чек и платёж по карте — одна покупка?» (одинаково на сайте, в боте и в чате, ARCHITECTURE §5); реестры обработчиков отмены и ответов | — | user | — |
 | `privacy` | PRIV-01/02/05/06/08, AUTH-02 | согласия с версией текста; экспорт и удаление аккаунта через реестр владельцев данных; политика ПД | — | user, system | `privacy.consent-changed` |
 | `mail` | AUTH-03/04/06, ADM-60 | SMTP, локальный почтовый ящик (только localhost), тестовое письмо | — | system | — |
 | `identity` | AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04 (вход) | Better Auth (ядро) + первый запуск, код восстановления, роли, блокировка, последний админ, демо-вход, домохозяйство | mail, privacy | system | `identity.system-initialized`, `identity.user-registered`, `identity.user-deleted` |
@@ -76,12 +77,6 @@
 | `quality` | QA-10…16, ADM-40 | eval-прогоны с бюджетом токенов, результаты, сравнение с прошлыми | llm, receipts, statements, categories, legal-base, legal-consult, agent | system | — |
 | `admin` | ADM-01…60 (экраны) | раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет | identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo | — | — |
 
-**Отличия от черновика отчёта 13 (§2.4):** `llm` дополнительно зависит от `identity` (подписка на
-`identity.system-initialized` — старт скачивания моделей, NFR-25) и `notifications` (уведомления админу
-об исчерпании лимитов, NOTIF-03); `accounts` — от `identity` (счёт «Наличные» по `identity.user-registered`)
-и `explain` (трасса остатка); `legal-base` — от `identity` (старт стартового каталога, LAW-10); `admin` —
-от `demo` (кнопка «Пересоздать демо-данные», ADM-60). Циклов нет.
-
 ## Кто слушает события
 
 | Событие (нагрузка — только id, пачкой) | Слушатели |
@@ -115,6 +110,9 @@
 | 8 · Каналы, показ, качество | `telegram`, `demo`, `quality` | бот, демо-данные, eval |
 | сквозной | `admin` | admin-экран области X делается в задаче модуля X: код экрана — в `admin`/`features/admin`, фасад — в X |
 
+Задача = модуль вместе со своей частью экранов (`docs/ARCHITECTURE.md` §10.5): кусок экрана, зависящий от
+модуля, встраивает задача этого модуля; столбец «Модули сервера» ниже — все модули, чьи куски окажутся на экране.
+
 Инструменты агента (`agent/tools.ts`) модуль добавляет в своей задаче, даже если агент ещё не собран:
 они проверяются тестом через `defineTool` без модели.
 
@@ -143,27 +141,3 @@
 | `admin/<раздел>` | `Admin` + состояния `Admin--*` | `/admin/{users,laws,rates,ai,quality,system}` | admin |
 
 Экран `Telegram.dc.html` — это бот (модуль `telegram`), а не страница сайта.
-
-## Сверка с SPEC
-
-| Требования | Где закрываются |
-|---|---|
-| `AUTH`, `ROLE` | identity, mail; `ROLE-01` — ещё платформа (`ScopedDb`, ADR-0006) |
-| `PRIV` | privacy; `PRIV-03/04/09` — llm; `PRIV-07` — правило `admin-no-user-data` и `SystemDb`; `PRIV-08` — telegram + privacy |
-| `PROF` | profile (`PROF-07` — вопрос задаёт calendar) |
-| `AGT`, `CHAT`, `VOICE` | agent (инструменты — в модулях-владельцах), chat, voice; фича `assistant` |
-| `RCPT`, `STMT`, `TXN`, `CAT`, `REC`, `FIN`, `BUD`, `AFF`, `CAL`, `DASH`, `EXPL`, `WEEK`, `XLS` | одноимённые модули (`STMT-01/02` — accounts, `STMT-06` — merchants, `STMT-09` — fx-rates) |
-| `LAW`, `LEGAL`, `TAX` | legal-base, legal-consult, tax; таблицы ставок и сроков — norm-tables |
-| `NOTIF`, `TG`, `DEMO`, `ADM` | notifications, telegram, demo, admin (+ admin-фасады модулей-владельцев) |
-| `LLM` | llm |
-| `SEC` | identity (`01/02`), files (`03`), платформа (`04`), `ui`/чат на сайте (`05`), agent + модули документов (`10/11`) |
-| `OBS` | платформа (`platform/logging`, `platform/telemetry`), llm (`03`), system (`05`, `07`) |
-| `QA` | quality (`10…16`), `packages/testing` и кассеты (`01`, `17`) |
-| `NFR` | платформа, `tooling/`, Compose, Makefile; `NFR-20/21` — сайт; `NFR-25` — llm |
-| `DES` | `apps/web/src/ui` (дизайн-система), фичи |
-| `DIP` [Д] | места расширения: новые инструменты агента (`DIP-01/02/06`), `visibility` и `s.own()` (`DIP-03`), `RCPT-15` (`DIP-07`), `recurring` (`DIP-04`) |
-
-Проверено 2026-10-24: у каждого раздела §6 SPEC есть модуль-владелец; у каждого модуля есть требования.
-Сущности §5 разложены по владельцам: «Журнал действий» — actions, «Согласие» — privacy, «Письмо» — mail,
-«Трасса ИИ» — журнал расхода llm (+ Langfuse), «Фоновая задача» и «Настройки системы» — платформа + system,
-«Состояние чек-листа» — legal-consult, «Прогон проверки качества» — quality, «Журнал правовой базы» — legal-base.

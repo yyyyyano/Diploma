@@ -14,29 +14,12 @@
 
 ## Решение
 
-Пять независимых замков (подробно — `docs/ARCHITECTURE.md` §6, правила — `.claude/rules/database.md`):
-
-1. **Типы.** `Scope` с брендом (литералом не собрать; создаётся только на входах: HTTP, Telegram, конверт задачи,
-   адаптер инструмента, тесты). Код с пользовательскими данными получает `s: ScopedDb` первым аргументом;
-   `s.insert/update/delete` сами ставят `household_id`/`user_id` и фильтр.
-2. **Схема.** `userOwnedTable`: `household_id NOT NULL`, PK `(household_id, id)`, ссылки — `ownedFk` (составной FK +
-   индекс). «Смешанные» таблицы запрещены: встроенные категории — общая `publicTable`, свои — `userOwnedTable`.
-3. **Аудитор SQL** в `Logger` Drizzle: до отправки каждого запроса проверяет, что каждое обращение к пользовательской
-   таблице ограничено `household_id = $n` со значением из scope; иначе `ISOLATION_VIOLATION` и запрос не уходит.
-   Режим в продакшене — **всегда отказ**. `SystemDb` (только модули с флагом `systemTables`) — запрет любого
-   упоминания пользовательских таблиц.
-4. **Статика.** dependency-cruiser (`schema-only-in-infrastructure`, `no-cross-module-repo`, `no-unsafe-db`,
-   `cross-tenant-only-in-sweeps`, `system-db-only-for-flagged-modules`, `admin-no-user-data`) +
-   `tooling/checks/isolation.mjs` (`makeScope`/`as Scope` вне входов, `sql.raw`/`.execute` вне `infrastructure/db`,
-   `$client`/`unsafeRaw`, `userId`/`householdId` во входных схемах) + проверка схемы в CI (нет `VIEW`, функций,
-   триггеров над пользовательскими таблицами; каждая таблица с `household_id` — в реестре).
-5. **Тесты.** Генерируются по реестрам процедур и инструментов («A вызывает с id из B» → `NOT_FOUND`/пусто, данные B
-   побайтно те же), канарейки данных и механизма, полнота `defineUserData`, покрытие `*.repo.ts`.
-
-Умолчания пользователя (`10-consensus.md`): `householdId` берётся из сессии без перепроверки на каждый запрос;
-аудитор всегда «отказ»; в админке нет счётчиков по пользователям; встроенные категории общие; задачи «для всех» —
-только `defineSweep` (сквозной запрос возвращает лишь `(id, householdId, userId)`); админка — `SystemDb`.
-Транзакции — явные `s.transaction(tx => …)`, без `AsyncLocalStorage` для данных.
+Пять независимых замков — **типы** (`Scope` с брендом, `s: ScopedDb` первым аргументом), **схема** (PK и FK с
+`household_id`, без «смешанных» таблиц), **аудитор SQL** в `Logger` Drizzle (каждое обращение к пользовательской
+таблице ограничено `household_id` из scope, иначе `ISOLATION_VIOLATION` до отправки запроса; в продакшене — всегда
+отказ), **статика** (dependency-cruiser, `isolation.mjs`, проверка схемы) и **тесты** по реестрам процедур и
+инструментов с канарейками. Таблица замков, `ScopedDb`, места рождения `Scope`, `SystemDb`, `defineSweep` и
+умолчания пользователя — `docs/ARCHITECTURE.md` §6; правила кода — `.claude/rules/database.md`.
 
 ## Альтернативы
 
@@ -58,5 +41,4 @@
 
 ## Ссылки
 
-`research/architecture/14-data-isolation.md` (весь; §10 — правила, §11 — что изменено в 13),
-`13-code-architecture.md` §2.7 (заменён), `10-consensus.md` («Изоляция данных»); ADR-0007, ADR-0008.
+`research/architecture/14-data-isolation.md` (заменяет вариант 13), `10-consensus.md`; ADR-0007, ADR-0008.

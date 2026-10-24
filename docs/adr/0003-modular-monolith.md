@@ -43,5 +43,4 @@ SPEC описывает ~30 функциональных областей. Ко�
 
 ## Ссылки
 
-`research/architecture/13-code-architecture.md` §1–2, §4, §8.2, §8.5; `01-monorepo-tooling.md` §4;
-`10-consensus.md` («Архитектура кода»); ADR-0004.
+`research/architecture/13-code-architecture.md`, `01-monorepo-tooling.md`, `10-consensus.md`; ADR-0004.

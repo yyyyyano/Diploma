@@ -37,13 +37,13 @@ paths:
   над пользовательскими таблицами. Таблицы pg-boss Drizzle не трогает (`schemaFilter: ["public"]`).
 - Индексы — под реальные запросы сценариев; HNSW — только для публичных данных (законы).
 
-Правильно:
+Правильно (JOIN и интерфейс `ScopedDb` — `docs/ARCHITECTURE.md` §6.3):
 
 ```ts
-async listByPeriod(s: ScopedDb, p: Period, sort: "date" | "amount") {
+async listPage(s: ScopedDb, p: Period, page: number, size: number) {   // TXN-02: страница + total (счёт — отдельно)
   return s.db.select().from(transactions)
     .where(and(s.own(transactions), between(transactions.date, p.from, p.to)))
-    .orderBy(sort === "date" ? desc(transactions.date) : desc(transactions.amountMinor)).limit(50);
+    .orderBy(desc(transactions.date), desc(transactions.id)).limit(size).offset((page - 1) * size);
 }
 ```
 

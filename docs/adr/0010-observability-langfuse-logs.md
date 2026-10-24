@@ -47,5 +47,4 @@
 
 ## Ссылки
 
-`research/architecture/12-langfuse.md` (§1–6, приложение A — фрагмент Compose), `08-runtime-observability-security.md`
-(решение 7 — логи), SPEC R46, OBS-05; `10-consensus.md` («Трассы ИИ»); ADR-0009, ADR-0015.
+`research/architecture/12-langfuse.md`, `08-runtime-observability-security.md`, `10-consensus.md`; SPEC R46, OBS-05; ADR-0009, ADR-0015.

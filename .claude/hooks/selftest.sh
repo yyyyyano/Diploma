@@ -65,7 +65,8 @@ for a in critic reviewer; do
     'pnpm vitest run apps/server/src/modules/receipts' 'pnpm --filter @kosht/calc test' 'pnpm exec oxlint apps/web' \
     'ls -la tasks' 'cat CONSTRAINTS.md | head -n 40' 'grep -rn "@ts-ignore" apps | wc -l' \
     'grep -rn "a|b" src' 'git diff --stat main...HEAD -- apps/server' 'find apps -name "*.test.ts"' \
-    'git log --format="%h %s%n%b" main..HEAD' 'wc -l $(echo x)' ; do
+    'git log --format="%h %s%n%b" main..HEAD' 'wc -l $(echo x)' \
+    'make e2e' 'make check-quick' 'make check-full' 'make check-commits' 'make deps-check' 'make -s e2e 2>&1 | tail -n 40' ; do
     want=0; case "$c" in *'$('*) want=2 ;; esac
     run $want readonly-bash.sh "$a можно: ${c:0:45}" "$(bash_in "$a" "$c")"
   done
@@ -73,6 +74,7 @@ for a in critic reviewer; do
     'echo x > src/a.ts' 'cat a >> b' 'git diff > /tmp/d.patch' 'ls 2> err.log' 'tee out.txt' \
     'sed -i s/a/b/ f' 'rm -rf src' 'mv a b' 'cp a b' 'npx vitest' 'node -e "1"' 'bash -c "ls"' \
     'pnpm exec oxlint --fix apps' 'pnpm vitest' 'pnpm vitest run -u' 'pnpm install' 'make up' 'make db-reset' \
+    'make ai-record SCENARIO=receipts/recheck' 'make db-up' 'make fmt' 'make demo-reset' 'make e2e UPDATE_SNAPSHOTS=1' \
     'find . -name x -delete' 'find . -exec rm {} \;' 'sort -o out.txt in.txt' 'git diff --output=x.patch' \
     'awk "{print}" f' 'FOO=1 make check' 'cat <<EOF
 x
@@ -184,6 +186,9 @@ check "settings.json — корректный JSON" jq -e . "$S"
 check "attribution пустой (без подписей ИИ)" jq -e '.attribution.commit == "" and .attribution.pr == ""' "$S"
 check "нет разрешений на tasks/reports" jq -e '[.permissions.allow[] | select(test("tasks/reports"))] | length == 0' "$S"
 check "git push запрещён в deny" jq -e '.permissions.deny | index("Bash(git push *)") != null' "$S"
+check "make ai-record разрешён (перезапись кассет имплементатором)" jq -e '.permissions.allow | index("Bash(make ai-record *)") != null' "$S"
+check "make db-up разрешён (тестовый Postgres)" jq -e '.permissions.allow | index("Bash(make db-up)") != null' "$S"
+check "чтение .env по-прежнему запрещено" jq -e '.permissions.deny | index("Read(./.env)") != null' "$S"
 check "gate-report.sh не зарегистрирован" jq -e '[.. | strings | select(test("gate-report"))] | length == 0' "$S"
 while IFS= read -r c; do
   f="${c//\$\{CLAUDE_PROJECT_DIR\}/$ROOT}"

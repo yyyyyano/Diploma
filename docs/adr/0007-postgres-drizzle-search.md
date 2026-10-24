@@ -47,4 +47,4 @@
 
 ## Ссылки
 
-`research/architecture/03-data-search-jobs.md` (итог), `14-data-isolation.md` §2; ADR-0006, ADR-0011.
+`research/architecture/03-data-search-jobs.md`, `14-data-isolation.md`; ADR-0006, ADR-0011.

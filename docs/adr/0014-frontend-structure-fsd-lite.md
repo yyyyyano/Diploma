@@ -39,4 +39,4 @@
 
 ## Ссылки
 
-`research/architecture/13-code-architecture.md` §3, §4 (правила `web-*`), `07-frontend.md`; ADR-0013.
+`research/architecture/13-code-architecture.md`, `07-frontend.md`; ADR-0013.

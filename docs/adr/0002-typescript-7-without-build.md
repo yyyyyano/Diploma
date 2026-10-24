@@ -42,4 +42,4 @@ TypeScript 7 (нативный компилятор) быстрее в 8–12 р
 
 ## Ссылки
 
-`research/architecture/01-monorepo-tooling.md` §5–6, `13-code-architecture.md` §4, §8.2; ADR-0001, ADR-0003.
+`research/architecture/01-monorepo-tooling.md`, `13-code-architecture.md`; ADR-0001, ADR-0003.

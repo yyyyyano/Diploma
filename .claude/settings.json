@@ -29,11 +29,17 @@
       "Bash(make test-*)",
       "Bash(make fmt)",
       "Bash(make deps-check)",
+      "Bash(make db-up)",
+      "Bash(make ai-record *)",
       "Bash(pnpm vitest run *)",
       "Bash(pnpm exec vitest run *)",
       "Bash(pnpm test *)",
       "Bash(pnpm lint *)",
-      "Bash(pnpm typecheck *)"
+      "Bash(pnpm typecheck *)",
+      "Bash(make e2e)",
+      "Bash(make check-quick)",
+      "Bash(make check-full)",
+      "Bash(make check-commits)"
     ],
     "deny": [
       "Bash(git push)",

@@ -45,5 +45,4 @@
 
 ## Ссылки
 
-`research/architecture/08-runtime-observability-security.md` (решения 1–6, 10, 11), `05-local-inference.md`
-(контейнеры и GPU), `12-langfuse.md` §6, `10-consensus.md` («Запуск»); ADR-0010, ADR-0011.
+`research/architecture/08-runtime-observability-security.md`, `05-local-inference.md`, `12-langfuse.md`, `10-consensus.md`; ADR-0010, ADR-0011.

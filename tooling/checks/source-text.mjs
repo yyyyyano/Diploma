@@ -190,6 +190,17 @@ function skipRegex(text, start, put) {
 }
 
 /**
+ * Код вместе с текстом строк — всё, кроме комментариев (позиции те же).
+ * @param {{ code: string, strings: string }} parts
+ * @returns {string}
+ */
+export function withoutComments({ code, strings }) {
+  let text = "";
+  for (let i = 0; i < code.length; i += 1) text += code[i] === " " ? strings[i] : code[i];
+  return text;
+}
+
+/**
  * Все совпадения регулярного выражения (флаг g) построчно.
  * @param {string} text
  * @param {RegExp} pattern

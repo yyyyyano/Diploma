@@ -10,7 +10,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkResult, listFiles, report, splitSource } from "./source-text.mjs";
+import { checkResult, listFiles, report, splitSource, withoutComments } from "./source-text.mjs";
 
 export const ROOTS = ["apps/web/src"];
 
@@ -99,13 +99,6 @@ function cssFindings(text) {
     }
   });
   return found;
-}
-
-/** Код вместе с текстом строк — всё, кроме комментариев. */
-function withoutComments({ code, strings }) {
-  let text = "";
-  for (let i = 0; i < code.length; i += 1) text += code[i] === " " ? strings[i] : code[i];
-  return text;
 }
 
 if (import.meta.main) {

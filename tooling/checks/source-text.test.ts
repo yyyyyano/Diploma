@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { checkResult, findAll, listFiles, splitSource } from "./source-text.mjs";
+import { checkResult, findAll, listFiles, splitSource, withoutComments } from "./source-text.mjs";
 
 describe("splitSource: код, комментарии и строки — отдельно, с теми же позициями", () => {
   it("строчный и блочный комментарий уходят из кода, переводы строк сохраняются", () => {
@@ -148,5 +148,11 @@ describe("checkResult: код выхода по общим правилам", ()
       code: 0,
       files: 0,
     });
+  });
+});
+
+describe("withoutComments: код вместе со строками, без комментариев", () => {
+  it("возвращает текст строк на их места, а комментарии — пробелами", () => {
+    expect(withoutComments(splitSource(`a("x"); // b`))).toBe(`a("x");     `);
   });
 });

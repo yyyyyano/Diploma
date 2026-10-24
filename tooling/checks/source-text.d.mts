@@ -26,6 +26,7 @@ export interface CheckResult {
 }
 
 export declare function splitSource(text: string): SourceParts;
+export declare function withoutComments(parts: { code: string; strings: string }): string;
 export declare function findAll(text: string, pattern: RegExp): LineMatch[];
 export declare function listFiles(
   baseDir: string,

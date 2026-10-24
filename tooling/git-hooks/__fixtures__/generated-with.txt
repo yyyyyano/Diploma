@@ -1,0 +1,3 @@
+chore: обновить конфигурацию линтера
+
+Generated with Claude Code

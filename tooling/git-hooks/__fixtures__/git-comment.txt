@@ -1,0 +1,4 @@
+fix: поправить подсчёт строк в numstat
+
+# Co-Authored-By: Claude <noreply@anthropic.com>
+# Строки с # git удаляет из сообщения.

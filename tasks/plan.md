@@ -50,6 +50,11 @@
   `floor`, JSX-литералы, `bundle-size`, цель `make static-checks`) вынесен в новую **T-056** (`Риск: high`,
   зависит от T-002); по файлу она стоит сразу после T-002, до T-003. Номер T-056 — потому что номера не
   переиспользуются и не перенумеруются; задач в плане теперь 56.
+- Критик T-003 (REVISE) счёл её слишком крупной (5 пакетов, около 60 файлов) и неопределённой по форме; принято
+  (обратимо): T-003 сужена до `kernel`, `calc`, `testing` с уточнёнными критериями (правила округления, подключение
+  покрытия в `vitest.config.ts` и Makefile, резолв `@kosht/*`, `Clock` и `FakeClock`, бренды на `z.$brand`), контракт
+  и тексты вынесены в новую **T-057** (по файлу — после T-003, до T-004; `Риск: high`); зависимости T-005 и T-008
+  дополнены T-057. Задач в плане теперь 57.
 - По ревью T-002 (R1-1, R1-4) в критерии T-004 добавлен пункт: файлы возможностей `platform/db` согласованы с
   `PLATFORM_DB` в `rules.ts`, а правило `drizzle-and-pg-only-in-db` пускает `packages/testing/db` — так буква
   CONSTRAINTS согласуется с ARCHITECTURE §12, где шаблонной БД нужен `pg` (обратимо; если исключение нежелательно —
@@ -148,30 +153,57 @@
 - Риск: high — скрипт, который ничего не ловит, снимает замок изоляции (ARCHITECTURE §15)
 - Зависимости: T-002
 
-### T-003 · Общие пакеты: деньги, даты, трасса расчёта, контракт, тексты и помощники тестов
+### T-003 · Деньги, даты и трасса расчёта: kernel, calc, помощники тестов
 - Статус: todo
-- Модули: `@kosht/kernel`, `@kosht/calc`, `@kosht/contract`, `@kosht/i18n`, `@kosht/testing`
-- SPEC: P1, P2, EXPL-02, FIN-20, NFR-19, NFR-23, DES-17
+- Модули: `@kosht/kernel`, `@kosht/calc`, `@kosht/testing`, `vitest.config.ts`, `Makefile`, `package.json`,
+  `pnpm-workspace.yaml`
+- SPEC: P1, P2, EXPL-02, FIN-20, NFR-23
 - Критерии приёмки:
-  - [ ] `kernel`: `Money { minor, currency }` (операция над разными валютами — ошибка), `LocalDate` (Минск), `Period`,
-    бренды id, `TraceNode`; `Scope` с брендом литералом не собирается (тест с `@ts-expect-error` и комментарием),
-    создаётся только `makeScope`; зависимости — только `zod`.
-  - [ ] `calc`: `Calc<T> = { value, trace }`, помощники `node/sum/sub/mul/avg/round` с явным правилом округления;
-    `freeBalance` — тест-пример FIN-20 «2 400 − 180 − 35 − 1 200 − 145 = 840 BYN» с трассой из пяти слагаемых
-    и ключом `fin.freeBalance`; fast-check: сумма частей равна целому.
-  - [ ] Покрытие (`coverage.thresholds`): `calc` строки ≥ 95 %, ветви ≥ 90 %; `kernel` ≥ 90 % / 85 %.
-  - [ ] `contract`: каталог ошибок (код → HTTP-статус, `retryable`), общие схемы (`Money`, `LocalDate`, бренды,
-    `PageNumber`, `PageSize` ≤ 100, `RowCount`), `health`, `PageContext`, части сообщений чата, событие
-    `events.stream`; зависит только от `zod`, `@orpc/contract`, `kernel`.
-  - [ ] `i18n`: словари ru (`common`, `errors`, `formulas`, `tools`), типизированные ключи (несуществующий ключ не
-    компилируется), русские множественные числа; `formatMoney` → `1 234,56 BYN` с неразрывными пробелами,
-    `formatDate` → `21.10.2026`, `formatRelativeDay`, всё по `Europe/Minsk`; тест: у каждого кода каталога ошибок
-    есть текст.
-  - [ ] `testing`: `FakeClock`, фабрики примитивов; паспорта `packages/*/CLAUDE.md` по
-    `docs/templates/package-passport.md`.
+  - [ ] `kernel`: `Money { minor, currency }` (`minor` — целое в безопасном диапазоне, валюта — код из трёх заглавных
+    букв; операция над разными валютами — ошибка), `LocalDate` (Минск; `Intl` — только в
+    `LocalDate.fromInstant(instant, tz)`, часовой пояс — настройка, NFR-23), `Period` (включительные границы
+    `LocalDate`, записать в паспорте), `Clock` (интерфейс `now()`, `today()`), бренды `UserId` / `HouseholdId` /
+    `TraceId` на `z.$brand`, `TraceNode`; `Scope { userId, householdId }` с брендом литералом не собирается (тест
+    с `@ts-expect-error` и комментарием), создаётся только `makeScope`; зависимости — только `zod`.
+  - [ ] `calc`: `Calc<T> = { value, trace }`, помощники `node/sum/sub/mul/avg/round`; правила округления перечислены
+    (направление для половин и отрицательных значений, форма ставки — по `.claude/rules/calc.md`), тесты на
+    отрицательные и половинные значения; `freeBalance` — тест-пример FIN-20 «2 400 − 180 − 35 − 1 200 − 145 =
+    840 BYN» с трассой из пяти слагаемых и ключом `fin.freeBalance`; fast-check: порядок слагаемых не меняет итог,
+    `sub(sum(a, b), b) = a`, разбиение целого на части в сумме даёт целое.
+  - [ ] `testing`: `FakeClock implements Clock`, фабрики примитивов.
+  - [ ] Покрытие: `coverage.include` для `packages/{calc,kernel}/src/**`, `coverage.thresholds` по glob — `calc` строки
+    ≥ 95 %, ветви ≥ 90 %; `kernel` ≥ 90 % / 85 %; `make test` запускает с покрытием; красное на поднятом пороге
+    проверено; время `make check` — в итог (бюджет 120 с).
+  - [ ] Пакеты подключены в workspace; `@kosht/kernel` из `calc` резолвится в `packages/kernel/src/index.ts` (не
+    `couldNotResolve`); `make deps-check` зелёный и красный на намеренном импорте мимо правил; паспорта
+    `packages/{kernel,calc,testing}/CLAUDE.md` по `docs/templates/package-passport.md`.
 - Проверка: make check; pnpm vitest run packages
 - Риск: high — деньги, округление и трасса лежат под каждым числом, которое увидит пользователь
 - Зависимости: T-002
+
+### T-057 · Контракт и тексты: contract, i18n
+- Статус: todo
+- Модули: `@kosht/contract`, `@kosht/i18n`, `pnpm-workspace.yaml`
+- SPEC: NFR-19, NFR-23, DES-17, P1
+- Критерии приёмки:
+  - [ ] `contract`: каталог ошибок (код → HTTP-статус, `retryable`; базовый набор: `VALIDATION` 400, `UNAUTHORIZED` 401,
+    `FORBIDDEN` 403, `NOT_FOUND` 404, `CONFLICT` 409, `RATE_LIMITED` 429 `retryable`, `INTERNAL` 500, `UNAVAILABLE`
+    503 `retryable`); общие схемы (`Money`, `LocalDate`, `PageNumber`, `PageSize` ≤ 100 с умолчанием 50, `RowCount`);
+    `system.health` как `publicProc` без БД (не заменяет `/healthz`); минимальные `PageContext` и событие
+    `events.stream` (виды `progress` и `changed`: сущность и id, без данных); части сообщений чата — только
+    text/step/card, расширения — в T-006, T-010 и T-043; зависит только от `zod`, `@orpc/contract`, `kernel`;
+    ключей `userId` / `householdId` / `ownerId` в контракте нет (`isolation.mjs` проверяет весь `packages/contract`).
+  - [ ] `i18n`: i18next (точная версия), `createT` без React; словари ru (`common`, `errors`, `formulas`, `tools`),
+    типизированные ключи (несуществующий ключ не компилируется — тест с `@ts-expect-error`), русские множественные
+    числа (ключ `common` с `count`); `formatMoney` → `1 234,56 BYN` с неразрывными пробелами (U+00A0) и знаком
+    минуса, `formatDate` → `21.10.2026`, `formatRelativeDay(date, today)`, всё по `Europe/Minsk`; точные символы —
+    в тестах; тесты: у каждого кода каталога ошибок есть текст, у каждого ключа трассы `calc` (`fin.freeBalance`)
+    есть подпись в `formulas`.
+  - [ ] Пакеты подключены в workspace; паспорта `packages/{contract,i18n}/CLAUDE.md` по
+    `docs/templates/package-passport.md`.
+- Проверка: make check; pnpm vitest run packages
+- Риск: high — `formatMoney` показывает каждую сумму, а каталог ошибок — каждую ошибку
+- Зависимости: T-003
 
 ### T-004 · База данных и изоляция: `ScopedDb`, аудитор SQL, виды таблиц и миграции
 - Статус: todo
@@ -234,7 +266,7 @@
     дообслуживается, пул закрывается (int-тест с дочерним процессом).
 - Проверка: make check; pnpm vitest run apps/server/src/platform; вручную: curl -i http://127.0.0.1:8140/healthz
 - Риск: high — секреты, CSRF и «только localhost» для первого запуска и почтового ящика (R40)
-- Зависимости: T-004
+- Зависимости: T-004, T-057
 
 ### T-006 · Платформа: фоновые задачи, события и живые сигналы
 - Статус: todo
@@ -306,7 +338,7 @@
     `no-raw-colors` и проверка литералов зелёные на `apps/web`.
 - Проверка: make check; make e2e; вручную: скриншоты 1440/390 рядом с `design/screenshots/desktop/Main.png`
 - Риск: medium — от дизайн-системы зависят все экраны; ошибка доступности размножится
-- Зависимости: T-007, T-003
+- Зависимости: T-007, T-003, T-057
 
 ### T-009 · Сквозной срез: первый запуск, вход и счёт «Наличные» с тестом изоляции по реестру
 - Статус: todo

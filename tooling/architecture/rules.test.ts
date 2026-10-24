@@ -1,12 +1,18 @@
 // Правила границ dependency-cruiser (ADR-0002, ADR-0003, CONSTRAINTS.md «Архитектурные запреты»): состав
 // правил выводится из карты модулей, а запреты библиотек узнают пакет в обеих раскладках путей — по имени из
 // импорта (пакет не установлен) и по пути pnpm (node_modules/.pnpm/…/node_modules/<пакет>/).
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { MODULES } from "./modules.ts";
 import {
   EXCLUDE,
+  PLATFORM_DB,
   buildConfig,
   buildForbiddenRules,
+  missingPlatformDbPaths,
   npmPattern,
   type ForbiddenRule,
 } from "./rules.ts";
@@ -122,5 +128,68 @@ describe("buildConfig", () => {
 
   it("dependency-cruiser читает TypeScript парсером tsc и видит импорты только типов", () => {
     expect(buildConfig().options).toMatchObject({ parser: "tsc", tsPreCompilationDeps: true });
+  });
+});
+
+describe("PLATFORM_DB — пути возможностей БД совпадают с файлами platform/db (ARCHITECTURE §15)", () => {
+  const repoRoot = fileURLToPath(new URL("../../", import.meta.url));
+
+  function withTree(files: readonly string[], check: (baseDir: string) => void): void {
+    const baseDir = mkdtempSync(join(tmpdir(), "platform-db-"));
+    try {
+      for (const file of files) {
+        mkdirSync(dirname(join(baseDir, file)), { recursive: true });
+        writeFileSync(join(baseDir, file), "export {};\n");
+      }
+      check(baseDir);
+    } finally {
+      rmSync(baseDir, { recursive: true, force: true });
+    }
+  }
+
+  it("в репозитории каждый путь PLATFORM_DB существует, как только появилась папка platform/db", () => {
+    expect(missingPlatformDbPaths(repoRoot)).toEqual([]);
+  });
+
+  it("папки platform/db ещё нет — сверять нечего", () => {
+    withTree(["apps/server/src/main/compose.ts"], (baseDir) => {
+      expect(missingPlatformDbPaths(baseDir)).toEqual([]);
+    });
+  });
+
+  it("каждая возможность — файл <путь>.ts или папка <путь>/ — расхождений нет", () => {
+    withTree(
+      [
+        `${PLATFORM_DB.unsafe}.ts`,
+        `${PLATFORM_DB.crossTenant}/index.ts`,
+        `${PLATFORM_DB.system}.ts`,
+      ],
+      (baseDir) => {
+        expect(missingPlatformDbPaths(baseDir)).toEqual([]);
+      },
+    );
+  });
+
+  it("файл возможности назван иначе — путь из PLATFORM_DB назван как отсутствующий", () => {
+    withTree(
+      [
+        `${PLATFORM_DB.unsafe}.ts`,
+        "apps/server/src/platform/db/cross-tenant-db.ts",
+        `${PLATFORM_DB.system}.ts`,
+      ],
+      (baseDir) => {
+        expect(missingPlatformDbPaths(baseDir)).toEqual([PLATFORM_DB.crossTenant]);
+      },
+    );
+  });
+
+  it("возможности отданы через общий platform/db/index.ts — все три пути отсутствуют", () => {
+    withTree(["apps/server/src/platform/db/index.ts"], (baseDir) => {
+      expect(missingPlatformDbPaths(baseDir)).toEqual([
+        PLATFORM_DB.unsafe,
+        PLATFORM_DB.crossTenant,
+        PLATFORM_DB.system,
+      ]);
+    });
   });
 });

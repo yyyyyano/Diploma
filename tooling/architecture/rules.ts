@@ -4,6 +4,8 @@
 // Новое правило ⇒ фикстура нарушения в tooling/architecture/fixtures/rules/<имя>/ и тест «правило ловит своё»
 // (rules.fixtures.test.ts). Правило, которое ничего не ловит, — сломанное правило (ARCHITECTURE §15).
 import type { ICruiseOptions, IRegularForbiddenRuleType } from "dependency-cruiser";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { MODULES, systemTables, type ModuleDef } from "./modules.ts";
 
 /** Корни обхода; проверяются только существующие (deps-guard.mjs). */
@@ -26,6 +28,18 @@ export const PLATFORM_DB = {
   crossTenant: `${PLATFORM}/db/cross-tenant`,
   system: `${PLATFORM}/db/system-db`,
 } as const;
+
+/**
+ * Пути PLATFORM_DB, которых нет на диске, хотя папка platform/db уже есть. Правила no-unsafe-db,
+ * cross-tenant-only-in-sweeps и system-db-only-for-flagged-modules смотрят только на эти пути: файл, названный
+ * иначе, или общий platform/db/index.ts выключили бы их молча (ARCHITECTURE §15). Пока папки нет — пусто.
+ */
+export function missingPlatformDbPaths(baseDir: string): string[] {
+  if (!existsSync(join(baseDir, PLATFORM, "db"))) return [];
+  return Object.values(PLATFORM_DB).filter(
+    (path) => !existsSync(join(baseDir, `${path}.ts`)) && !existsSync(join(baseDir, path)),
+  );
+}
 
 /** Тестовый код: тесты рядом с файлами, фикстуры, кассеты, @kosht/testing, e2e, настройка тестов сайта. */
 const TEST_CODE = [

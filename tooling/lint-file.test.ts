@@ -1,13 +1,17 @@
 // make lint-file (хук правки файла, CONSTRAINTS.md «Хуки»): файл вне линта — молча пропускается, код выхода 0;
 // настоящая ошибка в .ts — красный. Запускается настоящий make в корне репозитория.
 import { spawnSync } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const scratch = join(root, "tooling", "__lint_file_scratch__");
+// Временный файл — вне репозитория: соседние тесты параллельно обходят настоящее дерево (deps-guard, «Пол»,
+// раскладка pnpm в rules.fixtures) и падали с ENOENT, увидев файл, который этот тест уже удалил.
+// oxlint берёт .oxlintrc.json из cwd (корень репозитория), так что правила проекта действуют и на него.
+const scratch = mkdtempSync(join(tmpdir(), "kosht-lint-file-"));
 
 function lintFile(file: string) {
   return spawnSync("make", ["--no-print-directory", "lint-file", `FILE=${file}`], {
@@ -35,9 +39,8 @@ describe("make lint-file", () => {
   });
 
   it("настоящая ошибка линтера в .ts остаётся красной", () => {
-    mkdirSync(scratch, { recursive: true });
-    const file = join("tooling", "__lint_file_scratch__", "bad.ts");
-    writeFileSync(join(root, file), "export const x: any = 1;\n");
+    const file = join(scratch, "bad.ts");
+    writeFileSync(file, "export const x: any = 1;\n");
     const r = lintFile(file);
     expect(r.status).not.toBe(0);
     expect(r.stdout + r.stderr).toContain("no-explicit-any");

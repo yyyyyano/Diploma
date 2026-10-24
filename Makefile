@@ -29,7 +29,8 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node capabilities deps-check static-checks db-up db-shell
+	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
+	test-int
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -64,6 +65,16 @@ db-up: secrets/db_password ## Поднять только Postgres (сервис
 db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
 
+migrate: need-node db-up ## Применить миграции apps/server/drizzle (приложение делает то же при старте)
+	node apps/server/src/platform/db/migrate-cli.ts
+
+# Тестовая схема механизма изоляции: make db-generate DRIZZLE_CONFIG=apps/server/src/platform/db/__fixtures__/drizzle.config.ts
+DRIZZLE_CONFIG ?= apps/server/drizzle.config.ts
+
+db-generate: need-node ## Миграция из схем модулей: [name=имя] [custom=1 — пустая, для SQL руками]; SQL читать глазами
+	apps/server/node_modules/.bin/drizzle-kit generate --config $(DRIZZLE_CONFIG) $(if $(name),--name $(name)) $(if $(custom),--custom)
+	@$(BIN)/oxfmt apps/server/drizzle apps/server/src/platform/db/__fixtures__/drizzle >/dev/null
+
 # ── Качество ───────────────────────────────────────────────────────────────────────────────────────
 
 fmt: need-node ## Отформатировать код и конфиги (oxfmt)
@@ -86,8 +97,11 @@ lint-file: need-node ## Линт одного файла: make lint-file FILE=п
 typecheck: need-node ## Проверка типов TypeScript 7 во всех пакетах (Turborepo)
 	$(BIN)/turbo run typecheck --output-logs=errors-only
 
-test: need-node ## Все тесты Vitest с покрытием (пороги — vitest.config.ts, CONSTRAINTS.md)
+test: need-node db-up ## Все тесты Vitest (unit и int на Postgres) с покрытием (пороги — vitest.config.ts)
 	$(BIN)/vitest run --coverage
+
+test-int: need-node db-up ## Интеграционные тесты на настоящем Postgres: своя база на тестовый файл
+	$(BIN)/vitest run --project int
 
 deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»
 	node tooling/checks/deps-guard.mjs

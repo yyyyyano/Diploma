@@ -1,0 +1,9 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "edfa5c59-4b1d-41f5-9f99-5c1ea8b2235b",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "footprints": [],
+  "ddl": []
+}

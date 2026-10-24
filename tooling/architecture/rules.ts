@@ -20,7 +20,7 @@ const PLATFORM = `${SERVER}/platform`;
 const WEB = "apps/web/src";
 
 /**
- * Возможности доступа к БД (ARCHITECTURE §6.5). Файлы появятся в T-004; там же пути уточняются.
+ * Возможности доступа к БД (ARCHITECTURE §6.5): отдельные файлы platform/db, общего index.ts нет.
  * Каждый путь — файл `<путь>.ts` или папка `<путь>/`.
  */
 export const PLATFORM_DB = {
@@ -385,8 +385,15 @@ function libraryRules(): ForbiddenRule[] {
     rule(
       "drizzle-and-pg-only-in-db",
       "drizzle-orm и pg — только в infrastructure/db модулей и platform/db: запросы через ScopedDb " +
-        "(ADR-0006, CONSTRAINTS «Архитектурные запреты»).",
-      { pathNot: [`^${MOD}/[^/]+/infrastructure/db/`, `^${PLATFORM}/db/`] },
+        "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключение — @kosht/testing/db: шаблонная " +
+        "база тестов создаёт и удаляет базы test_* (ARCHITECTURE §12), данных пользователя не читает.",
+      {
+        pathNot: [
+          `^${MOD}/[^/]+/infrastructure/db/`,
+          `^${PLATFORM}/db/`,
+          String.raw`^packages/testing/src/db(\.ts$|/)`,
+        ],
+      },
       { path: npmPattern(["drizzle-orm", "pg"]) },
     ),
     rule(

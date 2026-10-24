@@ -141,7 +141,7 @@ const EXPECTED: Record<string, string[]> = {
   ],
   "drizzle-and-pg-only-in-db": [
     `${M}/receipts/application/recognize.ts → drizzle-orm/pg-core`,
-    "packages/testing/src/db.ts → pg",
+    "packages/testing/src/factories.ts → pg",
   ],
   "orpc-server-only-in-api": [`${M}/receipts/application/get-receipt.ts → @orpc/server`],
 };

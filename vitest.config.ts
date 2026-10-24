@@ -1,4 +1,5 @@
-// Тесты Vitest (ADR-0001, docs/ARCHITECTURE.md §12). Проекты int и web добавят T-004/T-008/T-011.
+// Тесты Vitest (ADR-0001, docs/ARCHITECTURE.md §12): unit — без БД, int — на настоящем Postgres (шаблонная
+// база на тестовый файл). Проект web добавит T-008.
 import { defineConfig } from "vitest/config";
 import { FIXTURES_DIR } from "./tooling/architecture/rules.ts";
 
@@ -11,6 +12,15 @@ export default defineConfig({
           name: "unit",
           include: ["*.test.ts", "{apps,packages,tooling}/**/*.test.ts"],
           exclude: ["**/node_modules/**", "**/*.int.test.ts", `${FIXTURES_DIR}/**`],
+        },
+      },
+      {
+        test: {
+          // `x.int.test.ts`: своя база на файл — клон шаблона из боевых миграций (make test-int поднимает db).
+          name: "int",
+          include: ["{apps,packages,tooling}/**/*.int.test.ts"],
+          exclude: ["**/node_modules/**", `${FIXTURES_DIR}/**`],
+          globalSetup: ["apps/server/src/platform/db/__fixtures__/int-global-setup.ts"],
         },
       },
     ],

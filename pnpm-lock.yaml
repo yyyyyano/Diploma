@@ -371,10 +371,16 @@ importers:
       '@kosht/kernel':
         specifier: workspace:*
         version: link:../kernel
+      pg:
+        specifier: 'catalog:'
+        version: 8.23.1
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.5
+      '@types/pg':
+        specifier: 'catalog:'
+        version: 8.23.1
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

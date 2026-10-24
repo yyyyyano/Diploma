@@ -12,20 +12,23 @@
 // InsertStmt, UpdateStmt, DeleteStmt, TransactionStmt и SET TRANSACTION; DO, COPY, CALL, SET, DDL, SELECT … INTO
 // и прочее — нарушение; MERGE — нигде в дереве (WITH … MERGE и MERGE в CTE вставляют без INSERT); нет функций,
 // исполняющих SQL из строки (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config);
-// пользовательская таблица — только в схеме public. У каждого обращения к пользовательской таблице (RangeVar в
-// FROM, JOIN, подзапросе, CTE, цели UPDATE/DELETE) — свой «household_id = $n» со значением домохозяйства scope:
-// предикат засчитывается обращению по квалификатору (алиас или имя), без квалификатора — любому. SET (в том числе
-// кортежный и в ON CONFLICT DO UPDATE) не меняет household_id; INSERT в пользовательскую таблицу — только
-// отдельной командой без WITH и только VALUES со своим household_id в каждой строке (INSERT … SELECT, VALUES …
-// UNION, INSERT внутри CTE — нарушение: их строки не проверить); цель ON CONFLICT включает household_id;
-// crossTenant — один SELECT без записи, блокировок и UNION, возвращающий только id, household_id, user_id.
+// пользовательская таблица — только в схеме public. Каждое обращение к пользовательской таблице (RangeVar в
+// FROM, JOIN, подзапросе, CTE, цели UPDATE/DELETE) сужено условием своей области (см. narrowLevel): конъюнктом
+// WHERE или ON соединения (ON внешнего соединения — только для nullable-стороны), OR — если сужает каждая ветка;
+// предикат — «household_id = $n» этого обращения (по алиасу; без квалификатора — когда пользовательская таблица в
+// области одна), значение $n сверяется с домохозяйством scope на каждом вызове. SET (в том числе кортежный и в
+// ON CONFLICT DO UPDATE) не меняет household_id; INSERT в пользовательскую таблицу — только отдельной командой
+// без WITH и только VALUES со своим household_id в каждой строке (INSERT … SELECT, VALUES … UNION, INSERT внутри
+// CTE — нарушение: их строки не проверить); цель ON CONFLICT включает household_id; crossTenant — один SELECT без
+// записи, блокировок и UNION, возвращающий только id, household_id, user_id.
 //
-// Чего не видит: предикат, который не сужает выборку (`… OR true`, `NOT household_id = $1`, предикат в списке
-// select, в ветке CASE или в filter (where …)); к какой таблице относится предикат без квалификатора (предикаты
-// считаются штуками); SQL внутри представлений и функций базы (их запрещает проверка схемы, schema-check.ts).
-// Это закрывают построитель ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL.
-// Ошибается аудитор в сторону «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой
-// таблицы свой own»).
+// Чего не видит: SQL внутри представлений и функций базы (их запрещает проверка схемы, schema-check.ts);
+// побочные каналы — выражение рядом с фильтром (`note::int = 1`, деление на ноль) база может вычислить и на
+// чужой строке раньше фильтра, и ошибка покажет значение; это закрывают построитель ScopedDb (s.own, s.update,
+// s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в сторону «громко»: не засчитывает
+// сужение, которое не может доказать по дереву (HAVING, `household_id IN ($1)`, USING, LATERAL-подзапрос с
+// предикатом внешней таблицы, имя соединения с алиасом), и безвредный подзапрос без own тоже останавливает
+// (правило «у каждой таблицы свой own»).
 //
 // Сверка с Postgres — audit-differential.int.test.ts: одни и те же запросы в разных записях база выполняет в
 // транзакции с откатом; каждый текст, принятый базой, принимает и парсер; таблица, которую база тронула
@@ -109,16 +112,22 @@ interface Fault {
   readonly hint: string;
 }
 
+/**
+ * Условие «household_id обращения = домохозяйство scope», собранное из дерева; значения `$n` подставляются на
+ * каждом вызове. `param` — предикат `household_id = $n`; `any` — конъюнкция (сужает, если сужает любой конъюнкт);
+ * `all` — дизъюнкция (сужает, если сужает каждая ветка). Пустой `any` — не сужает.
+ */
+type Narrowing =
+  | { readonly param: number }
+  | { readonly any: readonly Narrowing[] }
+  | { readonly all: readonly Narrowing[] };
+
+const NEVER: Narrowing = { any: [] };
+
 interface Ref {
   readonly table: string;
   readonly alias: string;
-}
-
-interface Predicate {
-  /** Алиас или имя таблицы перед `.household_id`; null — без квалификатора. */
-  readonly qualifier: string | null;
-  /** Номер параметра `$n`. */
-  readonly param: number;
+  readonly narrowing: Narrowing;
 }
 
 interface Insert {
@@ -144,10 +153,8 @@ interface Analysis {
   readonly insert: Insert | undefined;
   /** Таблица, у которой SET меняет household_id. */
   readonly ownerChange: string | undefined;
-  /** Обращения к пользовательским таблицам (кроме цели INSERT). */
+  /** Обращения к пользовательским таблицам (кроме цели INSERT) и чем каждое сужено. */
   readonly refs: readonly Ref[];
-  /** Предикаты `[квалификатор.]household_id = $n` и `$n = …`. */
-  readonly predicates: readonly Predicate[];
 }
 
 /** Разбор зависит только от текста: Drizzle выдаёт один и тот же текст, на горячем пути — сравнение параметров. */
@@ -200,7 +207,7 @@ function analyseUncached(sqlText: string, owned: ReadonlySet<string>): Analysis 
       : undefined;
   const refs: Ref[] = [];
   const mentions: string[] = [];
-  const predicates: Predicate[] = [];
+  const narrowed = new Map<Tree, Narrowing>();
   let nestedInsert: string | undefined;
   let ownerChange: string | undefined;
   walk(statements, (field, node) => {
@@ -210,12 +217,12 @@ function analyseUncached(sqlText: string, owned: ReadonlySet<string>): Analysis 
       const table = relname(node);
       if (!owned.has(table)) return true;
       mentions.push(table);
-      if (node !== topTarget) {
-        const alias = (node["alias"] as Tree | undefined)?.["aliasname"];
-        refs.push({ table, alias: typeof alias === "string" ? alias : table });
-      }
+      // Обращение, которое не попало ни в одну область (FROM, JOIN, цель UPDATE/DELETE), не сужено ничем.
+      if (node !== topTarget)
+        refs.push({ ...entryOf(node), narrowing: narrowed.get(node) ?? NEVER });
       return true;
     }
+    if (isQueryLevel(field, node)) narrowLevel(node, owned, narrowed);
     if (field === "InsertStmt" && node !== topInsert && owned.has(relname(node["relation"]))) {
       nestedInsert ??= relname(node["relation"]);
     }
@@ -226,10 +233,6 @@ function analyseUncached(sqlText: string, owned: ReadonlySet<string>): Analysis 
           ? (node["onConflictClause"] as Tree | undefined)?.["targetList"]
           : undefined;
     if (setsHousehold(assignments)) ownerChange ??= relname(node["relation"]);
-    if (field === "A_Expr") {
-      const predicate = householdPredicate(node);
-      if (predicate !== undefined) predicates.push(predicate);
-    }
     return false;
   });
   return {
@@ -258,7 +261,6 @@ function analyseUncached(sqlText: string, owned: ReadonlySet<string>): Analysis 
     insert,
     ownerChange,
     refs,
-    predicates,
   };
 }
 
@@ -271,7 +273,6 @@ function rejected(fault: Fault): Analysis {
     insert: undefined,
     ownerChange: undefined,
     refs: [],
-    predicates: [],
   };
 }
 
@@ -323,31 +324,144 @@ function paramNumber(node: unknown): number | undefined {
   return tag === "ParamRef" && typeof body["number"] === "number" ? body["number"] : undefined;
 }
 
-/** Квалификатор колонки household_id (null — без него); undefined — не колонка household_id. */
-function householdColumn(node: unknown): string | null | undefined {
-  const [tag, body] = tagOf(node) ?? ["", {}];
-  if (tag !== "ColumnRef") return undefined;
-  const fields = names(body["fields"]);
-  if (fields.at(-1) !== "household_id") return undefined;
-  return fields.length > 1 ? (fields.at(-2) ?? null) : null;
+// ── Область запроса и булев анализ ──────────────────────────────────────────────────────────────────
+
+/** Обращение в FROM области: по какому имени его называют колонки (алиас или имя таблицы). */
+interface Entry {
+  readonly table: string;
+  readonly alias: string;
+  /** Есть ли алиас: без него колонку можно назвать и `public.t.col`. */
+  readonly aliased: boolean;
 }
 
-/** `[q.]household_id = $n` или `$n = [q.]household_id` (оператор = из pg_catalog). */
-function householdPredicate(expr: Tree): Predicate | undefined {
-  const operator = names(expr["name"]);
-  if (expr["kind"] !== "AEXPR_OP" || operator.at(-1) !== "=") return undefined;
-  if (operator.length > 1 && (operator.length !== 2 || operator[0] !== "pg_catalog")) {
-    return undefined;
+function entryOf(rangeVar: Tree): Entry {
+  const table = relname(rangeVar);
+  const alias = (rangeVar["alias"] as Tree | undefined)?.["aliasname"];
+  return typeof alias === "string"
+    ? { table, alias, aliased: true }
+    : { table, alias: table, aliased: false };
+}
+
+/** Тело SelectStmt (с тегом или без — ветви UNION larg/rarg), UpdateStmt или DeleteStmt: своя область имён. */
+function isQueryLevel(field: string, node: Tree): boolean {
+  if (field === "SelectStmt" || field === "UpdateStmt" || field === "DeleteStmt") return true;
+  const op = node["op"];
+  return (
+    (field === "larg" || field === "rarg") && typeof op === "string" && op.startsWith("SETOP_")
+  );
+}
+
+/** Обращение области и условия, которые его сужают (WHERE и ON соединений, где это законно). */
+interface LevelEntry {
+  readonly rangeVar: Tree;
+  readonly entry: Entry;
+  readonly sources: unknown[];
+}
+
+/**
+ * Сузить обращения одной области (ROLE-01). Засчитываются конъюнкты WHERE (UPDATE и DELETE — тоже) и ON
+ * соединений: ON внутреннего соединения сужает обе стороны, LEFT — только правую (nullable), RIGHT — только левую,
+ * FULL — ни одну (строки обеих сторон приходят и без совпадения). Подзапросы, CTE и LATERAL — свои области:
+ * предикат внутри них внешнее обращение не сужает.
+ */
+function narrowLevel(
+  level: Tree,
+  owned: ReadonlySet<string>,
+  narrowed: Map<Tree, Narrowing>,
+): void {
+  const entries: LevelEntry[] = [];
+  const add = (rangeVar: unknown): void => {
+    if (typeof rangeVar === "object" && rangeVar !== null && isRangeVar(rangeVar as Tree)) {
+      entries.push({ rangeVar: rangeVar as Tree, entry: entryOf(rangeVar as Tree), sources: [] });
+    }
+  };
+  /** Обращения элемента FROM; ON соединения запоминается у тех, кого он сужает. */
+  const fromItem = (item: unknown): LevelEntry[] => {
+    const [tag, body] = tagOf(item) ?? ["", {}];
+    if (tag === "RangeVar") {
+      add(body);
+      return entries.slice(-1);
+    }
+    // TABLESAMPLE: алиас — у самой таблицы внутри.
+    if (tag === "RangeTableSample") return fromItem(body["relation"]);
+    if (tag !== "JoinExpr") return [];
+    const left = fromItem(body["larg"]);
+    const right = fromItem(body["rarg"]);
+    const joinType = body["jointype"];
+    const narrowedSides =
+      joinType === "JOIN_INNER"
+        ? [...left, ...right]
+        : joinType === "JOIN_LEFT"
+          ? right
+          : joinType === "JOIN_RIGHT"
+            ? left
+            : [];
+    for (const side of narrowedSides) side.sources.push(body["quals"]);
+    return [...left, ...right];
+  };
+  add(level["relation"]);
+  for (const list of [level["fromClause"], level["usingClause"]]) {
+    if (Array.isArray(list)) for (const item of list) fromItem(item);
   }
+  const ownedCount = entries.filter((e) => owned.has(e.entry.table)).length;
+  for (const { rangeVar, entry, sources } of entries) {
+    if (!owned.has(entry.table)) continue;
+    const scope = { entry, single: ownedCount === 1 };
+    narrowed.set(rangeVar, {
+      any: [level["whereClause"], ...sources].map((expr) => narrowingOf(expr, scope)),
+    });
+  }
+}
+
+/**
+ * Сужает ли условие обращение: AND — если сужает любой конъюнкт, OR — если каждая ветка; NOT, CASE, подзапрос,
+ * IS DISTINCT FROM и прочее — нет. Предикат — `household_id = $n` (или `$n = household_id`) этого обращения.
+ */
+function narrowingOf(expr: unknown, scope: { entry: Entry; single: boolean }): Narrowing {
+  const [tag, body] = tagOf(expr) ?? ["", {}];
+  if (tag === "BoolExpr") {
+    const args = Array.isArray(body["args"])
+      ? body["args"].map((arg) => narrowingOf(arg, scope))
+      : [];
+    if (body["boolop"] === "AND_EXPR") return { any: args };
+    if (body["boolop"] === "OR_EXPR" && args.length > 0) return { all: args };
+    return NEVER;
+  }
+  if (tag !== "A_Expr" || body["kind"] !== "AEXPR_OP") return NEVER;
+  const operator = names(body["name"]);
+  const plainEquals =
+    operator.length === 1 ? operator[0] === "=" : operator.join(".") === "pg_catalog.=";
+  if (!plainEquals) return NEVER;
   for (const [column, value] of [
-    [expr["lexpr"], expr["rexpr"]],
-    [expr["rexpr"], expr["lexpr"]],
+    [body["lexpr"], body["rexpr"]],
+    [body["rexpr"], body["lexpr"]],
   ]) {
-    const qualifier = householdColumn(column);
     const param = paramNumber(value);
-    if (qualifier !== undefined && param !== undefined) return { qualifier, param };
+    if (param !== undefined && isHouseholdOf(column, scope)) return { param };
   }
-  return undefined;
+  return NEVER;
+}
+
+/**
+ * Колонка household_id этого обращения: `алиас.household_id`; `[база.]public.t.household_id` у обращения без
+ * алиаса; без квалификатора — только когда пользовательская таблица в области одна (у каждой есть household_id,
+ * иначе Postgres назовёт ссылку неоднозначной). Квалификатор, которого в области нет, — внешняя таблица.
+ */
+function isHouseholdOf(column: unknown, scope: { entry: Entry; single: boolean }): boolean {
+  const [tag, body] = tagOf(column) ?? ["", {}];
+  if (tag !== "ColumnRef") return false;
+  const fields = names(body["fields"]);
+  if (fields.pop() !== "household_id") return false;
+  const { entry } = scope;
+  if (fields.length === 0) return scope.single;
+  if (fields.length === 1) return fields[0] === entry.alias;
+  return !entry.aliased && fields.at(-1) === entry.table && fields.at(-2) === "public";
+}
+
+function holds(narrowing: Narrowing, params: readonly unknown[], householdId: string): boolean {
+  if ("param" in narrowing) return params[narrowing.param - 1] === householdId;
+  if ("any" in narrowing) return narrowing.any.some((n) => holds(n, params, householdId));
+  return narrowing.all.every((n) => holds(n, params, householdId));
 }
 
 /** Присваивание household_id в списке SET (UPDATE, ON CONFLICT DO UPDATE), в том числе кортежное. */
@@ -498,27 +612,8 @@ function scopedFault(
         "s.update(таблица, where).set(…) без householdId",
     };
   }
-  // Каждое обращение «съедает» свой предикат: по алиасу, иначе — предикат без квалификатора.
-  const byQualifier = new Map<string, number>();
-  let unqualified = 0;
-  for (const { qualifier, param } of analysis.predicates) {
-    if (params[param - 1] !== householdId) continue;
-    if (qualifier === null) unqualified += 1;
-    else byQualifier.set(qualifier, (byQualifier.get(qualifier) ?? 0) + 1);
-  }
-  for (const { table, alias } of analysis.refs) {
-    const left = byQualifier.get(alias) ?? 0;
-    if (left > 0) {
-      byQualifier.set(alias, left - 1);
-      continue;
-    }
-    if (unqualified > 0) {
-      unqualified -= 1;
-      continue;
-    }
-    return missingFilter(table, alias);
-  }
-  return undefined;
+  const open = analysis.refs.find((ref) => !holds(ref.narrowing, params, householdId));
+  return open === undefined ? undefined : missingFilter(open.table, open.alias);
 }
 
 function missingFilter(table: string, alias: string): Fault {

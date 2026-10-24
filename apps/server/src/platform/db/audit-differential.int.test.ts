@@ -153,6 +153,70 @@ const BASES: readonly Base[] = [
     params: () => [A],
   },
   {
+    name: "OR: каждая ветка сужает",
+    kind: "safe",
+    template:
+      "K:select note % K:from T:fx_receipts K:where ( C:household_id = $1 K:and note = 'A' ) K:or " +
+      "( C:household_id = $1 K:and note <> 'A' )",
+    params: () => [A],
+  },
+  {
+    name: "LEFT JOIN: ON сужает правую таблицу, WHERE — левую",
+    kind: "safe",
+    template:
+      "K:select r.note , i.name % K:from T:fx_receipts A:r K:left K:join T:fx_receipt_items A:i " +
+      "K:on Q:i.household_id = $1 K:and i.receipt_id = r.id K:where Q:r.household_id = $1",
+    params: () => [A],
+  },
+  {
+    name: "OR true: предикат не сужает",
+    kind: "leak",
+    template: "K:select note % K:from T:fx_receipts K:where C:household_id = $1 K:or K:true",
+    params: () => [A],
+  },
+  {
+    name: "OR: одна ветка с чужим домохозяйством",
+    kind: "leak",
+    template:
+      "K:select note % K:from T:fx_receipts K:where C:household_id = $1 K:or C:household_id = $2",
+    params: () => [A, B],
+  },
+  {
+    name: "NOT household_id = $1",
+    kind: "leak",
+    template: "K:select note % K:from T:fx_receipts K:where K:not C:household_id = $1",
+    params: () => [A],
+  },
+  {
+    name: "x IS DISTINCT FROM household_id = $1",
+    kind: "leak",
+    template:
+      "K:select note % K:from T:fx_receipts K:where K:true K:is K:distinct K:from C:household_id = $1",
+    params: () => [A],
+  },
+  {
+    name: "предикат в filter (where …)",
+    kind: "leak",
+    template:
+      "K:select count ( * ) K:filter ( K:where C:household_id = $1 ) , string_agg ( note , ',' ) % " +
+      "K:from T:fx_receipts",
+    params: () => [A],
+  },
+  {
+    name: "LEFT JOIN: ON не сужает левую таблицу",
+    kind: "leak",
+    template:
+      "K:select r.note , i.name % K:from T:fx_receipts A:r K:left K:join T:fx_receipt_items A:i " +
+      "K:on Q:r.household_id = $1 K:and Q:i.household_id = $1",
+    params: () => [A],
+  },
+  {
+    name: "коррелированный подзапрос: предикат внешней таблицы внутри",
+    kind: "leak",
+    template: "K:select note , ( K:select Q:r.household_id = $1 ) % K:from T:fx_receipts A:r",
+    params: () => [A],
+  },
+  {
     name: "чтение без фильтра",
     kind: "leak",
     template: "K:select note % K:from T:fx_receipts",

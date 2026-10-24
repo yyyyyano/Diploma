@@ -1067,3 +1067,158 @@ describe("ADR-0019: известное расхождение парсера с 
     expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("UNPARSEABLE_SQL");
   });
 });
+
+describe("ROLE-01, SEC-04: булев анализ дерева — засчитывается только предикат, который сужает обращение", () => {
+  it.each<[string, string, unknown[], string]>([
+    [
+      "… OR true",
+      "select note from fx_receipts where household_id = $1 or true",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "OR, у которого одна ветка с чужим домохозяйством",
+      "select note from fx_receipts where household_id = $1 or household_id = $2",
+      [A, B],
+      "fx_receipts",
+    ],
+    [
+      "NOT household_id = $1",
+      "select note from fx_receipts where not household_id = $1",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "x IS DISTINCT FROM household_id = $1 (приоритет: сравнивается результат =)",
+      "select note from fx_receipts where true is distinct from household_id = $1",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "предикат в ветке CASE",
+      "select note from fx_receipts where case when household_id = $1 then true else true end",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "предикат в списке select",
+      "select household_id = $1 as mine, note from fx_receipts",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "предикат в filter (where …) агрегата",
+      "select count(*) filter (where household_id = $1), string_agg(note, ',') from fx_receipts",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "LEFT JOIN: ON не сужает сохраняемую (левую) таблицу",
+      "select r.note, i.name from fx_receipts r left join fx_receipt_items i " +
+        "on r.household_id = $1 and i.household_id = $1",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "RIGHT JOIN: ON не сужает сохраняемую (правую) таблицу",
+      "select r.note, i.name from fx_receipts r right join fx_receipt_items i " +
+        "on r.household_id = $1 and i.household_id = $1",
+      [A],
+      "fx_receipt_items",
+    ],
+    [
+      "FULL JOIN: ON не сужает ни одну сторону",
+      "select r.note, i.name from fx_receipts r full join fx_receipt_items i " +
+        "on r.household_id = $1 and i.household_id = $1 where i.household_id = $1",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "коррелированный подзапрос: предикат внешней таблицы внутри EXISTS",
+      "select note from fx_receipts r where exists (select 1 from fx_rates x where r.household_id = $1)",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "предикат без квалификатора внутри подзапроса относится к внешней таблице, но не сужает её",
+      "select note from fx_receipts where exists (select 1 from fx_rates where household_id = $1)",
+      [A],
+      "fx_receipts",
+    ],
+    [
+      "предикат без квалификатора при двух пользовательских таблицах в области",
+      "select * from fx_receipts r, fx_receipt_items i where household_id = $1 and household_id = $1",
+      [A],
+      "fx_receipts",
+    ],
+  ])("%s → MISSING_HOUSEHOLD_FILTER", (_name, text, params, table) => {
+    const error = violation(() => audit({ sql: text, params }));
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.table).toBe(table);
+  });
+
+  it.each<[string, string, unknown[]]>([
+    [
+      "OR, у которого каждая ветка сужает",
+      "select note from fx_receipts where (household_id = $1 and note = 'a') or (household_id = $1 and note = 'b')",
+      [A],
+    ],
+    [
+      "предикат конъюнктом рядом с OR других условий",
+      "select note from fx_receipts where household_id = $1 and (note = 'a' or note = 'b' or true)",
+      [A],
+    ],
+    [
+      "LEFT JOIN: ON сужает nullable-сторону, WHERE — сохраняемую",
+      "select r.note, i.name from fx_receipts r left join fx_receipt_items i " +
+        "on i.household_id = $1 and i.receipt_id = r.id where r.household_id = $1",
+      [A],
+    ],
+    [
+      "RIGHT JOIN: ON сужает левую таблицу, WHERE — правую",
+      "select r.note, i.name from fx_receipts r right join fx_receipt_items i " +
+        "on r.household_id = $1 and r.id = i.receipt_id where i.household_id = $1",
+      [A],
+    ],
+    [
+      "INNER JOIN внутри nullable-стороны LEFT JOIN сужает свои таблицы",
+      "select 1 from fx_transactions t left join (fx_receipts r join fx_receipt_items i " +
+        "on r.household_id = $1 and i.household_id = $1) on r.id = t.receipt_id where t.household_id = $1",
+      [A],
+    ],
+    [
+      "предикат без квалификатора и одна пользовательская таблица рядом с общей",
+      "select r.note from fx_receipts r join fx_rates x on true where household_id = $1",
+      [A],
+    ],
+    [
+      "имя таблицы со схемой как квалификатор",
+      "select note from fx_receipts where public.fx_receipts.household_id = $1",
+      [A],
+    ],
+  ])("правильная форма проходит: %s", (_name, text, params) => {
+    expect(() => audit({ sql: text, params })).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: сужение, которое не доказать по дереву, не засчитывается — громко", () => {
+  it.each<[string, string]>([
+    [
+      "HAVING",
+      "select household_id, count(*) from fx_receipts group by household_id having household_id = $1",
+    ],
+    ["IN ($1)", "select note from fx_receipts where household_id in ($1)"],
+    [
+      "USING (household_id) и предикат без квалификатора при двух таблицах",
+      "select note from fx_receipts r join fx_receipt_items i using (household_id) where household_id = $1",
+    ],
+    [
+      "предикат по алиасу соединения",
+      "select j.note from (fx_receipts r join fx_rates x on true) as j where j.household_id = $1",
+    ],
+  ])("%s → MISSING_HOUSEHOLD_FILTER", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe(
+      "MISSING_HOUSEHOLD_FILTER",
+    );
+  });
+});

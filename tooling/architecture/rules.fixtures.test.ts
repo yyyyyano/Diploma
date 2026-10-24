@@ -141,6 +141,9 @@ const EXPECTED: Record<string, string[]> = {
   "ai-sdk-only-in-llm": [`${M}/agent/application/run.ts → @ai-sdk/openai-compatible`],
   "ai-only-in-llm-agent-chat": [`${M}/receipts/application/recognize.ts → ai`],
   "pg-boss-only-in-platform-jobs": [`${M}/receipts/jobs/recognize.job.ts → pg-boss`],
+  "libpg-query-only-in-platform-db": [
+    `${M}/receipts/infrastructure/db/receipts.repo.ts → libpg-query`,
+  ],
   "grammy-only-in-telegram-infrastructure": [
     `${M}/telegram/application/send.ts → @grammyjs/runner`,
     `${M}/telegram/application/send.ts → grammy`,

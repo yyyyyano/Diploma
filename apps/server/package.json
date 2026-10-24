@@ -8,6 +8,7 @@
   "dependencies": {
     "@kosht/kernel": "workspace:*",
     "drizzle-orm": "catalog:",
+    "libpg-query": "catalog:",
     "pg": "catalog:"
   },
   "devDependencies": {

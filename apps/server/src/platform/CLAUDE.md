@@ -19,7 +19,8 @@
   перенесёт чтение окружения в config), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
 
 ## Можно зависеть от
-`@kosht/kernel`, `drizzle-orm`, `pg` (только `db/`). Модули — нет.
+`@kosht/kernel`, `drizzle-orm`, `pg` (только `db/`), `libpg-query` (только `db/`, аудитор SQL — ADR-0019). Модули —
+нет.
 
 ## Запреты
 - `drizzle()`, `pg`, `$client`, `unsafeRaw` вне `platform/db` и тестов; `ISOLATION_VIOLATION` не ловить и не глушить.

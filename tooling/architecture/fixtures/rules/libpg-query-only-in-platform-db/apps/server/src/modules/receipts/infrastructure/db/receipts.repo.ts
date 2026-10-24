@@ -1,0 +1,2 @@
+import "libpg-query";
+export {};

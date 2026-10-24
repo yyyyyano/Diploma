@@ -86,6 +86,10 @@ describe("npmPattern — запреты библиотек в обеих рас�
     ["pg", "node_modules/.pnpm/pg@8.16.3/node_modules/pg/lib/index.js"],
     ["pg", "node_modules/.pnpm/@types+pg@8.15.5/node_modules/@types/pg/index.d.ts"],
     ["pg-boss", "node_modules/.pnpm/pg-boss@12.0.0/node_modules/pg-boss/dist/index.js"],
+    [
+      "libpg-query",
+      "node_modules/.pnpm/libpg-query@18.2.0/node_modules/libpg-query/wasm/index.cjs",
+    ],
     ["ai", "ai"],
     ["ai", "node_modules/.pnpm/ai@7.0.0_zod@4.1.0/node_modules/ai/dist/index.mjs"],
     ["@ai-sdk/*", "@ai-sdk/groq"],
@@ -103,6 +107,7 @@ describe("npmPattern — запреты библиотек в обеих рас�
   it.each([
     ["pg", "pg-boss"],
     ["pg", "node_modules/.pnpm/pg-boss@12.0.0/node_modules/pg-boss/dist/index.js"],
+    ["pg", "node_modules/.pnpm/libpg-query@18.2.0/node_modules/libpg-query/wasm/index.cjs"],
     ["drizzle-orm", "drizzle-kit"],
     ["drizzle-orm", "node_modules/.pnpm/drizzle-kit@1.0.0/node_modules/drizzle-kit/index.js"],
     ["ai", "node_modules/.pnpm/ai@7.0.0/node_modules/aider/index.js"],

@@ -58,3 +58,4 @@ ADR фиксирует **одно** значимое решение: что ре
 | [0016](0016-auth-and-secrets.md) | Вход и секреты: Better Auth (ядро) + свои надстройки, argon2id, AES-256-GCM |
 | [0017](0017-calc-and-explain.md) | Расчёты в `packages/calc` с трассой и «Откуда эта цифра?» |
 | [0018](0018-agent-pipeline-and-rules.md) | Конвейер агентов разработки, паспорта модулей и правила |
+| [0019](0019-sql-auditor-on-postgres-parser.md) | Аудитор SQL читает запрос парсером PostgreSQL 18 (`libpg-query`, WASM) |

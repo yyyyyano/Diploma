@@ -41,4 +41,5 @@
 
 ## Ссылки
 
-`research/architecture/14-data-isolation.md` (заменяет вариант 13), `10-consensus.md`; ADR-0007, ADR-0008.
+`research/architecture/14-data-isolation.md` (заменяет вариант 13), `10-consensus.md`; ADR-0007, ADR-0008;
+разбор запроса аудитором — ADR-0019.

@@ -410,6 +410,12 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["pg-boss"]) },
     ),
     rule(
+      "libpg-query-only-in-platform-db",
+      "libpg-query (парсер PostgreSQL) — только в platform/db: им читает запросы аудитор SQL (ADR-0019).",
+      { pathNot: `^${PLATFORM}/db/` },
+      { path: npmPattern(["libpg-query"]) },
+    ),
+    rule(
       "grammy-only-in-telegram-infrastructure",
       "grammY — только в telegram/infrastructure; наружу — канал доставки DeliveryChannel (ARCHITECTURE §4.4).",
       { pathNot: `^${MOD}/telegram/infrastructure/` },

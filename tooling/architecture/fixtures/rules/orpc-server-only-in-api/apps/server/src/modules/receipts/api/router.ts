@@ -1,0 +1,2 @@
+import "@orpc/server";
+export {};

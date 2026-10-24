@@ -1,0 +1,2 @@
+import "./facade.ts";
+export {};

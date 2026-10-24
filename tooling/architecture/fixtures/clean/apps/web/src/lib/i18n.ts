@@ -1,0 +1,2 @@
+import "../../../../packages/i18n/src/index.ts";
+export {};

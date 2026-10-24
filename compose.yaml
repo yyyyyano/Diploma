@@ -1,0 +1,37 @@
+# «Кошт» — один Compose с профилями (ADR-0015, docs/ARCHITECTURE.md §14). Без профиля — только db;
+# профили app, models, observability добавляют задачи, которые дают эти сервисы.
+name: kosht
+
+services:
+  # PostgreSQL 18 + pgvector (ADR-0007). Точный тег образа: обновление — отдельная задача.
+  db:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    environment:
+      POSTGRES_USER: kosht
+      POSTGRES_DB: kosht
+      # Пароль — из secrets/db_password (создаёт make init), не из окружения и не из git (NFR-16).
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    # Только локальный адрес: база не слушает сеть (ADR-0015).
+    ports:
+      - "127.0.0.1:${DB_PORT:-5440}:5432"
+    # PostgreSQL 18 хранит данные в /var/lib/postgresql/18/docker — том монтируется уровнем выше.
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kosht -d kosht"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    logging:
+      driver: local
+    restart: unless-stopped
+
+secrets:
+  db_password:
+    file: ./secrets/db_password
+
+volumes:
+  pgdata:

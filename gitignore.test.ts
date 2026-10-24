@@ -19,6 +19,7 @@ describe(".gitignore", () => {
     ".env.local",
     ".env.production",
     "secrets/master.key",
+    "secrets/db_password",
     "data/files/x.pdf",
     "models/model.gguf",
     "samples/receipt.jpg",

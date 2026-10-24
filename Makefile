@@ -21,6 +21,7 @@ export TURBO_NO_UPDATE_NOTIFIER := 1
 
 BIN := node_modules/.bin
 BASE ?= main
+DC := docker compose
 
 # Расширения, которые форматирует oxfmt и проверяет oxlint (остальное — молча пропускаем).
 FMT_EXT := ts tsx mts cts js mjs cjs json jsonc yml yaml
@@ -28,7 +29,7 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node capabilities deps-check static-checks
+	check-commits need-node capabilities deps-check static-checks db-up db-shell
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -46,9 +47,22 @@ need-node:
 install: need-node ## Установить зависимости по pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
-init: install ## Первый запуск: зависимости, .env из .env.example (существующий не трогает), git-хуки
+init: install secrets/db_password ## Первый запуск: зависимости, .env из .env.example, пароль БД в secrets/, git-хуки
 	@if [ -f .env ]; then echo ".env уже есть — не трогаю."; else cp .env.example .env && echo "Создан .env из .env.example."; fi
 	$(BIN)/lefthook install
+
+# Пароль БД (NFR-16): создаётся один раз, существующий не меняется; читают его Compose (secrets:) и приложение.
+secrets/db_password:
+	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))' > $@
+	@echo "Создан $@ — пароль БД (вне git)."
+
+# ── База данных ────────────────────────────────────────────────────────────────────────────────────
+
+db-up: secrets/db_password ## Поднять только Postgres (сервис db) и дождаться готовности; запущенный не трогает
+	@$(DC) --progress quiet up -d --wait db
+
+db-shell: db-up ## Открыть psql в базе kosht
+	$(DC) exec db psql -U kosht -d kosht
 
 # ── Качество ───────────────────────────────────────────────────────────────────────────────────────
 

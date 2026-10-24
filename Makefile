@@ -80,9 +80,9 @@ deps-check: need-node ## Границы модулей (dependency-cruiser из 
 
 # Свои проверки tooling/checks/*.mjs (T-056): все запускаются, даже если первая нашла нарушение; код — худший
 # из кодов (2 «не смог проверить» важнее 1 «нарушение»).
-STATIC_CHECKS := isolation calc-no-clock
+STATIC_CHECKS := isolation no-raw-colors calc-no-clock
 
-static-checks: need-node ## Свои проверки (tooling/checks): изоляция данных, часы в calc
+static-checks: need-node ## Свои проверки (tooling/checks): изоляция данных, сырые цвета, часы в calc
 	@rc=0; for c in $(STATIC_CHECKS); do node tooling/checks/$$c.mjs || { s=$$?; if [ $$s -gt $$rc ]; then rc=$$s; fi; }; done; exit $$rc
 
 check: fmt-check lint typecheck deps-check static-checks test ## Все проверки: формат, линт, типы, границы, свои проверки, тесты («готово» = зелёный)

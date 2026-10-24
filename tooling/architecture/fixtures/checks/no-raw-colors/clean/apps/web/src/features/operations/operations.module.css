@@ -1,0 +1,8 @@
+/* было #11564d и padding: 12px — теперь токены */
+.row {
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--r);
+  color: var(--ink);
+  margin: 0;
+}
+.row:not(#main) { gap: var(--mantine-spacing-sm); }

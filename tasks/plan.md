@@ -45,6 +45,11 @@
   `web-routes-thin`, `ui-is-presentational`, `server-not-to-web`), смысл `admin-no-user-data` зафиксирован явно;
   добавлены `floor.mjs` («Пол» CONSTRAINTS, закрывает R1-4 из T-001) и цель `make static-checks` в `check`;
   фикстуры исключены из tsc/oxlint/oxfmt/vitest/`deps-check`; `Риск: high`.
+- Критик на раунде 2 счёл T-002 слишком крупной для одного ревью (около 35 правил с фикстурами, 6 скриптов, 7 конфигов)
+  и предложил разрез; принято (обратимо): критерий «Свои проверки» (`isolation`, `no-raw-colors`, `calc-no-clock`,
+  `floor`, JSX-литералы, `bundle-size`, цель `make static-checks`) вынесен в новую **T-056** (`Риск: high`,
+  зависит от T-002); по файлу она стоит сразу после T-002, до T-003. Номер T-056 — потому что номера не
+  переиспользуются и не перенумеруются; задач в плане теперь 56.
 
 ### T-001 · Ворота качества: монорепозиторий, проверки, хуки git и Makefile
 - Статус: done · 1a5faab..1191080
@@ -79,7 +84,7 @@
 - Риск: medium — на этих воротах держится вся планка; сломанный хук молча пропускает плохие коммиты
 - Зависимости: —
 
-### T-002 · Архитектура как код: карта 36 модулей, правила границ и свои проверки
+### T-002 · Архитектура как код: карта 36 модулей, правила границ и `deps-guard`
 - Статус: todo
 - Модули: `tooling/architecture/modules.ts`, `.dependency-cruiser.mjs`, `tooling/checks/`,
   `tooling/architecture/fixtures/`, `docs/CAPABILITIES.md`, `commitlint.config.ts`, `Makefile`, `package.json`,
@@ -114,6 +119,17 @@
   - [ ] `tooling/checks/deps-guard.mjs`: проверено меньше `MIN_MODULES` файлов → код 2, неразрешённый импорт → код 1
     (корни — только существующие из `apps packages e2e tooling`; порог — по реально существующим файлам, число —
     в итог; T-007 поднимает его).
+  - [ ] `make deps-check` ≤ 10 с, входит в `check` и `check-quick`; намеренный импорт мимо `index.ts` делает
+    `make check` красным.
+- Проверка: make check; make deps-check (время — в итоге); pnpm vitest run tooling; make capabilities && git diff --stat docs/CAPABILITIES.md
+- Риск: high — правило, которое молча ничего не ловит, обнуляет статический замок изоляции (ARCHITECTURE §15)
+- Зависимости: T-001
+
+### T-056 · Свои проверки: изоляция, цвета, часы в `calc`, «Пол», литералы JSX, бюджет бандла
+- Статус: todo
+- Модули: `tooling/checks/`, `tooling/architecture/fixtures/`, `Makefile`
+- SPEC: ROLE-01, SEC-04, NFR-19, DES-01, P1
+- Критерии приёмки:
   - [ ] Свои проверки с тестами на фикстурах, кодом 0/1 и сообщением «что и где исправить»: `isolation.mjs`
     (`makeScope`/`as Scope` вне входов, `sql.raw`/`.execute` вне `infrastructure/db`, `$client`/`unsafeRaw`,
     `userId`/`householdId` во входной схеме процедуры, инструмента и в нагрузке задачи, `db.query.*`),
@@ -124,11 +140,9 @@
     `make static-checks` (isolation, no-raw-colors, calc-no-clock, jsx-literals, floor) входит в `check`; допустимые
     места `makeScope`/`as Scope` и пути `platform/db` (unsafe, cross-tenant, system) — константы вверху скриптов,
     список — в итог (T-004, T-005, T-006, T-052 уточнят).
-  - [ ] `make deps-check` ≤ 10 с, входит в `check` и `check-quick`; намеренный импорт мимо `index.ts` делает
-    `make check` красным.
-- Проверка: make check; make deps-check (время — в итоге); make static-checks; pnpm vitest run tooling; make capabilities && git diff --stat docs/CAPABILITIES.md
-- Риск: high — правило, которое молча ничего не ловит, обнуляет статический замок изоляции (ARCHITECTURE §15)
-- Зависимости: T-001
+- Проверка: make check; make static-checks; pnpm vitest run tooling
+- Риск: high — скрипт, который ничего не ловит, снимает замок изоляции (ARCHITECTURE §15)
+- Зависимости: T-002
 
 ### T-003 · Общие пакеты: деньги, даты, трасса расчёта, контракт, тексты и помощники тестов
 - Статус: todo

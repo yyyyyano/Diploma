@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Операции</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+
+/* ===== PAGE: operations (ops-) ===== */
+.ops-filters{display:flex;flex-direction:column;gap:10px;padding:14px 16px}
+.ops-frow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ops-seg{max-width:100%;overflow-x:auto;flex:none}
+.ops-search{position:relative;flex:1 1 300px;min-width:220px}
+.ops-search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+.ops-search .input{padding-left:40px;height:40px}
+.ops-sel{width:auto;flex:0 1 260px;height:40px;padding-right:8px;min-width:0}
+.ops-sum{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;font-size:13.5px;color:var(--ink-2)}
+.ops-bulk{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:var(--brand-ink);color:#fff;border-radius:12px;padding:8px 10px 8px 16px;animation:rise .2s ease;box-shadow:0 8px 24px rgba(13,56,51,.22)}
+.ops-bulk .btn-ghost{color:#E9F2EF}.ops-bulk .btn-ghost:hover{background:rgba(255,255,255,.12);color:#fff}
+.ops-scroll{overflow-x:auto;position:relative}
+.ops-tbl{min-width:980px;font-size:14px}
+.ops-tr{display:grid;grid-template-columns:48px 84px minmax(220px,1.7fr) minmax(190px,1.1fr) 150px 100px 120px;align-items:center;border-bottom:1px solid var(--line)}
+.ops-tr > div{padding:10px 12px;min-width:0}
+.ops-th{background:var(--surface-2);font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.ops-th > div{padding:10px 12px}
+.ops-row{cursor:pointer;transition:background .12s}
+.ops-row:hover{background:#F8FAF9}
+.ops-row.ops-on{background:#EDF5F2}
+.ops-chk{width:18px;height:18px;accent-color:var(--brand);cursor:pointer;display:block}
+.ops-name{border:0;background:none;padding:0;font-weight:600;font-size:14.5px;cursor:pointer;text-align:left;color:var(--ink)}
+.ops-name:hover{color:var(--brand);text-decoration:underline}
+.ops-raw{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-3);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ops-dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.ops-flags{display:flex;gap:4px}
+.ops-flag{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;background:#EEF2F0;color:var(--ink-2);position:relative}
+.ops-flag.warn{background:var(--warn-soft);color:var(--warn)}
+.ops-flag.ok{background:var(--brand-soft);color:var(--brand)}
+.ops-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ops-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;font-size:13.5px;color:var(--ink-2)}
+.ops-pages{display:flex;gap:4px}
+.ops-pages button{min-width:34px;height:34px;border-radius:8px;border:1px solid var(--line-2);background:#fff;cursor:pointer;font-weight:600;font-size:13.5px}
+.ops-pages button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.ops-sheet{width:min(540px,100%)}
+.ops-dl{display:grid;grid-template-columns:150px 1fr;gap:10px 14px;font-size:14px;align-items:baseline;margin:0}
+.ops-dl dt{color:var(--ink-2)}
+.ops-dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.ops-grp{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ops-grp-h{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface-2);font-weight:600;font-size:14px}
+.ops-grp-i{display:flex;justify-content:space-between;gap:12px;padding:7px 12px 7px 30px;font-size:13.5px;border-top:1px solid var(--line)}
+.ops-rule{background:var(--brand-soft);border:1px solid var(--brand-soft-2);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;animation:rise .2s ease}
+.ops-hist div{display:flex;gap:10px;font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.ops-hist div:last-child{border-bottom:0}
+.ops-list{max-height:200px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+.ops-list div{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;font-size:13.5px;border-bottom:1px solid var(--line)}
+.ops-list div:last-child{border-bottom:0}
+.ops-modal-w{width:min(560px,calc(100% - 32px))}
+.ops-invalid{border-color:var(--danger)}
+@media (max-width:600px){.ops-sel{flex:1 1 100%}.ops-search{flex-basis:100%}.ops-seg{flex-wrap:wrap}}
+.ops-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.ops-full{grid-column:1 / -1}
+.ops-err{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:48px 20px}
+.ops-ic-round{width:56px;height:56px;border-radius:16px;display:grid;place-items:center}
+.bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px);animation:rise .16s ease}
+.nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.nt.unread{background:#F6FAF8}
+.nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.steps div{display:flex;align-items:center;gap:8px}
+.chat-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.op-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+@media (max-width:760px){.ops-form{grid-template-columns:minmax(0,1fr)}.ops-dl{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a class="on" href="Operations.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Операции</h1>
+      <p class="small muted">{{subText}}</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+      <button class="btn btn-secondary" onClick="{{exportXls}}" disabled="{{noData}}"><svg class="ic" aria-hidden="true"><use href="#i-download"></use></svg>Выгрузить в Excel</button>
+      <button class="btn btn-primary" onClick="{{openAdd}}"><svg class="ic" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить операцию</button>
+    </div>
+  </header>
+
+  <div class="k-body">
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <section class="card">
+        <div class="ops-err">
+          <span class="ops-ic-round" style="background: var(--brand-soft); color: var(--brand)"><svg class="ic ic-xl" aria-hidden="true"><use href="#i-ops"></use></svg></span>
+          <h2 style="font-size: 22px; font-weight: 650; letter-spacing: -0.015em">Операций пока нет</h2>
+          <p class="muted" style="max-width: 520px">Загрузите выписку из интернет-банкинга или сфотографируйте чек — Кошт сам разложит траты по категориям, найдёт переводы и регулярные платежи.</p>
+          <div class="row-btns" style="justify-content: center">
+            <a class="btn btn-primary" href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-upload"></use></svg>Загрузить выписку</a>
+            <a class="btn btn-secondary" href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-camera"></use></svg>Сканировать чек</a>
+          </div>
+          <p class="small muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-spark"></use></svg>или просто напишите ассистенту: «потратил 15 на кофе»</p>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+      <section class="card" role="alert">
+        <div class="ops-err">
+          <span class="ops-ic-round" style="background: var(--danger-soft); color: var(--danger)"><svg class="ic ic-xl" aria-hidden="true"><use href="#i-alert"></use></svg></span>
+          <h2 style="font-size: 22px; font-weight: 650; letter-spacing: -0.015em">Не удалось загрузить операции</h2>
+          <p class="muted" style="max-width: 520px">Ваши данные целы — сервер не ответил вовремя. Попробуйте ещё раз через несколько секунд. Если не поможет, проверьте, что Кошт запущен на этом компьютере.</p>
+          <button class="btn btn-primary" onClick="{{retry}}"><svg class="ic" aria-hidden="true"><use href="#i-refresh"></use></svg>Повторить</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{showList}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <section class="card ops-filters" aria-label="Фильтры">
+          <div class="ops-frow">
+          <div class="ops-search">
+            <svg class="ic" aria-hidden="true"><use href="#i-search"></use></svg>
+            <label for="ops-q" class="ops-sr">Поиск по операциям</label>
+            <input id="ops-q" class="input" value="{{q}}" onChange="{{onQ}}" placeholder="Поиск: магазин, описание из выписки, категория">
+          </div>
+          <div class="seg ops-seg" role="group" aria-label="Тип операции">
+            <sc-for list="{{typeChips}}" as="t" hint-placeholder-count="5"><button class="{{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+          </div>
+          </div>
+          <div class="ops-frow">
+          <label for="ops-cat" class="ops-sr">Категория</label>
+          <select id="ops-cat" class="input ops-sel" value="{{fCat}}" onChange="{{onCat}}">
+            <option value="all">Все категории</option>
+            <option value="Автомобиль и топливо">Автомобиль и топливо</option><option value="Бытовая химия и хозтовары">Бытовая химия и хозтовары</option><option value="Дети">Дети</option><option value="ЖКХ">ЖКХ</option><option value="Зарплата">Зарплата</option><option value="Здоровье и аптека">Здоровье и аптека</option><option value="Кафе, рестораны и доставка">Кафе, рестораны и доставка</option><option value="Красота и гигиена">Красота и гигиена</option><option value="Общественный транспорт">Общественный транспорт</option><option value="Одежда и обувь">Одежда и обувь</option><option value="Подписки и онлайн-сервисы">Подписки и онлайн-сервисы</option><option value="Продукты">Продукты</option><option value="Проценты и кешбэк">Проценты и кешбэк</option><option value="Прочее">Прочее</option><option value="Развлечения, спорт и хобби">Развлечения, спорт и хобби</option><option value="Связь, интернет и ТВ">Связь, интернет и ТВ</option><option value="Такси">Такси</option>
+          </select>
+          <label for="ops-acc" class="ops-sr">Счёт</label>
+          <select id="ops-acc" class="input ops-sel" value="{{fAcc}}" onChange="{{onAcc}}">
+            <option value="all">Все счета</option>
+            <option value="•• 4821">Беларусбанк, карта •• 4821</option><option value="•• 0937">Приорбанк, карта •• 0937</option><option value="•• 5530">Накопительный «Отпуск» •• 5530</option><option value="•• 2208">Альфа-Банк, карта •• 2208 (USD)</option><option value="Наличные">Наличные</option>
+          </select>
+          <button class="{{rcCls}}" aria-pressed="{{rc}}" onClick="{{toggleRc}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-receipt"></use></svg>С чеком</button>
+          <sc-if value="{{hasFilters}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{resetF}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>Сбросить фильтры</button></sc-if>
+          </div>
+        </section>
+
+        <sc-if value="{{hasSel}}" hint-placeholder-val="{{false}}">
+          <div class="ops-bulk" role="region" aria-label="Действия с выбранными">
+            <span class="strong" style="margin-right: 8px">Выбрано: {{selCount}}</span>
+            <button class="btn btn-ghost btn-sm" onClick="{{bulkCat}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Сменить категорию</button>
+            <button class="btn btn-ghost btn-sm" onClick="{{bulkTr}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-ops"></use></svg>Пометить переводом</button>
+            <button class="btn btn-ghost btn-sm" onClick="{{bulkDel}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg>Удалить</button>
+            <button class="btn btn-ghost btn-sm" style="margin-left: auto" onClick="{{clearSel}}">Снять выделение</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+          <div class="ops-sum" aria-live="polite"><span class="row" style="gap: 8px"><span class="spin"></span>Загружаю операции за октябрь…</span></div>
+        </sc-if>
+        <sc-if value="{{showSum}}" hint-placeholder-val="{{true}}">
+          <div class="ops-sum" aria-live="polite">
+            <span><b style="color: var(--ink)">{{visCount}}</b></span>
+            <span>Расходы: <b class="num" style="color: var(--ink)">{{visExp}}</b></span>
+            <span>Доходы: <b class="num inc">{{visInc}}</b></span>
+            <span class="row" style="gap: 6px; margin-left: auto"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>Переводы между своими счетами не входят ни в расходы, ни в доходы</span>
+          </div>
+        </sc-if>
+
+        <section class="card" style="padding: 0; overflow: hidden">
+          <div class="ops-scroll">
+            <div class="ops-tbl" role="table" aria-label="Операции за октябрь">
+              <div class="ops-tr ops-th" role="row">
+                <div role="columnheader"><input class="ops-chk" type="checkbox" aria-label="Выбрать все показанные" checked="{{allSel}}" onChange="{{toggleAll}}"></div>
+                <div role="columnheader">Дата</div>
+                <div role="columnheader">Контрагент</div>
+                <div role="columnheader">Категория</div>
+                <div role="columnheader">Счёт</div>
+                <div role="columnheader"><span class="ops-sr">Признаки</span></div>
+                <div role="columnheader" style="text-align: right">Сумма, BYN</div>
+              </div>
+              <sc-if value="{{isLoading}}" hint-placeholder-val="{{false}}">
+                <div aria-busy="true">
+                  <sc-for list="{{skRows}}" as="s" hint-placeholder-count="8">
+                    <div class="ops-tr" role="row">
+                      <div role="cell"><div class="sk" style="width: 18px; height: 18px"></div></div>
+                      <div role="cell"><div class="sk" style="width: 52px; height: 14px"></div></div>
+                      <div role="cell"><div class="sk" style="width: {{s.w}}%; height: 14px; margin-bottom: 6px"></div><div class="sk" style="width: 60%; height: 10px"></div></div>
+                      <div role="cell"><div class="sk" style="width: 120px; height: 14px"></div></div>
+                      <div role="cell"><div class="sk" style="width: 70px; height: 14px"></div></div>
+                      <div role="cell"><div class="sk" style="width: 26px; height: 26px"></div></div>
+                      <div role="cell"><div class="sk" style="width: 70px; height: 14px; margin-left: auto"></div></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-for list="{{vis}}" as="r" hint-placeholder-count="12">
+                <div class="{{r.trCls}}" role="row" onClick="{{r.open}}">
+                  <div role="cell" onClick="{{r.stop}}"><input class="ops-chk" type="checkbox" aria-label="{{r.selLabel}}" checked="{{r.checked}}" onChange="{{r.toggle}}"></div>
+                  <div role="cell"><div class="num strong">{{r.d}}</div><div class="xs faint num">{{r.t}}</div></div>
+                  <div role="cell" style="min-width: 0"><button class="ops-name" onClick="{{r.open}}">{{r.name}}</button><div class="ops-raw" title="{{r.raw}}">{{r.raw}}</div></div>
+                  <div role="cell" style="min-width: 0">
+                    <sc-if value="{{r.isSplit}}" hint-placeholder-val="{{false}}">
+                      <div class="row" style="gap: 6px"><span class="row" style="gap: 2px"><sc-for list="{{r.splitDots}}" as="sd" hint-placeholder-count="3"><span class="ops-dot" style="background: {{sd.c}}"></span></sc-for></span><span class="small">{{r.splitText}}</span></div>
+                    </sc-if>
+                    <sc-if value="{{r.isTr}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-ops"></use></svg>Перевод</span></sc-if>
+                    <sc-if value="{{r.isCat}}" hint-placeholder-val="{{true}}">
+                      <div class="row" style="gap: 8px"><span class="ops-dot" style="background: {{r.color}}"></span><span class="small">{{r.cat}}</span><sc-if value="{{r.isRef}}" hint-placeholder-val="{{false}}"><span class="badge b-ok">возврат</span></sc-if></div>
+                    </sc-if>
+                  </div>
+                  <div role="cell" style="min-width: 0"><div class="small" style="white-space: nowrap">{{r.accMain}}</div><div class="xs faint num" style="white-space: nowrap">{{r.accSub}}</div></div>
+                  <div role="cell">
+                    <div class="ops-flags">
+                      <sc-for list="{{r.flags}}" as="fl" hint-placeholder-count="1">
+                        <span class="{{fl.cls}}" title="{{fl.label}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{fl.icon}}"></use></svg><span class="ops-sr">{{fl.label}}</span></span>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div role="cell" style="text-align: right"><div class="num strong" style="color: {{r.amtColor}}">{{r.amtText}}</div><sc-if value="{{r.hasUsd}}" hint-placeholder-val="{{false}}"><div class="xs faint num">{{r.usd}}</div></sc-if></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{noResults}}" hint-placeholder-val="{{false}}">
+            <div class="empty">
+              <svg class="ic ic-xl" aria-hidden="true"><use href="#i-search"></use></svg>
+              <div class="strong" style="color: var(--ink)">Ничего не нашлось</div>
+              <div class="small">Попробуйте другое слово или сбросьте фильтры.</div>
+              <button class="btn btn-secondary btn-sm" onClick="{{resetF}}">Сбросить фильтры</button>
+            </div>
+          </sc-if>
+          <div class="ops-foot">
+            <span>{{footText}}</span>
+            <sc-if value="{{showPages}}" hint-placeholder-val="{{true}}">
+              <div class="ops-pages" role="group" aria-label="Страницы">
+                <button class="on" aria-current="page" aria-label="Страница 1">1</button>
+                <button onClick="{{otherPage}}" aria-label="Страница 2">2</button>
+                <button onClick="{{otherPage}}" aria-label="Страница 3">3</button>
+                <button onClick="{{otherPage}}" aria-label="Следующая страница"><svg class="ic ic-s" aria-hidden="true" style="margin: auto"><use href="#i-chev-r"></use></svg></button>
+              </div>
+            </sc-if>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet ops-sheet" role="dialog" aria-label="Операция">
+      <div class="sheet-h">
+        <h2 class="card-t" style="flex: 1">Операция</h2>
+        <button class="btn btn-ghost btn-sm" onClick="{{so.del}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg>Удалить</button>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span class="small muted">{{so.typeLabel}}</span>
+          <div class="big num" style="color: {{so.amtColor}}">{{so.amtText}}<span class="cur">BYN</span></div>
+          <sc-if value="{{so.hasUsd}}" hint-placeholder-val="{{false}}"><div class="row small muted" style="gap: 4px">{{so.usd}} по курсу НБРБ<button class="why" aria-label="Откуда эта цифра?" onClick="{{toggleWhy}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div></sc-if>
+          <h3 style="font-size: 18px; font-weight: 650; margin-top: 6px">{{so.name}}</h3>
+        </div>
+
+        <sc-if value="{{whyOpen}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 8px">Откуда эта цифра?</div>
+            <div class="formula">
+              <div class="formula-r"><span>Сумма в валюте</span><span class="num strong">9,99 USD</span></div>
+              <div class="formula-r"><span>Официальный курс НБРБ на 05.10.2026</span><span class="num strong">× 2,9871</span></div>
+              <div class="formula-t"><span>В рублях</span><span class="num">29,84 BYN</span></div>
+            </div>
+            <p class="xs faint" style="margin-top: 8px">Курс берётся по API Нацбанка на дату операции. Если курс на эту дату ещё не установлен (выходной), берётся последний установленный.</p>
+          </div>
+        </sc-if>
+
+        <dl class="ops-dl">
+          <sc-for list="{{so.fields}}" as="fd" hint-placeholder-count="5"><dt>{{fd.l}}</dt><dd>{{fd.v}}</dd></sc-for>
+        </dl>
+
+        <sc-if value="{{so.isSplitOp}}" hint-placeholder-val="{{false}}">
+          <div class="field">
+            <span class="lbl">Категории</span>
+            <span class="hint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-receipt"></use></svg>Покупка разбита по позициям чека — категорию каждой позиции можно поменять в чеке.</span>
+          </div>
+        </sc-if>
+        <sc-if value="{{so.canCat}}" hint-placeholder-val="{{true}}">
+          <div class="field">
+            <label for="ops-scat">Категория</label>
+            <select id="ops-scat" class="input" value="{{so.cat}}" onChange="{{so.changeCat}}">
+              <optgroup label="Расходы"><option value="Продукты">Продукты</option><option value="Кафе, рестораны и доставка">Кафе, рестораны и доставка</option><option value="Алкоголь и табак">Алкоголь и табак</option><option value="Бытовая химия и хозтовары">Бытовая химия и хозтовары</option><option value="Красота и гигиена">Красота и гигиена</option><option value="Здоровье и аптека">Здоровье и аптека</option><option value="Одежда и обувь">Одежда и обувь</option><option value="Электроника и техника">Электроника и техника</option><option value="Дом, мебель и ремонт">Дом, мебель и ремонт</option><option value="ЖКХ">ЖКХ</option><option value="Аренда жилья">Аренда жилья</option><option value="Связь, интернет и ТВ">Связь, интернет и ТВ</option><option value="Подписки и онлайн-сервисы">Подписки и онлайн-сервисы</option><option value="Общественный транспорт">Общественный транспорт</option><option value="Такси">Такси</option><option value="Автомобиль и топливо">Автомобиль и топливо</option><option value="Образование">Образование</option><option value="Дети">Дети</option><option value="Животные">Животные</option><option value="Развлечения, спорт и хобби">Развлечения, спорт и хобби</option><option value="Путешествия">Путешествия</option><option value="Подарки и благотворительность">Подарки и благотворительность</option><option value="Кредиты и займы">Кредиты и займы</option><option value="Налоги, сборы и штрафы">Налоги, сборы и штрафы</option><option value="Банковские комиссии">Банковские комиссии</option><option value="Прочее">Прочее</option></optgroup><optgroup label="Доходы"><option value="Зарплата">Зарплата</option><option value="Подработка и НПД">Подработка и НПД</option><option value="Пособия, пенсия, стипендия">Пособия, пенсия, стипендия</option><option value="Проценты и кешбэк">Проценты и кешбэк</option><option value="Возвраты">Возвраты</option><option value="Подарки">Подарки</option><option value="Прочие доходы">Прочие доходы</option></optgroup>
+            </select>
+            <span class="hint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>{{so.srcText}}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{so.hasRule}}" hint-placeholder-val="{{false}}">
+          <div class="ops-rule" role="status">
+            <div class="row" style="gap: 8px; align-items: flex-start"><svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-spark"></use></svg><p class="small">Запомнить правило: <b>«{{so.name}}» → «{{so.cat}}»</b> и применить к {{so.past}} прошлым операциям? Будущие операции этого контрагента сразу получат эту категорию — без обращения к нейросети.</p></div>
+            <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{so.ruleAll}}">Применить к {{so.past}}</button><button class="btn btn-secondary btn-sm" onClick="{{so.ruleOne}}">Только к этой</button></div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{so.isTr}}" hint-placeholder-val="{{false}}">
+          <div class="op-card"><svg class="ic" aria-hidden="true" style="color: var(--ink-2)"><use href="#i-ops"></use></svg><div class="small" style="flex: 1"><div class="strong">Парная операция</div><div class="muted">{{so.pair}}</div></div></div>
+        </sc-if>
+        <sc-if value="{{so.isRef}}" hint-placeholder-val="{{false}}">
+          <div class="op-card"><svg class="ic" aria-hidden="true" style="color: var(--income)"><use href="#i-undo"></use></svg><div class="small" style="flex: 1"><div class="strong">Исходная покупка</div><div class="muted">{{so.orig}}</div><div class="xs faint">Возврат уменьшает расходы категории «Одежда и обувь», а не увеличивает доходы.</div></div></div>
+        </sc-if>
+
+        <sc-if value="{{so.hasGroups}}" hint-placeholder-val="{{false}}">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div class="row" style="justify-content: space-between"><span class="lbl">Позиции чека по категориям</span><span class="{{so.rcptBadgeCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{so.rcptBadgeIcon}}"></use></svg>{{so.rcptBadge}}</span></div>
+            <sc-if value="{{so.check}}" hint-placeholder-val="{{false}}"><div class="op-card" style="background: var(--warn-soft); border-color: #F3D3B0"><svg class="ic" aria-hidden="true" style="color: var(--warn)"><use href="#i-warn"></use></svg><div class="small" style="flex: 1">Строки 5 и 9 не сошлись при проверке. Покупка учтена по итогу чека, а 1,37 BYN пока в «Прочем».</div><a class="btn btn-secondary btn-sm" href="Documents.dc.html">Проверить чек</a></div></sc-if>
+            <sc-for list="{{so.groups}}" as="g" hint-placeholder-count="2">
+              <div class="ops-grp">
+                <div class="ops-grp-h"><span class="ops-dot" style="background: {{g.color}}"></span><span style="flex: 1">{{g.c}}</span><span class="num">{{g.v}}</span></div>
+                <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2"><div class="ops-grp-i"><span>{{it.n}}</span><span class="num">{{it.s}}</span></div></sc-for>
+              </div>
+            </sc-for>
+            <div class="row-btns">
+              <a class="btn btn-secondary btn-sm" href="Documents.dc.html"><svg class="ic ic-s" aria-hidden="true"><use href="#i-image"></use></svg>Открыть фото чека</a>
+              <button class="btn btn-ghost btn-sm" onClick="{{so.unlink}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-link"></use></svg>Разорвать связь с чеком</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{so.hasImp}}" hint-placeholder-val="{{false}}">
+          <a class="op-card" href="Documents.dc.html" style="text-decoration: none; color: var(--ink)"><svg class="ic" aria-hidden="true" style="color: var(--ink-2)"><use href="#i-file"></use></svg><div class="small" style="flex: 1"><div class="xs muted">Загружено из файла</div><div class="strong">{{so.imp}}</div></div><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a>
+        </sc-if>
+
+        <div>
+          <div class="lbl" style="margin-bottom: 4px">История изменений</div>
+          <div class="ops-hist">
+            <sc-for list="{{so.hist}}" as="h" hint-placeholder-count="2"><div><span class="num faint" style="white-space: nowrap">{{h.d}}</span><span>{{h.t}}</span></div></sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{modalAdd}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal ops-modal-w" role="dialog" aria-labelledby="add-t">
+      <div class="row" style="justify-content: space-between"><h2 id="add-t" class="card-t" style="font-size: 18px">Новая операция</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="seg" role="group" aria-label="Тип операции" style="align-self: flex-start">
+        <sc-for list="{{addTypes}}" as="t" hint-placeholder-count="4"><button class="{{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+      </div>
+      <div class="ops-form">
+        <div class="field"><label for="add-sum">Сумма, BYN</label><input id="add-sum" class="{{add.sumCls}}" inputmode="decimal" placeholder="0,00" value="{{add.sum}}" onChange="{{add.onSum}}" aria-invalid="{{add.err}}" aria-describedby="add-sum-e"><sc-if value="{{add.err}}" hint-placeholder-val="{{false}}"><span id="add-sum-e" class="hint row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Укажите сумму больше нуля</span></sc-if></div>
+        <div class="field"><label for="add-date">Дата</label><input id="add-date" class="input num" value="{{add.date}}" onChange="{{add.onDate}}"></div>
+        <div class="field"><label for="add-acc">Счёт</label>
+          <select id="add-acc" class="input" value="{{add.acc}}" onChange="{{add.onAcc}}"><option value="•• 4821">Беларусбанк, карта •• 4821</option><option value="•• 0937">Приорбанк, карта •• 0937</option><option value="•• 5530">Накопительный «Отпуск» •• 5530</option><option value="•• 2208">Альфа-Банк, карта •• 2208 (USD)</option><option value="Наличные">Наличные</option></select>
+        </div>
+        <div class="field"><label for="add-cat">Категория</label>
+          <select id="add-cat" class="input" value="{{add.cat}}" onChange="{{add.onCat}}">
+            <optgroup label="Расходы"><option value="Продукты">Продукты</option><option value="Кафе, рестораны и доставка">Кафе, рестораны и доставка</option><option value="Алкоголь и табак">Алкоголь и табак</option><option value="Бытовая химия и хозтовары">Бытовая химия и хозтовары</option><option value="Красота и гигиена">Красота и гигиена</option><option value="Здоровье и аптека">Здоровье и аптека</option><option value="Одежда и обувь">Одежда и обувь</option><option value="Электроника и техника">Электроника и техника</option><option value="Дом, мебель и ремонт">Дом, мебель и ремонт</option><option value="ЖКХ">ЖКХ</option><option value="Аренда жилья">Аренда жилья</option><option value="Связь, интернет и ТВ">Связь, интернет и ТВ</option><option value="Подписки и онлайн-сервисы">Подписки и онлайн-сервисы</option><option value="Общественный транспорт">Общественный транспорт</option><option value="Такси">Такси</option><option value="Автомобиль и топливо">Автомобиль и топливо</option><option value="Образование">Образование</option><option value="Дети">Дети</option><option value="Животные">Животные</option><option value="Развлечения, спорт и хобби">Развлечения, спорт и хобби</option><option value="Путешествия">Путешествия</option><option value="Подарки и благотворительность">Подарки и благотворительность</option><option value="Кредиты и займы">Кредиты и займы</option><option value="Налоги, сборы и штрафы">Налоги, сборы и штрафы</option><option value="Банковские комиссии">Банковские комиссии</option><option value="Прочее">Прочее</option></optgroup><optgroup label="Доходы"><option value="Зарплата">Зарплата</option><option value="Подработка и НПД">Подработка и НПД</option><option value="Пособия, пенсия, стипендия">Пособия, пенсия, стипендия</option><option value="Проценты и кешбэк">Проценты и кешбэк</option><option value="Возвраты">Возвраты</option><option value="Подарки">Подарки</option><option value="Прочие доходы">Прочие доходы</option></optgroup>
+          </select>
+        </div>
+        <div class="field ops-full"><label for="add-name">Контрагент</label><input id="add-name" class="input" placeholder="Например, кофейня «Зерно»" value="{{add.name}}" onChange="{{add.onName}}"></div>
+        <div class="field ops-full"><label for="add-note">Комментарий <span class="faint" style="font-weight: 400">— необязательно</span></label><input id="add-note" class="input" value="{{add.note}}" onChange="{{add.onNote}}"></div>
+      </div>
+      <p class="hint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-spark"></use></svg>Быстрее — написать ассистенту: «потратил 15 на кофе».</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{saveAdd}}">Сохранить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{modalConfirm}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="alertdialog" aria-labelledby="cf-t" aria-describedby="cf-d">
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <span class="ops-ic-round" style="width: 40px; height: 40px; border-radius: 12px; background: {{cf.bg}}; color: {{cf.fg}}"><svg class="ic" aria-hidden="true"><use href="{{cf.icon}}"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="cf-t" class="card-t" style="font-size: 18px">{{cf.title}}</h2><p id="cf-d" class="small muted">{{cf.text}}</p></div>
+      </div>
+      <sc-if value="{{cf.hasSelect}}" hint-placeholder-val="{{false}}">
+        <div class="field"><label for="bulk-cat">Новая категория</label>
+          <select id="bulk-cat" class="input" value="{{bulkCatVal}}" onChange="{{onBulkCat}}">
+            <optgroup label="Расходы"><option value="Продукты">Продукты</option><option value="Кафе, рестораны и доставка">Кафе, рестораны и доставка</option><option value="Алкоголь и табак">Алкоголь и табак</option><option value="Бытовая химия и хозтовары">Бытовая химия и хозтовары</option><option value="Красота и гигиена">Красота и гигиена</option><option value="Здоровье и аптека">Здоровье и аптека</option><option value="Одежда и обувь">Одежда и обувь</option><option value="Электроника и техника">Электроника и техника</option><option value="Дом, мебель и ремонт">Дом, мебель и ремонт</option><option value="ЖКХ">ЖКХ</option><option value="Аренда жилья">Аренда жилья</option><option value="Связь, интернет и ТВ">Связь, интернет и ТВ</option><option value="Подписки и онлайн-сервисы">Подписки и онлайн-сервисы</option><option value="Общественный транспорт">Общественный транспорт</option><option value="Такси">Такси</option><option value="Автомобиль и топливо">Автомобиль и топливо</option><option value="Образование">Образование</option><option value="Дети">Дети</option><option value="Животные">Животные</option><option value="Развлечения, спорт и хобби">Развлечения, спорт и хобби</option><option value="Путешествия">Путешествия</option><option value="Подарки и благотворительность">Подарки и благотворительность</option><option value="Кредиты и займы">Кредиты и займы</option><option value="Налоги, сборы и штрафы">Налоги, сборы и штрафы</option><option value="Банковские комиссии">Банковские комиссии</option><option value="Прочее">Прочее</option></optgroup><optgroup label="Доходы"><option value="Зарплата">Зарплата</option><option value="Подработка и НПД">Подработка и НПД</option><option value="Пособия, пенсия, стипендия">Пособия, пенсия, стипендия</option><option value="Проценты и кешбэк">Проценты и кешбэк</option><option value="Возвраты">Возвраты</option><option value="Подарки">Подарки</option><option value="Прочие доходы">Прочие доходы</option></optgroup>
+          </select>
+        </div>
+      </sc-if>
+      <div class="ops-list">
+        <sc-for list="{{cf.items}}" as="ci" hint-placeholder-count="3"><div><span>{{ci.d}} · {{ci.n}}</span><span class="num strong">{{ci.a}}</span></div></sc-for>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="{{cf.btnCls}}" onClick="{{cf.go}}">{{cf.btn}}</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg>Вижу: Операции · октябрь{{ctxFilter}}</span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="chat-body" aria-live="polite" ref="{{chatRef}}">
+        <div class="msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Могу найти операции, посчитать суммы или массово поменять категории. Вижу, что вы в разделе «Операции» за октябрь.</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.taxi}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>В октябре на такси — <b class="num">112,40 BYN</b> за 14 поездок:</p>
+                      <div class="op-card" style="flex-direction: column; align-items: stretch; gap: 6px">
+                        <div class="row small" style="justify-content: space-between"><span>Яндекс Go · 9 поездок</span><b class="num">84,60</b></div>
+                        <div class="row small" style="justify-content: space-between"><span>Такси 7788 · 5 поездок</span><b class="num">27,80</b></div>
+                      </div>
+                      <p class="small row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Лимит 100,00 превышен на 12,40.</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.showTaxi}}">Показать в таблице</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.move}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <sc-if value="{{m.moveAsk}}" hint-placeholder-val="{{true}}">
+                        <div style="display: flex; flex-direction: column; gap: 10px">
+                          <p>Нашёл 13 операций «Такси 7788» за июль–октябрь. Перенести их из «Такси» в «Общественный транспорт»?</p>
+                          <div class="op-card" style="flex-direction: column; align-items: stretch; gap: 6px">
+                            <div class="row small" style="justify-content: space-between"><span>Июль — 3, август — 3, сентябрь — 2</span><b class="num">8 поездок</b></div>
+                            <div class="row small" style="justify-content: space-between"><span>Октябрь — 5 поездок</span><b class="num">27,80</b></div>
+                          </div>
+                          <p class="small muted">Лимит на такси в октябре станет 84,60 из 100,00. Я запомню правило для будущих поездок.</p>
+                          <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{m.yes}}">Да, перенести 13</button><button class="btn btn-ghost btn-sm" onClick="{{m.no}}">Нет</button></div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{m.moveYes}}" hint-placeholder-val="{{false}}"><div class="op-card"><svg class="ic" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg><div class="small" style="flex: 1">Перенёс 13 операций и запомнил правило «Такси 7788» → «Общественный транспорт».</div><button class="btn btn-ghost btn-sm" onClick="{{m.undo}}">Отменить</button></div></sc-if>
+                      <sc-if value="{{m.moveNo}}" hint-placeholder-val="{{false}}"><p class="small muted">Хорошо, ничего не меняю.</p></sc-if>
+                      <sc-if value="{{m.moveUndone}}" hint-placeholder-val="{{false}}"><p class="small muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Отменил: 13 операций вернулись в «Такси».</p></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.big}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Самая крупная трата октября — <b>ЖКХ, 186,40 BYN</b> (14.10, через ЕРИП). Это регулярный обязательный платёж.</p>
+                      <p>Среди нерегулярных — чек из Короны: <b class="num">132,80</b> (19.10). В нём две строки требуют проверки.</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.openZhkh}}">Открыть ЖКХ</button><button class="btn btn-secondary btn-sm" onClick="{{m.openKorona}}">Открыть чек Короны</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с расчётами из ваших данных.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="chat-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="3"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите об операциях…">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["Данные","Пусто","Загрузка","Ошибка"],"default":"Данные","section":"Состояние экрана"},"$preview":{"width":1440,"height":1720}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { rows: this.seed().map((r) => ({ ...r, from: r.src === 'chat' ? 'Сообщение ассистенту' : r.pending ? 'Чек — ожидает выписки' : r.linked ? 'Чек + выписка (одна покупка)' : r.rcpt && r.acc === 'Наличные' ? 'Чек, оплата наличными' : r.rcpt ? 'Чек + выписка' : 'Выписка' })), q: '', type: 'all', cat: 'all', acc: 'all', rc: false, sel: {}, sheet: null, modal: null, bulkCatVal: 'Продукты', rule: null, whyOpen: false, toast: null,
+      add: { type: 'exp', sum: '', date: '21.10.2026', acc: 'Наличные', cat: 'Кафе, рестораны и доставка', name: '', note: '', err: false },
+      chat: false, msgs: [], steps: [], busy: false, draft: '', bell: false, read: false, moveState: 'ask' };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  componentDidUpdate() {
+    const key = this.state.msgs.length + ':' + this.state.busy + ':' + this.state.steps.length;
+    if (this.chatEl && key !== this.chatKey) { this.chatKey = key; this.chatEl.scrollTop = this.chatEl.scrollHeight; }
+  }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  colors() {
+    return { 'Продукты': '#1F6F63', 'ЖКХ': '#C98A1B', 'Кафе, рестораны и доставка': '#B5655A', 'Автомобиль и топливо': '#7A5C8E', 'Дети': '#6E9E5B', 'Такси': '#8C6D3F', 'Кредиты и займы': '#4A6FA5', 'Образование': '#3E7CA6',
+      'Связь, интернет и ТВ': '#5B8C85', 'Подписки и онлайн-сервисы': '#9C5A86', 'Здоровье и аптека': '#C0574A', 'Одежда и обувь': '#8A7F5A', 'Развлечения, спорт и хобби': '#5E7FA0', 'Бытовая химия и хозтовары': '#6F8F8A',
+      'Красота и гигиена': '#A0668C', 'Зарплата': '#146C43', 'Проценты и кешбэк': '#2F8A5B', 'Общественный транспорт': '#3F7F8C', 'Прочее': '#AEB7B3' };
+  }
+  accShort(a) {
+    return { '•• 4821': ['Беларусбанк', '•• 4821'], '•• 0937': ['Приорбанк', '•• 0937'], '•• 5530': ['«Отпуск»', '•• 5530'], '•• 2208': ['Альфа-Банк', '•• 2208 · USD'], 'Наличные': ['Наличные', 'без выписки'] }[a] || [a, ''];
+  }
+  accName(a) {
+    return { '•• 4821': 'Беларусбанк, карта •• 4821', '•• 0937': 'Приорбанк, карта •• 0937', '•• 5530': 'Накопительный «Отпуск» •• 5530', '•• 2208': 'Альфа-Банк, карта •• 2208 (USD)', 'Наличные': 'Наличные' }[a] || a;
+  }
+  seed() {
+    const A = '•• 4821', P = '•• 0937', S = '•• 5530', U = '•• 2208', C = 'Наличные';
+    const iB = 'Выписка Беларусбанк •• 4821 от 18.10 (PDF)', iP = 'Выписка Приорбанк •• 0937 от 20.10 (PDF)', iU = 'Выписка Альфа-Банк •• 2208 от 20.10 (XLSX)';
+    return [
+      { id: 'r1', d: '21.10', t: '08:47', name: 'Кофейня «Зерно»', raw: 'Из чата: «кофе 6,50 наличными»', cat: 'Кафе, рестораны и доставка', acc: C, amt: -6.50, type: 'exp', src: 'chat', past: 3, hist: [['21.10 08:47', 'Записано ассистентом по сообщению в чате']] },
+      { id: 'r2', d: '20.10', t: '22:41', name: 'Яндекс Go', raw: 'YANDEX.GO TAXI MINSK', cat: 'Такси', acc: P, amt: -9.80, type: 'exp', src: 'dir', past: 8, imp: iP },
+      { id: 'r3', d: '19.10', t: '12:47', name: 'Корона', raw: 'TC KORONA ZAMOK POBEDITELEY 65', cat: 'Продукты', acc: P, amt: -132.80, type: 'exp', src: 'rcpt', rcpt: true, check: true, imp: iP,
+        groups: [{ c: 'Продукты', v: 104.14, items: [['Кофе в зёрнах 1 кг', 31.53], ['Филе индейки 1,224 кг', 23.13], ['Сыр полутвёрдый 0,486 кг', 11.42], ['Шоколад 90 г × 4', 11.16], ['Минеральная вода 1,5 л × 6', 7.14], ['Ещё 5 позиций', 19.76]] },
+          { c: 'Бытовая химия и хозтовары', v: 24.90, items: [['Стиральный порошок 3 кг', 24.90]] }, { c: 'Красота и гигиена', v: 2.39, items: [['Влажные салфетки', 2.39]] },
+          { c: 'Прочее', v: 1.37, items: [['Нераспознанный остаток чека', 1.37]] }],
+        hist: [['19.10 12:52', 'Чек распознан: 12 позиций; строки 5 и 9 не сходятся после двух перепроверок'], ['20.10 21:30', 'Чек привязан к платежу по карте •• 0937 из выписки']] },
+      { id: 'r4', d: '18.10', t: '19:05', name: 'Гиппо', raw: 'Чек: оплата картой •• 4821 — платёж в выписке ещё не найден', cat: 'Продукты', acc: A, amt: -34.45, type: 'exp', src: 'rcpt', rcpt: true, pending: true,
+        groups: [{ c: 'Продукты', v: 25.25, items: [['Кофе молотый 250 г', 9.89], ['Сок яблочный 1 л × 3', 7.47], ['Масло сливочное 82,5%', 4.59], ['Макароны 500 г × 2', 3.30]] },
+          { c: 'Красота и гигиена', v: 8.95, items: [['Шампунь 400 мл', 8.95]] }, { c: 'Бытовая химия и хозтовары', v: 0.25, items: [['Пакет', 0.25]] }],
+        hist: [['18.10 19:07', 'Чек распознан; строка 2: 3 × 2,49 ≠ 8,47 → перепроверка → 7,47'], ['18.10 19:07', 'Создана предварительная операция «ожидает выписки» — остаток счёта не меняется']] },
+      { id: 'r5', d: '17.10', t: '10:02', name: 'Перевод на «Отпуск»', raw: 'PEREVOD NA SCHET 3014****5530', cat: null, acc: A, accTo: S, amt: -120.00, type: 'tr', src: 'pair', imp: iB, pair: 'Зачисление на накопительный «Отпуск» •• 5530, 17.10, +120,00. Перевод между своими счетами — не расход и не доход.' },
+      { id: 'r6', d: '16.10', t: '23:15', name: 'Такси 7788', raw: 'TAXI 7788 MINSK', cat: 'Такси', acc: A, amt: -7.40, type: 'exp', src: 'rule', past: 12, imp: iB, hist: [['18.10 21:15', 'Загружено из выписки'], ['18.10 21:15', 'Категория «Такси» — по вашему правилу от 02.09']] },
+      { id: 'r7', d: '15.10', t: '11:20', name: 'Аптека «Белфармация» №15', raw: 'Чек: оплата наличными', cat: 'Здоровье и аптека', acc: C, amt: -23.45, type: 'exp', src: 'rcpt', rcpt: true,
+        groups: [{ c: 'Здоровье и аптека', v: 23.45, items: [['Витамин D3', 12.40], ['Ибупрофен 200 мг №50', 6.85], ['Пластырь × 2', 4.20]] }], hist: [['15.10 11:24', 'Чек распознан, сумма сходится; списано со счёта «Наличные»']] },
+      { id: 'r8', d: '14.10', t: '18:32', name: 'АЗС «Белоруснефть» №58', raw: 'BELORUSNEFT AZS 58 MINSK', cat: 'Автомобиль и топливо', acc: A, amt: -72.60, type: 'exp', src: 'dir', past: 6, imp: iB },
+      { id: 'r9', d: '14.10', t: '09:05', name: 'ЖКХ', raw: 'ERIP RASCHET ZHKU L/S 1123581', cat: 'ЖКХ', acc: A, amt: -186.40, type: 'exp', src: 'dir', past: 5, rec: true, imp: iB },
+      { id: 'r10', d: '14.10', t: '03:10', name: 'iCloud+', raw: 'APPLE.COM/BILL ITUNES.COM', cat: 'Подписки и онлайн-сервисы', acc: P, amt: -9.49, type: 'exp', src: 'kw', past: 5, rec: true, imp: iP },
+      { id: 'r11', d: '13.10', t: '14:32', name: 'Евроопт', raw: 'EVROOPT T-0042 MINSK', cat: 'Продукты', acc: A, amt: -47.30, type: 'exp', src: 'rcpt', rcpt: true, linked: true, imp: iB,
+        groups: [{ c: 'Продукты', v: 39.56, items: [['Куриное филе 0,842 кг', 10.94], ['Сыр 200 г', 6.79], ['Бананы 1,236 кг', 5.30], ['Молоко 3,2% 1 л × 2', 4.98], ['Яйца С1 10 шт', 3.89], ['Йогурт питьевой × 3', 3.57], ['Яблоки 0,803 кг', 2.24], ['Хлеб ржаной', 1.85]] },
+          { c: 'Красота и гигиена', v: 4.25, items: [['Зубная паста', 4.25]] }, { c: 'Бытовая химия и хозтовары', v: 3.49, items: [['Средство для посуды', 3.49]] }],
+        hist: [['12.10 14:40', 'Чек распознан: 10 позиций, сумма сходится 100%'], ['18.10 21:15', 'Привязан к платежу по карте •• 4821 от 13.10 — покупка учтена один раз']] },
+      { id: 'r12', d: '12.10', t: '13:20', name: 'Снятие наличных', raw: 'BELARUSBANK ATM 0042 MINSK', cat: null, acc: A, accTo: C, amt: -100.00, type: 'tr', src: 'pair', imp: iB, pair: 'Пополнение счёта «Наличные», 12.10, +100,00. Снятие наличных — перевод между своими счетами, а не трата.' },
+      { id: 'r13', d: '11.10', t: '15:48', name: 'Возврат: Mark Formelle', raw: 'VOZVRAT MARK FORMELLE TC GALILEO', cat: 'Одежда и обувь', acc: P, amt: 24.90, type: 'ref', src: 'pair', imp: iP, orig: 'Mark Formelle, 26.09.2026, −24,90 (карта •• 0937)' },
+      { id: 'r14', d: '10.10', t: '10:00', name: 'Аванс, ООО «ТехноСофт»', raw: 'ZACHISLENIE ZP OOO TEHNOSOFT AVANS', cat: 'Зарплата', acc: A, amt: 960.00, type: 'inc', src: 'dir', past: 6, rec: true, imp: iB },
+      { id: 'r15', d: '09.10', t: '16:30', name: 'Кружок робототехники', raw: 'IP SIDORENKO A.V. ROBOTEKA', cat: 'Дети', acc: A, amt: -60.00, type: 'exp', src: 'model', past: 2, rec: true, imp: iB },
+      { id: 'r16', d: '08.10', t: '21:04', name: 'Wildberries', raw: 'WILDBERRIES.BY OOO VAILDBERRIZ', cat: 'Одежда и обувь', acc: P, amt: -114.80, type: 'exp', src: 'dir', past: 4, imp: iP },
+      { id: 'r17', d: '07.10', t: '20:15', name: 'Ресторан «Васильки»', raw: 'VASILKI REST PR. NEZAVISIMOSTI', cat: 'Кафе, рестораны и доставка', acc: A, amt: -48.60, type: 'exp', src: 'dir', past: 2, imp: iB },
+      { id: 'r18', d: '05.10', t: '22:50', name: 'Steam', raw: 'STEAMPOWERED.COM 9.99 USD', cat: 'Развлечения, спорт и хобби', acc: U, amt: -29.84, usd: '−9,99 USD', type: 'exp', src: 'kw', past: 3, imp: iU },
+      { id: 'r19', d: '05.10', t: '06:00', name: 'VK Музыка', raw: 'VK MUSIC 7000 MINSK', cat: 'Подписки и онлайн-сервисы', acc: P, amt: -12.99, type: 'exp', src: 'dir', past: 5, rec: true, imp: iP },
+      { id: 'r20', d: '03.10', t: '19:40', name: 'Пицца Темпо, доставка', raw: 'PIZZATEMPO.BY', cat: 'Кафе, рестораны и доставка', acc: A, amt: -36.40, type: 'exp', src: 'dir', past: 4, imp: iB },
+      { id: 'r21', d: '02.10', t: '07:00', name: 'А1', raw: 'A1 MOBILE MINSK', cat: 'Связь, интернет и ТВ', acc: A, amt: -10.00, type: 'exp', src: 'dir', past: 5, rec: true, imp: iB },
+      { id: 'r22', d: '01.10', t: '05:30', name: 'Яндекс Плюс', raw: 'YANDEX PLUS', cat: 'Подписки и онлайн-сервисы', acc: A, amt: -15.99, type: 'exp', src: 'dir', past: 5, rec: true, imp: iB },
+      { id: 'r23', d: '01.10', t: '00:01', name: 'Кешбэк', raw: 'CASHBACK PRIORBANK 09.2026', cat: 'Проценты и кешбэк', acc: P, amt: 12.40, type: 'inc', src: 'dir', past: 5, imp: iP }
+    ];
+  }
+  srcText(r) {
+    if (r.src === 'dir') return 'Категория — по справочнику контрагентов РБ';
+    if (r.src === 'rule') return 'Категория — по вашему правилу «' + r.name + '» → «' + r.cat + '»';
+    if (r.src === 'model') return 'Категорию определила модель (уверенность высокая) — проверьте';
+    if (r.src === 'kw') return 'Категория — по ключевым словам в описании';
+    if (r.src === 'rcpt') return 'Категории — по позициям чека';
+    if (r.src === 'chat') return 'Категория — по вашему сообщению в чате';
+    if (r.src === 'manual') return 'Категорию вы указали вручную';
+    return 'Категория указана вручную';
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('перенес') || s.includes('перенеси') || s.includes('общественн')) kind = 'move';
+    else if (s.includes('такси')) kind = 'taxi';
+    else if (s.includes('крупн') || s.includes('больш') || s.includes('дорог')) kind = 'big';
+    const plan = {
+      taxi: ['Ищу операции «Такси» за октябрь…', 'Группирую по перевозчикам…'],
+      move: ['Ищу операции «Такси 7788» за всё время…', 'Готовлю список изменений…'],
+      big: ['Сортирую расходы октября по сумме…', 'Отделяю регулярные платежи…'],
+      generic: ['Разбираю вопрос…']
+    }[kind];
+    const msgs = this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]);
+    const patch0 = { msgs, busy: true, draft: '', steps: [{ t: plan[0], done: false }] };
+    if (kind === 'move') patch0.moveState = 'ask';
+    this.setState(patch0);
+    plan.forEach((t, i) => {
+      this.later(() => {
+        const steps = plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i }));
+        if (i < plan.length - 1) { this.setState({ steps }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  setCat(id, cat) {
+    this.setState({ rows: this.state.rows.map((r) => (r.id === id ? { ...r, cat, src: 'manual', groups: r.groups && r.groups.length > 1 ? r.groups : r.groups } : r)) });
+  }
+  num(v) { return parseFloat(String(v).replace(/\s| /g, '').replace(',', '.')) || 0; }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n); const col = this.colors();
+    const view = this.props.view ?? 'Данные';
+    const EXP = ['Продукты', 'Кафе, рестораны и доставка', 'Алкоголь и табак', 'Бытовая химия и хозтовары', 'Красота и гигиена', 'Здоровье и аптека', 'Одежда и обувь', 'Электроника и техника', 'Дом, мебель и ремонт', 'ЖКХ', 'Аренда жилья', 'Связь, интернет и ТВ', 'Подписки и онлайн-сервисы', 'Общественный транспорт', 'Такси', 'Автомобиль и топливо', 'Образование', 'Дети', 'Животные', 'Развлечения, спорт и хобби', 'Путешествия', 'Подарки и благотворительность', 'Кредиты и займы', 'Налоги, сборы и штрафы', 'Банковские комиссии', 'Прочее'];
+    const INC = ['Зарплата', 'Подработка и НПД', 'Пособия, пенсия, стипендия', 'Проценты и кешбэк', 'Возвраты', 'Подарки', 'Прочие доходы'];
+    const accs = ['•• 4821', '•• 0937', '•• 5530', '•• 2208', 'Наличные'];
+    const q = st.q.trim().toLowerCase();
+    const visRaw = st.rows.filter((r) =>
+      (!q || (r.name + ' ' + r.raw + ' ' + (r.cat || '') + ' ' + (r.type === 'tr' ? 'перевод' : '')).toLowerCase().includes(q)) &&
+      (st.type === 'all' || r.type === st.type) &&
+      (st.cat === 'all' || r.cat === st.cat || (r.groups && r.groups.some((g) => g.c === st.cat))) &&
+      (st.acc === 'all' || r.acc === st.acc || r.accTo === st.acc) &&
+      (!st.rc || r.rcpt));
+    const sumExp = (rs) => rs.reduce((s, r) => s + (r.type === 'exp' || r.type === 'ref' ? -r.amt : 0), 0);
+    const sumInc = (rs) => rs.reduce((s, r) => s + (r.type === 'inc' ? r.amt : 0), 0);
+    if (this.seedExp === undefined) { const sd = this.seed(); this.seedExp = sumExp(sd); this.seedInc = sumInc(sd); }
+    const hasF = !!q || st.type !== 'all' || st.cat !== 'all' || st.acc !== 'all' || st.rc;
+    const expSum = hasF ? sumExp(visRaw) : 1492.92 + sumExp(st.rows) - this.seedExp;
+    const incSum = hasF ? sumInc(visRaw) : 972.40 + sumInc(st.rows) - this.seedInc;
+    const sel = st.sel; const selIds = Object.keys(sel).filter((k) => sel[k] && st.rows.some((r) => r.id === k));
+    const selRows = st.rows.filter((r) => selIds.includes(r.id));
+    const vis = visRaw.map((r) => {
+      const flags = [];
+      if (r.rcpt) flags.push({ icon: '#i-receipt', label: r.linked ? 'Есть чек, привязан к платежу из выписки' : 'Есть чек', cls: 'ops-flag ok' });
+      if (r.check) flags.push({ icon: '#i-warn', label: 'Чек требует проверки', cls: 'ops-flag warn' });
+      if (r.pending) flags.push({ icon: '#i-clock', label: 'Ожидает выписки — остаток счёта не меняет', cls: 'ops-flag' });
+      if (r.rec) flags.push({ icon: '#i-repeat', label: 'Регулярный платёж', cls: 'ops-flag' });
+      if (r.usd) flags.push({ icon: '#i-coins', label: 'Валютная операция', cls: 'ops-flag' });
+      const isSplit = !!(r.groups && r.groups.length > 1);
+      const n = r.groups ? r.groups.length : 0;
+      return { ...r, flags, isSplit, isTr: r.type === 'tr', isCat: r.type !== 'tr' && !isSplit, isRef: r.type === 'ref',
+        splitDots: isSplit ? r.groups.map((g) => ({ c: col[g.c] || '#AEB7B3' })) : [], splitText: 'По чеку: ' + n + (n < 5 ? ' категории' : ' категорий'),
+        color: col[r.cat] || '#AEB7B3', accMain: r.accTo ? this.accShort(r.acc).join(' ') : this.accShort(r.acc)[0], accSub: r.accTo ? '→ ' + this.accShort(r.accTo).join(' ') : this.accShort(r.acc)[1],
+        amtText: r.type === 'tr' ? f(Math.abs(r.amt)) : (r.amt > 0 ? '+' + f(r.amt) : f(r.amt)), amtColor: r.type === 'tr' ? 'var(--ink-3)' : r.amt > 0 ? 'var(--income)' : 'var(--ink)',
+        hasUsd: !!r.usd, checked: !!sel[r.id], trCls: 'ops-tr ops-row' + (sel[r.id] ? ' ops-on' : ''), selLabel: 'Выбрать: ' + r.name + ', ' + r.d,
+        open: () => this.setState({ sheet: r.id, rule: null, whyOpen: false, bell: false }),
+        stop: (e) => e.stopPropagation(),
+        toggle: () => this.setState({ sel: { ...this.state.sel, [r.id]: !this.state.sel[r.id] } }) };
+    });
+    const allSel = vis.length > 0 && vis.every((r) => sel[r.id]);
+    const typeDefs = [['all', 'Все'], ['exp', 'Расходы'], ['inc', 'Доходы'], ['tr', 'Переводы'], ['ref', 'Возвраты']];
+    const typeChips = typeDefs.map(([k, l]) => ({ label: l, on: st.type === k, cls: st.type === k ? 'on' : '', pick: () => this.setState({ type: k }) }));
+    const usedCats = Array.from(new Set(st.rows.flatMap((r) => (r.groups ? r.groups.map((g) => g.c) : r.cat ? [r.cat] : [])))).sort((a, b) => a.localeCompare(b, 'ru'));
+    const hasFilters = !!q || st.type !== 'all' || st.cat !== 'all' || st.acc !== 'all' || st.rc;
+    const op = st.sheet ? st.rows.find((r) => r.id === st.sheet) : null;
+    let so = { fields: [], groups: [], hist: [] };
+    if (op) {
+      const typeLabel = { exp: 'Расход', inc: 'Доход', tr: 'Перевод между своими счетами', ref: 'Возврат за покупку' }[op.type];
+      const source = op.from || 'Выписка';
+      const fields = [{ l: 'Дата и время', v: op.d + '.2026, ' + op.t }, { l: 'Счёт', v: op.accTo ? this.accName(op.acc) + ' → ' + this.accName(op.accTo) : this.accName(op.acc) }, { l: 'Тип', v: typeLabel }, { l: 'Источник', v: source }, { l: 'Описание из выписки', v: op.raw }];
+      const hist = (op.hist || [['18.10 21:15', 'Загружено из выписки'], ['18.10 21:15', this.srcText(op)]]).map(([d, t]) => ({ d, t }));
+      const rcptBadge = op.check ? 'Требует проверки' : op.pending ? 'Ожидает выписки' : 'Сумма сходится 100%';
+      so = { ...op, typeLabel, fields, hist, srcText: this.srcText(op),
+        amtText: op.type === 'tr' ? f(Math.abs(op.amt)) : (op.amt > 0 ? '+' + f(op.amt) : f(op.amt)), amtColor: op.type === 'tr' ? 'var(--ink-2)' : op.amt > 0 ? 'var(--income)' : 'var(--ink)',
+        hasUsd: !!op.usd, canCat: op.type !== 'tr' && !(op.groups && op.groups.length > 1), isSplitOp: !!(op.groups && op.groups.length > 1), check: !!op.check, rcptBadgeIcon: op.check ? '#i-warn' : op.pending ? '#i-clock' : '#i-check', isTr: op.type === 'tr', isRef: op.type === 'ref', hasImp: !!op.imp, cat: op.cat || 'Продукты',
+        hasGroups: !!op.groups, rcptBadge, rcptBadgeCls: op.check ? 'badge b-warn' : op.pending ? 'badge b-neutral' : 'badge b-ok',
+        groups: (op.groups || []).map((g) => ({ c: g.c, v: f(g.v), color: col[g.c] || '#AEB7B3', items: g.items.map(([n, s]) => ({ n, s: f(s) })) })),
+        hasRule: !!(st.rule && st.rule.id === op.id), past: op.past || 0,
+        changeCat: (e) => {
+          const prev = op.cat; const val = e.target.value;
+          this.setState({ rows: this.state.rows.map((r) => (r.id === op.id ? { ...r, cat: val, src: 'manual' } : r)), rule: op.past ? { id: op.id, prev } : null });
+          if (!op.past) this.toast('Категория изменена на «' + val + '»', () => this.setState({ rows: this.state.rows.map((r) => (r.id === op.id ? { ...r, cat: prev, src: op.src } : r)) }));
+        },
+        ruleAll: () => {
+          const prev = st.rule ? st.rule.prev : op.cat;
+          this.setState({ rule: null, rows: this.state.rows.map((r) => (r.id === op.id ? { ...r, src: 'rule' } : r)) });
+          this.toast('Правило сохранено: «' + op.name + '» → «' + op.cat + '». Обновлено ' + ((op.past || 0) + 1) + ' операций', () => this.setState({ rows: this.state.rows.map((r) => (r.id === op.id ? { ...r, cat: prev, src: op.src } : r)) }));
+        },
+        ruleOne: () => {
+          const prev = st.rule ? st.rule.prev : op.cat;
+          this.setState({ rule: null });
+          this.toast('Изменено только для этой операции', () => this.setState({ rows: this.state.rows.map((r) => (r.id === op.id ? { ...r, cat: prev, src: op.src } : r)) }));
+        },
+        unlink: () => {
+          this.toast('Связь с чеком разорвана: чек стал отдельной операцией', null);
+        },
+        del: () => this.setState({ modal: { kind: 'delOne', ids: [op.id] } })
+      };
+    }
+    let cf = { items: [] };
+    const md = st.modal;
+    if (md && md.kind !== 'add') {
+      const rowsM = st.rows.filter((r) => md.ids.includes(r.id));
+      const items = rowsM.map((r) => ({ d: r.d, n: r.name, a: r.amt > 0 ? '+' + f(r.amt) : f(r.amt) }));
+      const n = rowsM.length; const w = n === 1 ? 'операцию' : n < 5 ? 'операции' : 'операций';
+      if (md.kind === 'bulkCat') cf = { title: 'Перенести ' + n + ' ' + w + ' в «' + st.bulkCatVal + '»?', text: 'Категория изменится у выбранных операций. Отменить можно сразу после.', icon: '#i-edit', bg: 'var(--brand-soft)', fg: 'var(--brand)', hasSelect: true, items, btn: 'Перенести ' + n, btnCls: 'btn btn-primary',
+        go: () => { const back = this.state.rows; const c = this.state.bulkCatVal; this.setState({ modal: null, sel: {}, rows: this.state.rows.map((r) => (md.ids.includes(r.id) ? { ...r, cat: c, type: r.type === 'tr' ? 'exp' : r.type, groups: r.groups && r.groups.length > 1 ? null : r.groups, src: 'manual' } : r)) }); this.toast('Перенёс ' + n + ' ' + w + ' в «' + c + '»', () => this.setState({ rows: back })); } };
+      if (md.kind === 'bulkTr') cf = { title: 'Пометить ' + n + ' ' + w + ' как переводы?', text: 'Переводы между своими счетами не считаются ни расходом, ни доходом — они пропадут из трат и аналитики.', icon: '#i-ops', bg: 'var(--brand-soft)', fg: 'var(--brand)', hasSelect: false, items, btn: 'Пометить переводом', btnCls: 'btn btn-primary',
+        go: () => { const back = this.state.rows; this.setState({ modal: null, sel: {}, rows: this.state.rows.map((r) => (md.ids.includes(r.id) ? { ...r, type: 'tr', cat: null, groups: null, pair: 'Пара не найдена — помечено вручную как перевод между своими счетами.' } : r)) }); this.toast('Помечено переводами: ' + n, () => this.setState({ rows: back })); } };
+      if (md.kind === 'bulkDel' || md.kind === 'delOne') cf = { title: 'Удалить ' + n + ' ' + w + '?', text: 'Операции пропадут из счетов и аналитики. Вернуть их можно сразу после удаления.', icon: '#i-trash', bg: 'var(--danger-soft)', fg: 'var(--danger)', hasSelect: false, items, btn: 'Удалить ' + n, btnCls: 'btn btn-danger',
+        go: () => { const back = this.state.rows; this.setState({ modal: null, sel: {}, sheet: null, rows: this.state.rows.filter((r) => !md.ids.includes(r.id)) }); this.toast('Удалено: ' + n + ' ' + w, () => this.setState({ rows: back })); } };
+    }
+    const ad = st.add;
+    const setAdd = (k) => (e) => this.setState({ add: { ...this.state.add, [k]: e.target.value, err: k === 'sum' ? false : this.state.add.err } });
+    const addTypes = [['exp', 'Расход'], ['inc', 'Доход'], ['tr', 'Перевод'], ['ref', 'Возврат']].map(([k, l]) => ({ label: l, on: ad.type === k, cls: ad.type === k ? 'on' : '', pick: () => this.setState({ add: { ...this.state.add, type: k, cat: k === 'inc' ? 'Прочие доходы' : this.state.add.cat } }) }));
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const sugg = ['Сколько я потратил на такси в октябре?', 'Перенеси все «Такси 7788» в общественный транспорт', 'Найди самую крупную трату'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', taxi: m.kind === 'taxi', move: m.kind === 'move', big: m.kind === 'big', generic: m.kind === 'generic',
+      moveAsk: st.moveState === 'ask', moveYes: st.moveState === 'yes', moveNo: st.moveState === 'no', moveUndone: st.moveState === 'undone',
+      yes: () => this.setState({ moveState: 'yes', rows: this.state.rows.map((r) => (r.id === 'r6' ? { ...r, cat: 'Общественный транспорт', src: 'rule' } : r)) }),
+      no: () => this.setState({ moveState: 'no' }),
+      undo: () => this.setState({ moveState: 'undone', rows: this.state.rows.map((r) => (r.id === 'r6' ? { ...r, cat: 'Такси', src: 'rule' } : r)) }),
+      showTaxi: () => this.setState({ q: 'такси', type: 'all', cat: 'all', acc: 'all', rc: false, chat: false }),
+      openZhkh: () => this.setState({ sheet: 'r9', chat: false }), openKorona: () => this.setState({ sheet: 'r3', chat: false }) }));
+    const visN = vis.length;
+    const word = (n) => (n % 10 === 1 && n % 100 !== 11 ? 'операция' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'операции' : 'операций');
+    return {
+      isEmpty: view === 'Пусто', isError: view === 'Ошибка', isLoading: view === 'Загрузка', showList: view === 'Данные' || view === 'Загрузка',
+      skRows: [70, 55, 62, 48, 66, 52, 58, 45].map((w) => ({ w })),
+      q: st.q, onQ: (e) => this.setState({ q: e.target.value }),
+      typeChips, fCat: st.cat, onCat: (e) => this.setState({ cat: e.target.value }), filterCats: usedCats.map((v) => ({ v })),
+      fAcc: st.acc, onAcc: (e) => this.setState({ acc: e.target.value }), accOpts: accs.map((v) => ({ v, t: this.accName(v) })),
+      rc: st.rc, rcCls: st.rc ? 'chip on' : 'chip', toggleRc: () => this.setState({ rc: !st.rc }),
+      hasFilters, resetF: () => this.setState({ q: '', type: 'all', cat: 'all', acc: 'all', rc: false }),
+      vis: view === 'Загрузка' ? [] : vis, noResults: view === 'Данные' && visN === 0,
+      visCount: hasFilters ? 'Найдено ' + visN + ' ' + word(visN) : 'Весь октябрь',
+      showSum: view === 'Данные', showPages: !hasFilters, noData: view === 'Пусто' || view === 'Ошибка',
+      subText: view === 'Пусто' ? 'Пока нет ни одной операции' : 'Октябрь 2026 · 58 операций по 5 счетам',
+      visExp: f(expSum), visInc: '+' + f(incSum),
+      footText: hasFilters ? 'Найдено ' + visN + ' из 58 за октябрь' : 'Показано ' + visN + ' из 58',
+      otherPage: () => this.toast('В прототипе показана первая страница — остальные операции октября устроены так же'),
+      allSel, toggleAll: () => { const ns = { ...sel }; vis.forEach((r) => { ns[r.id] = !allSel; }); this.setState({ sel: ns }); },
+      hasSel: selIds.length > 0, selCount: selIds.length, clearSel: () => this.setState({ sel: {} }),
+      bulkCat: () => this.setState({ modal: { kind: 'bulkCat', ids: selIds } }), bulkTr: () => this.setState({ modal: { kind: 'bulkTr', ids: selIds } }), bulkDel: () => this.setState({ modal: { kind: 'bulkDel', ids: selIds } }),
+      sheetOpen: !!op, so, closeSheet: () => this.setState({ sheet: null, rule: null, whyOpen: false }),
+      whyOpen: st.whyOpen, toggleWhy: () => this.setState({ whyOpen: !st.whyOpen }),
+      expOpts: EXP.map((v) => ({ v })), incOpts: INC.map((v) => ({ v })),
+      modalAdd: !!(md && md.kind === 'add'), modalConfirm: !!(md && md.kind !== 'add'), cf, closeModal: () => this.setState({ modal: null }),
+      bulkCatVal: st.bulkCatVal, onBulkCat: (e) => this.setState({ bulkCatVal: e.target.value }),
+      openAdd: () => this.setState({ modal: { kind: 'add' }, add: { type: 'exp', sum: '', date: '21.10.2026', acc: 'Наличные', cat: 'Кафе, рестораны и доставка', name: '', note: '', err: false } }),
+      addTypes, add: { ...ad, sumCls: 'input num' + (ad.err ? ' ops-invalid' : ''), onSum: setAdd('sum'), onDate: setAdd('date'), onAcc: setAdd('acc'), onCat: setAdd('cat'), onName: setAdd('name'), onNote: setAdd('note') },
+      saveAdd: () => {
+        const v = this.num(ad.sum);
+        if (v <= 0) { this.setState({ add: { ...ad, err: true } }); return; }
+        const id = 'n' + Date.now();
+        const row = { id, from: 'Ручной ввод', d: ad.date.slice(0, 5), t: 'сейчас', name: ad.name.trim() || 'Без названия', raw: 'Добавлено вручную' + (ad.note ? ': ' + ad.note : ''), cat: ad.type === 'tr' ? null : ad.cat, acc: ad.acc, accTo: ad.type === 'tr' ? '•• 5530' : undefined,
+          amt: ad.type === 'inc' || ad.type === 'ref' ? v : -v, type: ad.type, src: 'manual', past: 0, hist: [['21.10', 'Добавлено вручную']], pair: 'Перевод между своими счетами — не расход и не доход.', orig: 'Исходная покупка не указана' };
+        this.setState({ modal: null, rows: [row].concat(this.state.rows) });
+        this.toast('Операция добавлена: ' + row.name + ', ' + (row.amt > 0 ? '+' : '−') + f(v), () => this.setState({ rows: this.state.rows.filter((r) => r.id !== id) }));
+      },
+      exportXls: () => this.toast('Готовлю файл kosht_oktyabr_2026.xlsx: листы «Операции», «Сводка», «Лимиты» — суммы считаются формулами'),
+      retry: () => this.toast('Повторяю загрузку…'),
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatRef: (el) => { this.chatEl = el; },
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      ctxFilter: hasFilters ? ' · фильтр включён' : '',
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

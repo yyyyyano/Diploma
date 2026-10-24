@@ -1,0 +1,36 @@
+/* Кошт — дизайн-токены из макета (design/screens/*.dc.html, блок KIT).
+   Шрифты: Onest (интерфейс, вес 400–700) и Literata (тексты законов). Оба — Google Fonts, лицензия OFL;
+   по ТЗ (DES-09) в продукте подключаются локально, например пакетами @fontsource-variable/onest и @fontsource-variable/literata. */
+:root {
+  --bg:#F3F5F3;
+  --surface:#FFFFFF;
+  --surface-2:#F8FAF9;
+  --line:#E1E6E3;
+  --line-2:#CDD5D1;
+  --ink:#14211F;
+  --ink-2:#4E5B57;
+  --ink-3:#63706B;
+  --brand:#11564D;
+  --brand-hover:#0B4740;
+  --brand-ink:#0D3833;
+  --brand-soft:#E3EFEA;
+  --brand-soft-2:#CBE2D9;
+  --amber:#F2B53A;
+  --amber-hover:#E4A52A;
+  --amber-soft:#FDF2D8;
+  --amber-ink:#7A5200;
+  --income:#146C43;
+  --income-soft:#E2F2E9;
+  --warn:#9A4D00;
+  --warn-soft:#FCEBD8;
+  --danger:#B3261E;
+  --danger-soft:#FCE8E6;
+  --law:#2D4F8A;
+  --law-soft:#E8EEF8;
+  --r:14px;
+  --r-sm:10px;
+
+  /* Шрифты */
+  --font-ui: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-law: 'Literata', Georgia, 'Times New Roman', serif;
+}

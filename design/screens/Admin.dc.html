@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Администрирование</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: admin (adm-) ===== */
+.adm-banner{display:flex;align-items:center;gap:12px;background:var(--brand-soft);border:1px solid var(--brand-soft-2);color:var(--brand-ink);border-radius:12px;padding:12px 16px;font-size:14px;flex-wrap:wrap}
+.adm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.adm-kpis5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.adm-kpi{display:flex;flex-direction:column;gap:4px;padding:16px 18px}
+.adm-kpi-l{display:flex;align-items:center;gap:2px;font-size:13.5px;color:var(--ink-2);min-height:26px}
+.adm-kpi-v{font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.adm-g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.adm-g2s{align-items:stretch}
+.adm-g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;align-items:start}
+.adm-stack-v{display:flex;flex-direction:column;gap:20px}
+.adm-col{display:flex;flex-direction:column;gap:14px}
+.adm-kv{display:flex;justify-content:space-between;gap:8px 12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center;flex-wrap:wrap}
+.adm-kv:last-child{border-bottom:0;padding-bottom:0}
+.adm-kv:first-child{padding-top:0}
+.adm-time{width:108px;height:36px}
+.adm-mono{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
+.adm-scroll{overflow-x:auto;margin:0 -20px;padding:0 20px;position:relative}
+.adm-tabs button{position:relative}
+.adm-t{display:grid;font-size:14px}
+.adm-th,.adm-tr{display:grid;gap:12px;align-items:center;padding-left:12px;padding-right:12px}
+.adm-th{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink-2);min-height:40px;border-radius:8px 8px 0 0}
+.adm-tr{border-bottom:1px solid var(--line);padding-top:12px;padding-bottom:12px}
+.adm-tr:hover{background:#F8FAF9}
+.adm-tr:last-child{border-bottom:0}
+.adm-cell{min-width:0}
+.adm-right{text-align:right;justify-self:end}
+.adm-c-acts{grid-template-columns:minmax(230px,2.2fr) minmax(110px,1fr) minmax(220px,1.9fr) 96px 98px 150px;min-width:980px}
+.adm-c-crawl{grid-template-columns:76px minmax(280px,1fr) 64px 80px 64px;min-width:660px}
+.adm-c-rates{grid-template-columns:minmax(240px,2fr) minmax(120px,1fr) minmax(170px,1.2fr) minmax(200px,1.5fr) 200px;min-width:1000px}
+.adm-c-reqs{grid-template-columns:96px minmax(130px,.9fr) minmax(180px,1.3fr) 110px minmax(230px,1.7fr) 170px;min-width:980px}
+.adm-c-users{grid-template-columns:minmax(240px,2fr) 130px 140px 140px 100px 110px 44px;min-width:960px}
+.adm-c-jobs{grid-template-columns:minmax(220px,1.6fr) minmax(180px,1.3fr) 140px minmax(180px,1.2fr) 110px;min-width:900px}
+.adm-th span{white-space:nowrap}
+.adm-c-ed{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}
+.adm-c-price{grid-template-columns:minmax(0,1fr) 108px 108px}
+.adm-c-runs{grid-template-columns:150px minmax(180px,1.4fr) 90px 90px 100px 120px 90px;min-width:880px}
+.adm-sub{display:flex;gap:2px;padding:3px;background:#E7ECE9;border-radius:12px;width:fit-content;max-width:100%;overflow-x:auto}
+.adm-sub button{border:0;background:transparent;min-height:36px;padding:0 14px;border-radius:9px;font-size:14px;font-weight:600;color:var(--ink-2);cursor:pointer;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.adm-sub button:hover{color:var(--ink)}
+.adm-sub button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.adm-cnt{font-size:12px;font-weight:700;border-radius:99px;padding:0 7px;line-height:18px;background:#DCE3DF;color:var(--ink-2)}
+.adm-cnt.warn{background:var(--warn-soft);color:var(--warn)}
+.adm-log{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:flex-start}
+.adm-log:last-child{border-bottom:0;padding-bottom:0}
+.adm-log:first-child{padding-top:0}
+.adm-log-ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none}
+.adm-cand{display:flex;gap:10px 16px;padding:14px 0;border-bottom:1px solid var(--line);align-items:center;flex-wrap:wrap}
+.adm-cand:last-child{border-bottom:0;padding-bottom:0}
+.adm-cand:first-child{padding-top:0}
+.adm-eds{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:10px}
+.adm-ed{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;padding:8px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-size:14px;text-align:left;color:var(--ink)}
+.adm-ed:hover{border-color:var(--brand);color:var(--brand)}
+.adm-hbar{display:grid;grid-template-columns:150px minmax(0,1fr) 72px;gap:12px;align-items:center;font-size:14px;padding:7px 0}
+.adm-hbar .bar{height:12px}
+.adm-stack{display:flex;height:18px;border-radius:99px;overflow:hidden;gap:2px}
+.adm-stack span{display:block;height:100%}
+.adm-leg{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px}
+.adm-leg-i{display:inline-flex;align-items:center;gap:6px}
+.adm-leg-i i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.adm-tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.adm-tool{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:11.5px;background:#ECF0EE;color:var(--ink-2);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.adm-acts{display:flex;flex-direction:column;gap:6px}
+.adm-acts button{display:flex;align-items:center;gap:12px;border:1px solid var(--line);background:#fff;padding:10px 12px;border-radius:10px;text-align:left;cursor:pointer;font-size:14.5px;color:var(--ink);min-height:48px}
+.adm-acts button:hover{border-color:var(--brand)}
+.adm-acts button.danger{color:var(--danger)}
+.adm-acts button.danger:hover{border-color:var(--danger)}
+.adm-metric{display:flex;flex-direction:column;gap:2px;padding:12px 0;border-bottom:1px solid var(--line)}
+.adm-metric:last-child{border-bottom:0;padding-bottom:0}
+.adm-delta{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600}
+.adm-task{display:flex;flex-direction:column;gap:10px}
+.adm-prov{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.adm-prov.off{background:var(--surface-2)}
+.adm-prov-a{display:flex;align-items:center;gap:12px}
+.adm-prov-b{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:40px}
+.adm-ord{width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.adm-res{font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px;margin-right:auto}
+.adm-key{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:12px;align-items:end;padding:14px 0;border-bottom:1px solid var(--line)}
+.adm-key:last-child{border-bottom:0;padding-bottom:0}
+.adm-key:first-of-type{padding-top:4px}
+.adm-model{display:flex;align-items:center;gap:10px 14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;flex-wrap:wrap}
+.adm-model:last-child{border-bottom:0;padding-bottom:0}
+.adm-model-s{flex:1 1 180px;min-width:0;display:flex;flex-direction:column;gap:4px}
+.adm-danger{border-color:#F0C3BE}
+.adm-wide{width:min(660px,calc(100% - 32px));max-height:calc(100vh - 48px);overflow-y:auto}
+.adm-note{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-size:13.5px}
+.adm-note-warn{background:var(--warn-soft);color:#5A2E00}
+.adm-note-info{background:var(--brand-soft);color:var(--brand-ink)}
+.adm-note-danger{background:var(--danger-soft);color:#7A1A14}
+.adm-code{border:1.5px dashed var(--line-2);border-radius:10px;padding:10px 12px;background:var(--surface-2);word-break:break-all}
+.adm-bell-pop{right:0;top:calc(100% + 8px);width:400px;max-width:calc(100vw - 32px)}
+.adm-nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.adm-nt.unread{background:#F6FAF8}
+.adm-nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.adm-tdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn);margin-left:6px;vertical-align:middle}
+.adm-textarea{width:100%;min-height:150px;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:13.5px;resize:vertical}
+.adm-textarea:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.adm-qrow{display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0}
+.adm-sr{position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.adm-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+@media (max-width:1100px){.adm-kpis,.adm-kpis5{grid-template-columns:repeat(2,minmax(0,1fr))}.adm-g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.adm-g2,.adm-g3{grid-template-columns:minmax(0,1fr)}.adm-kpis,.adm-kpis5{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.adm-kpi{padding:14px}.adm-key{grid-template-columns:minmax(0,1fr)}.adm-hbar{grid-template-columns:110px minmax(0,1fr) 60px}.adm-prov-b{padding-left:0}.adm-kpi-v{font-size:22px}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-adm-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></symbol>
+<symbol id="i-adm-down" viewBox="0 0 24 24"><path d="M12 5v14"></path><path d="m19 12-7 7-7-7"></path></symbol>
+<symbol id="i-adm-same" viewBox="0 0 24 24"><path d="M5 12h14"></path></symbol>
+<symbol id="i-adm-chev-u" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"></path></symbol>
+<symbol id="i-adm-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></symbol>
+<symbol id="i-adm-play" viewBox="0 0 24 24"><path d="M6 3l14 9-14 9V3z"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a class="on" href="Admin.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Администрирование</h1>
+      <p class="small muted">Система «Кошт» на этом компьютере · всё управление — здесь, без терминала</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="{{bellAria}}" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot" aria-hidden="true">4</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop adm-bell-pop" role="dialog" aria-label="Уведомления администратора">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления администратора</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="adm-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <div><button class="btn btn-secondary btn-sm" onClick="{{n.go}}">{{n.act}}</button></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <div class="adm-banner" role="note">
+      <svg class="ic" aria-hidden="true"><use href="#i-shield-ok"></use></svg>
+      <span style="flex: 1 1 320px"><b>Администратор не видит финансы, профиль и переписку пользователей</b> — только метаданные: сколько запросов, какие инструменты, сколько времени.</span>
+    </div>
+
+    <div class="tabs adm-tabs" aria-label="Разделы администрирования">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="7">
+        <button class="{{t.cls}}" aria-pressed="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}<sc-if value="{{t.dot}}" hint-placeholder-val="{{false}}"><span class="adm-tdot" aria-hidden="true"></span><span class="adm-sr">, есть что проверить</span></sc-if></button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isLaws}}" hint-placeholder-val="{{true}}">
+      <div class="adm-stack-v">
+        <div class="adm-kpis">
+          <div class="card adm-kpi"><span class="adm-kpi-l">В индексе, с полным текстом</span><span class="adm-kpi-v num">184</span><span class="xs muted">ищутся по статьям, цитируются</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Только карточка</span><span class="adm-kpi-v num">212</span><span class="xs muted">текста на pravo.by нет — ссылка без цитат</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Утратили силу</span><span class="adm-kpi-v num">37</span><span class="xs muted">с отметкой и ссылкой на замену</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Ждут решения</span><span class="adm-kpi-v num" style="color: var(--warn)">{{candTotal}}</span><span class="xs muted">кандидатов в очереди</span></div>
+        </div>
+
+        <div class="adm-g2 adm-g2s">
+          <section class="card" aria-labelledby="upd-t">
+            <div class="card-h"><h2 id="upd-t" class="card-t">Расписание проверок</h2><span class="{{autoBadgeCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{autoBadgeIcon}}"></use></svg>{{autoBadge}}</span></div>
+            <div class="adm-kv"><span class="muted">Последняя проверка</span><span class="num strong">{{lastCheck}}</span></div>
+            <div class="adm-kv"><span class="muted">Результат</span><span>{{lastResult}}</span></div>
+            <div class="adm-kv"><span class="muted">Следующая проверка</span><span class="num strong">22.10.2026, 04:00</span></div>
+            <div class="adm-kv">
+              <span class="muted">Ночное окно</span>
+              <span class="row" style="gap: 6px">
+                <label for="w-from" class="xs muted">с</label><input id="w-from" class="input num adm-time" type="time" value="{{winFrom}}" onChange="{{onWinFrom}}">
+                <label for="w-to" class="xs muted">до</label><input id="w-to" class="input num adm-time" type="time" value="{{winTo}}" onChange="{{onWinTo}}">
+              </span>
+            </div>
+            <div class="adm-kv"><label for="sw-auto" class="muted">Проверять законы автоматически</label><label class="sw"><input id="sw-auto" type="checkbox" checked="{{auto}}" onChange="{{toggleAuto}}"><span></span></label></div>
+            <div class="adm-kv">
+              <span class="muted">Новые акты</span>
+              <div class="seg" aria-label="Что делать с новыми актами">
+                <sc-for list="{{newModes}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.sel}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for>
+              </div>
+            </div>
+          </section>
+
+          <section class="card adm-col" aria-labelledby="idx-t">
+            <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 id="idx-t" class="card-t">Индекс и загрузчик</h2><span class="xs muted">1 поток · запрос раз в 3–5 с</span></div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div class="row small" style="justify-content: space-between"><span>Векторный индекс · модель bge-m3</span><span class="num strong">{{vecPct}}%</span></div>
+              <div class="bar" role="progressbar" aria-label="Векторный индекс" aria-valuenow="{{vecPct}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{vecPct}}%"></span></div>
+              <span class="xs muted">{{vecText}}</span>
+            </div>
+            <sc-if value="{{checking}}" hint-placeholder-val="{{false}}">
+              <div class="adm-note adm-note-info" aria-live="polite" style="flex-direction: column; gap: 8px">
+                <div class="row" style="gap: 8px"><span class="spin"></span><b>{{checkText}}</b></div>
+                <div class="bar" style="width: 100%"><span style="width: {{checkPct}}%"></span></div>
+              </div>
+            </sc-if>
+            <div class="row-btns">
+              <button class="btn btn-primary" onClick="{{runCheck}}" disabled="{{checking}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-refresh"></use></svg>Проверить сейчас</button>
+              <button class="btn btn-secondary" onClick="{{openAdd}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить акты вручную</button>
+            </div>
+            <div class="field" style="border-top: 1px solid var(--line); padding-top: 14px">
+              <label for="contact">Контакт оператора для загрузчика</label>
+              <input id="contact" class="input" value="{{contact}}" onChange="{{onContact}}">
+              <span class="hint adm-mono">User-Agent: {{ua}}</span>
+              <sc-if value="{{noContact}}" hint-placeholder-val="{{false}}"><div class="adm-note adm-note-danger"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-alert"></use></svg><span>Контакт пустой — загрузчик остановлен. pravo.by должен знать, кому написать, если что-то пойдёт не так.</span></div></sc-if>
+            </div>
+          </section>
+        </div>
+
+        <section class="card adm-col" aria-label="Каталог законов">
+          <div class="adm-sub" aria-label="Разделы каталога">
+            <sc-for list="{{lawSubs}}" as="s" hint-placeholder-count="5"><button class="{{s.cls}}" aria-pressed="{{s.sel}}" onClick="{{s.pick}}">{{s.label}}<sc-if value="{{s.hasCnt}}" hint-placeholder-val="{{false}}"><span class="{{s.cntCls}}">{{s.cnt}}</span></sc-if></button></sc-for>
+          </div>
+
+          <sc-if value="{{subActs}}" hint-placeholder-val="{{true}}">
+            <div class="adm-col">
+              <div class="row-btns" aria-label="Фильтр по статусу">
+                <sc-for list="{{actChips}}" as="c" hint-placeholder-count="7"><button class="{{c.cls}}" aria-pressed="{{c.sel}}" onClick="{{c.pick}}">{{c.label}}<span class="num muted">{{c.n}}</span></button></sc-for>
+              </div>
+              <div class="adm-scroll">
+                <div class="adm-t" role="table" aria-label="Акты каталога">
+                  <div class="adm-th adm-c-acts" role="row"><span role="columnheader">Акт</span><span role="columnheader">Тема</span><span role="columnheader">Статус</span><span role="columnheader">Редакция</span><span role="columnheader">Проверен</span><span role="columnheader"><span class="adm-sr">Действие</span></span></div>
+                  <sc-for list="{{acts}}" as="a" hint-placeholder-count="8">
+                    <div class="adm-tr adm-c-acts" role="row">
+                      <div class="adm-cell" role="cell"><div class="strong small">{{a.n}}</div><div class="xs muted adm-mono">{{a.id}}</div></div>
+                      <div class="adm-cell small" role="cell">{{a.topic}}</div>
+                      <div class="adm-cell" role="cell"><span class="{{a.bCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{a.bIcon}}"></use></svg>{{a.bText}}</span><sc-if value="{{a.hasNote}}" hint-placeholder-val="{{false}}"><div class="xs muted" style="margin-top: 4px">{{a.note}}</div></sc-if></div>
+                      <div class="adm-cell num small" role="cell">{{a.ed}}</div>
+                      <div class="adm-cell num small muted" role="cell">{{a.chk}}</div>
+                      <div class="adm-cell adm-right" role="cell">
+                        <sc-if value="{{a.isLink}}" hint-placeholder-val="{{true}}"><a class="btn btn-ghost btn-sm" href="Laws.dc.html" aria-label="{{a.openAria}}">Открыть</a></sc-if>
+                        <sc-if value="{{a.isAct}}" hint-placeholder-val="{{false}}"><button class="btn btn-secondary btn-sm" onClick="{{a.act}}">{{a.actLabel}}</button></sc-if>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div class="row" style="justify-content: space-between; flex-wrap: wrap">
+                <span class="xs muted">Показаны примеры: {{actsShown}} из {{actsTotal}}</span>
+                <sc-if value="{{canMoreActs}}" hint-placeholder-val="{{true}}"><button class="btn btn-ghost btn-sm" onClick="{{moreActs}}">{{moreActsLabel}}<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-d"></use></svg></button></sc-if>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{subCands}}" hint-placeholder-val="{{false}}">
+            <div class="adm-col">
+              <p class="small muted">Акты, которые нашёл загрузчик, но не добавил сам: тема не определилась или источник требует решения человека. Отклонённые повторно не предлагаются.</p>
+              <sc-if value="{{noCands}}" hint-placeholder-val="{{false}}"><div class="empty"><svg class="ic ic-xl" aria-hidden="true"><use href="#i-check-c"></use></svg><span>На этой странице всё разобрано. Ещё 4 кандидата — на следующей.</span></div></sc-if>
+              <div>
+                <sc-for list="{{cands}}" as="c" hint-placeholder-count="5">
+                  <div class="adm-cand">
+                    <div style="flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+                      <div class="strong small">{{c.n}}</div>
+                      <div class="row" style="gap: 8px; flex-wrap: wrap"><span class="badge b-neutral">{{c.src}}</span><span class="xs muted">{{c.why}}</span></div>
+                    </div>
+                    <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{c.add}}" aria-label="{{c.addAria}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить</button><button class="btn btn-ghost btn-sm" onClick="{{c.reject}}" aria-label="{{c.rejAria}}">Отклонить</button></div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{subLog}}" hint-placeholder-val="{{false}}">
+            <div>
+              <sc-for list="{{logs}}" as="l" hint-placeholder-count="5">
+                <div class="adm-log">
+                  <span class="adm-log-ic" style="background: {{l.bg}}; color: {{l.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{l.icon}}"></use></svg></span>
+                  <div style="min-width: 0"><div class="xs muted num">{{l.t}}</div><div>{{l.text}}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{subCrawl}}" hint-placeholder-val="{{false}}">
+            <div class="adm-col">
+              <div class="adm-scroll">
+                <div class="adm-t adm-mono" role="table" aria-label="Запросы загрузчика сегодня">
+                  <div class="adm-th adm-c-crawl" role="row"><span role="columnheader">Время</span><span role="columnheader">Адрес на pravo.by</span><span role="columnheader">Код</span><span role="columnheader">Размер</span><span role="columnheader">Длит.</span></div>
+                  <sc-for list="{{crawl}}" as="r" hint-placeholder-count="6">
+                    <div class="adm-tr adm-c-crawl" role="row"><span role="cell">{{r.t}}</span><span role="cell" style="word-break: break-all">{{r.u}}</span><span role="cell"><span class="{{r.cls}}">{{r.c}}</span></span><span role="cell">{{r.s}}</span><span role="cell">{{r.d}}</span></div>
+                  </sc-for>
+                </div>
+              </div>
+              <p class="xs muted">PDF официального опубликования, поиск и поисковые выдачи автоматически не запрашиваются (так требует robots.txt). При ответах 403 или 429 цикл останавливается до следующих суток.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{subEds}}" hint-placeholder-val="{{false}}">
+            <div class="adm-col">
+              <p class="small muted">Правила, по которым загрузчик отбирает акты и раскладывает их по темам. Изменения применяются со следующей проверки.</p>
+              <div class="adm-eds">
+                <sc-for list="{{editors}}" as="e" hint-placeholder-count="7"><button class="adm-ed" onClick="{{e.open}}"><span>{{e.n}}</span><span class="row" style="gap: 6px"><span class="num xs muted">{{e.count}}</span><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></span></button></sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isRates}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <div class="adm-note adm-note-info"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-info"></use></svg><span><b>Калькулятор вычетов считает только по подтверждённым значениям.</b> Новое или изменённое число начинает действовать после нажатия «Подтвердить». Если значения на нужный год нет, калькулятор так и скажет пользователю.</span></div>
+        <section class="card" aria-labelledby="rt-t">
+          <div class="card-h"><h2 id="rt-t" class="card-t">Таблица ставок</h2><span class="xs muted">Подоходный налог · Налоговый кодекс РБ</span></div>
+          <div class="adm-scroll">
+            <div class="adm-t" role="table" aria-label="Таблица ставок">
+              <div class="adm-th adm-c-rates" role="row"><span role="columnheader">Параметр</span><span role="columnheader">Значение</span><span role="columnheader">Источник</span><span role="columnheader">Статус</span><span role="columnheader"><span class="adm-sr">Действия</span></span></div>
+              <sc-for list="{{rates}}" as="r" hint-placeholder-count="12">
+                <div class="adm-tr adm-c-rates" role="row">
+                  <div class="adm-cell" role="cell"><div class="small">{{r.p}}</div><div class="xs muted">Период: {{r.per}}</div></div>
+                  <div class="adm-cell num strong" role="cell" style="white-space: normal">{{r.v}}</div>
+                  <div class="adm-cell xs muted" role="cell">{{r.src}}</div>
+                  <div class="adm-cell" role="cell"><span class="{{r.bCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{r.bIcon}}"></use></svg>{{r.bText}}</span><sc-if value="{{r.hasSub}}" hint-placeholder-val="{{true}}"><div class="xs muted" style="margin-top: 4px">{{r.bSub}}</div></sc-if><sc-if value="{{r.isFlag}}" hint-placeholder-val="{{false}}"><div class="xs" style="color: var(--warn); margin-top: 4px">В изменённом фрагменте другое число — сверьте. <a href="Laws.dc.html">Открыть фрагмент</a></div></sc-if></div>
+                  <div class="adm-cell adm-right row-btns" role="cell" style="justify-content: flex-end">
+                    <sc-if value="{{r.canConfirm}}" hint-placeholder-val="{{false}}"><button class="btn btn-primary btn-sm" onClick="{{r.confirm}}" aria-label="{{r.confAria}}">Подтвердить</button></sc-if>
+                    <button class="btn btn-ghost btn-sm" onClick="{{r.edit}}" aria-label="{{r.editAria}}">{{r.editLabel}}</button>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+        <section class="card" aria-labelledby="rh-t">
+          <h2 id="rh-t" class="card-t" style="margin-bottom: 14px">История изменений</h2>
+          <div>
+            <sc-for list="{{rateHist}}" as="h" hint-placeholder-count="2">
+              <div class="adm-log"><span class="adm-log-ic" style="background: #ECF0EE; color: var(--ink-2)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg></span><div><div class="xs muted num">{{h.t}}</div><div>{{h.text}}</div></div></div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isAi}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <div class="row" style="justify-content: space-between; flex-wrap: wrap">
+          <div class="seg" aria-label="Период">
+            <sc-for list="{{periods}}" as="p" hint-placeholder-count="3"><button class="{{p.cls}}" aria-pressed="{{p.sel}}" onClick="{{p.pick}}">{{p.label}}</button></sc-for>
+          </div>
+          <button class="btn btn-secondary btn-sm" onClick="{{openPrice}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Прайс-лист</button>
+        </div>
+        <div class="adm-kpis adm-kpis5">
+          <div class="card adm-kpi"><span class="adm-kpi-l">Запросов</span><span class="adm-kpi-v num">{{ai.req}}</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Токенов</span><span class="adm-kpi-v num">{{ai.tok}}</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Условная стоимость<button class="why" aria-label="Откуда эта цифра: условная стоимость" aria-expanded="{{costOpen}}" onClick="{{whyCost}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></span><span class="adm-kpi-v num">{{ai.cost}}</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Медиана ответа</span><span class="adm-kpi-v num">{{ai.med}}</span></div>
+          <div class="card adm-kpi"><span class="adm-kpi-l">Ошибки</span><span class="adm-kpi-v num">{{ai.err}}</span><span class="xs muted">почти все ответил резервный провайдер</span></div>
+        </div>
+        <sc-if value="{{costOpen}}" hint-placeholder-val="{{false}}">
+          <div class="adm-note adm-note-info"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-info"></use></svg><span style="flex: 1">Условная стоимость = токены × цена из прайс-листа провайдера. На деле всё работает на бесплатных тарифах — цифра показывает, сколько это стоило бы на платных.</span><button class="btn btn-ghost btn-sm" onClick="{{whyCost}}">Понятно</button></div>
+        </sc-if>
+        <div class="adm-g2">
+          <section class="card" aria-labelledby="tk-t">
+            <h2 id="tk-t" class="card-t" style="margin-bottom: 12px">По задачам</h2>
+            <sc-for list="{{aiTasks}}" as="t" hint-placeholder-count="6">
+              <div class="adm-hbar"><span>{{t.n}}</span><div class="bar" aria-hidden="true"><span style="width: {{t.w}}%"></span></div><span class="num strong" style="text-align: right">{{t.v}}</span></div>
+            </sc-for>
+          </section>
+          <section class="card adm-col" aria-labelledby="pv-t">
+            <h2 id="pv-t" class="card-t">Кто отвечал</h2>
+            <div class="adm-stack" role="img" aria-label="{{provAria}}">
+              <sc-for list="{{provShare}}" as="s" hint-placeholder-count="3"><span style="width: {{s.v}}%; background: {{s.c}}"></span></sc-for>
+            </div>
+            <div class="adm-leg"><sc-for list="{{provShare}}" as="s" hint-placeholder-count="3"><span class="adm-leg-i"><i style="background: {{s.c}}"></i><span>{{s.n}} — <b class="num">{{s.v}}%</b></span></span></sc-for></div>
+            <p class="small muted">Облачные модели — {{cloudShare}}%, локальные — {{localShare}}%: это пользователи без облачного согласия и запасной вариант при сбоях.</p>
+            <div style="border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 12px">
+              <div class="lbl">Дневные лимиты бесплатных тарифов · сегодня</div>
+              <sc-for list="{{limits}}" as="l" hint-placeholder-count="3">
+                <div style="display: flex; flex-direction: column; gap: 6px">
+                  <div class="row small" style="justify-content: space-between; flex-wrap: wrap"><span>{{l.n}}</span><span class="num strong">{{l.v}}</span></div>
+                  <sc-if value="{{l.hasBar}}" hint-placeholder-val="{{true}}"><div class="bar" aria-hidden="true"><span style="width: {{l.w}}%"></span></div></sc-if>
+                </div>
+              </sc-for>
+              <p class="xs muted">Минутный лимит Groq (8 тыс. токенов) сегодня превышался 3 раза — эти запросы ответил Z.ai.</p>
+            </div>
+          </section>
+        </div>
+        <section class="card adm-col" aria-labelledby="rq-t">
+          <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 id="rq-t" class="card-t">Последние запросы</h2><span class="row xs muted" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-lock"></use></svg>Текст запросов и ответов не хранится и не показывается</span></div>
+          <div class="adm-scroll">
+            <div class="adm-t" role="table" aria-label="Последние запросы к ИИ">
+              <div class="adm-th adm-c-reqs" role="row"><span role="columnheader">Время</span><span role="columnheader">Задача</span><span role="columnheader">Провайдер и модель</span><span role="columnheader">Токены · время</span><span role="columnheader">Шаги агента</span><span role="columnheader">Итог</span></div>
+              <sc-for list="{{reqs}}" as="r" hint-placeholder-count="7">
+                <div class="adm-tr adm-c-reqs" role="row">
+                  <div class="adm-cell" role="cell"><div class="num small">{{r.t}}</div><div class="xs muted adm-mono">{{r.u}}</div></div>
+                  <div class="adm-cell small" role="cell">{{r.task}}</div>
+                  <div class="adm-cell small" role="cell">{{r.prov}}</div>
+                  <div class="adm-cell" role="cell"><div class="num small">{{r.tok}}</div><div class="xs muted num">{{r.dur}}</div></div>
+                  <div class="adm-cell" role="cell"><div class="adm-tools"><sc-for list="{{r.tools}}" as="x" hint-placeholder-count="2"><span class="adm-tool">{{x.n}}</span></sc-for></div></div>
+                  <div class="adm-cell" role="cell"><span class="{{r.cls}}" style="white-space: normal">{{r.res}}</span></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isUsers}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <section class="card adm-col" aria-labelledby="us-t">
+          <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 id="us-t" class="card-t">Пользователи · {{userCount}}</h2><span class="xs muted">Финансы и переписка пользователей здесь не видны</span></div>
+          <div class="adm-scroll">
+            <div class="adm-t" role="table" aria-label="Пользователи">
+              <div class="adm-th adm-c-users" role="row"><span role="columnheader">Email</span><span role="columnheader">Почта</span><span role="columnheader">Статус</span><span role="columnheader">Роль</span><span role="columnheader">Telegram</span><span role="columnheader">Режим ИИ</span><span role="columnheader"><span class="adm-sr">Действия</span></span></div>
+              <sc-for list="{{users}}" as="u" hint-placeholder-count="5">
+                <div class="adm-tr adm-c-users" role="row">
+                  <div class="adm-cell" role="cell">
+                    <div class="row" style="gap: 6px; flex-wrap: wrap"><span class="small strong">{{u.e}}</span><sc-if value="{{u.me}}" hint-placeholder-val="{{false}}"><span class="badge b-brand">вы</span></sc-if><sc-if value="{{u.demo}}" hint-placeholder-val="{{false}}"><span class="badge b-amber">демо</span></sc-if></div>
+                    <div class="xs muted num">с {{u.reg}}</div>
+                  </div>
+                  <div class="adm-cell" role="cell"><span class="{{u.confCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{u.confIcon}}"></use></svg>{{u.confText}}</span></div>
+                  <div class="adm-cell" role="cell"><span class="{{u.stCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{u.stIcon}}"></use></svg>{{u.stText}}</span></div>
+                  <div class="adm-cell small" role="cell">{{u.role}}</div>
+                  <div class="adm-cell small" role="cell">{{u.tg}}</div>
+                  <div class="adm-cell small" role="cell">{{u.mode}}</div>
+                  <div class="adm-cell adm-right" role="cell"><button class="btn btn-ghost btn-sm btn-icon" aria-label="{{u.menuAria}}" onClick="{{u.openMenu}}"><svg class="ic" aria-hidden="true"><use href="#i-more"></use></svg></button></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+        <div class="adm-note adm-note-info"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-key"></use></svg><span>Ссылка для сброса пароля уходит <b>самому пользователю</b> — на почту и в привязанный Telegram. Администратору её показывают, только если у пользователя нет ни подтверждённой почты, ни Telegram; это записывается в журнал, а пользователь узнаёт о сбросе при следующем входе.</span></div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isQuality}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <section class="card" aria-labelledby="ql-t">
+          <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 14px; align-items: flex-start">
+            <div style="flex: 1 1 420px"><h2 id="ql-t" class="card-t">Проверка качества ИИ</h2><p class="small muted" style="margin-top: 4px">Последний прогон: <b class="num">{{qLast}}</b> · Groq gpt-oss-120b и qwen3.8-27b · 4 мин 12 с. Эталоны — образцы, которые администратор сам положил в систему.</p></div>
+            <button class="btn btn-primary" onClick="{{askQRun}}" disabled="{{qRunning}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-pulse"></use></svg>Запустить проверку</button>
+          </div>
+          <sc-if value="{{qRunning}}" hint-placeholder-val="{{false}}">
+            <div style="margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px" aria-live="polite">
+              <sc-for list="{{qSteps}}" as="q" hint-placeholder-count="5">
+                <div class="adm-qrow">
+                  <sc-if value="{{q.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg></sc-if>
+                  <sc-if value="{{q.going}}" hint-placeholder-val="{{false}}"><span class="spin"></span></sc-if>
+                  <sc-if value="{{q.wait}}" hint-placeholder-val="{{true}}"><svg class="ic ic-s faint" aria-hidden="true"><use href="#i-clock"></use></svg></sc-if>
+                  <span class="{{q.cls}}">{{q.n}}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </section>
+        <div class="adm-g3">
+          <sc-for list="{{qGroups}}" as="g" hint-placeholder-count="5">
+            <section class="card" aria-label="{{g.n}}">
+              <div class="card-h" style="margin-bottom: 8px"><h2 class="card-t">{{g.n}}</h2><span class="xs muted">{{g.set}}</span></div>
+              <div>
+                <sc-for list="{{g.ms}}" as="m" hint-placeholder-count="2">
+                  <div class="adm-metric">
+                    <span class="small muted">{{m.n}}</span>
+                    <div class="row" style="justify-content: space-between; align-items: baseline; flex-wrap: wrap"><span class="num" style="font-size: 22px; font-weight: 650">{{m.v}}</span><span class="adm-delta" style="color: {{m.dc}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{m.di}}"></use></svg>{{m.dt}}</span></div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+          </sc-for>
+          <section class="card" aria-labelledby="fl-t">
+            <div class="card-h" style="margin-bottom: 12px"><h2 id="fl-t" class="card-t">Не прошли сценарии агента</h2><span class="badge b-warn">2</span></div>
+            <div class="adm-log"><span class="adm-log-ic" style="background: var(--warn-soft); color: var(--warn)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg></span><span class="small">«А в августе?» после вопроса про сентябрь — агент потерял период из контекста.</span></div>
+            <div class="adm-log"><span class="adm-log-ic" style="background: var(--warn-soft); color: var(--warn)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg></span><span class="small">«Удали все траты за вчера» — в подтверждении 11 операций вместо 12.</span></div>
+          </section>
+        </div>
+        <section class="card adm-col" aria-labelledby="qh-t">
+          <h2 id="qh-t" class="card-t">Прошлые прогоны</h2>
+          <div class="adm-scroll">
+            <div class="adm-t" role="table" aria-label="Прошлые прогоны">
+              <div class="adm-th adm-c-runs" role="row"><span role="columnheader">Дата</span><span role="columnheader">Модели</span><span role="columnheader">Чеки: итог</span><span role="columnheader">Категории</span><span role="columnheader">Право: статья</span><span role="columnheader">Выдуманные цитаты</span><span role="columnheader">Агент</span></div>
+              <div class="adm-tr adm-c-runs" role="row"><span role="cell" class="num small">20.10.2026, 22:40</span><span role="cell" class="small">gpt-oss-120b, qwen3.8-27b</span><span role="cell" class="num">96%</span><span role="cell" class="num">93%</span><span role="cell" class="num">87%</span><span role="cell" class="num">0</span><span role="cell" class="num">24 из 26</span></div>
+              <div class="adm-tr adm-c-runs" role="row"><span role="cell" class="num small">13.10.2026, 22:31</span><span role="cell" class="small">gpt-oss-120b, qwen3.8-27b</span><span role="cell" class="num">94%</span><span role="cell" class="num">92%</span><span role="cell" class="num">84%</span><span role="cell" class="num">0</span><span role="cell" class="num">23 из 26</span></div>
+              <div class="adm-tr adm-c-runs" role="row"><span role="cell" class="num small">06.10.2026, 23:05</span><span role="cell" class="small">gpt-oss-120b, GLM-4.6V-Flash</span><span role="cell" class="num">91%</span><span role="cell" class="num">90%</span><span role="cell" class="num">81%</span><span role="cell" class="num">1</span><span role="cell" class="num">21 из 26</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isProv}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <div class="adm-note adm-note-info"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-info"></use></svg><span>Запрос уходит первому включённому провайдеру. При ошибке, таймауте или исчерпанном лимите он сам переходит к следующему — пользователь этого не замечает. У пользователей без облачного согласия работают только локальные модели.</span></div>
+        <div class="adm-g2">
+          <sc-for list="{{chains}}" as="c" hint-placeholder-count="6">
+            <section class="card adm-task" aria-label="{{c.n}}">
+              <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 class="card-t">{{c.n}}</h2><span class="xs muted">{{c.hint}}</span></div>
+              <sc-for list="{{c.rows}}" as="r" hint-placeholder-count="3">
+                <div class="{{r.cls}}">
+                  <div class="adm-prov-a">
+                    <span class="adm-ord num" aria-hidden="true">{{r.i}}</span>
+                    <div style="flex: 1; min-width: 0"><div class="small strong">{{r.n}}</div><div class="xs muted">{{r.m}} · {{r.kind}}</div></div>
+                    <sc-if value="{{r.movable}}" hint-placeholder-val="{{true}}"><label class="sw"><input type="checkbox" checked="{{r.on}}" onChange="{{r.toggle}}" aria-label="{{r.swAria}}"><span></span></label></sc-if>
+                  </div>
+                  <div class="adm-prov-b">
+                    <span class="adm-res" style="color: {{r.resC}}" aria-live="polite">
+                      <sc-if value="{{r.going}}" hint-placeholder-val="{{false}}"><span class="spin"></span></sc-if>
+                      <sc-if value="{{r.hasIcon}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{r.resI}}"></use></svg></sc-if>
+                      <span>{{r.res}}</span>
+                    </span>
+                    <sc-if value="{{r.movable}}" hint-placeholder-val="{{true}}">
+                      <span class="row" style="gap: 2px">
+                        <button class="btn btn-ghost btn-sm btn-icon" aria-label="{{r.upAria}}" onClick="{{r.up}}" disabled="{{r.first}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-adm-chev-u"></use></svg></button>
+                        <button class="btn btn-ghost btn-sm btn-icon" aria-label="{{r.downAria}}" onClick="{{r.down}}" disabled="{{r.last}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-d"></use></svg></button>
+                      </span>
+                    </sc-if>
+                    <button class="btn btn-secondary btn-sm" onClick="{{r.check}}" aria-label="{{r.checkAria}}">Проверить связь</button>
+                  </div>
+                </div>
+              </sc-for>
+            </section>
+          </sc-for>
+        </div>
+        <div class="adm-g2">
+          <section class="card" aria-labelledby="ky-t">
+            <h2 id="ky-t" class="card-t" style="margin-bottom: 4px">Ключи API</h2>
+            <p class="xs muted" style="margin-bottom: 6px">Поля только для записи: после сохранения ключ хранится зашифрованным, больше не показывается и не попадает в логи.</p>
+            <sc-for list="{{keys}}" as="k" hint-placeholder-count="3">
+              <div class="adm-key">
+                <div style="display: flex; flex-direction: column; gap: 4px; align-self: center"><span class="small strong">{{k.n}}</span><span class="{{k.bCls}}" style="align-self: flex-start">{{k.bText}}</span></div>
+                <div class="field" style="min-width: 0">
+                  <label class="xs muted" for="{{k.id}}" style="font-weight: 500">{{k.label}}</label>
+                  <input id="{{k.id}}" class="input" type="password" value="{{k.draft}}" onChange="{{k.onDraft}}" disabled="{{k.dis}}" placeholder="{{k.ph}}">
+                </div>
+                <button class="btn btn-secondary" onClick="{{k.save}}" disabled="{{k.cantSave}}">Сохранить</button>
+                <sc-if value="{{k.dis}}" hint-placeholder-val="{{false}}"><div class="xs" style="grid-column: 1 / -1; color: var(--warn)">Недоступен при запуске из Беларуси, а обход через VPN нарушает правила провайдера.</div></sc-if>
+              </div>
+            </sc-for>
+          </section>
+          <section class="card" aria-labelledby="lm-t">
+            <h2 id="lm-t" class="card-t" style="margin-bottom: 4px">Локальные модели</h2>
+            <p class="xs muted" style="margin-bottom: 6px">Система скачивает их сама и докачивает после обрыва. Подобраны под процессор без дискретной видеокарты.</p>
+            <sc-for list="{{models}}" as="m" hint-placeholder-count="6">
+              <div class="adm-model">
+                <div style="flex: 1 1 180px; min-width: 0"><div class="small strong">{{m.n}}</div><div class="xs muted">{{m.task}} · {{m.size}}</div></div>
+                <div class="adm-model-s" style="flex: 0 1 220px">
+                  <sc-if value="{{m.isOk}}" hint-placeholder-val="{{true}}"><span class="badge b-ok" style="align-self: flex-start"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Установлена</span></sc-if>
+                  <sc-if value="{{m.isDl}}" hint-placeholder-val="{{false}}"><div style="display: flex; flex-direction: column; gap: 4px"><span class="xs num">{{m.dlText}}</span><div class="bar" role="progressbar" aria-label="{{m.dlAria}}" aria-valuenow="{{m.dlPct}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{m.dlPct}}%"></span></div></div></sc-if>
+                  <sc-if value="{{m.isNone}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral" style="align-self: flex-start">Не установлена</span></sc-if>
+                </div>
+                <sc-if value="{{m.isNone}}" hint-placeholder-val="{{false}}"><button class="btn btn-secondary btn-sm" onClick="{{m.start}}" aria-label="{{m.dlBtnAria}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-download"></use></svg>Скачать</button></sc-if>
+                <sc-if value="{{m.canPause}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{m.pause}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{m.pauseIcon}}"></use></svg>{{m.pauseLabel}}</button></sc-if>
+              </div>
+            </sc-for>
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isSys}}" hint-placeholder-val="{{false}}">
+      <div class="adm-stack-v">
+        <section class="card adm-col" aria-labelledby="bg-t">
+          <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 id="bg-t" class="card-t">Фоновые задачи</h2><span class="xs muted">Если компьютер был выключен, пропущенное выполнится при следующем запуске</span></div>
+          <div class="adm-scroll">
+            <div class="adm-t" role="table" aria-label="Фоновые задачи">
+              <div class="adm-th adm-c-jobs" role="row"><span role="columnheader">Задача</span><span role="columnheader">Расписание</span><span role="columnheader">Последний запуск</span><span role="columnheader">Состояние</span><span role="columnheader">Следующий</span></div>
+              <sc-for list="{{jobs}}" as="j" hint-placeholder-count="7">
+                <div class="adm-tr adm-c-jobs" role="row"><span role="cell" class="small strong">{{j.n}}</span><span role="cell" class="small">{{j.sch}}</span><span role="cell" class="num small">{{j.last}}</span><span role="cell"><span class="{{j.cls}}" style="white-space: normal">{{j.st}}</span></span><span role="cell" class="num small muted">{{j.next}}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+        <div class="adm-g2">
+          <section class="card adm-col" aria-labelledby="sm-t">
+            <div class="row" style="justify-content: space-between; flex-wrap: wrap"><h2 id="sm-t" class="card-t">Почта (SMTP)</h2><span class="{{smtpBadgeCls}}">{{smtpBadge}}</span></div>
+            <sc-if value="{{smtpNot}}" hint-placeholder-val="{{true}}"><div class="adm-note adm-note-warn"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-mail"></use></svg><span>Пока почта не настроена, все письма попадают в <a href="Mailbox.dc.html">локальный почтовый ящик</a> — он только для демо и разработки.</span></div></sc-if>
+            <div class="adm-g2" style="gap: 12px">
+              <div class="field"><label for="sm-host">Сервер</label><input id="sm-host" class="input" value="{{smtp.host}}" onChange="{{onSmtpHost}}" placeholder="smtp.example.by"></div>
+              <div class="field"><label for="sm-port">Порт</label><input id="sm-port" class="input num" value="{{smtp.port}}" onChange="{{onSmtpPort}}"></div>
+              <div class="field"><label for="sm-user">Логин</label><input id="sm-user" class="input" value="{{smtp.user}}" onChange="{{onSmtpUser}}" placeholder="kosht@example.by"></div>
+              <div class="field"><label for="sm-pass">Пароль</label><input id="sm-pass" class="input" type="password" value="{{smtp.pass}}" onChange="{{onSmtpPass}}" placeholder="{{smtpPassPh}}"></div>
+            </div>
+            <sc-if value="{{smtpHasErr}}" hint-placeholder-val="{{false}}"><div class="row small" role="alert" style="color: var(--danger); font-weight: 600; gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg><span>{{smtpErr}}</span></div></sc-if>
+            <div class="row-btns"><button class="btn btn-primary" onClick="{{saveSmtp}}">Сохранить</button><button class="btn btn-secondary" onClick="{{testMail}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-send"></use></svg>Отправить тестовое письмо</button></div>
+          </section>
+          <section class="card adm-col" aria-labelledby="sy-t">
+            <h2 id="sy-t" class="card-t">Telegram, время и сеть</h2>
+            <div class="field">
+              <label for="tg-tok">Токен Telegram-бота</label>
+              <div class="row"><input id="tg-tok" class="input" type="password" value="{{tgDraft}}" onChange="{{onTgDraft}}" placeholder="Задан — введите новый, чтобы заменить"><button class="btn btn-secondary" onClick="{{saveTg}}" disabled="{{tgCantSave}}">Сохранить</button></div>
+              <div class="row-btns"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Задан · @kosht_demo_bot</span><button class="btn btn-ghost btn-sm" onClick="{{checkBot}}">Проверить бота</button></div>
+            </div>
+            <div class="field">
+              <label for="tz">Часовой пояс</label>
+              <select id="tz" class="input" value="{{tz}}" onChange="{{onTz}}">
+                <option value="Europe/Minsk">Europe/Minsk (UTC+3)</option>
+                <option value="Europe/Moscow">Europe/Moscow (UTC+3)</option>
+                <option value="Europe/Vilnius">Europe/Vilnius (UTC+2/+3)</option>
+                <option value="Europe/Warsaw">Europe/Warsaw (UTC+1/+2)</option>
+              </select>
+              <span class="hint">По нему считаются «сегодня», «вчера», расписания и напоминания.</span>
+            </div>
+            <div class="adm-kv" style="align-items: flex-start; border-top: 1px solid var(--line); padding-top: 14px">
+              <div style="flex: 1 1 240px"><label for="sw-lan" class="strong small">Доступ с других устройств в локальной сети</label><div class="xs muted" style="margin-top: 2px">{{lanText}}</div></div>
+              <label class="sw"><input id="sw-lan" type="checkbox" checked="{{lan}}" onChange="{{toggleLan}}"><span></span></label>
+            </div>
+            <div class="adm-kv"><span class="small">Режим разработки</span><span class="row" style="gap: 8px; flex-wrap: wrap"><span class="badge b-neutral">Выключен</span><span class="xs muted">включается только в конфигурации</span></span></div>
+          </section>
+        </div>
+        <section class="card adm-danger row" style="gap: 14px; flex-wrap: wrap" aria-labelledby="dm-t">
+          <span class="cat-ic" style="background: var(--danger-soft); color: var(--danger); width: 44px; height: 44px" aria-hidden="true"><svg class="ic"><use href="#i-refresh"></use></svg></span>
+          <div style="flex: 1 1 320px"><h2 id="dm-t" class="card-t">Пересоздать демо-данные</h2><p class="small muted" style="margin-top: 2px">Демо-пользователь получит свежие 6 месяцев операций до сегодняшнего дня, чеки, лимиты, цели и события. Реальных пользователей это не затронет.</p></div>
+          <button class="btn btn-secondary" style="color: var(--danger); border-color: #E7B3AD" onClick="{{askDemo}}" disabled="{{demoBusy}}"><sc-if value="{{demoBusy}}" hint-placeholder-val="{{false}}"><span class="spin"></span></sc-if><span>{{demoLabel}}</span></button>
+        </section>
+      </div>
+    </sc-if>
+  </div>
+</main>
+
+<sc-if value="{{mAdd}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal adm-wide" role="dialog" aria-modal="true" aria-labelledby="ma-t">
+      <div class="row" style="justify-content: space-between"><h2 id="ma-t" class="card-t" style="font-size: 18px">Добавить акты вручную</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="seg" aria-label="Как добавить" style="align-self: flex-start">
+        <sc-for list="{{addModes}}" as="m" hint-placeholder-count="2"><button class="{{m.cls}}" aria-pressed="{{m.sel}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for>
+      </div>
+      <sc-if value="{{addOne}}" hint-placeholder-val="{{true}}">
+        <div class="adm-col">
+          <p class="small muted">Вставьте ссылку на текст или карточку акта на pravo.by. Если текст есть, акт сразу появится в точном и полнотекстовом поиске, а векторы достроятся в фоне.</p>
+          <div class="field"><label for="add-url">Ссылка на pravo.by</label><input id="add-url" class="input" value="{{addUrl}}" onChange="{{onAddUrl}}" placeholder="https://pravo.by/document/?guid=3871&amp;p0=H10200090"></div>
+          <sc-if value="{{hasAddErr}}" hint-placeholder-val="{{false}}"><div class="row small" role="alert" style="color: var(--danger); font-weight: 600; gap: 6px; align-items: flex-start"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-alert"></use></svg><span>{{addErr}}</span></div></sc-if>
+          <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{confirmAdd}}">Добавить</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{addMany}}" hint-placeholder-val="{{false}}">
+        <div class="adm-col">
+          <p class="small muted">Так можно перенести подборку из тематических разделов pravo.by, закрытых для автоматического обхода. Одна ссылка — одна строка.</p>
+          <div class="field">
+            <label for="list-txt">Ссылки</label>
+            <textarea id="list-txt" class="adm-textarea adm-mono" value="{{listText}}" onChange="{{onListText}}" placeholder="https://pravo.by/document/?guid=3871&amp;p0=…"></textarea>
+            <span class="hint">Распознано ссылок на pravo.by: <b class="num">{{listCount}}</b>{{listBad}}</span>
+          </div>
+          <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{confirmList}}" disabled="{{listEmpty}}">{{listBtn}}</button></div>
+        </div>
+      </sc-if>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mEditor}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal adm-wide" role="dialog" aria-modal="true" aria-labelledby="me-t">
+      <div class="row" style="justify-content: space-between"><h2 id="me-t" class="card-t" style="font-size: 18px">{{ed.n}}</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small muted">{{ed.desc}}</p>
+      <div class="adm-t" role="table" aria-label="{{ed.n}}" style="border: 1px solid var(--line); border-radius: 10px">
+        <div class="adm-th adm-c-ed" role="row"><span role="columnheader">{{ed.h1}}</span><span role="columnheader">{{ed.h2}}</span></div>
+        <sc-for list="{{ed.rows}}" as="r" hint-placeholder-count="3"><div class="adm-tr adm-c-ed" role="row"><span role="cell" class="small strong">{{r.a}}</span><span role="cell" class="small">{{r.b}}</span></div></sc-for>
+      </div>
+      <span class="hint">Всего записей: <b class="num">{{ed.count}}</b>. Здесь показаны первые три.</span>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-secondary" onClick="{{edAdd}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить строку</button><button class="btn btn-primary" onClick="{{closeModal}}">Готово</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mRate}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="mr-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mr-t" class="card-t" style="font-size: 18px">Значение ставки</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small"><b>{{rateEdit.p}}</b> · период {{rateEdit.per}}</p>
+      <div class="field"><label for="rate-v">Значение</label><input id="rate-v" class="input num" value="{{rateVal}}" onChange="{{onRateVal}}" placeholder="например, 216 BYN/мес"><span class="hint">После сохранения значение получит статус «Требует подтверждения» и не будет использоваться, пока его не подтвердят.</span></div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{saveRate}}" disabled="{{rateEmpty}}">Сохранить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mActions}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="mu-t">
+      <div class="row" style="justify-content: space-between; align-items: flex-start"><div style="min-width: 0"><h2 id="mu-t" class="card-t" style="font-size: 18px">Действия с пользователем</h2><div class="small muted" style="word-break: break-all">{{target.e}}</div></div><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="adm-acts">
+        <button onClick="{{uBlock}}"><svg class="ic" aria-hidden="true"><use href="{{target.blockIcon}}"></use></svg><span>{{target.blockLabel}}</span></button>
+        <button onClick="{{uReset}}"><svg class="ic" aria-hidden="true"><use href="#i-key"></use></svg><span>Сбросить пароль</span></button>
+        <button onClick="{{uRole}}"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg><span>{{target.roleLabel}}</span></button>
+        <button class="danger" onClick="{{uDelete}}"><svg class="ic" aria-hidden="true"><use href="#i-trash"></use></svg><span>Удалить пользователя</span></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mBlock}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="mb-t">
+      <h2 id="mb-t" class="card-t" style="font-size: 18px; word-break: break-word">Заблокировать {{target.e}}?</h2>
+      <p class="small">Пользователь не сможет войти ни на сайт, ни в бот — оба покажут понятное сообщение о блокировке. Данные сохранятся, разблокировать можно в любой момент.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmBlock}}">Заблокировать</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mReset}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal adm-wide" role="dialog" aria-modal="true" aria-labelledby="mrs-t">
+      <div class="row" style="justify-content: space-between; align-items: flex-start"><div style="min-width: 0"><h2 id="mrs-t" class="card-t" style="font-size: 18px">Сбросить пароль</h2><div class="small muted" style="word-break: break-all">{{target.e}}</div></div><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <sc-if value="{{target.reachable}}" hint-placeholder-val="{{true}}">
+        <div class="adm-col">
+          <div class="adm-note adm-note-info"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-mail"></use></svg><span>Одноразовая ссылка (действует 1 час) уйдёт самому пользователю: {{target.channels}}. Вы её не увидите — так администратор не сможет войти в чужой аккаунт.</span></div>
+          <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{sendReset}}">Отправить ссылку пользователю</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{target.unreachable}}" hint-placeholder-val="{{false}}">
+        <div class="adm-col">
+          <div class="adm-note adm-note-warn"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-warn"></use></svg><span>У пользователя нет ни подтверждённой почты, ни Telegram. Ссылку можно показать вам — это запишется в журнал, а пользователь при следующем входе увидит «Пароль был сброшен администратором 21.10». Передайте ссылку лично.</span></div>
+          <sc-if value="{{resetShown}}" hint-placeholder-val="{{false}}">
+            <div class="adm-col" style="gap: 8px">
+              <div class="adm-code adm-mono">http://localhost:8080/reset/9f3c7a21e4b84d0c9a6f2b18d57e03aa</div>
+              <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{copyReset}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>Скопировать</button><span class="xs muted">Одноразовая, действует 1 час</span></div>
+            </div>
+          </sc-if>
+          <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Закрыть</button><sc-if value="{{resetHidden}}" hint-placeholder-val="{{true}}"><button class="btn btn-primary" onClick="{{showReset}}">Показать ссылку мне</button></sc-if></div>
+        </div>
+      </sc-if>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mDel}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="md-t">
+      <h2 id="md-t" class="card-t" style="font-size: 18px; color: var(--danger); word-break: break-word">Удалить {{target.e}}?</h2>
+      <p class="small">Аккаунт и все данные пользователя — операции, чеки, выписки, факты, диалоги и связанные с ним трассы — будут удалены безвозвратно. Привязка Telegram разорвётся.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmDel}}">Удалить навсегда</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mErr}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mer-t" aria-describedby="mer-d">
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <span class="cat-ic" style="background: var(--danger-soft); color: var(--danger)" aria-hidden="true"><svg class="ic"><use href="#i-alert"></use></svg></span>
+        <div><h2 id="mer-t" class="card-t" style="font-size: 17px">{{errTitle}}</h2><p id="mer-d" class="small" style="margin-top: 4px">{{errText}}</p></div>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-primary" onClick="{{closeModal}}">Понятно</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mQRun}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="mq-t">
+      <h2 id="mq-t" class="card-t" style="font-size: 18px">Запустить проверку качества?</h2>
+      <div class="adm-note adm-note-warn"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-warn"></use></svg><span>Проверка тратит лимиты бесплатных API: около 600 запросов и 1,1 млн токенов. Пользователям может не хватить дневного лимита Groq — их запросы уйдут к Z.ai или локальной модели.</span></div>
+      <p class="small muted">Наборы: чеки (24 фото), выписки (6), категоризация (300 операций), правовые вопросы (60), сценарии агента (26). Прогон идёт в фоне — страницу можно закрыть.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{runQ}}">Запустить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mPrice}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal adm-wide" role="dialog" aria-modal="true" aria-labelledby="mp-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mp-t" class="card-t" style="font-size: 18px">Прайс-лист для условной стоимости</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small muted">Цена за 1 млн токенов в долларах по прайсу провайдера на платном тарифе. Нужна только для оценки — платить ничего не нужно.</p>
+      <div class="adm-t" role="table" aria-label="Цены моделей" style="border: 1px solid var(--line); border-radius: 10px">
+        <div class="adm-th adm-c-price" role="row"><span role="columnheader">Модель</span><span role="columnheader">Вход, $</span><span role="columnheader">Выход, $</span></div>
+        <sc-for list="{{prices}}" as="p" hint-placeholder-count="4">
+          <div class="adm-tr adm-c-price" role="row"><span role="cell" class="small strong">{{p.n}}</span><span role="cell"><input class="input num" style="height: 36px" value="{{p.i}}" onChange="{{p.onI}}" aria-label="{{p.ariaI}}"></span><span role="cell"><input class="input num" style="height: 36px" value="{{p.o}}" onChange="{{p.onO}}" aria-label="{{p.ariaO}}"></span></div>
+        </sc-for>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{savePrice}}">Сохранить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mLan}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal adm-wide" role="dialog" aria-modal="true" aria-labelledby="mln-t">
+      <h2 id="mln-t" class="card-t" style="font-size: 18px">Открыть доступ из локальной сети?</h2>
+      <div class="adm-note adm-note-warn"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-warn"></use></svg><span>Сайт станет доступен всем устройствам в этой Wi-Fi сети по адресу <b class="adm-mono">http://192.168.1.24:8080</b>. Соединение — без HTTPS.</span></div>
+      <ul class="adm-list small">
+        <li>Ссылки в письмах и в боте будут вести на сетевой адрес.</li>
+        <li>Экран первого запуска и локальный почтовый ящик останутся доступны только с этого компьютера.</li>
+        <li>Микрофон на сайте работает только здесь, а с телефона можно надиктовать в Telegram.</li>
+      </ul>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-primary" onClick="{{confirmLan}}">Открыть доступ</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mDemo}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="mdm-t">
+      <h2 id="mdm-t" class="card-t" style="font-size: 18px">Пересоздать демо-данные?</h2>
+      <p class="small">Данные демо-пользователя irina.k@example.by заменятся свежими: 6 месяцев операций до 21.10.2026, чеки, лимиты, цели, события и история итогов недели. Реальные пользователи не затронуты.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmDemo}}">Пересоздать</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"vector":{"editor":"enum","options":["Готов","Строится"],"default":"Готов","section":"Состояние экрана"},"$preview":{"width":1440,"height":1700}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.D = {
+      acts: [
+        { n: 'Налоговый кодекс (Особенная часть)', id: 'Hk0900071', topic: 'Налоги', st: 'pending', note: 'Закон № 170-З от 17.07.2026 принят, в текст ещё не вошёл', ed: '21.10.2026', chk: '21.10, 04:06' },
+        { n: 'Трудовой кодекс', id: 'HK9900296', topic: 'Работа', st: 'quar', note: 'Похоже, изменилась вёрстка: пропало 7% фрагментов. Действует прежняя редакция', ed: '20.10.2026', chk: '21.10, 04:12' },
+        { n: 'Кодекс об образовании', id: 'Hk1100243', topic: 'Образование', st: 'err', note: 'Ошибка 503, повтор в 04:30', ed: '20.10.2026', chk: '21.10, 04:15' },
+        { n: 'Закон «О защите прав потребителей» № 90-З', id: 'H10200090', topic: 'Потребители', st: 'ok', note: '', ed: '18.10.2026', chk: '21.10, 04:07' },
+        { n: 'ПСМ № 778 от 14.06.2002 (невозвратные товары)', id: 'C20200778', topic: 'Потребители', st: 'card', note: 'Текста на pravo.by нет — показываем ссылку', ed: '—', chk: '21.10, 04:10' },
+        { n: 'Указ № 530 «О страховой деятельности»', id: 'P30600530', topic: 'Страхование', st: 'lost', note: 'Утратил силу 23.04.2025, заменён Указом № 108', ed: '—', chk: '18.10, 04:30' },
+        { n: 'Налоговый кодекс (Общая часть)', id: 'Hk0200166', topic: 'Налоги', st: 'pending', note: 'Закон № 170-З от 17.07.2026', ed: '21.10.2026', chk: '21.10, 04:05' },
+        { n: 'Гражданский кодекс', id: 'HK9800218', topic: 'Банки, договоры, наследство', st: 'pending', note: 'В карточке есть изменяющий акт, ещё не вступивший в силу', ed: '21.10.2026', chk: '21.10, 04:08' },
+        { n: 'Жилищный кодекс', id: 'Hk1200428', topic: 'Жильё', st: 'ok', note: '', ed: '21.10.2026', chk: '21.10, 04:09' },
+        { n: 'Закон № 369-З о гарантированном возмещении вкладов', id: 'H10800369', topic: 'Банки', st: 'card', note: '', ed: '—', chk: '21.10, 04:10' },
+        { n: 'Указ № 345 «О семейном капитале»', id: 'P31900345', topic: 'Пособия', st: 'ok', note: '', ed: '21.10.2026', chk: '21.10, 04:11' },
+        { n: 'Кодекс об административных правонарушениях', id: 'HK2100091', topic: 'Штрафы', st: 'pending', note: 'Принятые изменения есть в карточке', ed: '21.10.2026', chk: '21.10, 04:13' }
+      ],
+      editors: [
+        { n: 'Стартовый каталог', count: 28, desc: 'Встроенный список ключевых актов, с которого начинается база. Дальше каталог пополняется сам.', h1: 'Акт', h2: 'ID и что есть на pravo.by', rows: [['НК (Особенная часть)', 'Hk0900071 · текст'], ['Закон № 90-З', 'H10200090 · текст'], ['ПСМ № 778', 'C20200778 · только карточка']] },
+        { n: 'Рубрики ЕПК → темы', count: 64, desc: 'По рубрикам Единого правового классификатора акту назначается одна из 10 тем.', h1: 'Рубрика', h2: 'Тема', rows: [['03.02', 'Налоги'], ['04.01.14', 'Покупки и права потребителя'], ['08.03', 'Пособия, пенсии, льготы']] },
+        { n: 'Шаблоны заголовков для отсева', count: 23, desc: 'Акты с такими заголовками отсекаются без обращения к модели. Причина видна в журнале.', h1: 'Шаблон', h2: 'Что отсекает', rows: [['О назначении …', 'кадровые'], ['О награждении …', 'наградные'], ['О [Фамилия И. О.]', 'персональные']] },
+        { n: 'Словарь органов', count: 41, desc: 'Для актов без рубрик тема определяется по органу, который их принял.', h1: 'Орган', h2: 'Тема', rows: [['МНС', 'Налоги'], ['Минтруда и соцзащиты', 'Работа, пособия'], ['Национальный банк', 'Банки и кредиты']] },
+        { n: 'Краткие имена актов', count: 52, desc: 'Чтобы «ст. 210 НК» находилась сразу, без векторного поиска.', h1: 'Краткое имя', h2: 'Акт', rows: [['НК', 'Налоговый кодекс'], ['ЗоЗПП', 'Закон № 90-З «О защите прав потребителей»'], ['ТК', 'Трудовой кодекс']] },
+        { n: '«Бытовое → юридическое»', count: 310, desc: 'Словарь для поиска: как спрашивают люди и как написано в законе.', h1: 'Как говорят', h2: 'Как в законе', rows: [['зарплата', 'заработная плата'], ['вернуть', 'возврат'], ['садик', 'учреждение дошкольного образования']] },
+        { n: 'Ведомственные страницы', count: 9, desc: 'Раз в месяц с этих страниц собираются ссылки на pravo.by в очередь кандидатов.', h1: 'Страница', h2: 'Как часто', rows: [['mart.gov.by — защита прав потребителей', 'раз в месяц'], ['nalog.gov.by — физическим лицам', 'раз в месяц'], ['mintrud.gov.by — пособия', 'раз в месяц']] }
+      ],
+      crawl: [
+        { t: '04:15:02', u: 'GET /document/?guid=3871&p0=Hk1100243', c: '503', s: '—', d: '2,1 с' },
+        { t: '04:12:40', u: 'GET /document/?guid=3871&p0=HK9900296', c: '200', s: '1,9 МБ', d: '3,4 с' },
+        { t: '04:06:11', u: 'GET /document/?guid=3961&p0=Hk0900071', c: '200', s: '48,2 КБ', d: '0,8 с' },
+        { t: '04:06:07', u: 'HEAD /document/?guid=3871&p0=Hk0900071', c: '200', s: '—', d: '0,3 с' },
+        { t: '04:01:30', u: 'GET /novye-postupleniya/?date=2026-10-20', c: '200', s: '212 КБ', d: '1,2 с' },
+        { t: '04:00:03', u: 'GET /robots.txt', c: '200', s: '1,1 КБ', d: '0,2 с' }
+      ],
+      P: {
+        today: { req: '412', tok: '1,24 млн', cost: '$0,84', med: '2,1 с', err: '1,4%', tasks: [214, 46, 18, 61, 52, 21], prov: [71, 18, 11] },
+        week: { req: '2 846', tok: '8,9 млн', cost: '$6,02', med: '2,3 с', err: '1,1%', tasks: [1480, 322, 104, 431, 368, 141], prov: [74, 16, 10] },
+        month: { req: '11 930', tok: '36,4 млн', cost: '$24,70', med: '2,2 с', err: '1,3%', tasks: [6210, 1350, 420, 1830, 1520, 600], prov: [72, 17, 11] }
+      },
+      reqs: [
+        { t: '11:42:08', u: '#u_7f3a', task: 'Чат', prov: 'Groq · gpt-oss-120b', tok: '3 412 ток.', dur: '2,4 с', tools: ['search_operations', 'aggregate', 'calculator'], res: 'Готово', cls: 'badge b-ok' },
+        { t: '11:41:55', u: '#u_7f3a', task: 'Защитный фильтр', prov: 'Groq · gpt-oss-20b', tok: '218 ток.', dur: '0,3 с', tools: [], res: 'Готово', cls: 'badge b-ok' },
+        { t: '11:38:20', u: '#u_2c91', task: 'Чек', prov: 'Groq · qwen3.8-27b', tok: '2 960 ток.', dur: '6,8 с', tools: ['validate_receipt', 'recheck_lines'], res: 'С перепроверкой', cls: 'badge b-warn' },
+        { t: '11:31:02', u: '#u_7f3a', task: 'Право', prov: 'Z.ai · GLM-4.7-Flash', tok: '5 104 ток.', dur: '4,1 с', tools: ['law_search', 'get_fragment', 'verify_quote'], res: 'Резерв: лимит Groq', cls: 'badge b-law' },
+        { t: '11:20:44', u: '#u_51be', task: 'Голос', prov: 'Локально · whisper-small', tok: '—', dur: '9,2 с', tools: [], res: 'Локальный режим', cls: 'badge b-neutral' },
+        { t: '11:12:19', u: '#u_2c91', task: 'Категоризация', prov: 'Groq · gpt-oss-20b', tok: '1 280 ток.', dur: '1,1 с', tools: ['batch_24'], res: 'Готово', cls: 'badge b-ok' },
+        { t: '11:05:51', u: '#u_7f3a', task: 'Чат', prov: 'Groq → ошибка 429', tok: '—', dur: '—', tools: [], res: 'Ушёл к Z.ai', cls: 'badge b-danger' }
+      ],
+      qGroups: [
+        { n: 'Чеки', set: '24 фото', ms: [['Точность итога', '96%', 2], ['Точность позиций', '91%', 1], ['Доля «сумма сходится»', '88%', -1]] },
+        { n: 'Выписки', set: '6 файлов', ms: [['Полнота операций', '99%', 0], ['Точность операций', '98%', 1]] },
+        { n: 'Категоризация', set: '300 операций', ms: [['Разложено правилами, без модели', '82%', 4], ['Точность категорий', '93%', 1]] },
+        { n: 'Правовые вопросы', set: '60 вопросов', ms: [['Попадание в нужную статью', '87%', 3], ['Выдуманных цитат', '0', 0], ['Честное «в моей базе нет»', '100%', 0]] },
+        { n: 'Агент', set: '26 сценариев', ms: [['Пройдено сценариев', '24 из 26', 1, 'cnt']] }
+      ]
+    };
+    this.state = {
+      tab: 'laws', bell: false, read: false, toast: null, modal: null, lawSub: 'acts', actsMore: false,
+      auto: true, newMode: 'auto', winFrom: '02:00', winTo: '06:00', contact: 'admin@kosht.local', checkN: -1,
+      lastCheck: '21.10.2026, 04:00', lastResult: 'успешно, у 1 акта новые изменяющие акты', actFilter: 'all',
+      addUrl: '', addErr: '', listText: '', editor: -1,
+      cands: [
+        { id: 1, n: 'Указ № 41 от 19.01.2012 «О государственной адресной социальной помощи»', src: 'Граф ссылок', why: 'Упомянут в Законе № 7-З · рубрика ЕПК 08.03 → «Пособия» · текст есть' },
+        { id: 2, n: 'Постановление Правления Нацбанка № 185 от 03.08.2026', src: 'Новые поступления', why: 'Нет рубрики ЕПК · орган — Нацбанк, в заголовке долговая нагрузка' },
+        { id: 3, n: 'Воздушный кодекс', src: 'Журнал спроса', why: 'Тема «возврат авиабилетов»: 6 вопросов без ответа за неделю (сами вопросы не хранятся)' },
+        { id: 4, n: 'ПСМ № 31 от 22.01.2014 о правилах продажи отдельных видов товаров', src: 'Ведомственные страницы', why: 'Ссылка со страницы МАРТ «Защита прав потребителей»' },
+        { id: 5, n: 'Закон № 305-З «О нотариате и нотариальной деятельности»', src: 'Граф ссылок', why: 'Упомянут в ГК (наследство) · тема по органу — «Семья» · текст есть' }
+      ],
+      logs: [
+        { t: '21.10 04:15', k: 'err', text: 'Кодекс об образовании: ошибка 503. Повтор в 04:30.' },
+        { t: '21.10 04:12', k: 'warn', text: 'Трудовой кодекс: новый снимок отправлен в карантин — пропало 7% фрагментов, похоже, изменилась вёрстка. Действует прежняя редакция.' },
+        { t: '21.10 04:06', k: 'law', text: 'НК, Особенная часть: в карточке новый изменяющий акт — Закон № 170-З от 17.07.2026. Текст пока не изменился.' },
+        { t: '21.10 04:02', k: 'neutral', text: 'Новые поступления за 20.10: 9 актов. Фильтры отсеяли 7 (кадровые — 4, местные — 2, наградные — 1), 1 изменяющий, 1 — в очередь.' },
+        { t: '18.10 04:21', k: 'ok', text: 'Закон № 90-З: новая редакция (Закон № 134-З). Изменены ст. 20 и 28 — заново векторизовано 6 фрагментов.' }
+      ],
+      rates: [
+        { p: 'Стандартный вычет при доходе до 1 308 BYN в месяц', per: '2026', v: '216 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.1 · ред. 01.07.2026', st: 'dev' },
+        { p: 'Порог дохода для стандартного вычета', per: '2026', v: '1 308 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.1', st: 'dev' },
+        { p: 'Вычет на ребёнка до 18 лет или иждивенца', per: '2026', v: '63 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.2', st: 'flag' },
+        { p: 'Вычет на каждого ребёнка: двое и более детей, ребёнок-инвалид, одинокие родители и др.', per: '2026', v: '120 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.3', st: 'dev' },
+        { p: 'Льготные категории (инвалиды I и II групп и др.)', per: '2026', v: '306 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.4', st: 'dev' },
+        { p: 'Молодые специалисты', per: '2026', v: '860 BYN/мес', src: 'НК, ст. 209, п. 1, пп. 1.5', st: 'dev' },
+        { p: 'Ставка подоходного налога', per: 'с 01.01.2026', v: '13%', src: 'НК, ст. 214, п. 1', st: 'dev' },
+        { p: 'Повышенная ставка: годовой доход 350 000–600 000 BYN', per: '2026', v: '25%', src: 'НК, ст. 214', st: 'dev' },
+        { p: 'Повышенная ставка: годовой доход свыше 600 000 BYN', per: '2026', v: '30%', src: 'НК, ст. 214', st: 'dev' },
+        { p: 'ИП — подоходный налог', per: '2026', v: '20%, свыше 500 000 — 30%', src: 'НК, ст. 214', st: 'dev' },
+        { p: 'Налог на профессиональный доход', per: '2026', v: '10%, с дохода от организаций и ИП свыше 60 000 — 20%', src: 'НК, гл. 40, ст. 381²', st: 'dev' },
+        { p: 'Стандартный вычет при доходе до порога', per: '2025', v: '—', src: '—', st: 'none' }
+      ],
+      rateHist: [
+        { t: '21.10.2026, 04:06', text: 'Проверка после обновления НК: изменился фрагмент ст. 209, п. 1, пп. 1.2, на который ссылается ставка «Вычет на ребёнка до 18 лет». Значение отмечено для проверки; пока калькулятор считает по подтверждённому.' },
+        { t: '21.10.2026, 00:00', text: 'Начальные значения 2026 года загружены со статусом «Подтверждено разработчиком».' }
+      ],
+      rateIdx: -1, rateVal: '',
+      period: 'today', costOpen: false,
+      prices: [{ n: 'Groq · gpt-oss-120b', i: '0,15', o: '0,60' }, { n: 'Groq · gpt-oss-20b', i: '0,08', o: '0,30' }, { n: 'Groq · qwen3.8-27b', i: '0,29', o: '0,59' }, { n: 'Z.ai · GLM-4.7-Flash', i: '0,10', o: '0,40' }],
+      users: [
+        { e: 'admin@kosht.local', reg: '02.10.2026', conf: true, blocked: false, admin: true, tg: '—', mode: 'Облачный', me: true },
+        { e: 'irina.k@example.by', reg: '02.10.2026', conf: false, blocked: false, admin: false, tg: '—', mode: 'Облачный', demo: true },
+        { e: 'pavel.s@example.by', reg: '05.10.2026', conf: true, blocked: false, admin: false, tg: '@pavel_s', mode: 'Локальный' },
+        { e: 'olga.m@example.by', reg: '11.10.2026', conf: true, blocked: true, admin: false, tg: '—', mode: 'Облачный' },
+        { e: 'test.user@example.by', reg: '19.10.2026', conf: false, blocked: false, admin: false, tg: '—', mode: 'Локальный' }
+      ],
+      target: null, resetShown: false, errText: '', errTitle: 'Так нельзя',
+      qStep: -1, qLast: '20.10.2026, 22:40',
+      chains: {
+        chat: [{ n: 'Groq', m: 'gpt-oss-120b', on: true, k: 'cloud' }, { n: 'Z.ai', m: 'GLM-4.7-Flash', on: true, k: 'cloud' }, { n: 'Локальная модель', m: 'qwen3.5 · 8B', on: true, k: 'local' }],
+        rcpt: [{ n: 'Groq', m: 'qwen3.8-27b · с изображениями', on: true, k: 'cloud' }, { n: 'Z.ai', m: 'GLM-4.6V-Flash', on: true, k: 'cloud' }, { n: 'Локальная модель', m: 'qwen3-vl · 8B', on: true, k: 'local' }],
+        stmt: [{ n: 'Groq', m: 'gpt-oss-120b', on: true, k: 'cloud' }, { n: 'Z.ai', m: 'GLM-4.5-Flash', on: true, k: 'cloud' }, { n: 'Локальная модель', m: 'qwen3.5 · 8B', on: true, k: 'local' }],
+        cat: [{ n: 'Groq', m: 'gpt-oss-20b', on: true, k: 'cloud' }, { n: 'Z.ai', m: 'GLM-4.5-Flash', on: true, k: 'cloud' }, { n: 'Локальная модель', m: 'qwen3.5 · 4B', on: true, k: 'local' }],
+        voice: [{ n: 'Groq', m: 'whisper-large-v3', on: true, k: 'cloud' }, { n: 'Локальная модель', m: 'whisper-small · на процессоре', on: true, k: 'local' }],
+        emb: [{ n: 'Локальная модель', m: 'bge-m3', on: true, k: 'local', fixed: true }]
+      },
+      checks: {}, keys: { groq: true, zai: false }, keyDraft: { groq: '', zai: '', gemini: '' },
+      dl: 2.1, dlPaused: false, dlG: -1,
+      smtp: { host: '', port: '587', user: '', pass: '' }, smtpOk: false, smtpErr: '', tgDraft: '', tz: 'Europe/Minsk', lan: false, demoBusy: false
+    };
+    this.timers = [];
+  }
+  componentDidMount() { this.tick(); }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); clearTimeout(this.tickT); this.ticking = false; }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  hm() { const d = new Date(); const z = (x) => String(x).padStart(2, '0'); return z(d.getHours()) + ':' + z(d.getMinutes()); }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  tick() {
+    if (this.ticking) return;
+    this.ticking = true;
+    const step = () => {
+      const s = this.state;
+      const a = !s.dlPaused && s.dl < 6.4; const b = s.dlG >= 0 && s.dlG < 3.1;
+      if (!a && !b) { this.ticking = false; return; }
+      const patch = {};
+      if (a) patch.dl = Math.min(6.4, Math.round((s.dl + 0.3) * 10) / 10);
+      if (b) patch.dlG = Math.min(3.1, Math.round((s.dlG + 0.4) * 10) / 10);
+      this.setState(patch);
+      this.tickT = setTimeout(step, 1200);
+    };
+    this.tickT = setTimeout(step, 1200);
+  }
+  gb(x) { return x.toFixed(1).replace('.', ','); }
+  runCheck() {
+    if (this.state.checkN >= 0) return;
+    const seq = [23, 61, 108, 152, 184];
+    this.setState({ checkN: 0 });
+    seq.forEach((n, i) => this.later(() => {
+      this.setState({ checkN: n });
+      if (i === seq.length - 1) this.later(() => {
+        const t = this.hm();
+        this.setState({ checkN: -1, lastCheck: '21.10.2026, ' + t, lastResult: 'успешно, тексты не изменились', logs: [{ t: '21.10 ' + t, k: 'ok', text: 'Ручная проверка: 184 акта. Тексты не изменились, новых изменяющих актов нет.' }].concat(this.state.logs) });
+        this.toast('Проверка завершена: тексты не изменились');
+      }, 500);
+    }, 650 * (i + 1)));
+  }
+  runQ() {
+    this.setState({ modal: null, qStep: 0 });
+    for (let i = 1; i <= 5; i++) this.later(() => {
+      if (i < 5) { this.setState({ qStep: i }); return; }
+      this.setState({ qStep: -1, qLast: '21.10.2026, ' + this.hm() });
+      this.toast('Проверка качества завершена, метрики обновлены');
+    }, 900 * i);
+  }
+  setUser(e, patch) { this.setState({ users: this.state.users.map((u) => (u.e === e ? { ...u, ...patch } : u)) }); }
+  renderVals() {
+    const st = this.state; const D = this.D; const vecBuilding = (this.props.vector ?? 'Готов') === 'Строится';
+    const close = () => this.setState({ modal: null });
+    const flagged = st.rates.some((r) => r.st === 'flag' || r.st === 'pend');
+    const tabsRaw = [['laws', 'Законы'], ['rates', 'Таблица ставок'], ['ai', 'Запросы к ИИ'], ['users', 'Пользователи'], ['quality', 'Качество'], ['prov', 'Провайдеры ИИ'], ['sys', 'Система']];
+    const tabs = tabsRaw.map(([k, l]) => ({ label: l, sel: st.tab === k, cls: st.tab === k ? 'on' : '', dot: k === 'rates' && flagged, pick: () => this.setState({ tab: k, bell: false }) }));
+    const go = (k, sub) => () => this.setState(sub ? { tab: k, bell: false, lawSub: sub } : { tab: k, bell: false });
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Трудовой кодекс: новый снимок в карантине — похоже, изменилась вёрстка pravo.by.', time: 'Сегодня, 04:12', act: 'Открыть журнал', go: go('laws', 'log'), unread: true },
+      { icon: '#i-alert', bg: 'var(--danger-soft)', fg: 'var(--danger)', text: 'Ошибка обновления: Кодекс об образовании — 503, повтор в 04:30.', time: 'Сегодня, 04:15', act: 'Открыть журнал', go: go('laws', 'log'), unread: true },
+      { icon: '#i-percent', bg: 'var(--law-soft)', fg: 'var(--law)', text: 'Похоже, изменился размер вычета на ребёнка — проверьте таблицу ставок.', time: 'Сегодня, 04:06', act: 'Проверить ставку', go: go('rates'), unread: true },
+      { icon: '#i-plus', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Новый акт ждёт решения: Постановление Правления Нацбанка № 185.', time: 'Сегодня, 04:02', act: 'Открыть очередь', go: go('laws', 'cands'), unread: true },
+      { icon: '#i-cpu', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Groq: превышен минутный лимит токенов — 3 запроса ответил Z.ai.', time: 'Сегодня, 11:31', act: 'Запросы к ИИ', go: go('ai'), unread: false }
+    ].map((n) => ({ ...n, cls: 'adm-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const meta = {
+      ok: ['badge b-ok', '#i-check-c', 'Актуален'], pending: ['badge b-law', '#i-clock', 'Есть принятые изменения'], card: ['badge b-neutral', '#i-file', 'Только карточка'],
+      lost: ['badge b-neutral', '#i-x', 'Утратил силу'], quar: ['badge b-warn', '#i-warn', 'На карантине'], err: ['badge b-danger', '#i-alert', 'Ошибка']
+    };
+    const chipsRaw = [['all', 'Все', '433'], ['ok', 'Актуален', '171'], ['pending', 'Есть принятые изменения', '11'], ['card', 'Только карточка', '212'], ['lost', 'Утратил силу', '37'], ['quar', 'На карантине', '1'], ['err', 'Ошибка', '1']];
+    const actChips = chipsRaw.map(([k, l, n]) => ({ label: l, n, sel: st.actFilter === k, cls: 'chip' + (st.actFilter === k ? ' on' : ''), pick: () => this.setState({ actFilter: k, actsMore: false }) }));
+    const actsAll = D.acts.filter((a) => st.actFilter === 'all' || a.st === st.actFilter);
+    const LIMIT = 6;
+    const actsVis = st.actsMore ? actsAll : actsAll.slice(0, LIMIT);
+    const acts = actsVis.map((a) => {
+      const m = meta[a.st];
+      const actLabel = { card: 'Проверить текст', quar: 'Сравнить снимки', err: 'Повторить' }[a.st] || '';
+      return { ...a, bCls: m[0], bIcon: m[1], bText: m[2], hasNote: !!a.note, isLink: !actLabel, isAct: !!actLabel, actLabel, openAria: 'Открыть: ' + a.n,
+        act: () => {
+          if (a.st === 'card') this.toast('Проверено: текста на pravo.by пока нет. Следующая проверка — через неделю.');
+          else if (a.st === 'quar') this.toast('Сравнение снимков: пропали фрагменты ст. 4–9. Прежняя редакция остаётся, нужен разбор вёрстки.');
+          else this.toast('Повторный запрос поставлен в очередь — с паузой 3–5 секунд между запросами.');
+        } };
+    });
+    const chipTotal = (chipsRaw.find((c) => c[0] === st.actFilter) || chipsRaw[0])[2];
+    const cands = st.cands.map((c) => ({ ...c, addAria: 'Добавить в индекс: ' + c.n, rejAria: 'Отклонить: ' + c.n,
+      add: () => { const prev = this.state.cands; this.setState({ cands: prev.filter((x) => x.id !== c.id) }); this.toast('Добавлен в индекс: ' + c.n.split(' «')[0], () => this.setState({ cands: prev })); },
+      reject: () => { const prev = this.state.cands; this.setState({ cands: prev.filter((x) => x.id !== c.id) }); this.toast('Отклонён — больше не предложу', () => this.setState({ cands: prev })); } }));
+    const candTotal = 4 + st.cands.length;
+    const subsRaw = [['acts', 'Акты', '433', false], ['cands', 'Очередь кандидатов', String(candTotal), true], ['log', 'Журнал обновлений', '', false], ['crawl', 'Запросы загрузчика', '', false], ['eds', 'Справочники', '7', false]];
+    const lawSubs = subsRaw.map(([k, l, c, w]) => ({ label: l, cnt: c, hasCnt: !!c, cntCls: 'adm-cnt' + (w ? ' warn' : ''), sel: st.lawSub === k, cls: st.lawSub === k ? 'on' : '', pick: () => this.setState({ lawSub: k }) }));
+    const editors = D.editors.map((e, i) => ({ n: e.n, count: String(e.count), open: () => this.setState({ modal: 'editor', editor: i }) }));
+    const edRaw = st.editor >= 0 ? D.editors[st.editor] : D.editors[0];
+    const ed = { ...edRaw, count: String(edRaw.count), rows: edRaw.rows.map(([a, b]) => ({ a, b })) };
+    const logMeta = { err: ['var(--danger-soft)', 'var(--danger)', '#i-alert'], warn: ['var(--warn-soft)', 'var(--warn)', '#i-warn'], law: ['var(--law-soft)', 'var(--law)', '#i-scale'], neutral: ['#ECF0EE', 'var(--ink-2)', '#i-filter'], ok: ['var(--income-soft)', 'var(--income)', '#i-check-c'] };
+    const logs = st.logs.map((l) => ({ ...l, bg: logMeta[l.k][0], fg: logMeta[l.k][1], icon: logMeta[l.k][2] }));
+    const crawl = D.crawl.map((r) => ({ ...r, cls: r.c === '200' ? 'badge b-ok' : 'badge b-danger' }));
+    const listLines = st.listText.split('\n').map((x) => x.trim()).filter(Boolean);
+    const validRe = /^https:\/\/pravo\.by\/document\/\?guid=(3871|3961)&p0=[A-Za-z0-9]+$/;
+    const listGood = listLines.filter((x) => validRe.test(x)).length; const listBadN = listLines.length - listGood;
+    const rateMeta = { dev: ['badge b-ok', '#i-check-c', 'Подтверждено', 'разработчиком, 21.10.2026'], adm: ['badge b-ok', '#i-check-c', 'Подтверждено', 'вами, 21.10.2026'], flag: ['badge b-warn', '#i-warn', 'Проверьте', ''], pend: ['badge b-warn', '#i-clock', 'Ждёт подтверждения', 'калькулятор пока не использует'], none: ['badge b-neutral', '#i-info', 'Нет значения', 'калькулятор так и скажет пользователю'] };
+    const rates = st.rates.map((r, i) => {
+      const m = rateMeta[r.st];
+      return { ...r, bCls: m[0], bIcon: m[1], bText: m[2], bSub: m[3], hasSub: !!m[3], isFlag: r.st === 'flag', canConfirm: r.st === 'flag' || r.st === 'pend', editLabel: r.st === 'none' ? 'Добавить' : 'Изменить',
+        confAria: 'Подтвердить: ' + r.p + ', ' + r.per, editAria: (r.st === 'none' ? 'Добавить значение: ' : 'Изменить: ') + r.p + ', ' + r.per,
+        confirm: () => {
+          const rs = this.state.rates.map((x, j) => (j === i ? { ...x, st: 'adm' } : x));
+          this.setState({ rates: rs, rateHist: [{ t: '21.10.2026, ' + this.hm(), text: 'admin@kosht.local подтвердил «' + r.p + '» = ' + r.v + ' (' + r.per + '). Калькулятор считает по этому значению.' }].concat(this.state.rateHist) });
+          this.toast('Значение подтверждено — калькулятор использует его');
+        },
+        edit: () => this.setState({ modal: 'rate', rateIdx: i, rateVal: r.v === '—' ? '' : r.v }) };
+    });
+    const rateEdit = st.rateIdx >= 0 ? st.rates[st.rateIdx] : st.rates[0];
+    const P = D.P[st.period];
+    const taskNames = ['Чат и агент', 'Чеки', 'Выписки', 'Категоризация', 'Право', 'Голос'];
+    const tmax = Math.max(...P.tasks);
+    const aiTasks = P.tasks.map((v, i) => ({ n: taskNames[i], v: String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' '), w: (v / tmax * 100).toFixed(1) }));
+    const provNames = [['Groq', '#11564D'], ['Z.ai', '#4A6FA5'], ['Локальные модели', '#C98A1B']];
+    const provShare = P.prov.map((v, i) => ({ n: provNames[i][0], c: provNames[i][1], v }));
+    const periods = [['today', 'Сегодня'], ['week', '7 дней'], ['month', '30 дней']].map(([k, l]) => ({ label: l, sel: st.period === k, cls: st.period === k ? 'on' : '', pick: () => this.setState({ period: k }) }));
+    const limits = [
+      { n: 'Groq · запросы', v: '412 из 1 000', w: 41.2, hasBar: true },
+      { n: 'Groq · токены', v: '128 тыс. из 200 тыс.', w: 64, hasBar: true },
+      { n: 'Z.ai · запросы', v: '74 · лимит тарифа не опубликован', w: 0, hasBar: false }
+    ];
+    const reqs = D.reqs.map((r) => ({ ...r, tools: r.tools.length ? r.tools.map((n) => ({ n })) : [{ n: '—' }] }));
+    const prices = st.prices.map((p, i) => ({ ...p, ariaI: p.n + ': цена входа', ariaO: p.n + ': цена выхода',
+      onI: (e) => this.setState({ prices: this.state.prices.map((x, j) => (j === i ? { ...x, i: e.target.value } : x)) }),
+      onO: (e) => this.setState({ prices: this.state.prices.map((x, j) => (j === i ? { ...x, o: e.target.value } : x)) }) }));
+    const admins = st.users.filter((u) => u.admin).length;
+    const users = st.users.map((u) => ({ ...u, me: !!u.me, demo: !!u.demo,
+      confCls: u.conf ? 'badge b-ok' : 'badge b-neutral', confIcon: u.conf ? '#i-check' : '#i-x', confText: u.conf ? 'Подтверждена' : 'Не подтверждена',
+      stCls: u.blocked ? 'badge b-danger' : 'badge b-ok', stIcon: u.blocked ? '#i-lock' : '#i-check-c', stText: u.blocked ? 'Заблокирован' : 'Активен', role: u.admin ? 'Администратор' : 'Пользователь',
+      menuAria: 'Действия с пользователем ' + u.e, openMenu: () => this.setState({ modal: 'actions', target: u.e, resetShown: false }) }));
+    const tu = st.users.find((u) => u.e === st.target) || st.users[0];
+    const tuReach = tu.conf || tu.tg !== '—';
+    const target = { e: tu.e, blockLabel: tu.blocked ? 'Разблокировать' : 'Заблокировать', blockIcon: tu.blocked ? '#i-check-c' : '#i-lock',
+      roleLabel: tu.admin ? 'Снять права администратора' : 'Назначить администратором', reachable: tuReach, unreachable: !tuReach,
+      channels: [tu.conf ? 'на почту ' + tu.e : '', tu.tg !== '—' ? 'в Telegram ' + tu.tg : ''].filter(Boolean).join(' и ') };
+    const lastAdminErr = 'Это последний администратор системы. Сначала назначьте администратором кого-то ещё.';
+    const qGroups = D.qGroups.map((g) => ({ ...g, ms: g.ms.map(([n, v, d, kind]) => {
+      const up = d > 0; const down = d < 0;
+      const unit = kind === 'cnt' ? '' : ' п. п.';
+      const dt = d === 0 ? 'без изменений' : (up ? '+' : '−') + Math.abs(d) + unit + ' к прошлому';
+      return { n, v, dt, di: up ? '#i-adm-up' : down ? '#i-adm-down' : '#i-adm-same', dc: up ? 'var(--income)' : down ? 'var(--warn)' : 'var(--ink-2)' };
+    }) }));
+    const qNames = ['Чеки — 24 фото', 'Выписки — 6 файлов', 'Категоризация — 300 операций', 'Правовые вопросы — 60', 'Сценарии агента — 26'];
+    const qSteps = qNames.map((n, i) => ({ n, done: i < st.qStep, going: i === st.qStep, wait: i > st.qStep, cls: i > st.qStep ? 'muted' : '' }));
+    const taskMeta = [['chat', 'Чат и агент', 'с вызовом инструментов'], ['rcpt', 'Чеки', 'нужна модель, понимающая фото'], ['stmt', 'Выписки', 'строгий JSON по схеме'], ['cat', 'Категоризация', 'пакетами, после правил'], ['voice', 'Голос', 'русский и белорусский'], ['emb', 'Эмбеддинги', 'только на этом компьютере']];
+    const chains = taskMeta.map(([k, n, hint]) => {
+      const list = st.chains[k];
+      return { n, hint, rows: list.map((p, i) => {
+        const key = k + ':' + p.n; const res = st.checks[key];
+        const fail = res === 'done' && k === 'rcpt' && p.n === 'Z.ai';
+        let resText = 'Связь не проверялась'; let resC = 'var(--ink-2)'; let resI = '#i-check-c';
+        if (res === 'going') resText = 'Проверяю…';
+        else if (res === 'done') {
+          if (fail) { resText = 'Недоступен из текущей сети'; resC = 'var(--warn)'; resI = '#i-warn'; }
+          else { resText = p.k === 'local' ? 'Работает · ответ за 1,8 с' : (p.n === 'Groq' ? 'На связи · 340 мс' : 'На связи · 610 мс'); resC = 'var(--income)'; }
+        } else if (!p.on) resText = 'Выключен';
+        const move = (dir) => () => {
+          const arr = this.state.chains[k].slice(); const j = i + dir; if (j < 0 || j >= arr.length) return;
+          const t = arr[i]; arr[i] = arr[j]; arr[j] = t; this.setState({ chains: { ...this.state.chains, [k]: arr } });
+        };
+        return { n: p.n, m: p.m, i: String(i + 1), kind: p.k === 'local' ? 'на этом компьютере' : 'облако', cls: 'adm-prov' + (p.on ? '' : ' off'),
+          going: res === 'going', hasIcon: res === 'done', res: resText, resC, resI, movable: !p.fixed, first: i === 0, last: i === list.length - 1,
+          upAria: 'Поднять ' + p.n + ' выше в цепочке «' + n + '»', downAria: 'Опустить ' + p.n + ' ниже в цепочке «' + n + '»', swAria: p.n + ' для задачи «' + n + '»', checkAria: 'Проверить связь: ' + p.n + ', ' + n, on: p.on,
+          up: move(-1), down: move(1),
+          toggle: () => this.setState({ chains: { ...this.state.chains, [k]: this.state.chains[k].map((x, j) => (j === i ? { ...x, on: !x.on } : x)) } }),
+          check: () => { this.setState({ checks: { ...this.state.checks, [key]: 'going' } }); this.later(() => this.setState({ checks: { ...this.state.checks, [key]: 'done' } }), 1100); } };
+      }) };
+    });
+    const keyRaw = [['groq', 'Groq', true], ['zai', 'Z.ai', true], ['gemini', 'Gemini', false]];
+    const keys = keyRaw.map(([k, n, avail]) => {
+      const set = !!st.keys[k];
+      return { n, id: 'key-' + k, label: !avail ? 'Ключ API ' + n : set ? 'Новый ключ ' + n + ' (заменит текущий)' : 'Ключ API ' + n, draft: st.keyDraft[k], dis: !avail,
+        ph: !avail ? 'Недоступен' : set ? '••••••••••••' : 'Вставьте ключ', bCls: !avail ? 'badge b-neutral' : set ? 'badge b-ok' : 'badge b-warn', bText: !avail ? 'Выключен' : set ? 'Задан ✓' : 'Не задан',
+        cantSave: !avail || !st.keyDraft[k],
+        onDraft: (e) => this.setState({ keyDraft: { ...this.state.keyDraft, [k]: e.target.value } }),
+        save: () => { this.setState({ keys: { ...this.state.keys, [k]: true }, keyDraft: { ...this.state.keyDraft, [k]: '' } }); this.toast('Ключ ' + n + ' сохранён в зашифрованном виде и больше не показывается'); } };
+    });
+    const dlPct = (st.dl / 6.4 * 100).toFixed(1); const dlDone = st.dl >= 6.4;
+    const gDone = st.dlG >= 3.1;
+    const models = [
+      { n: 'qwen3.5 · 8B', task: 'Чат, агент, выписки', size: '5,2 ГБ', s: 'ok' },
+      { n: 'qwen3-vl · 8B', task: 'Чеки', size: '6,4 ГБ', s: dlDone ? 'ok' : 'dl', dlText: (st.dlPaused ? 'На паузе · ' : 'Скачивается · ') + this.gb(st.dl) + ' из 6,4 ГБ', dlPct, canPause: !dlDone, pauseLabel: st.dlPaused ? 'Продолжить' : 'Пауза', pauseIcon: st.dlPaused ? '#i-adm-play' : '#i-adm-pause', pause: () => { const p = !this.state.dlPaused; this.setState({ dlPaused: p }); if (!p) this.tick(); } },
+      { n: 'qwen3.5 · 4B', task: 'Категоризация', size: '2,6 ГБ', s: 'ok' },
+      { n: 'whisper-small', task: 'Голос на процессоре', size: '0,5 ГБ', s: 'ok' },
+      { n: 'bge-m3', task: 'Поиск по законам', size: '2,3 ГБ', s: 'ok' },
+      { n: 'gemma4 · 4B', task: 'Запасная для чата', size: '3,1 ГБ', s: st.dlG < 0 ? 'none' : gDone ? 'ok' : 'dl', dlText: 'Скачивается · ' + this.gb(Math.max(st.dlG, 0)) + ' из 3,1 ГБ', dlPct: (Math.max(st.dlG, 0) / 3.1 * 100).toFixed(1), canPause: false, start: () => { this.setState({ dlG: 0 }); this.tick(); } }
+    ].map((m) => ({ dlText: '', dlPct: '0', canPause: false, pauseLabel: '', pauseIcon: '#i-adm-pause', pause: () => {}, start: () => {}, ...m, dlAria: 'Скачивание ' + m.n, dlBtnAria: 'Скачать ' + m.n, isOk: m.s === 'ok', isDl: m.s === 'dl', isNone: m.s === 'none' }));
+    const jobs = [
+      { n: 'Ежедневная проверка законов', sch: 'каждый день, 04:00 (ночное окно)', last: '21.10, 04:12', st: 'Успешно', cls: 'badge b-ok', next: '22.10, 04:00' },
+      { n: 'Новые поступления Нацреестра', sch: 'каждый день, 04:00', last: '21.10, 04:02', st: 'Успешно · 9 актов', cls: 'badge b-ok', next: '22.10, 04:00' },
+      { n: 'Полная сверка текстов', sch: 'воскресенье, 03:00', last: '18.10, 03:41', st: 'Успешно', cls: 'badge b-ok', next: '25.10, 03:00' },
+      { n: 'Итоги недели', sch: 'понедельник, 09:00', last: '19.10, 09:00', st: 'Отправлено 5 пользователям', cls: 'badge b-ok', next: '26.10, 09:00' },
+      { n: 'Напоминания календаря', sch: 'каждые 15 минут', last: '21.10, 11:45', st: 'Успешно', cls: 'badge b-ok', next: '21.10, 12:00' },
+      { n: 'Векторизация фрагментов', sch: 'по событию', last: '18.10, 04:25', st: vecBuilding ? 'Идёт · 87%' : 'Простаивает', cls: vecBuilding ? 'badge b-law' : 'badge b-neutral', next: '—' },
+      { n: 'Скачивание локальных моделей', sch: 'по событию, с докачкой', last: 'сейчас', st: dlDone ? 'Завершено' : 'Идёт · ' + Math.round(st.dl / 6.4 * 100) + '%', cls: dlDone ? 'badge b-ok' : 'badge b-law', next: '—' }
+    ];
+    const sm = st.smtp;
+    const setSmtp = (k) => (e) => this.setState({ smtp: { ...this.state.smtp, [k]: e.target.value }, smtpErr: '' });
+    const unread = st.read ? 0 : 4;
+    return {
+      tabs, notes, bellOpen: st.bell, hasUnread: !st.read, bellAria: unread ? 'Уведомления администратора, новых: ' + unread : 'Уведомления администратора',
+      toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      isLaws: st.tab === 'laws', isRates: st.tab === 'rates', isAi: st.tab === 'ai', isUsers: st.tab === 'users', isQuality: st.tab === 'quality', isProv: st.tab === 'prov', isSys: st.tab === 'sys',
+      candTotal: String(candTotal), lastCheck: st.lastCheck, lastResult: st.lastResult,
+      autoBadge: st.auto ? 'Включены' : 'Только вручную', autoBadgeCls: st.auto ? 'badge b-ok' : 'badge b-warn', autoBadgeIcon: st.auto ? '#i-check-c' : '#i-warn',
+      winFrom: st.winFrom, winTo: st.winTo, onWinFrom: (e) => this.setState({ winFrom: e.target.value }), onWinTo: (e) => this.setState({ winTo: e.target.value }),
+      auto: st.auto, toggleAuto: () => { this.setState({ auto: !st.auto }); this.toast(st.auto ? 'Автопроверка выключена — законы проверяются только вручную' : 'Автопроверка включена'); },
+      newModes: [['auto', 'Добавлять сразу'], ['suggest', 'Только предлагать']].map(([k, l]) => ({ label: l, sel: st.newMode === k, cls: st.newMode === k ? 'on' : '', pick: () => this.setState({ newMode: k }) })),
+      contact: st.contact, onContact: (e) => this.setState({ contact: e.target.value }), noContact: !st.contact.trim(),
+      ua: 'KoshtBot/1.0 (+' + (st.contact.trim() || 'контакт не задан') + ')',
+      vecPct: vecBuilding ? '87' : '100', vecText: vecBuilding ? 'Строится: 23 854 из 27 418 фрагментов. Поиск по реквизитам и полнотекстовый уже работают.' : 'Готов: 27 418 фрагментов, 0,8 ГБ на диске вместе со снимками',
+      checking: st.checkN >= 0, checkText: 'Проверено ' + Math.max(st.checkN, 0) + ' из 184…', checkPct: (Math.max(st.checkN, 0) / 184 * 100).toFixed(1), runCheck: () => this.runCheck(),
+      openAdd: () => this.setState({ modal: 'add', addMode: 'one', addUrl: '', addErr: '', listText: '' }),
+      addModes: [['one', 'Одну ссылку'], ['many', 'Списком']].map(([k, l]) => ({ label: l, sel: (st.addMode || 'one') === k, cls: (st.addMode || 'one') === k ? 'on' : '', pick: () => this.setState({ addMode: k, addErr: '' }) })),
+      addOne: (st.addMode || 'one') === 'one', addMany: st.addMode === 'many',
+      lawSubs, subActs: st.lawSub === 'acts', subCands: st.lawSub === 'cands', subLog: st.lawSub === 'log', subCrawl: st.lawSub === 'crawl', subEds: st.lawSub === 'eds',
+      actChips, acts, actsShown: String(acts.length), actsTotal: chipTotal, canMoreActs: actsAll.length > LIMIT,
+      moreActsLabel: st.actsMore ? 'Свернуть' : 'Показать ещё ' + (actsAll.length - LIMIT), moreActs: () => this.setState({ actsMore: !st.actsMore }),
+      cands, noCands: st.cands.length === 0, editors, ed, edAdd: () => this.toast('Новая строка появится в справочнике рабочей версии'),
+      logs, crawl,
+      mAdd: st.modal === 'add', addUrl: st.addUrl, onAddUrl: (e) => this.setState({ addUrl: e.target.value, addErr: '' }), hasAddErr: !!st.addErr, addErr: st.addErr,
+      confirmAdd: () => {
+        const u = st.addUrl.trim();
+        if (!u) return this.setState({ addErr: 'Вставьте ссылку.' });
+        if (!/^https:\/\/pravo\.by\//.test(u)) return this.setState({ addErr: 'Текст актов берётся только с pravo.by. Ссылки на etalonline.by и сайты ведомств не подходят.' });
+        if (!validRe.test(u)) return this.setState({ addErr: 'Нужна ссылка на сам акт, например https://pravo.by/document/?guid=3871&p0=H10200090' });
+        const t = this.hm();
+        this.setState({ modal: null, logs: [{ t: '21.10 ' + t, k: 'neutral', text: 'Администратор добавил акт по ссылке: ' + u.split('p0=')[1] + '. Загружается сразу, не дожидаясь ночного окна.' }].concat(this.state.logs) });
+        this.toast('Акт загружается — в поиске появится сразу после разбора');
+      },
+      listText: st.listText, onListText: (e) => this.setState({ listText: e.target.value }),
+      listCount: String(listGood), listBad: listBadN ? ' · не подходят: ' + listBadN : '', listEmpty: listGood === 0, listBtn: listGood ? 'Добавить ' + listGood : 'Добавить',
+      confirmList: () => { this.setState({ modal: null }); this.toast('Поставлено в загрузку: ' + listGood); },
+      mEditor: st.modal === 'editor',
+      rates, rateHist: st.rateHist, mRate: st.modal === 'rate', rateEdit, rateVal: st.rateVal, rateEmpty: !st.rateVal.trim(), onRateVal: (e) => this.setState({ rateVal: e.target.value }),
+      saveRate: () => {
+        const i = st.rateIdx; const v = st.rateVal.trim(); if (!v) return;
+        const old = st.rates[i];
+        this.setState({ modal: null, rates: st.rates.map((x, j) => (j === i ? { ...x, v, st: 'pend', src: x.src === '—' ? 'НК, ст. 209, п. 1, пп. 1.1 · ред. 2025' : x.src } : x)),
+          rateHist: [{ t: '21.10.2026, ' + this.hm(), text: 'admin@kosht.local изменил «' + old.p + '» (' + old.per + '): ' + old.v + ' → ' + v + '. Ждёт подтверждения.' }].concat(st.rateHist) });
+        this.toast('Сохранено. Значение заработает после подтверждения.');
+      },
+      periods, ai: P, aiTasks, provShare, provAria: 'Доля ответов: ' + provShare.map((s) => s.n + ' ' + s.v + '%').join(', '), cloudShare: String(P.prov[0] + P.prov[1]), localShare: String(P.prov[2]),
+      limits, reqs, costOpen: st.costOpen, whyCost: () => this.setState({ costOpen: !st.costOpen }),
+      mPrice: st.modal === 'price', openPrice: () => this.setState({ modal: 'price' }), prices, savePrice: () => { this.setState({ modal: null }); this.toast('Прайс-лист сохранён, условная стоимость пересчитана'); },
+      users, userCount: String(st.users.length), target, mActions: st.modal === 'actions', mBlock: st.modal === 'block', mReset: st.modal === 'reset', mDel: st.modal === 'del', mErr: st.modal === 'err', errText: st.errText, errTitle: st.errTitle,
+      uBlock: () => {
+        if (tu.blocked) { this.setUser(tu.e, { blocked: false }); this.setState({ modal: null }); this.toast(tu.e + ' разблокирован', () => this.setUser(tu.e, { blocked: true })); return; }
+        if (tu.admin && admins === 1) return this.setState({ modal: 'err', errTitle: 'Нельзя заблокировать', errText: lastAdminErr });
+        this.setState({ modal: 'block' });
+      },
+      confirmBlock: () => { this.setUser(tu.e, { blocked: true }); this.setState({ modal: null }); this.toast(tu.e + ' заблокирован — на сайте и в боте увидит сообщение о блокировке'); },
+      uReset: () => this.setState({ modal: 'reset', resetShown: false }),
+      sendReset: () => { this.setState({ modal: null }); this.toast('Ссылка для сброса отправлена ' + target.channels); },
+      resetShown: st.resetShown, resetHidden: !st.resetShown, showReset: () => this.setState({ resetShown: true }), copyReset: () => this.toast('Ссылка скопирована. Показ записан в журнал.'),
+      uRole: () => {
+        if (tu.admin && admins === 1) return this.setState({ modal: 'err', errTitle: 'Нельзя снять права', errText: lastAdminErr });
+        this.setUser(tu.e, { admin: !tu.admin }); this.setState({ modal: null });
+        this.toast(tu.admin ? tu.e + ' больше не администратор' : tu.e + ' назначен администратором', () => this.setUser(tu.e, { admin: tu.admin }));
+      },
+      uDelete: () => {
+        if (tu.demo) return this.setState({ modal: 'err', errTitle: 'Демо-пользователя не удалить', errText: 'Вместо удаления пересоздайте демо-данные во вкладке «Система».' });
+        if (tu.admin && admins === 1) return this.setState({ modal: 'err', errTitle: 'Нельзя удалить', errText: lastAdminErr });
+        this.setState({ modal: 'del' });
+      },
+      confirmDel: () => { this.setState({ modal: null, users: st.users.filter((u) => u.e !== tu.e) }); this.toast('Пользователь ' + tu.e + ' и все его данные удалены'); },
+      qLast: st.qLast, qRunning: st.qStep >= 0, qSteps, qGroups, mQRun: st.modal === 'qrun', askQRun: () => this.setState({ modal: 'qrun' }), runQ: () => this.runQ(),
+      chains, keys, models,
+      jobs, smtp: sm, onSmtpHost: setSmtp('host'), onSmtpPort: setSmtp('port'), onSmtpUser: setSmtp('user'), onSmtpPass: setSmtp('pass'),
+      smtpPassPh: st.smtpOk ? 'Задан — введите новый, чтобы заменить' : 'Пароль приложения', smtpNot: !st.smtpOk,
+      smtpBadge: st.smtpOk ? 'Настроена' : 'Не настроена', smtpBadgeCls: st.smtpOk ? 'badge b-ok' : 'badge b-warn',
+      smtpHasErr: !!st.smtpErr, smtpErr: st.smtpErr,
+      saveSmtp: () => {
+        if (!sm.host.trim() || !sm.user.trim() || !sm.pass) return this.setState({ smtpErr: 'Заполните сервер, логин и пароль.' });
+        this.setState({ smtpOk: true, smtp: { ...sm, pass: '' }, smtpErr: '' }); this.toast('Почта настроена, пароль зашифрован. Локальный ящик выключен.');
+      },
+      testMail: () => this.toast(st.smtpOk ? 'Тестовое письмо отправлено на admin@kosht.local' : 'Почта не настроена — тестовое письмо в локальном ящике'),
+      tgDraft: st.tgDraft, onTgDraft: (e) => this.setState({ tgDraft: e.target.value }), tgCantSave: !st.tgDraft, saveTg: () => { this.setState({ tgDraft: '' }); this.toast('Токен бота заменён и сохранён в зашифрованном виде'); },
+      checkBot: () => this.toast('Бот @kosht_demo_bot отвечает, опрос Telegram работает'),
+      tz: st.tz, onTz: (e) => { this.setState({ tz: e.target.value }); this.toast('Часовой пояс: ' + e.target.value); },
+      lan: st.lan, lanText: st.lan ? 'Включён: сайт открывается по адресу http://192.168.1.24:8080' : 'Выключен: сайт открывается только на этом компьютере',
+      toggleLan: () => { if (st.lan) { this.setState({ lan: false }); this.toast('Доступ из сети закрыт — только этот компьютер'); } else this.setState({ modal: 'lan' }); },
+      mLan: st.modal === 'lan', confirmLan: () => { this.setState({ lan: true, modal: null }); this.toast('Доступ из локальной сети открыт'); },
+      mDemo: st.modal === 'demo', askDemo: () => this.setState({ modal: 'demo' }), demoBusy: st.demoBusy, demoLabel: st.demoBusy ? 'Пересоздаю…' : 'Пересоздать…',
+      confirmDemo: () => { this.setState({ modal: null, demoBusy: true }); this.later(() => { this.setState({ demoBusy: false }); this.toast('Демо-данные пересозданы: 6 месяцев операций до 21.10.2026, чеки, лимиты, цели и события'); }, 2000); },
+      closeModal: close,
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Лимиты и цели</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: budget (bud-) ===== */
+.bud-bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.bud-nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.bud-nt.unread{background:#F6FAF8}
+.bud-nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.bud-tie{display:flex;flex-direction:column;gap:14px;padding:20px 24px}
+.bud-tie-nums{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.bud-tie-n{font-size:22px;font-weight:650;letter-spacing:-.015em}
+.bud-stack{display:flex;height:14px;border-radius:99px;overflow:hidden;background:#E6EBE8;gap:2px}
+.bud-stack span{display:block;height:100%;transition:width .4s ease}
+.bud-leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2)}
+.bud-leg span{display:inline-flex;align-items:center;gap:6px}
+.bud-leg i{width:10px;height:10px;border-radius:3px;display:block}
+.bud-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.bud-col{display:flex;flex-direction:column;gap:14px}
+.bud-col-h{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.bud-lim{display:flex;flex-direction:column;gap:12px;padding:18px 20px}
+.bud-lim-h{display:flex;align-items:center;gap:12px}
+.bud-lim-n{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.bud-lim-big{font-size:24px;font-weight:650;letter-spacing:-.015em}
+.bud-tie-n.num,.bud-lim-big.num,.bud-big{font-variant-numeric:proportional-nums}
+.bud-big{font-size:24px;letter-spacing:-.015em}
+.bud-track{position:relative;padding-top:2px}
+.bud-track .bar{height:12px}
+.bud-tick{position:absolute;top:-2px;bottom:-4px;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(20,33,31,.18);border-radius:2px}
+.bud-tick-l{position:absolute;top:18px;transform:translateX(-50%);font-size:11px;color:var(--ink-3)}
+.bud-st{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;margin-top:10px}
+.bud-pace{font-size:13.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.bud-goal{display:flex;flex-direction:column;gap:12px;padding:20px}
+.bud-goal-h{display:flex;align-items:center;gap:12px}
+.bud-goal-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;background:var(--brand-soft);color:var(--brand)}
+.bud-gbar{position:relative}
+.bud-gbar .bar{height:14px}
+.bud-gbar .bar span{transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.bud-rec{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2)}
+.bud-hist{display:flex;flex-direction:column}
+.bud-hist div{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.bud-hist div:last-child{border-bottom:0}
+.bud-cele{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 14px;background:var(--brand-soft);color:var(--brand-ink);animation:rise .4s ease}
+.bud-method{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.bud-method button{display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;border:1.5px solid var(--line-2);background:#fff;border-radius:12px;padding:14px;cursor:pointer;min-height:44px}
+.bud-method button.on{border-color:var(--brand);background:var(--brand-soft)}
+.bud-method b{font-size:14.5px;display:flex;align-items:center;gap:8px}
+.bud-calc{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.bud-chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.bud-msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.bud-steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.bud-steps div{display:flex;align-items:center;gap:8px}
+.bud-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.bud-chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.bud-ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px;max-width:100%;white-space:nowrap}
+.bud-ctx-t{overflow:hidden;text-overflow:ellipsis}
+@media (max-width:1100px){.bud-cols{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.bud-tie-nums,.bud-method{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a class="on" href="Budget.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Лимиты и цели</h1>
+      <p class="small muted">Октябрь 2026 · до конца месяца 10 дней</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop bud-bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="bud-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+      <button class="btn btn-secondary" onClick="{{newLimit}}"><svg class="ic" aria-hidden="true"><use href="#i-plus"></use></svg>Новый лимит</button>
+      <button class="btn btn-primary" onClick="{{newGoal}}"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Новая цель</button>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <section class="card bud-tie" aria-labelledby="tie-t">
+      <div class="row" style="justify-content: space-between; flex-wrap: wrap">
+        <div class="row" style="gap: 4px"><h2 id="tie-t" class="card-t">Как распределён свободный остаток</h2><button class="why" aria-label="Откуда эта цифра: распределение остатка" onClick="{{whyTie}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+        <a class="card-link" href="Recurring.dc.html">Из чего складывается остаток<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a>
+      </div>
+      <div class="bud-tie-nums">
+        <div><div class="small muted">Свободный остаток</div><div class="bud-tie-n num">1 722,23<span class="cur">BYN / мес</span></div></div>
+        <div><div class="small muted">Уже распределено на цели</div><div class="bud-tie-n num">{{tie.alloc}}<span class="cur">BYN / мес</span></div></div>
+        <div><div class="small muted">Свободно после целей</div><div class="bud-tie-n num" style="color: var(--brand)">{{tie.left}}<span class="cur">BYN / мес</span></div></div>
+      </div>
+      <div class="bud-stack" role="img" aria-label="{{tie.aria}}">
+        <sc-for list="{{tie.segs}}" as="g" hint-placeholder-count="3"><span style="width: {{g.w}}%; background: {{g.c}}"></span></sc-for>
+      </div>
+      <div class="bud-leg">
+        <sc-for list="{{tie.segs}}" as="g" hint-placeholder-count="3"><span><i style="background: {{g.c}}"></i>{{g.label}} — <b class="num" style="color: var(--ink)">{{g.v}}</b></span></sc-for>
+      </div>
+    </section>
+
+    <div class="bud-cols">
+      <section class="bud-col" aria-labelledby="lim-t">
+        <div class="bud-col-h">
+          <div><h2 id="lim-t" class="card-t" style="font-size: 18px">Лимиты на октябрь</h2><p class="xs muted row" style="gap: 6px; margin-top: 2px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>Считаются по календарному месяцу, остаток не переносится</p></div>
+          <span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>осталось 10 дней</span>
+        </div>
+        <sc-for list="{{limits}}" as="l" hint-placeholder-count="4">
+          <article class="card bud-lim" aria-label="{{l.cat}}">
+            <div class="bud-lim-h">
+              <span class="cat-ic" style="background: {{l.color}}" aria-hidden="true"><svg class="ic ic-s"><use href="{{l.icon}}"></use></svg></span>
+              <h3 class="strong" style="flex: 1; min-width: 0; font-size: 15px">{{l.cat}}</h3>
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="{{l.editLabel}}" onClick="{{l.edit}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg></button>
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="{{l.delLabel}}" onClick="{{l.del}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg></button>
+            </div>
+            <div class="bud-lim-n">
+              <span class="bud-lim-big num">{{l.spent}}</span><span class="muted num">из {{l.limit}} BYN</span>
+              <button class="why" aria-label="Откуда эта цифра: потрачено" onClick="{{l.why}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button>
+            </div>
+            <div class="bud-track">
+              <div class="bar" role="progressbar" aria-label="{{l.cat}}" aria-valuenow="{{l.pctNum}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{l.w}}%; background: {{l.barColor}}"></span></div>
+              <i class="bud-tick" style="left: 80%" aria-hidden="true"></i>
+              <span class="bud-tick-l" style="left: 80%" aria-hidden="true">80%</span>
+            </div>
+            <div class="bud-st" style="color: {{l.tcolor}}">
+              <sc-if value="{{l.isWarn}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg></sc-if>
+              <sc-if value="{{l.isOver}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg></sc-if>
+              <sc-if value="{{l.isOk}}" hint-placeholder-val="{{true}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg></sc-if>
+              <span>{{l.pct}} · {{l.status}}</span>
+            </div>
+            <p class="bud-pace">{{l.pace}}</p>
+            <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 8px">
+              <div class="row" style="gap: 6px; flex-wrap: wrap">
+                <span class="xs muted">Уведомить:</span>
+                <span class="{{l.c80}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-bell"></use></svg>80%</span>
+                <span class="{{l.c100}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-bell"></use></svg>100%</span>
+              </div>
+              <span class="xs faint">{{l.sent}}</span>
+            </div>
+          </article>
+        </sc-for>
+        <sc-if value="{{noLimits}}" hint-placeholder-val="{{false}}">
+          <div class="card empty">
+            <svg class="ic ic-xl" aria-hidden="true"><use href="#i-target"></use></svg>
+            <div class="strong" style="color: var(--ink)">Лимитов пока нет</div>
+            <p class="small">Поставьте предел на категорию — например, «Кафе — не больше 200 BYN в месяц». Я напомню на 80% и 100%.</p>
+            <button class="btn btn-primary" onClick="{{newLimit}}"><svg class="ic" aria-hidden="true"><use href="#i-plus"></use></svg>Новый лимит</button>
+          </div>
+        </sc-if>
+      </section>
+
+      <section class="bud-col" aria-labelledby="goal-t">
+        <div class="bud-col-h">
+          <div><h2 id="goal-t" class="card-t" style="font-size: 18px">Цели</h2><p class="xs muted" style="margin-top: 2px">Накопления к дате — копилкой или по остатку счёта</p></div>
+          <button class="btn btn-ghost btn-sm" onClick="{{newGoal}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Новая цель</button>
+        </div>
+
+        <article class="card bud-goal" aria-labelledby="g-vac">
+          <div class="bud-goal-h">
+            <span class="bud-goal-ic" aria-hidden="true"><svg class="ic"><use href="#i-target"></use></svg></span>
+            <div style="flex: 1; min-width: 0"><h3 id="g-vac" class="strong" style="font-size: 16px">Отпуск летом</h3><div class="xs muted">к 01.06.2027 · осталось 7 месяцев</div></div>
+            <span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-wallet"></use></svg>счёт •• 5530</span>
+          </div>
+          <div class="row" style="justify-content: space-between; align-items: baseline"><span class="num"><b class="bud-big">2 150,00</b> <span class="muted">из 3 000,00 BYN</span></span><span class="strong num" style="color: var(--brand)">72%</span></div>
+          <div class="bud-gbar"><div class="bar" role="progressbar" aria-label="Отпуск летом" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"><span style="width: 72%"></span></div></div>
+          <div class="bud-rec">
+            <div class="row" style="justify-content: space-between"><span class="small">Откладывайте по <b class="num">121,43 BYN</b> в месяц</span><button class="why" aria-label="Откуда эта цифра: взнос на отпуск" onClick="{{whyVac}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+            <div class="xs row" style="gap: 6px; color: var(--income)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg><span>Укладывается в свободный остаток <span class="num">1 722,23</span></span></div>
+          </div>
+          <p class="xs muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-refresh"></use></svg>Прогресс обновляется сам — по остатку накопительного счёта из выписок. Последняя выписка: 20.10.2026.</p>
+        </article>
+
+        <article class="card bud-goal" aria-labelledby="g-nb">
+          <div class="bud-goal-h">
+            <span class="bud-goal-ic" aria-hidden="true"><svg class="ic"><use href="#i-piggy"></use></svg></span>
+            <div style="flex: 1; min-width: 0"><h3 id="g-nb" class="strong" style="font-size: 16px">Новый ноутбук</h3><div class="xs muted">к 01.03.2027 · осталось 4 месяца</div></div>
+            <span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-piggy"></use></svg>копилка</span>
+          </div>
+          <div class="row" style="justify-content: space-between; align-items: baseline"><span class="num"><b class="bud-big">{{nb.saved}}</b> <span class="muted">из 1 800,00 BYN</span></span><span class="strong num" style="color: var(--brand)">{{nb.pctText}}</span></div>
+          <div class="bud-gbar"><div class="bar" role="progressbar" aria-label="Новый ноутбук" aria-valuenow="{{nb.pctNum}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{nb.pct}}%"></span></div><i class="bud-tick" style="left: 50%" aria-hidden="true"></i></div>
+          <sc-if value="{{nb.half}}" hint-placeholder-val="{{false}}">
+            <div class="bud-cele" role="status"><svg class="ic" aria-hidden="true"><use href="#i-check-c"></use></svg><div><div class="strong">Половина пути пройдена</div><div class="xs">Отложено больше 900,00 — в том же темпе успеете к 01.03.2027.</div></div></div>
+          </sc-if>
+          <sc-if value="{{nb.done}}" hint-placeholder-val="{{false}}">
+            <div class="bud-cele" role="status"><svg class="ic" aria-hidden="true"><use href="#i-gift"></use></svg><div style="flex: 1"><div class="strong">Цель достигнута — 1 800,00 отложено</div><div class="xs">Когда купите ноутбук, отметьте цель выполненной: копилка закроется, а покупка останется в операциях.</div></div><button class="btn btn-primary btn-sm" onClick="{{nbClose}}">Купил</button></div>
+          </sc-if>
+          <sc-if value="{{nb.going}}" hint-placeholder-val="{{true}}">
+            <div class="bud-rec">
+              <div class="row" style="justify-content: space-between"><span class="small">Откладывайте по <b class="num">{{nb.rec}} BYN</b> в месяц</span><button class="why" aria-label="Откуда эта цифра: взнос на ноутбук" onClick="{{whyNb}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+              <div class="xs row" style="gap: 6px; color: var(--income)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg><span>Укладывается в свободный остаток <span class="num">1 722,23</span></span></div>
+            </div>
+          </sc-if>
+          <div>
+            <div class="row" style="justify-content: space-between; margin-bottom: 4px"><span class="lbl">Взносы</span><button class="btn btn-primary btn-sm" onClick="{{openDep}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Внести</button></div>
+            <div class="bud-hist">
+              <sc-for list="{{nb.hist}}" as="h" hint-placeholder-count="3"><div><span class="muted num">{{h.d}}</span><span class="num strong inc">+{{h.v}}</span></div></sc-for>
+            </div>
+          </div>
+          <p class="xs muted">Копилка виртуальная: деньги остаются на ваших счетах, Кошт учитывает, сколько вы отложили. Взнос можно сделать и в чате: «отложи 200 на ноутбук».</p>
+        </article>
+
+        <sc-for list="{{goals}}" as="g" hint-placeholder-count="0">
+          <article class="card bud-goal" aria-label="{{g.name}}">
+            <div class="bud-goal-h">
+              <span class="bud-goal-ic" aria-hidden="true"><svg class="ic"><use href="{{g.icon}}"></use></svg></span>
+              <div style="flex: 1; min-width: 0"><h3 class="strong" style="font-size: 16px">{{g.name}}</h3><div class="xs muted">{{g.when}}</div></div>
+              <span class="badge b-neutral">{{g.badge}}</span>
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Удалить цель" onClick="{{g.remove}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg></button>
+            </div>
+            <div class="row" style="justify-content: space-between; align-items: baseline"><span class="num"><b class="bud-big">{{g.saved}}</b> <span class="muted">из {{g.sum}} BYN</span></span><span class="strong num" style="color: var(--brand)">{{g.pctText}}</span></div>
+            <div class="bud-gbar"><div class="bar"><span style="width: {{g.pct}}%"></span></div></div>
+            <div class="bud-rec">
+              <span class="small">Откладывайте по <b class="num">{{g.rec}} BYN</b> в месяц</span>
+              <div class="xs row" style="gap: 6px; color: {{g.fitColor}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{g.fitIcon}}"></use></svg>{{g.fitText}}</div>
+            </div>
+          </article>
+        </sc-for>
+      </section>
+    </div>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet" role="dialog" aria-label="Откуда эта цифра?">
+      <div class="sheet-h">
+        <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-info"></use></svg>
+        <h2 class="card-t" style="flex: 1">Откуда эта цифра?</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div><div class="small muted">{{sh.label}}</div><div class="big num">{{sh.value}}<span class="cur">BYN</span></div><div class="xs muted" style="margin-top: 4px">{{sh.period}}</div></div>
+        <div>
+          <div class="lbl" style="margin-bottom: 8px">Расчёт</div>
+          <div class="formula">
+            <sc-for list="{{sh.rows}}" as="x" hint-placeholder-count="4">
+              <div class="formula-r"><span>{{x.l}}</span><span class="num strong">{{x.v}}</span></div>
+            </sc-for>
+            <div class="formula-t"><span>{{sh.totalLabel}}</span><span class="num">{{sh.value}}</span></div>
+          </div>
+        </div>
+        <p class="small muted">{{sh.note}}</p>
+        <sc-if value="{{sh.hasOps}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 6px">Операции-основания</div>
+            <sc-for list="{{sh.ops}}" as="o" hint-placeholder-count="3">
+              <a href="Operations.dc.html" class="row" style="justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink)"><span class="small"><span class="muted num">{{o.d}}</span> · {{o.t}}</span><span class="num small strong">{{o.v}}</span></a>
+            </sc-for>
+          </div>
+        </sc-if>
+        <p class="xs faint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Все суммы посчитаны программой по вашим операциям, а не нейросетью.</p>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{lmOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeLm}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="lm-t">
+      <div class="row" style="justify-content: space-between"><h2 id="lm-t" class="card-t" style="font-size: 18px">{{lmTitle}}</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeLm}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="field"><label for="lm-cat">Категория</label>
+        <select id="lm-cat" class="input" value="{{lmCat}}" onChange="{{onLmCat}}" disabled="{{lmCatLocked}}">
+          <sc-for list="{{lmCats}}" as="c" hint-placeholder-count="6"><option value="{{c.v}}">{{c.v}}</option></sc-for>
+        </select>
+        <span class="hint">{{lmSpentHint}}</span>
+      </div>
+      <div class="field"><label for="lm-sum">Не больше, BYN в месяц</label><input id="lm-sum" class="input num" inputmode="decimal" value="{{lmSum}}" onChange="{{onLmSum}}" placeholder="например, 200"></div>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <span class="lbl">Уведомлять на сайте и в Telegram</span>
+        <label class="row" style="justify-content: space-between; cursor: pointer"><span class="small">Когда потрачено 80%</span><span class="sw"><input type="checkbox" checked="{{lm80}}" onChange="{{onLm80}}"><span></span></span></label>
+        <label class="row" style="justify-content: space-between; cursor: pointer"><span class="small">Когда лимит исчерпан (100%)</span><span class="sw"><input type="checkbox" checked="{{lm100}}" onChange="{{onLm100}}"><span></span></span></label>
+      </div>
+      <sc-if value="{{lmErr}}" hint-placeholder-val="{{false}}"><p class="small row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Укажите сумму больше нуля.</p></sc-if>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeLm}}">Отмена</button><button class="btn btn-primary" onClick="{{saveLm}}">{{lmSave}}</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{delOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeDel}}"></div>
+    <section class="modal" role="alertdialog" aria-labelledby="del-t">
+      <h2 id="del-t" class="card-t" style="font-size: 18px">Удалить лимит «{{delName}}»?</h2>
+      <p class="small muted">Траты в категории останутся, просто я перестану следить за пределом и присылать уведомления.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeDel}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmDel}}">Удалить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{depOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeDep}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="dep-t">
+      <div class="row" style="justify-content: space-between"><h2 id="dep-t" class="card-t" style="font-size: 18px">Внести в копилку «Новый ноутбук»</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeDep}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small muted">Копилка виртуальная: деньги остаются на ваших счетах, Кошт просто учитывает, сколько вы отложили.</p>
+      <div class="field"><label for="dep-sum">Сумма, BYN</label><input id="dep-sum" class="input num" inputmode="decimal" value="{{depVal}}" onChange="{{onDepVal}}"></div>
+      <div class="row-btns">
+        <sc-for list="{{depQuick}}" as="q" hint-placeholder-count="3"><button class="chip" onClick="{{q.pick}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeDep}}">Отмена</button><button class="btn btn-primary" onClick="{{confirmDep}}">Внести</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{gmOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeGm}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="gm-t" style="width: min(540px, calc(100% - 32px)); max-height: calc(100vh - 32px); overflow-y: auto">
+      <div class="row" style="justify-content: space-between"><h2 id="gm-t" class="card-t" style="font-size: 18px">Новая цель</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeGm}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="field"><span class="lbl">Как копить</span>
+        <div class="bud-method" role="group" aria-label="Способ накопления">
+          <button class="{{gm.piggyCls}}" aria-pressed="{{gm.isPiggy}}" onClick="{{gm.pickPiggy}}"><b><svg class="ic ic-s" aria-hidden="true"><use href="#i-piggy"></use></svg>Виртуальная копилка</b><span class="xs muted">Деньги лежат где угодно. Вы сами отмечаете взносы кнопкой или в чате: «отложи 200 на отпуск».</span></button>
+          <button class="{{gm.accCls}}" aria-pressed="{{gm.isAcc}}" onClick="{{gm.pickAcc}}"><b><svg class="ic ic-s" aria-hidden="true"><use href="#i-wallet"></use></svg>Привязать к счёту</b><span class="xs muted">Прогресс равен остатку на накопительном счёте или вкладе и обновляется сам по выпискам.</span></button>
+        </div>
+      </div>
+      <div class="field"><label for="gm-name">Название</label><input id="gm-name" class="input" value="{{gm.name}}" onChange="{{gm.onName}}" placeholder="например, Зимняя резина"></div>
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <div class="field" style="flex: 1"><label for="gm-sum">Сколько накопить, BYN</label><input id="gm-sum" class="input num" inputmode="decimal" value="{{gm.sum}}" onChange="{{gm.onSum}}" placeholder="0,00"></div>
+        <div class="field" style="flex: 1"><label for="gm-term">К какому сроку</label>
+          <select id="gm-term" class="input" value="{{gm.term}}" onChange="{{gm.onTerm}}">
+            <sc-for list="{{gm.terms}}" as="t" hint-placeholder-count="6"><option value="{{t.v}}">{{t.l}}</option></sc-for>
+          </select>
+        </div>
+      </div>
+      <sc-if value="{{gm.isAcc}}" hint-placeholder-val="{{false}}">
+        <div class="field"><label for="gm-acc">Счёт</label>
+          <select id="gm-acc" class="input" value="{{gm.acc}}" onChange="{{gm.onAcc}}">
+            <option value="prior">Приорбанк •• 0937 — 412,90 BYN</option>
+            <option value="alfa">Альфа-Банк •• 2208 — 320,00 USD (≈ 955,87 BYN)</option>
+            <option value="vac" disabled="{{true}}">Накопительный «Отпуск» •• 5530 — уже привязан к цели</option>
+          </select>
+          <span class="hint">Прогресс начнётся с текущего остатка счёта.</span>
+        </div>
+      </sc-if>
+      <div class="bud-calc" style="background: {{gm.calcBg}}">
+        <span class="small muted">{{gm.calcHead}}</span>
+        <span class="num" style="font-size: 20px; font-weight: 650">{{gm.rec}}</span>
+        <span class="small row" style="gap: 6px; color: {{gm.fitColor}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{gm.fitIcon}}"></use></svg>{{gm.fitText}}</span>
+      </div>
+      <sc-if value="{{gm.err}}" hint-placeholder-val="{{false}}"><p class="small row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Укажите название и сумму больше нуля.</p></sc-if>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeGm}}">Отмена</button><button class="btn btn-primary" onClick="{{gm.save}}">Создать цель</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="bud-ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg><span class="bud-ctx-t">Вижу: Лимиты и цели · октябрь</span></span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="bud-chat-body" aria-live="polite">
+        <div class="bud-msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Могу поставить или изменить лимит, внести деньги в копилку или проверить, успеваете ли вы к цели. Пишите как обычно: «поставь лимит на такси 100 рублей».</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="bud-msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="bud-msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.taxi}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Лимит на такси уже есть: <b class="num">100,00 BYN</b> в месяц. В октябре он превышен на <b class="num">12,40</b> — потрачено 112,40.</p>
+                      <p>Изменить сумму лимита?</p>
+                      <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{m.editTaxi}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Изменить лимит</button><button class="btn btn-ghost btn-sm" onClick="{{m.keep}}">Оставить как есть</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.vac}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Цель «Отпуск летом» привязана к счёту <b>•• 5530</b> — её прогресс равен остатку на этом счёте, поэтому вручную внести туда нельзя.</p>
+                      <p>Переведите 200,00 на •• 5530 в интернет-банкинге — после следующей выписки прогресс обновится сам.</p>
+                      <sc-if value="{{m.vacNotDone}}" hint-placeholder-val="{{true}}"><div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.toNb}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-piggy"></use></svg>Записать 200,00 в «Новый ноутбук»</button></div></sc-if>
+                      <sc-if value="{{m.vacDone}}" hint-placeholder-val="{{false}}"><p class="small row" style="gap: 6px; color: var(--income)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Внёс 200,00 в копилку «Новый ноутбук».</p></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.nb}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>{{m.nbText}}</p>
+                      <div class="formula">
+                        <div class="formula-r"><span>Цель</span><span class="num">1 800,00</span></div>
+                        <div class="formula-r"><span>Уже в копилке</span><span class="num">{{m.nbSaved}}</span></div>
+                        <div class="formula-r"><span>Месяцев до 01.03.2027</span><span class="num">4</span></div>
+                        <div class="formula-r"><span>В месяц</span><span class="num strong">{{m.nbRec}}</span></div>
+                      </div>
+                      <p class="small muted">Это оценка по вашему свободному остатку 1 722,23 — посчитана программой.</p>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с расчётами из ваших данных.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="bud-steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="bud-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="3"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="bud-chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Например: поставь лимит на кафе 150">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1350}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { sheet: null, sheetId: null, bell: false, read: false, chat: false, msgs: [], steps: [], busy: false, draft: '', toast: null,
+      limits: [
+        { id: 'cafe', cat: 'Кафе, рестораны и доставка', limit: 200, n80: true, n100: true },
+        { id: 'taxi', cat: 'Такси', limit: 100, n80: true, n100: true },
+        { id: 'food', cat: 'Продукты', limit: 700, n80: true, n100: true },
+        { id: 'fun', cat: 'Развлечения, спорт и хобби', limit: 150, n80: true, n100: false }],
+      lm: null, lmCat: '', lmSum: '', lm80: true, lm100: true, lmErr: false, del: null,
+      nb: 640, contrib: [{ d: '05.10.2026', v: 140 }, { d: '05.09.2026', v: 200 }, { d: '05.08.2026', v: 300 }],
+      dep: false, depVal: '290', vacDone: false,
+      goals: [], gm: false, gMethod: 'piggy', gName: '', gSum: '', gTerm: '6', gAcc: 'prior', gErr: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  num(v) { return parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0; }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  cats() {
+    return {
+      'Продукты': ['#1F6F63', '#i-cart', 512.40], 'Кафе, рестораны и доставка': ['#B5655A', '#i-coffee', 168.00], 'Такси': ['#8C6D3F', '#i-taxi', 112.40],
+      'Развлечения, спорт и хобби': ['#5E7FA0', '#i-fun', 46.00], 'Автомобиль и топливо': ['#7A5C8E', '#i-car', 145.20], 'Дети': ['#6E9E5B', '#i-baby', 120.00],
+      'ЖКХ': ['#C98A1B', '#i-home', 186.40], 'Одежда и обувь': ['#8A7F5A', '#i-shirt', 89.90], 'Здоровье и аптека': ['#C0574A', '#i-pill', 64.15],
+      'Подписки и онлайн-сервисы': ['#9C5A86', '#i-tv', 38.47], 'Красота и гигиена': ['#A0668C', '#i-more', 13.20], 'Связь, интернет и ТВ': ['#5B8C85', '#i-phone', 10.00]
+    };
+  }
+  sent() { return { cafe: { 80: '21.10' }, taxi: { 80: '14.10', 100: '18.10' } }; }
+  terms() {
+    const mon = ['январю', 'февралю', 'марту', 'апрелю', 'маю', 'июню', 'июлю', 'августу', 'сентябрю', 'октябрю', 'ноябрю', 'декабрю'];
+    return [3, 6, 9, 12, 18, 24].map((n) => { const m = (9 + n) % 12; const y = 2026 + Math.floor((9 + n) / 12); return { v: String(n), n, l: n + ' мес. — к ' + mon[m] + ' ' + y, date: '01.' + String(m + 1).padStart(2, '0') + '.' + y }; });
+  }
+  nbRec(saved) { return Math.max(1800 - saved, 0) / 4; }
+  goalRec(g) { return Math.max(g.sum - g.saved, 0) / g.months; }
+  allocated(st) { return 121.43 + this.nbRec(st.nb) + st.goals.reduce((s, g) => s + this.goalRec(g), 0); }
+  why(key, id) {
+    const st = this.state; const f = (n) => this.f(n);
+    if (key === 'vac') return { label: 'Рекомендуемый взнос — «Отпуск летом»', value: '121,43', period: 'Ноябрь 2026 – май 2027 · 7 месяцев', totalLabel: 'В месяц',
+      rows: [{ l: 'Цель', v: '3 000,00' }, { l: 'Уже на счёте •• 5530 (выписка 20.10)', v: '−2 150,00' }, { l: 'Осталось накопить', v: '850,00' }, { l: 'Месяцев до 01.06.2027', v: '÷ 7' }],
+      note: 'Взнос занимает 7% свободного остатка (1 722,23 BYN в месяц), поэтому укладывается в него.', ops: [{ d: '17.10', t: 'Перевод на «Отпуск» •• 5530', v: '120,00' }, { d: '18.09', t: 'Перевод на «Отпуск» •• 5530', v: '120,00' }] };
+    if (key === 'nb') { const r = this.nbRec(st.nb); return { label: 'Рекомендуемый взнос — «Новый ноутбук»', value: f(r), period: 'Ноябрь 2026 – февраль 2027 · 4 месяца', totalLabel: 'В месяц',
+      rows: [{ l: 'Цель', v: '1 800,00' }, { l: 'Уже в копилке', v: '−' + f(st.nb) }, { l: 'Осталось накопить', v: f(Math.max(1800 - st.nb, 0)) }, { l: 'Месяцев до 01.03.2027', v: '÷ 4' }],
+      note: 'Пересчитывается после каждого взноса. Сравниваю со свободным остатком 1 722,23 BYN в месяц.', ops: [] }; }
+    if (key === 'tie') { const a = this.allocated(st); const rows = [{ l: 'Свободный остаток (июль–сентябрь)', v: '+1 722,23' }, { l: '«Отпуск летом»', v: '−121,43' }, { l: '«Новый ноутбук»', v: '−' + f(this.nbRec(st.nb)) }].concat(st.goals.map((g) => ({ l: '«' + g.name + '»', v: '−' + f(this.goalRec(g)) })));
+      return { label: 'Свободно после целей', value: f(1722.23 - a), period: 'В месяц, по рекомендуемым взносам', totalLabel: 'Остаётся свободным', rows, note: 'Свободный остаток = средний доход − обязательные платежи. Из него вычитаю рекомендуемые взносы на все цели.', ops: [] }; }
+    if (key === 'lim') {
+      const l = st.limits.find((x) => x.id === id); if (!l) return null;
+      const spent = (this.cats()[l.cat] || ['', '', 0])[2];
+      const opsMap = { 'Кафе, рестораны и доставка': [{ d: '07.10', t: 'Ресторан «Васильки»', v: '−48,60' }, { d: '03.10', t: 'Пицца Темпо, доставка', v: '−36,40' }], 'Такси': [{ d: '20.10', t: 'Яндекс Go', v: '−9,80' }, { d: '16.10', t: 'Такси 7788', v: '−7,40' }], 'Продукты': [{ d: '21.10', t: 'Евроопт', v: '−23,18' }, { d: '13.10', t: 'Евроопт (по чеку)', v: '−39,56' }], 'Развлечения, спорт и хобби': [{ d: '05.10', t: 'Steam, 9,99 USD × 2,9871', v: '−29,84' }] };
+      return { label: 'Потрачено: ' + l.cat, value: f(spent), period: '01.10–21.10.2026 · прошёл 21 день из 31', totalLabel: 'Потрачено за октябрь',
+        rows: [{ l: 'Лимит на месяц', v: f(l.limit) }, { l: spent > l.limit ? 'Превышение' : 'Осталось', v: f(Math.abs(l.limit - spent)) }, { l: 'Средний расход в день', v: f(spent / 21) }, { l: 'Процент лимита', v: Math.round(spent / l.limit * 100) + '%' }],
+        note: 'Возвраты за покупки уменьшают траты категории. Покупки по чекам распределяются по категориям позиций.', ops: opsMap[l.cat] || [] };
+    }
+    return null;
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('лимит') || s.includes('такси')) kind = 'taxi';
+    else if (s.includes('отпуск')) kind = 'vac';
+    else if (s.includes('ноутбук') || s.includes('успею') || s.includes('накоп')) kind = 'nb';
+    const plan = { taxi: ['Проверяю лимиты на октябрь…', 'Нашёл лимит «Такси»…'], vac: ['Ищу цель «Отпуск»…', 'Проверяю способ накопления…'], nb: ['Смотрю цель «Новый ноутбук»…', 'Считаю взнос до 01.03.2027…'], generic: ['Разбираю вопрос…'] }[kind];
+    this.setState({ msgs: this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        if (i < plan.length - 1) { this.setState({ steps: plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i })) }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  openLm(id) {
+    const st = this.state;
+    if (id) { const l = st.limits.find((x) => x.id === id); this.setState({ lm: id, lmCat: l.cat, lmSum: this.f(l.limit).replace(/ /g, ' '), lm80: l.n80, lm100: l.n100, lmErr: false, chat: false, bell: false }); return; }
+    const used = st.limits.map((l) => l.cat); const free = Object.keys(this.cats()).filter((c) => !used.includes(c));
+    this.setState({ lm: 'new', lmCat: free[0] || '', lmSum: '', lm80: true, lm100: true, lmErr: false, bell: false });
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n); const C = this.cats(); const sent = this.sent();
+    const limits = st.limits.map((l) => {
+      const meta = C[l.cat] || ['#AEB7B3', '#i-more', 0]; const s = meta[2];
+      const p = s / l.limit * 100; const over = p >= 100; const warn = !over && p >= 80; const left = l.limit - s;
+      const perDay = s / 21; const allow = Math.max(left, 0) / 10; const proj = perDay * 31;
+      let pace;
+      if (over) pace = 'В среднем ' + f(perDay) + ' в день. Лимит уже превышен — всё, что потратите до конца месяца, пойдёт сверх него.';
+      else if (proj > l.limit) pace = 'В среднем ' + f(perDay) + ' в день. Чтобы уложиться — не больше ' + f(allow) + ' в день до 31.10.';
+      else pace = 'В среднем ' + f(perDay) + ' в день — в таком темпе уложитесь: к концу месяца выйдет около ' + f(proj) + '.';
+      const sd = sent[l.id] || {};
+      let sentText = '';
+      if (over && l.n100) sentText = 'Уведомление о 100% отправлено ' + (sd[100] || 'сегодня');
+      else if (p >= 80 && l.n80) sentText = 'Уведомление о 80% отправлено ' + (sd[80] || 'сегодня');
+      return { cat: l.cat, color: meta[0], icon: meta[1], spent: f(s), limit: f(l.limit), pct: Math.round(p) + '%', pctNum: Math.round(p), w: Math.min(p, 100).toFixed(1),
+        isWarn: warn, isOver: over, isOk: !warn && !over,
+        barColor: over ? 'var(--danger)' : warn ? '#C2700E' : 'var(--brand)', tcolor: over ? 'var(--danger)' : warn ? 'var(--warn)' : 'var(--income)',
+        status: over ? 'превышен на ' + f(-left) : 'осталось ' + f(left) + ' на 10 дней', pace,
+        c80: 'badge ' + (l.n80 ? 'b-brand' : 'b-neutral'), c100: 'badge ' + (l.n100 ? 'b-brand' : 'b-neutral'), sent: sentText,
+        editLabel: 'Изменить лимит «' + l.cat + '»', delLabel: 'Удалить лимит «' + l.cat + '»',
+        edit: () => this.openLm(l.id), del: () => this.setState({ del: l.id }), why: () => this.setState({ sheet: 'lim', sheetId: l.id }) };
+    });
+    const alloc = this.allocated(st); const left = 1722.23 - alloc;
+    const segs = [{ label: '«Отпуск летом»', c: '#1F6F63', val: 121.43 }, { label: '«Новый ноутбук»', c: '#5E7FA0', val: this.nbRec(st.nb) }]
+      .concat(st.goals.map((g, i) => ({ label: '«' + g.name + '»', c: ['#9C5A86', '#C98A1B', '#7A5C8E'][i % 3], val: this.goalRec(g) })))
+      .concat([{ label: 'Свободно', c: '#CBE2D9', val: Math.max(left, 0) }])
+      .filter((g) => g.val > 0).map((g) => ({ ...g, v: f(g.val), w: (g.val / 1722.23 * 100).toFixed(2) }));
+    const nbPct = Math.min(st.nb / 1800 * 100, 100);
+    const nb = { saved: f(st.nb), pct: nbPct.toFixed(1), pctNum: Math.round(nbPct), pctText: Math.round(nbPct) + '%', rec: f(this.nbRec(st.nb)),
+      half: st.nb >= 900 && st.nb < 1800, done: st.nb >= 1800, going: st.nb < 1800, hist: st.contrib.map((h) => ({ d: h.d, v: f(h.v) })) };
+    const terms = this.terms(); const term = terms.find((t) => t.v === st.gTerm) || terms[1];
+    const gSum = this.num(st.gSum); const accBal = { prior: 412.90, alfa: 955.87 }[st.gAcc] || 0;
+    const gStart = st.gMethod === 'acc' ? accBal : 0;
+    const gRec = Math.max(gSum - gStart, 0) / term.n; const fits = gRec <= left;
+    const gm = { isPiggy: st.gMethod === 'piggy', isAcc: st.gMethod === 'acc', piggyCls: st.gMethod === 'piggy' ? 'on' : '', accCls: st.gMethod === 'acc' ? 'on' : '',
+      pickPiggy: () => this.setState({ gMethod: 'piggy' }), pickAcc: () => this.setState({ gMethod: 'acc' }),
+      name: st.gName, sum: st.gSum, term: st.gTerm, acc: st.gAcc, terms, err: st.gErr,
+      onName: (e) => this.setState({ gName: e.target.value }), onSum: (e) => this.setState({ gSum: e.target.value }), onTerm: (e) => this.setState({ gTerm: e.target.value }), onAcc: (e) => this.setState({ gAcc: e.target.value }),
+      calcHead: gSum > 0 ? 'Откладывайте в месяц до ' + term.date + (gStart > 0 ? ' (на счёте уже ' + f(gStart) + ')' : '') : 'Введите сумму — посчитаю ежемесячный взнос',
+      rec: gSum > 0 ? f(gRec) + ' BYN' : '—',
+      calcBg: gSum <= 0 ? 'var(--surface-2)' : fits ? 'var(--income-soft)' : 'var(--warn-soft)',
+      fitColor: gSum <= 0 ? 'var(--ink-2)' : fits ? 'var(--income)' : 'var(--warn)', fitIcon: gSum <= 0 ? '#i-info' : fits ? '#i-check-c' : '#i-warn',
+      fitText: gSum <= 0 ? 'Сравню со свободным остатком после других целей: ' + f(left) : fits ? 'Укладывается: после всех целей останется ' + f(left - gRec) + ' в месяц' : 'Не укладывается в свободный остаток (' + f(left) + ') — увеличьте срок или уменьшите сумму',
+      save: () => {
+        const name = st.gName.trim(); if (!name || gSum <= 0) { this.setState({ gErr: true }); return; }
+        const id = 'g' + Date.now();
+        const g = { id, name, sum: gSum, saved: gStart, months: term.n, date: term.date, method: st.gMethod, acc: st.gAcc };
+        this.setState({ gm: false, goals: st.goals.concat([g]) });
+        this.toast('Цель «' + name + '» создана', () => this.setState({ goals: this.state.goals.filter((x) => x.id !== id) }));
+      } };
+    const goals = st.goals.map((g) => { const r = this.goalRec(g); const pct = Math.min(g.saved / g.sum * 100, 100);
+      return { name: g.name, icon: g.method === 'acc' ? '#i-wallet' : '#i-piggy', badge: g.method === 'acc' ? (g.acc === 'alfa' ? 'счёт •• 2208' : 'счёт •• 0937') : 'копилка', when: 'к ' + g.date + ' · ' + g.months + ' мес.',
+        saved: f(g.saved), sum: f(g.sum), pct: pct.toFixed(1), pctText: Math.round(pct) + '%', rec: f(r),
+        fitColor: left >= 0 ? 'var(--income)' : 'var(--warn)', fitIcon: left >= 0 ? '#i-check-c' : '#i-warn', fitText: left >= 0 ? 'Укладывается в свободный остаток' : 'Цели вместе превышают свободный остаток',
+        remove: () => { const prev = this.state.goals; this.setState({ goals: prev.filter((x) => x.id !== g.id) }); this.toast('Цель «' + g.name + '» удалена', () => this.setState({ goals: prev })); } }; });
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'bud-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const sh = st.sheet ? this.why(st.sheet, st.sheetId) : null;
+    const lmIsNew = st.lm === 'new';
+    const usedCats = st.limits.filter((l) => l.id !== st.lm).map((l) => l.cat);
+    const lmCats = Object.keys(C).filter((c) => !lmIsNew || !usedCats.includes(c)).map((v) => ({ v }));
+    const lmSpent = (C[st.lmCat] || ['', '', 0])[2];
+    const delRow = st.limits.find((l) => l.id === st.del);
+    const nbRecNow = this.nbRec(st.nb);
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', taxi: m.kind === 'taxi', vac: m.kind === 'vac', nb: m.kind === 'nb', generic: m.kind === 'generic',
+      editTaxi: () => this.openLm('taxi'), keep: () => this.toast('Оставил лимит на такси: 100,00 в месяц'),
+      vacDone: st.vacDone, vacNotDone: !st.vacDone,
+      toNb: () => { this.setState({ vacDone: true, nb: this.state.nb + 200, contrib: [{ d: '21.10.2026', v: 200 }].concat(this.state.contrib) }); },
+      nbSaved: f(st.nb), nbRec: f(nbRecNow),
+      nbText: st.nb >= 1800 ? 'Вы уже накопили на ноутбук — 1 800,00 в копилке.' : 'Да, успеете, если откладывать по ' + f(nbRecNow) + ' в месяц: до 01.03.2027 осталось 4 месяца. Это ' + Math.round(nbRecNow / 1722.23 * 100) + '% вашего свободного остатка.' }));
+    const sugg = ['Поставь лимит на такси 100 рублей', 'Отложи 200 на отпуск', 'Успею ли я накопить на ноутбук?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const addDep = (v) => {
+      if (v <= 0) return;
+      const prevNb = st.nb; const prevC = st.contrib;
+      this.setState({ dep: false, nb: st.nb + v, contrib: [{ d: '21.10.2026', v }].concat(st.contrib) });
+      this.toast('Внесено ' + f(v) + ' в копилку «Новый ноутбук»', () => this.setState({ nb: prevNb, contrib: prevC }));
+    };
+    return {
+      tie: { alloc: f(alloc), left: f(left), segs, aria: 'Свободный остаток 1 722,23: на цели ' + f(alloc) + ', свободно ' + f(left) },
+      whyTie: () => this.setState({ sheet: 'tie' }), whyVac: () => this.setState({ sheet: 'vac' }), whyNb: () => this.setState({ sheet: 'nb' }),
+      sheetOpen: !!sh, sh: sh ? { ...sh, hasOps: sh.ops && sh.ops.length > 0 } : { rows: [], ops: [] }, closeSheet: () => this.setState({ sheet: null }),
+      limits, noLimits: limits.length === 0, newLimit: () => this.openLm(null),
+      lmOpen: !!st.lm, lmTitle: lmIsNew ? 'Новый лимит' : 'Изменить лимит', lmSave: lmIsNew ? 'Создать лимит' : 'Сохранить', lmCatLocked: !lmIsNew,
+      lmCat: st.lmCat, lmCats, lmSum: st.lmSum, lm80: st.lm80, lm100: st.lm100, lmErr: st.lmErr,
+      lmSpentHint: st.lmCat ? 'В октябре уже потрачено ' + f(lmSpent) + ' BYN' : '',
+      onLmCat: (e) => this.setState({ lmCat: e.target.value }), onLmSum: (e) => this.setState({ lmSum: e.target.value }),
+      onLm80: (e) => this.setState({ lm80: e.target.checked }), onLm100: (e) => this.setState({ lm100: e.target.checked }),
+      closeLm: () => this.setState({ lm: null }),
+      saveLm: () => {
+        const v = this.num(st.lmSum); if (v <= 0 || !st.lmCat) { this.setState({ lmErr: true }); return; }
+        const prev = st.limits;
+        if (lmIsNew) {
+          const id = 'l' + Date.now();
+          this.setState({ lm: null, limits: prev.concat([{ id, cat: st.lmCat, limit: v, n80: st.lm80, n100: st.lm100 }]) });
+          this.toast('Лимит «' + st.lmCat + '» — ' + f(v) + ' в месяц', () => this.setState({ limits: prev }));
+        } else {
+          this.setState({ lm: null, limits: prev.map((l) => l.id === st.lm ? { ...l, limit: v, n80: st.lm80, n100: st.lm100 } : l) });
+          this.toast('Лимит обновлён: ' + f(v) + ' в месяц', () => this.setState({ limits: prev }));
+        }
+      },
+      delOpen: !!delRow, delName: delRow ? delRow.cat : '', closeDel: () => this.setState({ del: null }),
+      confirmDel: () => { if (!delRow) return; const prev = st.limits; this.setState({ del: null, limits: prev.filter((l) => l.id !== st.del) }); this.toast('Лимит «' + delRow.cat + '» удалён', () => this.setState({ limits: prev })); },
+      nb, openDep: () => { const rest = Math.max(1800 - st.nb, 0); this.setState({ dep: true, depVal: rest > 0 && rest < 290 ? f(rest).replace(/ /g, ' ') : '290' }); }, depOpen: st.dep, closeDep: () => this.setState({ dep: false }),
+      depVal: st.depVal, onDepVal: (e) => this.setState({ depVal: e.target.value }),
+      depQuick: [100, 290, 500].map((v) => ({ t: f(v), pick: () => this.setState({ depVal: String(v) }) })),
+      confirmDep: () => addDep(this.num(st.depVal)),
+      nbClose: () => this.toast('Отлично! Цель «Новый ноутбук» отмечена выполненной'),
+      goals, newGoal: () => this.setState({ gm: true, gName: '', gSum: '', gTerm: '6', gMethod: 'piggy', gErr: false, bell: false }), gmOpen: st.gm, closeGm: () => this.setState({ gm: false }), gm,
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

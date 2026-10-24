@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Вход</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: auth (au-) ===== */
+.au-wrap{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.au-brand{flex:0 0 460px;max-width:none;background:var(--brand-ink);color:#C9DBD5;padding:44px 48px 40px;display:flex;flex-direction:column;gap:36px;position:relative;overflow:hidden}
+.au-rings{position:absolute;right:-150px;bottom:-150px;width:480px;height:480px;pointer-events:none}
+.au-logo{display:flex;align-items:center;gap:10px;color:#fff;position:relative}
+.au-pitch{display:flex;flex-direction:column;gap:12px;position:relative;max-width:420px}
+.au-pitch h2{font-size:34px;line-height:1.18;font-weight:650;letter-spacing:-.025em;color:#fff;text-wrap:balance}
+.au-pitch p{font-size:16px;color:#BCD3CC}
+.au-points{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:18px;position:relative;max-width:420px}
+.au-points li{display:flex;gap:14px;align-items:flex-start}
+.au-pi{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);color:var(--amber);display:grid;place-items:center;flex:none}
+.au-pt{display:block;color:#fff;font-weight:600;font-size:15.5px;line-height:1.35}
+.au-pd{display:block;font-size:14px;color:#AFC8C0;margin-top:2px}
+.au-priv{margin-top:auto;display:flex;align-items:center;gap:8px;font-size:13.5px;color:#BCD3CC;position:relative}
+.au-side{flex:999 1 480px;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:48px 24px}
+.au-card{width:100%;max-width:440px;background:#fff;border:1px solid var(--line);border-radius:20px;padding:32px;box-shadow:0 1px 2px rgba(20,33,31,.04),0 12px 32px rgba(20,33,31,.06);display:flex;flex-direction:column;gap:18px;animation:rise .25s ease}
+.au-h{display:flex;flex-direction:column;gap:6px}
+.au-h h1{font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.2}
+.au-foot{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:center;font-size:13.5px}
+.au-foot a,.au-foot button{color:var(--ink-2);text-decoration:none;background:none;border:0;padding:0;cursor:pointer;font-size:13.5px}
+.au-foot a:hover,.au-foot button:hover{color:var(--ink);text-decoration:underline}
+.au-pw{position:relative}
+.au-pw .input{padding-right:48px}
+.au-eye{position:absolute;right:4px;top:3px;width:36px;height:36px;border:0;background:transparent;border-radius:8px;color:var(--ink-2);cursor:pointer;display:grid;place-items:center}
+.au-eye:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.au-div{display:flex;align-items:center;gap:12px;color:var(--ink-3);font-size:13px}
+.au-div::before,.au-div::after{content:"";flex:1;height:1px;background:var(--line)}
+.au-err{display:flex;gap:6px;align-items:flex-start;color:var(--danger);font-size:13px;font-weight:500}
+.input.is-err{border-color:var(--danger)}
+.au-alert{display:flex;gap:10px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-size:14px}
+.au-alert.danger{background:var(--danger-soft);color:#7A1A14}
+.au-alert.warn{background:var(--warn-soft);color:#6B3600}
+.au-alert.ok{background:var(--income-soft);color:#0E4F31}
+.au-alert.info{background:var(--brand-soft);color:var(--brand-ink)}
+.au-link{background:none;border:0;padding:0;color:var(--brand);font-weight:600;cursor:pointer;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.au-link:hover{color:var(--brand-hover);text-decoration:underline}
+.au-back{align-self:flex-start;color:var(--ink-2);font-weight:500}
+.au-big-ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center}
+.au-wide{width:100%;min-height:46px;font-size:15px}
+.au-code{letter-spacing:.12em;text-transform:uppercase;font-variant-numeric:tabular-nums;font-weight:600}
+.au-alt{display:flex;flex-direction:column;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px}
+.au-alt-r{display:flex;gap:10px;align-items:flex-start}
+.au-alt-r .ic{margin-top:2px;color:var(--ink-2)}
+.au-pol h3{font-size:14.5px;font-weight:650;margin-bottom:4px}
+.au-pol p,.au-pol li{font-size:14px;color:var(--ink-2)}
+.au-pol ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:2px}
+@media (max-width:960px){.au-brand{max-width:none;flex-basis:100%;padding:24px 20px;gap:16px}.au-pitch h2{font-size:22px}.au-pitch p{display:none}.au-points{display:none}.au-priv{margin-top:0}.au-rings{width:300px;height:300px;right:-110px;bottom:-130px}.au-side{padding:28px 16px}.au-card{padding:24px 20px}}
+</style>
+</helmet>
+<div class="au-wrap">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="au-brand" aria-label="О Коште">
+  <svg class="au-rings" viewBox="0 0 480 480" aria-hidden="true">
+    <circle cx="240" cy="240" r="36" fill="none" style="stroke: rgba(242,181,58,.35); stroke-width: 1.5"></circle>
+    <circle cx="240" cy="240" r="70" fill="none" style="stroke: rgba(255,255,255,.08); stroke-width: 1.5"></circle>
+    <circle cx="240" cy="240" r="108" fill="none" style="stroke: rgba(255,255,255,.07); stroke-width: 1.5"></circle>
+    <circle cx="240" cy="240" r="142" fill="none" style="stroke: rgba(255,255,255,.06); stroke-width: 1.5"></circle>
+    <circle cx="240" cy="240" r="182" fill="none" style="stroke: rgba(255,255,255,.05); stroke-width: 1.5"></circle>
+    <circle cx="240" cy="240" r="226" fill="none" style="stroke: rgba(255,255,255,.04); stroke-width: 1.5"></circle>
+  </svg>
+  <div class="au-logo"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></div>
+  <div class="au-pitch">
+    <h2>Ваши деньги и&nbsp;ваши права&nbsp;— понятно и&nbsp;под контролем</h2>
+    <p>Финансовый и правовой помощник для жителей Беларуси: считает, напоминает и объясняет простыми словами.</p>
+  </div>
+  <ul class="au-points">
+    <li><span class="au-pi" aria-hidden="true"><svg class="ic"><use href="#i-receipt"></use></svg></span><div><span class="au-pt">Чеки и выписки разбираются сами</span><span class="au-pd">Сфотографируйте чек — каждая позиция окажется в своей категории.</span></div></li>
+    <li><span class="au-pi" aria-hidden="true"><svg class="ic"><use href="#i-coins"></use></svg></span><div><span class="au-pt">Вычеты, которые вам положены</span><span class="au-pd">Кошт сам находит, где можно вернуть подоходный налог.</span></div></li>
+    <li><span class="au-pi" aria-hidden="true"><svg class="ic"><use href="#i-scale"></use></svg></span><div><span class="au-pt">Ответы по законам РБ&nbsp;— с&nbsp;цитатами</span><span class="au-pd">Дословно из текстов на pravo.by, с датой редакции.</span></div></li>
+  </ul>
+  <div class="au-priv"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Всё работает на этом компьютере</div>
+</aside>
+
+<main class="au-side">
+
+  <sc-if value="{{isLogin}}" hint-placeholder-val="{{true}}">
+    <section class="au-card" aria-labelledby="li-t">
+      <div class="au-h">
+        <h1 id="li-t">Вход в Кошт</h1>
+        <p class="muted">С возвращением! Введите email и пароль.</p>
+      </div>
+      <sc-if value="{{isBlocked}}" hint-placeholder-val="{{false}}">
+        <div class="au-alert danger" role="alert"><svg class="ic" aria-hidden="true"><use href="#i-lock"></use></svg><div><b>Аккаунт заблокирован администратором.</b> Обратитесь к администратору системы — он может снять блокировку.</div></div>
+      </sc-if>
+      <sc-if value="{{isRate}}" hint-placeholder-val="{{false}}">
+        <div class="au-alert warn" role="alert"><svg class="ic" aria-hidden="true"><use href="#i-clock"></use></svg><div><b>Слишком много попыток входа.</b> Попробуйте через 5 минут — так мы защищаем аккаунт от подбора пароля.</div></div>
+      </sc-if>
+      <div class="field">
+        <label for="li-email">Email</label>
+        <input id="li-email" class="input" type="email" autocomplete="email" value="{{email}}" onChange="{{onEmail}}" placeholder="you@example.by">
+      </div>
+      <div class="field">
+        <div class="row" style="justify-content: space-between">
+          <label for="li-pass">Пароль</label>
+          <button class="au-link" style="font-size: 13.5px" onClick="{{goForgot}}">Забыли пароль?</button>
+        </div>
+        <div class="au-pw">
+          <input id="li-pass" class="{{passCls}}" type="{{passType}}" autocomplete="current-password" value="{{pass}}" onChange="{{onPass}}" placeholder="Ваш пароль" aria-invalid="{{isWrong}}" aria-describedby="{{passDesc}}">
+          <button class="au-eye" aria-label="{{eyeLabel}}" onClick="{{toggleShow}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg></button>
+        </div>
+        <sc-if value="{{isWrong}}" hint-placeholder-val="{{false}}">
+          <div id="li-pass-err" class="au-err"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg><span>Неверный email или пароль. Проверьте раскладку клавиатуры и Caps Lock. Осталось 3 попытки.</span></div>
+        </sc-if>
+      </div>
+      <sc-if value="{{canLogin}}" hint-placeholder-val="{{true}}">
+        <a class="btn btn-primary au-wide" href="Main.dc.html">Войти</a>
+      </sc-if>
+      <sc-if value="{{isRate}}" hint-placeholder-val="{{false}}">
+        <button class="btn btn-primary au-wide" disabled="">Войти можно через 5 минут</button>
+      </sc-if>
+      <button class="au-link" style="align-self: center" onClick="{{goRecovery}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-key"></use></svg>Войти с кодом восстановления</button>
+      <div class="au-div">или</div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <a class="btn btn-secondary au-wide" href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg>Войти как демо-пользователь</a>
+        <p class="hint" style="text-align: center">Работает только на этом компьютере (localhost).</p>
+      </div>
+      <p class="small muted" style="text-align: center">Нет аккаунта? <a class="strong" href="Register.dc.html">Зарегистрироваться</a></p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isForgot}}" hint-placeholder-val="{{false}}">
+    <section class="au-card" aria-labelledby="fp-t">
+      <button class="au-link au-back" onClick="{{goLogin}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-l"></use></svg>Ко входу</button>
+      <div class="au-h">
+        <h1 id="fp-t">Восстановление пароля</h1>
+        <p class="muted">Пришлём на почту ссылку, по которой можно задать новый пароль.</p>
+      </div>
+      <div class="field">
+        <label for="fp-email">Email аккаунта</label>
+        <input id="fp-email" class="input" type="email" autocomplete="email" value="{{fEmail}}" onChange="{{onFEmail}}" placeholder="you@example.by">
+      </div>
+      <button class="btn btn-primary au-wide" onClick="{{sendLink}}" disabled="{{sendDisabled}}">
+        <sc-if value="{{sending}}" hint-placeholder-val="{{false}}"><span class="spin" style="border-color: rgba(255,255,255,.35); border-top-color: #fff"></span></sc-if>
+        <span>{{sendLabel}}</span>
+      </button>
+      <div class="au-alt">
+        <div class="strong">Нет доступа к почте?</div>
+        <div class="au-alt-r"><svg class="ic ic-s" aria-hidden="true"><use href="#i-send"></use></svg><span>В Telegram-боте Кошта нажмите «Сбросить пароль» — ссылка придёт в чат, если бот подключён.</span></div>
+        <div class="au-alt-r"><svg class="ic ic-s" aria-hidden="true"><use href="#i-key"></use></svg><span>Войдите <button class="au-link" onClick="{{goRecovery}}">с кодом восстановления</button>, который вы сохранили при создании аккаунта.</span></div>
+        <div class="au-alt-r"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield"></use></svg><span>Попросите администратора системы: ссылка придёт вам, а не ему.</span></div>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isSent}}" hint-placeholder-val="{{false}}">
+    <section class="au-card" aria-labelledby="fs-t" role="status">
+      <span class="au-big-ic" style="background: var(--brand-soft); color: var(--brand)" aria-hidden="true"><svg class="ic ic-l"><use href="#i-mail"></use></svg></span>
+      <div class="au-h">
+        <h1 id="fs-t">Проверьте почту</h1>
+        <p class="muted">Письмо со ссылкой отправлено на <b style="color: var(--ink)">{{fEmail}}</b>. Ссылка действует 1 час и сработает один раз.</p>
+      </div>
+      <a class="btn btn-secondary au-wide" href="Mailbox.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mail"></use></svg>Открыть локальный почтовый ящик (демо)</a>
+      <div class="au-alert info"><svg class="ic" aria-hidden="true"><use href="#i-info"></use></svg><div class="small">Почта в этой установке ещё не настроена, поэтому письма попадают в локальный ящик. Когда администратор подключит почту, они будут приходить как обычно.</div></div>
+      <div class="row" style="justify-content: space-between; flex-wrap: wrap">
+        <button class="au-link" onClick="{{resend}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-refresh"></use></svg>Отправить ещё раз</button>
+        <button class="au-link" style="color: var(--ink-2)" onClick="{{goLogin}}">Вернуться ко входу</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isRec}}" hint-placeholder-val="{{false}}">
+    <section class="au-card" aria-labelledby="rc-t">
+      <button class="au-link au-back" onClick="{{goLogin}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-l"></use></svg>Ко входу</button>
+      <div class="au-h">
+        <h1 id="rc-t">Вход с кодом восстановления</h1>
+        <p class="muted">Код вы сохранили, когда создавали аккаунт. После входа он перестанет действовать — новый можно получить в настройках.</p>
+      </div>
+      <div class="field">
+        <label for="rc-code">Код восстановления</label>
+        <input id="rc-code" class="input au-code" autocomplete="off" value="{{code}}" onChange="{{onCode}}" placeholder="XXXX-XXXX-XXXX-XXXX" aria-describedby="rc-code-h">
+        <span id="rc-code-h" class="hint">{{codeHint}}</span>
+      </div>
+      <div class="field">
+        <label for="rc-p1">Новый пароль</label>
+        <div class="au-pw">
+          <input id="rc-p1" class="input" type="{{npType}}" autocomplete="new-password" value="{{np1}}" onChange="{{onNp1}}" placeholder="Не короче 8 символов">
+          <button class="au-eye" aria-label="{{npEyeLabel}}" onClick="{{toggleNp}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg></button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="rc-p2">Повторите пароль</label>
+        <input id="rc-p2" class="{{np2Cls}}" type="{{npType}}" autocomplete="new-password" value="{{np2}}" onChange="{{onNp2}}" aria-invalid="{{npMismatch}}" aria-describedby="{{np2Desc}}">
+        <sc-if value="{{npMismatch}}" hint-placeholder-val="{{false}}"><div id="rc-p2-err" class="au-err" role="alert"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg><span>Пароли не совпадают.</span></div></sc-if>
+      </div>
+      <button class="btn btn-primary au-wide" onClick="{{saveRec}}" disabled="{{recDisabled}}">Сохранить пароль и войти</button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{isRecDone}}" hint-placeholder-val="{{false}}">
+    <section class="au-card" aria-labelledby="rd-t" role="status">
+      <span class="au-big-ic" style="background: var(--income-soft); color: var(--income)" aria-hidden="true"><svg class="ic ic-l"><use href="#i-check-c"></use></svg></span>
+      <div class="au-h">
+        <h1 id="rd-t">Новый пароль сохранён</h1>
+        <p class="muted">Использованный код восстановления больше не действует. Получите новый в разделе «Настройки → Вход и безопасность» и сохраните его.</p>
+      </div>
+      <a class="btn btn-primary au-wide" href="Main.dc.html">Перейти на главную</a>
+    </section>
+  </sc-if>
+
+  <nav class="au-foot" aria-label="Дополнительно">
+    <a href="Laws.dc.html">База законов</a>
+    <button onClick="{{openPolicy}}">Политика обработки персональных данных</button>
+    <a href="Setup.dc.html">Первый запуск</a>
+  </nav>
+</main>
+
+<sc-if value="{{policyOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closePolicy}}"></div>
+    <section class="sheet" role="dialog" aria-label="Политика обработки персональных данных">
+      <div class="sheet-h">
+        <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-shield-ok"></use></svg>
+        <h2 class="card-t" style="flex: 1">Политика обработки персональных данных</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closePolicy}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b au-pol">
+        <p class="small muted">Коротко и простыми словами. Основание — Закон Республики Беларусь от 07.05.2021 № 99-З «О защите персональных данных».</p>
+        <div><h3>Какие данные</h3><p>Email и пароль (хранится только в виде стойкого хэша), операции, чеки и их фото, выписки, факты профиля, переписка с ассистентом.</p></div>
+        <div><h3>Зачем</h3><p>Учёт личных финансов, поиск положенных налоговых вычетов, ответы ассистента, напоминания о платежах и сроках.</p></div>
+        <div><h3>Где хранятся</h3><p>На этом компьютере. В облачные ИИ-модели данные уходят только с вашего отдельного согласия и в замаскированном виде: имена, номера счетов и телефоны заменяются метками.</p></div>
+        <div><h3>Сколько храним</h3><p>Пока существует аккаунт. Удаление аккаунта безвозвратно стирает все данные, файлы и записи о запросах.</p></div>
+        <div><h3>Ваши права</h3><ul><li>узнать, какие данные о вас обрабатываются;</li><li>скачать все свои данные одним архивом;</li><li>отозвать согласие на облачную обработку или Telegram;</li><li>удалить аккаунт.</li></ul></div>
+        <div><h3>Кто видит ваши данные</h3><p>Только вы. Администратор системы не видит ваши финансы, профиль и переписку.</p></div>
+        <a class="card-link" href="https://pravo.by/document/?guid=3871&amp;p0=H12100099" target="_blank" rel="noopener">Закон № 99-З на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"loginState":{"editor":"enum","options":["Обычный","Неверный пароль","Заблокирован","Слишком много попыток"],"default":"Обычный","section":"Состояние экрана"},"$preview":{"width":1440,"height":940}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { mode: 'login', email: 'irina.k@example.by', pass: '', show: false, fEmail: 'irina.k@example.by', sending: false, code: '', np1: '', np2: '', showNp: false, policy: false, toast: null };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 4000);
+  }
+  fmtCode(v) {
+    const s = String(v).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+    return (s.match(/.{1,4}/g) || []).join('-');
+  }
+  renderVals() {
+    const st = this.state;
+    const ls = this.props.loginState ?? 'Обычный';
+    const wrong = ls === 'Неверный пароль'; const blocked = ls === 'Заблокирован'; const rate = ls === 'Слишком много попыток';
+    const codeOk = st.code.length === 19;
+    const npOk = st.np1.length >= 8;
+    const mismatch = st.np2.length > 0 && st.np2 !== st.np1;
+    const emailOk = /.+@.+\..+/.test(st.fEmail);
+    return {
+      isLogin: st.mode === 'login', isForgot: st.mode === 'forgot', isSent: st.mode === 'sent', isRec: st.mode === 'rec', isRecDone: st.mode === 'recDone',
+      isWrong: wrong, isBlocked: blocked, isRate: rate, canLogin: !rate,
+      email: st.email, onEmail: (e) => this.setState({ email: e.target.value }),
+      pass: st.pass, onPass: (e) => this.setState({ pass: e.target.value }),
+      passType: st.show ? 'text' : 'password', eyeLabel: st.show ? 'Скрыть пароль' : 'Показать пароль', toggleShow: () => this.setState({ show: !st.show }),
+      passCls: wrong ? 'input is-err' : 'input', passDesc: wrong ? 'li-pass-err' : null,
+      goForgot: () => this.setState({ mode: 'forgot', fEmail: st.email || st.fEmail }),
+      goRecovery: () => this.setState({ mode: 'rec' }), goLogin: () => this.setState({ mode: 'login', sending: false }),
+      fEmail: st.fEmail, onFEmail: (e) => this.setState({ fEmail: e.target.value }),
+      sending: st.sending, sendLabel: st.sending ? 'Отправляю…' : 'Отправить ссылку', sendDisabled: st.sending || !emailOk,
+      sendLink: () => { if (!emailOk) return; this.setState({ sending: true }); this.later(() => this.setState({ sending: false, mode: 'sent' }), 900); },
+      resend: () => this.toast('Отправили ещё одно письмо. Прежняя ссылка больше не действует'),
+      code: st.code, onCode: (e) => this.setState({ code: this.fmtCode(e.target.value) }),
+      codeHint: codeOk ? 'Формат верный' : '16 букв и цифр — дефисы подставятся сами',
+      np1: st.np1, np2: st.np2, onNp1: (e) => this.setState({ np1: e.target.value }), onNp2: (e) => this.setState({ np2: e.target.value }),
+      npType: st.showNp ? 'text' : 'password', npEyeLabel: st.showNp ? 'Скрыть пароль' : 'Показать пароль', toggleNp: () => this.setState({ showNp: !st.showNp }),
+      npMismatch: mismatch, np2Cls: mismatch ? 'input is-err' : 'input', np2Desc: mismatch ? 'rc-p2-err' : null,
+      recDisabled: !(codeOk && npOk && st.np2 === st.np1),
+      saveRec: () => this.setState({ mode: 'recDone' }),
+      policyOpen: st.policy, openPolicy: () => this.setState({ policy: true }), closePolicy: () => this.setState({ policy: false }),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : ''
+    };
+  }
+}
+</script>
+</body>
+</html>

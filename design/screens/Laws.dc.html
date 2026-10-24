@@ -1,0 +1,810 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — База законов</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: shared chat/bell (как в Main) ===== */
+.bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.nt.unread{background:#F6FAF8}
+.nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.steps div{display:flex;align-items:center;gap:8px}
+.chat-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+/* ===== PAGE: laws (lw-) ===== */
+.lw-pub{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px max(32px, calc((100% - 1196px) / 2));background:#fff;border-bottom:1px solid var(--line)}
+.lw-gbody{margin:0 auto}
+.lw-pub .k-logo{color:var(--ink);padding:0}
+.lw-pub .k-logo:hover{color:var(--ink)}
+.lw-hero{display:flex;flex-direction:column;gap:8px;max-width:760px}
+.lw-hero h2{font-size:28px;font-weight:650;letter-spacing:-.02em;line-height:1.2}
+.lw-search{position:relative}
+.lw-search .ic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+.lw-search .input{height:50px;padding-left:44px;font-size:16px;border-radius:12px}
+.lw-chips{display:flex;flex-wrap:wrap;gap:8px}
+.lw-chips .chip b{font-weight:600;color:var(--ink-3);font-size:12px}
+.lw-sum{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;color:var(--ink-2);align-items:center}
+.lw-sum b{color:var(--ink)}
+.lw-hit{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--law-soft);border:1px solid #CCD9EE;border-radius:14px;padding:14px 18px}
+.lw-groups{columns:2;column-gap:20px}
+.lw-group{break-inside:avoid;margin:0 0 20px;padding:0;overflow:hidden;display:block}
+.lw-gh{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.lw-gh h3{font-size:15px;font-weight:650;flex:1}
+.lw-gi{width:28px;height:28px;border-radius:8px;background:var(--law-soft);color:var(--law);display:grid;place-items:center;flex:none}
+.lw-item{display:grid;grid-template-columns:minmax(0,1fr) auto 32px;gap:10px;align-items:center;padding:10px 12px 10px 16px;border-top:1px solid var(--line)}
+.lw-gh + .lw-item{border-top:0}
+.lw-item:hover{background:#F8FAF9}
+.lw-open{display:flex;flex-direction:column;gap:2px;text-align:left;background:none;border:0;padding:2px 0;cursor:pointer;min-width:0;border-radius:6px}
+.lw-open:hover .lw-t{color:var(--brand);text-decoration:underline}
+.lw-t{font-weight:600;font-size:14.5px;line-height:1.35}
+.lw-sub{font-variant-numeric:tabular-nums}
+.lw-crumb{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13.5px}
+.lw-crumb button{background:none;border:0;padding:0;color:var(--brand);font-weight:600;cursor:pointer}
+.lw-banner{display:flex;gap:12px;align-items:flex-start;background:var(--law-soft);border:1px solid #CCD9EE;border-radius:12px;padding:14px 16px;color:#1F3A66;font-size:14px}
+.lw-reader{display:grid;grid-template-columns:280px minmax(0,1fr);gap:24px;align-items:start}
+.lw-toc{display:flex;flex-direction:column;gap:2px;padding:14px}
+.lw-toc-h{font-size:12.5px;color:var(--ink-2);font-weight:600;padding:6px 10px}
+.lw-toc button{display:flex;gap:8px;text-align:left;background:none;border:0;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1.35;color:var(--ink)}
+.lw-toc button:hover{background:var(--surface-2)}
+.lw-toc button.on{background:var(--law-soft);color:var(--law);font-weight:600}
+.lw-toc button b{flex:none;min-width:58px}
+.lw-art{padding:28px 32px;display:flex;flex-direction:column;gap:16px}
+.lw-art h3{font-family:'Literata',Georgia,serif;font-size:22px;font-weight:600;line-height:1.35;color:#1C2B45}
+.lw-p{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:16px;line-height:1.7;color:#1C2B45;display:flex;gap:8px}
+.lw-p b{font-family:'Onest',system-ui,sans-serif;font-size:14px;color:var(--law);flex:none;padding-top:3px;min-width:34px}
+.lw-p.sub{padding-left:26px}
+.lw-p.hl{background:var(--amber-soft);border-radius:10px;padding:10px 12px 10px 38px;margin-left:-12px}
+.lw-mine{display:flex;gap:10px;align-items:flex-start;background:var(--amber-soft);border:1px solid #F1D9A2;border-radius:12px;padding:12px 14px;font-size:14px}
+.lw-acts{display:flex;flex-wrap:wrap;gap:8px;padding-top:16px;border-top:1px solid var(--line)}
+.lw-dl{display:grid;grid-template-columns:200px minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lw-dl dt,.lw-dl dd{margin:0;padding:11px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.lw-dl dt{background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.lw-src{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink-2)}
+@media (max-width:900px){.lw-groups{columns:1}}
+@media (max-width:900px){.lw-reader{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:640px){.lw-chips{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px;padding:0 16px 4px}.lw-chips .chip{flex:none}.lw-item{grid-template-columns:minmax(0,1fr) 32px}.lw-st{grid-column:1;grid-row:2}.lw-dl{grid-template-columns:minmax(0,1fr)}.lw-art{padding:20px}.lw-pub{padding:12px 16px}.lw-toc button b{min-width:48px}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<sc-if value="{{isUser}}" hint-placeholder-val="{{true}}">
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a class="on" href="Laws.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+</sc-if>
+
+<main class="k-main">
+  <sc-if value="{{isGuest}}" hint-placeholder-val="{{false}}">
+    <header class="lw-pub">
+      <a class="k-logo" href="Login.dc.html" aria-label="Кошт — вход"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+      <span class="badge b-law" style="font-size: 13px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</span>
+      <div class="row-btns" style="margin-left: auto">
+        <a class="btn btn-secondary" href="Login.dc.html">Войти</a>
+        <a class="btn btn-primary" href="Register.dc.html">Регистрация</a>
+      </div>
+    </header>
+  </sc-if>
+  <sc-if value="{{isUser}}" hint-placeholder-val="{{true}}">
+    <header class="k-top">
+      <div class="k-top-title">
+        <h1>База законов</h1>
+        <p class="small muted">Законы Республики Беларусь о деньгах — в действующей редакции, с поиском по статьям</p>
+      </div>
+      <div class="k-top-actions">
+        <div class="pos-rel">
+          <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+          <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+          <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+            <div class="pop bell-pop" role="dialog" aria-label="Уведомления">
+              <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+                <span class="strong">Уведомления</span>
+                <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+              </div>
+              <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+                <div class="{{n.cls}}">
+                  <span class="nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                  <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                    <div class="small">{{n.text}}</div>
+                    <div class="xs faint">{{n.time}}</div>
+                    <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </header>
+  </sc-if>
+
+  <div class="{{bodyCls}}">
+    <sc-if value="{{isCatalog}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 18px">
+        <sc-if value="{{isGuest}}" hint-placeholder-val="{{false}}">
+          <div class="lw-hero">
+            <h2>Законы Беларуси о деньгах — простым поиском</h2>
+            <p class="muted">Налоги и вычеты, права потребителя, жильё, кредиты, пособия, штрафы. Тексты — только с pravo.by, в действующей редакции. Бесплатно и без регистрации.</p>
+          </div>
+        </sc-if>
+        <div class="lw-search">
+          <svg class="ic" aria-hidden="true"><use href="#i-search"></use></svg>
+          <label for="lw-q" style="position: absolute; left: -9999px">Поиск по названию акта или статье</label>
+          <input id="lw-q" class="input" value="{{q}}" onChange="{{onQ}}" onKeyDown="{{onQKey}}" placeholder="Название акта или статья: «ст. 210 НК», «28 ЗоЗПП», «пособия»">
+        </div>
+        <sc-if value="{{hasHit}}" hint-placeholder-val="{{false}}">
+          <div class="lw-hit">
+            <span class="cat-ic" style="background: var(--law); width: 40px; height: 40px" aria-hidden="true"><svg class="ic"><use href="#i-book"></use></svg></span>
+            <div style="flex: 1; min-width: 220px"><div class="xs" style="color: var(--law); font-weight: 600">Найдена статья · нажмите Enter</div><div class="strong">{{hit.title}}</div><div class="small muted">{{hit.act}}</div></div>
+            <button class="btn btn-primary" onClick="{{hit.open}}">Открыть статью<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></button>
+          </div>
+        </sc-if>
+        <div class="lw-chips" role="group" aria-label="Тема">
+          <sc-for list="{{topics}}" as="t" hint-placeholder-count="13"><button class="{{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.l}} <b>{{t.n}}</b></button></sc-for>
+        </div>
+        <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 12px">
+          <div class="seg" role="group" aria-label="Статус">
+            <sc-for list="{{statuses}}" as="s" hint-placeholder-count="4"><button class="{{s.cls}}" aria-pressed="{{s.on}}" onClick="{{s.pick}}">{{s.l}}</button></sc-for>
+          </div>
+          <div class="lw-sum">
+            <span><b class="num">28</b> актов, из них <b class="num">23</b> с текстом</span><span title="На pravo.by опубликована только карточка акта"><b class="num">5</b> только карточкой — текста на pravo.by нет</span><span><b class="num">8</b> с принятыми изменениями, ещё не вошедшими в текст</span><span class="row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>Редакция на 21.10.2026</span>
+          </div>
+        </div>
+        <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 8px; min-height: 32px"><span class="small muted">{{listLabel}}</span><sc-if value="{{hasFilters}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{resetFilters}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>Сбросить фильтры</button></sc-if></div>
+        <div class="lw-groups" aria-label="Список актов по темам">
+          <sc-for list="{{groups}}" as="g" hint-placeholder-count="6">
+            <section class="card lw-group" aria-label="{{g.l}}">
+              <div class="lw-gh"><span class="lw-gi" aria-hidden="true"><svg class="ic ic-s"><use href="{{g.icon}}"></use></svg></span><h3>{{g.l}}</h3><span class="xs muted num">{{g.count}}</span></div>
+              <sc-for list="{{g.acts}}" as="a" hint-placeholder-count="2">
+                <div class="lw-item">
+                  <button class="lw-open" onClick="{{a.open}}" aria-label="{{a.aria}}">
+                    <span class="lw-t">{{a.title}}</span>
+                    <span class="xs muted lw-sub">{{a.sub}}</span>
+                  </button>
+                  <span class="lw-st">
+                    <sc-if value="{{a.isOk}}" hint-placeholder-val="{{true}}"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Действует</span></sc-if>
+                    <sc-if value="{{a.isPending}}" hint-placeholder-val="{{false}}"><span class="badge b-law"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>Есть изменения</span></sc-if>
+                    <sc-if value="{{a.isCard}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-file"></use></svg>Только карточка</span></sc-if>
+                  </span>
+                  <a class="btn btn-ghost btn-sm btn-icon" href="{{a.url}}" target="_blank" rel="noopener" aria-label="{{a.urlAria}}" title="Открыть на pravo.by"><svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a>
+                </div>
+              </sc-for>
+            </section>
+          </sc-for>
+        </div>
+        <sc-if value="{{noActs}}" hint-placeholder-val="{{false}}">
+          <section class="card empty">
+            <svg class="ic ic-xl" aria-hidden="true"><use href="#i-search"></use></svg>
+            <div class="strong" style="color: var(--ink)">В моей базе такого акта нет</div>
+            <p class="small" style="max-width: 460px">Попробуйте другое слово или номер статьи. Если акт нужен, ассистент подскажет, какой закон может это регулировать, и даст ссылку на pravo.by.</p>
+            <button class="btn btn-secondary btn-sm" onClick="{{resetFilters}}">Сбросить поиск и фильтры</button>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isReader}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <nav class="lw-crumb" aria-label="Навигация"><button onClick="{{back}}">База законов</button><svg class="ic ic-s faint" aria-hidden="true"><use href="#i-chev-r"></use></svg><span class="muted">{{cur.topicLabel}}</span><svg class="ic ic-s faint" aria-hidden="true"><use href="#i-chev-r"></use></svg><span class="strong">{{cur.short}}</span></nav>
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <div class="row" style="gap: 8px; flex-wrap: wrap"><span class="badge b-neutral">{{cur.kind}}</span><span class="small muted num">{{cur.req}}</span>
+            <sc-if value="{{cur.isOk}}" hint-placeholder-val="{{true}}"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Действует</span></sc-if>
+            <sc-if value="{{cur.isPending}}" hint-placeholder-val="{{false}}"><span class="badge b-law"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>Есть принятые изменения</span></sc-if>
+          </div>
+          <h2 style="font-size: 26px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.25">{{cur.title}}</h2>
+          <div class="row small muted" style="gap: 14px; flex-wrap: wrap"><span class="row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>Редакция по состоянию на 21.10.2026</span><span>Текст получен с pravo.by 21.10.2026, 04:00</span><a class="row" style="gap: 4px" href="{{cur.url}}" target="_blank" rel="noopener">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a><a class="row" style="gap: 4px" href="{{cur.cardUrl}}" target="_blank" rel="noopener">Карточка акта<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a></div>
+        </div>
+        <sc-if value="{{cur.isPending}}" hint-placeholder-val="{{false}}">
+          <div class="lw-banner" role="note"><svg class="ic" aria-hidden="true" style="margin-top: 1px"><use href="#i-info"></use></svg><div><b>Принят Закон № 170-З от 17.07.2026, изменяющий этот акт; содержание изменений в базе отсутствует.</b> Ниже — действующая редакция. Когда изменения войдут в текст, Кошт обновит его сам, а ответы ассистента по изменённым статьям получат пометку. <a href="{{cur.cardUrl}}" target="_blank" rel="noopener">Карточка на pravo.by</a></div></div>
+        </sc-if>
+        <div class="lw-reader">
+          <nav class="card lw-toc" aria-label="Оглавление">
+            <div class="lw-toc-h">{{rd.part}}</div>
+            <div class="lw-toc-h" style="color: var(--ink); padding-top: 0">{{rd.chapter}}</div>
+            <sc-for list="{{rd.toc}}" as="t" hint-placeholder-count="5"><button class="{{t.cls}}" aria-current="{{t.cur}}" onClick="{{t.pick}}"><b>{{t.n}}</b><span>{{t.t}}</span></button></sc-for>
+          </nav>
+          <article class="card lw-art" aria-labelledby="lw-art-t">
+            <h3 id="lw-art-t">{{rd.head}}</h3>
+            <sc-if value="{{rd.hasMine}}" hint-placeholder-val="{{false}}">
+              <div class="lw-mine"><svg class="ic ic-s" aria-hidden="true" style="color: var(--amber-ink); margin-top: 2px"><use href="#i-coins"></use></svg><span style="flex: 1">{{rd.mine}}</span><a class="card-link" href="{{rd.mineHref}}">Подробнее</a></div>
+            </sc-if>
+            <sc-for list="{{rd.paras}}" as="p" hint-placeholder-count="4">
+              <div class="{{p.cls}}"><b>{{p.n}}</b><span>{{p.t}}</span></div>
+            </sc-for>
+            <sc-if value="{{rd.hasRef}}" hint-placeholder-val="{{false}}">
+              <div class="lw-src"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-link"></use></svg><span>Перечень, на который ссылается статья: <button class="lref" onClick="{{rd.openRef}}">ПСМ № 778</button> — в базе только карточка.</span></div>
+            </sc-if>
+            <div class="lw-acts">
+              <button class="btn btn-secondary btn-sm" onClick="{{rd.copy}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>Скопировать ссылку</button>
+              <sc-if value="{{isUser}}" hint-placeholder-val="{{true}}"><button class="btn btn-secondary btn-sm" onClick="{{rd.ask}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-spark"></use></svg>Спросить ассистента об этой статье</button></sc-if>
+              <sc-if value="{{isGuest}}" hint-placeholder-val="{{false}}"><a class="btn btn-secondary btn-sm" href="Login.dc.html"><svg class="ic ic-s" aria-hidden="true"><use href="#i-lock"></use></svg>Войдите, чтобы спросить ассистента</a></sc-if>
+              <a class="btn btn-ghost btn-sm" href="{{cur.url}}" target="_blank" rel="noopener">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a>
+              <span style="margin-left: auto" class="row-btns">
+                <button class="btn btn-ghost btn-sm btn-icon" aria-label="Предыдущая статья" onClick="{{rd.prev}}" disabled="{{rd.noPrev}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-l"></use></svg></button>
+                <button class="btn btn-ghost btn-sm btn-icon" aria-label="Следующая статья" onClick="{{rd.next}}" disabled="{{rd.noNext}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></button>
+              </span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isCard}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 16px; max-width: 880px">
+        <nav class="lw-crumb" aria-label="Навигация"><button onClick="{{back}}">База законов</button><svg class="ic ic-s faint" aria-hidden="true"><use href="#i-chev-r"></use></svg><span class="muted">{{cur.topicLabel}}</span><svg class="ic ic-s faint" aria-hidden="true"><use href="#i-chev-r"></use></svg><span class="strong">{{cur.short}}</span></nav>
+        <div class="row" style="gap: 8px; flex-wrap: wrap"><span class="badge b-neutral">{{cur.kind}}</span><span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-file"></use></svg>Только карточка</span></div>
+        <h2 style="font-size: 26px; font-weight: 650; letter-spacing: -0.02em; line-height: 1.25">{{cur.title}}</h2>
+        <section class="card row" style="gap: 16px; align-items: flex-start; padding: 22px">
+          <span class="cat-ic" style="background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); width: 44px; height: 44px" aria-hidden="true"><svg class="ic"><use href="#i-file"></use></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 10px; flex: 1">
+            <h3 style="font-size: 18px; font-weight: 650">Текста этого акта в базе нет — откройте его на pravo.by</h3>
+            <p class="muted">На pravo.by для него опубликована только карточка: реквизиты, статус и список изменений. Поэтому ассистент назовёт этот акт и даст ссылку, но не будет его цитировать. Раз в неделю Кошт проверяет, не появился ли текст.</p>
+            <div class="row-btns"><a class="btn btn-primary" href="{{cur.cardUrl}}" target="_blank" rel="noopener">Открыть карточку на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a><button class="btn btn-ghost" onClick="{{back}}">К списку актов</button></div>
+          </div>
+        </section>
+        <dl class="lw-dl">
+          <dt>Вид</dt><dd>{{cur.kindFull}}</dd>
+          <dt>Номер и дата</dt><dd class="num">{{cur.req}}</dd>
+          <dt>Принял</dt><dd>{{cur.org}}</dd>
+          <dt>Тема</dt><dd>{{cur.topicLabel}}</dd>
+          <dt>Статус</dt><dd>Действует · по карточке на 21.10.2026</dd>
+          <dt>Номер в Нац. реестре</dt><dd class="num">{{cur.id}}</dd>
+        </dl>
+      </div>
+    </sc-if>
+
+    <p class="lw-src" style="margin-top: 8px"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-shield-ok"></use></svg><span>Тексты — только с pravo.by, в действующей редакции; проверка обновлений ежедневно. При использовании материалов — активная ссылка на pravo.by. Тексты в прототипе иллюстративные. Не является юридической консультацией.</span></p>
+  </div>
+</main>
+
+<sc-if value="{{isUser}}" hint-placeholder-val="{{true}}">
+  <button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg>{{ctxLabel}}</span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="chat-body" aria-live="polite">
+        <div class="msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>{{greet}}</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <p>{{m.p1}}</p>
+                  <sc-if value="{{m.hasQuote}}" hint-placeholder-val="{{false}}">
+                    <div class="lawq">
+                      <div class="lawq-h"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>{{m.qHead}}</div>
+                      <p class="lawq-t">{{m.qText}}</p>
+                      <div class="lawq-f"><span>Редакция на 21.10.2026</span><a href="{{m.qUrl}}" target="_blank" rel="noopener" class="row" style="gap: 4px">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.hasP2}}" hint-placeholder-val="{{false}}"><p>{{m.p2}}</p></sc-if>
+                  <sc-if value="{{m.hasBtn}}" hint-placeholder-val="{{false}}"><div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.act}}">{{m.btn}}</button></div></sc-if>
+                  <sc-if value="{{m.hasLink}}" hint-placeholder-val="{{false}}"><div class="row-btns"><a class="btn btn-secondary btn-sm" href="{{m.href}}">{{m.linkText}}</a></div></sc-if>
+                  <sc-if value="{{m.legal}}" hint-placeholder-val="{{false}}"><p class="xs faint">Не является юридической консультацией.</p></sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="chat-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="2"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите о законах, правах, сроках…">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"audience":{"editor":"enum","options":["Пользователь","Гость"],"default":"Пользователь","section":"Состояние экрана"},"$preview":{"width":1440,"height":1300}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { view: 'catalog', act: null, art: null, q: '', topic: 'all', status: 'all', bell: false, read: false, chat: false, ctx: 'base', msgs: [], steps: [], busy: false, draft: '', toast: null };
+    this.timers = [];
+    this.T = [['all', 'Все'], ['tax', 'Налоги'], ['consumer', 'Потребители'], ['housing', 'Жильё и ЖКХ'], ['banks', 'Банки и кредиты'], ['work', 'Работа'], ['benefits', 'Пособия и пенсии'], ['contracts', 'Договоры, страхование, транспорт'], ['edu', 'Образование и медицина'], ['family', 'Семья'], ['fines', 'Штрафы'], ['pd', 'Персональные данные'], ['plenum', 'Разъяснения Пленума']];
+    const A = (id, kind, kindFull, short, title, req, topics, status, org, alias) => ({ id, kind, kindFull, short, title, req, topics, status, org, alias: alias || '' });
+    this.ACTS = [
+      A('Hk0200166', 'Кодекс', 'Кодекс Республики Беларусь', 'НК (Общая часть)', 'Налоговый кодекс Республики Беларусь (Общая часть)', '№ 166-З от 19.12.2002', ['tax'], 'pending', 'Палата представителей, Совет Республики', 'нк налоговый'),
+      A('Hk0900071', 'Кодекс', 'Кодекс Республики Беларусь', 'НК (Особенная часть)', 'Налоговый кодекс Республики Беларусь (Особенная часть)', '№ 71-З от 29.12.2009', ['tax'], 'pending', 'Палата представителей, Совет Республики', 'нк налоговый вычет'),
+      A('H10200090', 'Закон', 'Закон Республики Беларусь', 'ЗоЗПП', 'Закон «О защите прав потребителей»', '№ 90-З от 09.01.2002', ['consumer'], 'ok', 'Палата представителей, Совет Республики', 'зозпп потребител возврат'),
+      A('C20200778', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 778', 'Постановление Совета Министров № 778 (перечни невозвратных товаров и др.)', '№ 778 от 14.06.2002', ['consumer'], 'card', 'Совет Министров Республики Беларусь', 'невозвратн'),
+      A('C21800935', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 935', 'Постановление Совета Министров «О некоторых мерах по защите прав потребителей»', '№ 935 от 22.12.2018', ['consumer'], 'card', 'Совет Министров Республики Беларусь'),
+      A('C22600134', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 134', 'Постановление Совета Министров «О Правилах бытового обслуживания потребителей»', '№ 134 от 23.03.2026', ['consumer'], 'card', 'Совет Министров Республики Беларусь'),
+      A('Hk1200428', 'Кодекс', 'Кодекс Республики Беларусь', 'ЖК', 'Жилищный кодекс Республики Беларусь', '№ 428-З от 28.08.2012', ['housing'], 'ok', 'Палата представителей, Совет Республики', 'жк жилищный'),
+      A('P32500095', 'Указ', 'Указ Президента Республики Беларусь', 'Указ № 95', 'Указ «О государственной поддержке при жилищном строительстве»', '№ 95 от 06.03.2025', ['housing'], 'ok', 'Президент Республики Беларусь', 'льготный кредит'),
+      A('HK0000441', 'Кодекс', 'Кодекс Республики Беларусь', 'БК', 'Банковский кодекс Республики Беларусь', '№ 441-З от 25.10.2000', ['banks'], 'pending', 'Палата представителей, Совет Республики', 'бк банковский'),
+      A('HK9800218', 'Кодекс', 'Кодекс Республики Беларусь', 'ГК', 'Гражданский кодекс Республики Беларусь', '№ 218-З от 07.12.1998', ['contracts', 'banks', 'family'], 'pending', 'Палата представителей, Совет Республики', 'гк гражданский договор наследств'),
+      A('H10800369', 'Закон', 'Закон Республики Беларусь', 'Закон № 369-З', 'Закон «О гарантированном возмещении банковских вкладов (депозитов) физических лиц»', '№ 369-З от 08.07.2008', ['banks'], 'card', 'Палата представителей, Совет Республики', 'вклад депозит'),
+      A('HK9900296', 'Кодекс', 'Кодекс Республики Беларусь', 'ТК', 'Трудовой кодекс Республики Беларусь', '№ 296-З от 26.07.1999', ['work'], 'pending', 'Палата представителей, Совет Республики', 'тк трудовой зарплат'),
+      A('H11200007', 'Закон', 'Закон Республики Беларусь', 'Закон № 7-З', 'Закон «О государственных пособиях семьям, воспитывающим детей»', '№ 7-З от 29.12.2012', ['benefits'], 'ok', 'Палата представителей, Совет Республики', 'пособи'),
+      A('C21300569', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 569', 'Постановление Совета Министров о назначении и выплате государственных пособий', '№ 569 от 28.06.2013', ['benefits'], 'ok', 'Совет Министров Республики Беларусь', 'пособи'),
+      A('P31900345', 'Указ', 'Указ Президента Республики Беларусь', 'Указ № 345', 'Указ «О семейном капитале»', '№ 345 от 18.09.2019', ['benefits'], 'ok', 'Президент Республики Беларусь', 'семейный капитал'),
+      A('C21500128', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 128', 'Постановление Совета Министров о порядке использования средств семейного капитала', '№ 128 от 24.02.2015', ['benefits'], 'ok', 'Совет Министров Республики Беларусь', 'семейный капитал'),
+      A('V19201596', 'Закон', 'Закон Республики Беларусь', 'Закон о пенсиях', 'Закон «О пенсионном обеспечении»', '№ 1596-XII от 17.04.1992', ['benefits'], 'ok', 'Верховный Совет Республики Беларусь', 'пенси'),
+      A('H12400344', 'Закон', 'Закон Республики Беларусь', 'Закон № 344-З', 'Закон «О страховой деятельности»', '№ 344-З от 05.01.2024', ['contracts'], 'pending', 'Палата представителей, Совет Республики', 'страхов'),
+      A('P32500108', 'Указ', 'Указ Президента Республики Беларусь', 'Указ № 108', 'Указ «О страховании»', '№ 108 от 18.03.2025', ['contracts'], 'ok', 'Президент Республики Беларусь', 'осаго страхов'),
+      A('P31900140', 'Указ', 'Указ Президента Республики Беларусь', 'Указ № 140', 'Указ «О возмещении таможенных пошлин, налогов»', '№ 140 от 10.04.2019', ['contracts'], 'ok', 'Президент Республики Беларусь', 'транспорт автомобил'),
+      A('Hk1100243', 'Кодекс', 'Кодекс Республики Беларусь', 'Кодекс об образовании', 'Кодекс Республики Беларусь об образовании', '№ 243-З от 13.01.2011', ['edu'], 'pending', 'Палата представителей, Совет Республики', 'образован обучени'),
+      A('V19302435', 'Закон', 'Закон Республики Беларусь', 'Закон о здравоохранении', 'Закон «О здравоохранении»', '№ 2435-XII от 18.06.1993', ['edu'], 'ok', 'Верховный Совет Республики Беларусь', 'медицин здравоохран'),
+      A('C20900182', 'Постановление', 'Постановление Совета Министров', 'ПСМ № 182', 'Постановление Совета Министров «Об оказании платных медицинских услуг…»', '№ 182 от 10.02.2009', ['edu'], 'card', 'Совет Министров Республики Беларусь', 'платные медицинские'),
+      A('HK9900278', 'Кодекс', 'Кодекс Республики Беларусь', 'КоБС', 'Кодекс Республики Беларусь о браке и семье', '№ 278-З от 09.07.1999', ['family'], 'ok', 'Палата представителей, Совет Республики', 'кобс алимент брак'),
+      A('HK2100091', 'Кодекс', 'Кодекс Республики Беларусь', 'КоАП', 'Кодекс Республики Беларусь об административных правонарушениях', '№ 91-З от 06.01.2021', ['fines'], 'pending', 'Палата представителей, Совет Республики', 'коап штраф'),
+      A('HK2100092', 'Кодекс', 'Кодекс Республики Беларусь', 'ПИКоАП', 'Процессуально-исполнительный кодекс об административных правонарушениях', '№ 92-З от 06.01.2021', ['fines'], 'ok', 'Палата представителей, Совет Республики', 'пикоап штраф'),
+      A('H12100099', 'Закон', 'Закон Республики Беларусь', 'Закон № 99-З', 'Закон «О защите персональных данных»', '№ 99-З от 07.05.2021', ['pd'], 'ok', 'Палата представителей, Совет Республики', 'персональн'),
+      A('S21000004', 'Пленум', 'Постановление Пленума Верховного Суда (разъяснение, не НПА)', 'Пленум ВС № 4', 'Постановление Пленума Верховного Суда «О практике применения судами законодательства при рассмотрении дел о защите прав потребителей»', '№ 4 от 24.06.2010', ['plenum', 'consumer'], 'ok', 'Пленум Верховного Суда Республики Беларусь', 'пленум потребител')
+    ];
+    const P = (n, t, sub, hl) => ({ n, t, sub: !!sub, hl: !!hl });
+    this.TX = {
+      Hk0900071: { part: 'Раздел IV. Республиканские налоги, сборы (пошлины)', chapter: 'Глава 16. Подоходный налог с физических лиц', order: ['209', '210', '211', '212', '214'], arts: {
+        '209': { t: 'Стандартные налоговые вычеты', mine: 'Касается вас: двое детей до 18 лет — 240 BYN вычета в месяц, экономия 31,20 BYN.', mineHref: 'Deductions.dc.html', paras: [
+          P('1.', 'Плательщик имеет право на получение следующих стандартных налоговых вычетов:'),
+          P('1.1.', 'в размере 216 белорусских рублей за каждый месяц налогового периода при получении дохода в этом месяце в размере, не превышающем 1 308 белорусских рублей;', 1),
+          P('1.2.', 'в размере 63 белорусских рублей в месяц на каждого ребёнка в возрасте до восемнадцати лет и (или) каждого иждивенца;', 1),
+          P('1.3.', 'в размере 120 белорусских рублей в месяц на каждого ребёнка до восемнадцати лет и (или) каждого иждивенца — плательщикам, имеющим двух и более детей в возрасте до восемнадцати лет или ребёнка-инвалида, а также вдовам (вдовцам), одиноким родителям, приёмным родителям, опекунам или попечителям;', 1, 1),
+          P('1.4.', 'в размере 306 белорусских рублей в месяц — инвалидам I и II группы и иным категориям плательщиков, указанным в настоящем подпункте;', 1),
+          P('2.', 'Стандартные налоговые вычеты предоставляются плательщику по основному месту работы на основании его письменного заявления и документов, подтверждающих право на вычеты.')] },
+        '210': { t: 'Социальные налоговые вычеты', mine: 'Касается вас: оплата обучения Максима в БГУ 12.09.2026 — можно вернуть до 260,00 BYN.', mineHref: 'Deductions.dc.html', paras: [
+          P('1.', 'При определении размера налоговой базы плательщик имеет право на получение следующих социальных налоговых вычетов:'),
+          P('1.1.', 'в сумме, уплаченной в течение налогового периода плательщиком за своё обучение, обучение близких родственников, опекаемых, подопечных в учреждениях образования Республики Беларусь при получении ими первого высшего, первого среднего специального или первого профессионально-технического образования, а также в сумме, направленной на погашение кредитов банков Республики Беларусь, фактически израсходованных на оплату такого обучения, и процентов за пользование ими;', 1, 1),
+          P('1.2.', 'в сумме, уплаченной в течение налогового периода плательщиком страховым организациям Республики Беларусь страховых взносов по договорам добровольного страхования жизни и дополнительной пенсии, заключённым на срок не менее трёх лет;', 1),
+          P('2.', 'Социальные налоговые вычеты предоставляются плательщику при условии представления документов, подтверждающих его фактические расходы, — нанимателем по основному месту работы или налоговым органом при подаче налоговой декларации.'),
+          P('3.', 'Сумма социального налогового вычета, не использованная в налоговом периоде, переносится на последующие налоговые периоды.')] },
+        '211': { t: 'Имущественные налоговые вычеты', mine: 'Чтобы понять, касается ли вас: кредит в Беларусбанке — на жильё? Ответьте в разделе «Налоговые вычеты».', mineHref: 'Deductions.dc.html', paras: [
+          P('1.', 'Плательщик имеет право на получение имущественного налогового вычета в сумме, фактически израсходованной им и членами его семьи, состоящими на учёте нуждающихся в улучшении жилищных условий, на строительство индивидуального жилого дома или квартиры, приобретение жилого дома или квартиры на территории Республики Беларусь, а также на погашение кредитов, полученных на эти цели, и процентов по ним.'),
+          P('2.', 'Имущественный налоговый вычет предоставляется налоговым органом при подаче налоговой декларации, а также нанимателем — в течение налогового периода.'),
+          P('3.', 'Не использованная в налоговом периоде часть имущественного налогового вычета переносится на последующие налоговые периоды до полного её использования.')] },
+        '212': { t: 'Профессиональные налоговые вычеты', paras: [
+          P('1.', 'При определении размера налоговой базы плательщики имеют право на получение профессиональных налоговых вычетов по доходам, полученным от выполнения работ (оказания услуг) по гражданско-правовым договорам, в сумме фактически произведённых ими и документально подтверждённых расходов, связанных с выполнением этих работ.'),
+          P('2.', 'При невозможности документального подтверждения расходов профессиональный налоговый вычет производится в размере, установленном настоящей статьёй.')] },
+        '214': { t: 'Налоговые ставки', paras: [
+          P('1.', 'Налоговые ставки устанавливаются в размере 13 процентов, если иное не установлено настоящей статьёй.'),
+          P('2.', 'Налоговые ставки устанавливаются в размере 25 процентов в отношении части годового дохода свыше 350 000 до 600 000 белорусских рублей и 30 процентов — в отношении части годового дохода свыше 600 000 белорусских рублей.'),
+          P('3.', 'Для индивидуальных предпринимателей налоговая ставка устанавливается в размере 20 процентов, а в отношении доходов свыше 500 000 белорусских рублей — 30 процентов.')] } } },
+      H10200090: { part: 'Закон о защите прав потребителей', chapter: 'Глава 2. Защита прав потребителей при продаже товаров', order: ['20', '21', '28'], arts: {
+        '20': { t: 'Права потребителя в случае продажи ему товара ненадлежащего качества', paras: [
+          P('1.', 'Потребитель, которому продан товар ненадлежащего качества, если его недостатки не были оговорены продавцом, вправе по своему выбору потребовать: замены недоброкачественного товара; соразмерного уменьшения покупной цены; незамедлительного безвозмездного устранения недостатков; возмещения расходов по устранению недостатков; расторжения договора и возврата уплаченной суммы.'),
+          P('2.', 'Отсутствие у потребителя документа, подтверждающего факт покупки, не является основанием для отказа в удовлетворении его требований.')] },
+        '21': { t: 'Сроки предъявления потребителем требований в отношении недостатков товара', mine: 'Касается вас: пылесос из Электросилы (03.05.2026) — гарантийный срок до 03.05.2028.', mineHref: 'Calendar.dc.html', paras: [
+          P('1.', 'Потребитель вправе предъявить требования в отношении недостатков товара в течение гарантийного срока или срока годности.'),
+          P('2.', 'Если гарантийный срок не установлен или составляет менее двух лет, требования могут быть предъявлены в течение двух лет со дня передачи товара потребителю, а в отношении недвижимого имущества — в течение трёх лет.', 0, 1)] },
+        '28': { t: 'Право потребителя на обмен и возврат товара надлежащего качества', ref: true, paras: [
+          P('1.', 'Потребитель вправе в течение четырнадцати дней с момента передачи ему непродовольственного товара надлежащего качества, если более длительный срок не объявлен продавцом, обменять купленный товар у продавца, у которого этот товар был приобретён, на аналогичный товар другого размера, формы, габарита, фасона, расцветки, комплектации либо вернуть его продавцу и получить уплаченную за него денежную сумму.', 0, 1),
+          P('2.', 'Обмен либо возврат товара надлежащего качества производится, если товар не был в употреблении, сохранены его потребительские свойства и имеются доказательства приобретения его у данного продавца.'),
+          P('3.', 'Уплаченная денежная сумма возвращается потребителю незамедлительно, а при невозможности — не позднее семи дней со дня предъявления требования.'),
+          P('4.', 'Перечень непродовольственных товаров надлежащего качества, не подлежащих обмену и возврату, утверждается Правительством Республики Беларусь.')] } } }
+    };
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  url(a, card) { return 'https://pravo.by/document/?guid=' + (card ? '3961' : '3871') + '&p0=' + a.id; }
+  pl(n, w) { const a = Math.abs(n) % 100; const b = a % 10; if (a > 10 && a < 20) return w[2]; if (b > 1 && b < 5) return w[1]; if (b === 1) return w[0]; return w[2]; }
+  topicLabel(a) { const t = this.T.find((x) => x[0] === a.topics[0]); return t ? t[1] : ''; }
+  open(id, art) {
+    const a = this.ACTS.find((x) => x.id === id); if (!a) return;
+    if (a.status === 'card') { this.setState({ view: 'card', act: id, art: null }); return; }
+    const tx = this.TX[id];
+    this.setState({ view: 'reader', act: id, art: art || (tx ? (id === 'H10200090' ? '28' : '210') : null), chat: false });
+  }
+  hit() {
+    const q = this.state.q.toLowerCase().trim(); if (!q) return null;
+    const m = q.match(/(?:ст\.?|статья|статьи|статье)\s*(\d{1,3})/) || q.match(/^(\d{1,3})(?:\s|$)/) || q.match(/\s(\d{1,3})\s*(?:нк|зозпп)/);
+    if (!m) return null; const n = m[1];
+    const rest = q.replace(m[0], ' ');
+    const consumer = /зозпп|потреб|90/.test(rest);
+    if (!consumer && this.TX.Hk0900071.arts[n]) return { id: 'Hk0900071', n, title: 'Статья ' + n + '. ' + this.TX.Hk0900071.arts[n].t, act: 'Налоговый кодекс (Особенная часть), гл. 16' };
+    if (this.TX.H10200090.arts[n] && (consumer || !this.TX.Hk0900071.arts[n])) return { id: 'H10200090', n, title: 'Статья ' + n + '. ' + this.TX.H10200090.arts[n].t, act: 'Закон «О защите прав потребителей»' };
+    return null;
+  }
+  explain(id, n) {
+    const E = {
+      '209': 'Если у вас дети, наниматель каждый месяц уменьшает облагаемую зарплату на фиксированную сумму. При двух и более детях — 120 BYN на каждого, то есть налог меньше на 15,60 BYN в месяц за каждого ребёнка.',
+      '210': 'Если вы платите за первое высшее, среднее специальное или профессионально-техническое образование — своё или близких родственников — в учреждении образования Беларуси, налоговую базу уменьшат на сумму оплаты. Проще: вернут 13% от того, что вы заплатили, но не больше налога, удержанного за год.',
+      '211': 'Если вы стоите (или стояли на момент договора) на учёте нуждающихся и строите или покупаете жильё в Беларуси, налог можно не платить с суммы, потраченной на жильё и погашение кредита. Остаток вычета переносится на следующие годы.',
+      '212': 'Если вы работаете по договору подряда или получаете авторское вознаграждение, налог считают с дохода за вычетом подтверждённых расходов на эту работу.',
+      '214': 'Обычная ставка подоходного налога — 13%. С части годового дохода свыше 350 000 BYN — 25%, свыше 600 000 BYN — 30%. Для ИП — 20%.',
+      '20': 'Если товар оказался с браком, вы сами выбираете: замена, скидка, бесплатный ремонт, возмещение ремонта или возврат денег. Отсутствие чека — не повод отказать.',
+      '21': 'Претензию по браку можно предъявить в течение гарантийного срока. Если гарантии нет или она меньше двух лет — в течение двух лет с покупки.',
+      '28': 'Непродовольственный товар без брака можно вернуть или обменять в течение 14 дней, если он не был в употреблении и есть доказательство покупки. Деньги — сразу или не позднее 7 дней.' };
+    return E[n] || 'Коротко: статья регулирует порядок, описанный в её тексте. Задайте вопрос о вашей ситуации — отвечу с цитатой.';
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase(); const st = this.state;
+    const zUrl = 'https://pravo.by/document/?guid=3871&p0=H10200090';
+    let kind = 'generic';
+    if (s.includes('пылесос') || (s.includes('вернуть') && s.includes('дн'))) kind = 'vac';
+    else if (s.includes('нельзя вернуть') || s.includes('невозврат') || s.includes('какие товары')) kind = 'nonret';
+    else if (s.includes('простыми') || s.includes('объясни')) kind = 'explain';
+    else if (s.includes('положен') || s.includes('мне')) kind = 'mine';
+    const plan = { vac: ['Ищу в базе: возврат товара надлежащего качества…', 'Нашёл ст. 28 Закона № 90-З…', 'Ищу ваши чеки…'], nonret: ['Ищу перечень невозвратных товаров…', 'Проверяю, есть ли текст в базе…'], explain: ['Читаю статью…', 'Перевожу на простой язык…'], mine: ['Сверяю статью с вашим профилем и операциями…'], generic: ['Разбираю вопрос…'] }[kind];
+    let bot = { p1: 'В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с цитатами из базы законов.' };
+    const n = st.art; const actId = st.act;
+    if (kind === 'vac') bot = { p1: 'Да, если пылесос надлежащего качества и не был в употреблении: на обмен или возврат есть 14 дней с момента покупки, если продавец не объявил срок дольше. Деньги должны вернуть сразу, а если не получается — не позднее 7 дней.',
+      qHead: 'Закон № 90-З «О защите прав потребителей», ст. 28, п. 1', qText: '«Потребитель вправе в течение четырнадцати дней с момента передачи ему непродовольственного товара надлежащего качества, если более длительный срок не объявлен продавцом… вернуть его продавцу и получить уплаченную за него денежную сумму».', qUrl: zUrl,
+      p2: 'Ваш чек: Электросила, 03.05.2026 — пылесос 389,00. С покупки прошло больше 14 дней, поэтому вернуть его как товар надлежащего качества уже нельзя. Если появится недостаток — действует гарантия до 03.05.2028 (ст. 21).', btn: 'Открыть ст. 28', actKind: 'art28', legal: true };
+    if (kind === 'nonret') bot = { p1: 'Продовольственные товары надлежащего качества обмену и возврату не подлежат. Для непродовольственных товаров перечень утверждает Правительство — так сказано в ст. 28 Закона № 90-З.',
+      qHead: 'Закон № 90-З, ст. 28, п. 4', qText: '«Перечень непродовольственных товаров надлежащего качества, не подлежащих обмену и возврату, утверждается Правительством Республики Беларусь».', qUrl: zUrl,
+      p2: 'Этот перечень установлен постановлением Совета Министров № 778 от 14.06.2002. Его текста в моей базе нет — на pravo.by опубликована только карточка, поэтому цитировать его я не буду. Откройте по ссылке.', btn: 'Карточка ПСМ № 778', actKind: 'card778', legal: true };
+    if (kind === 'explain') bot = { p1: this.explain(actId, n), p2: 'Это пересказ. Точная формулировка — в тексте статьи слева.', legal: true };
+    if (kind === 'mine') {
+      const M = { '210': ['Похоже, да: вы оплатили обучение Максима в БГУ 12.09.2026 — 2 000,00 BYN. Можно вернуть до 260,00 BYN (2 000,00 × 13%).', 'Deductions.dc.html', 'Как получить вычет'],
+        '209': ['Да: у вас двое детей до 18 лет — 120 × 2 = 240 BYN вычета в месяц, экономия 31,20 BYN. Наниматель даёт его по заявлению.', 'Deductions.dc.html', 'Подробнее о вычете'],
+        '211': ['Пока не знаю. Нужно уточнить: платёж 410,00 в Беларусбанк — кредит на жильё? И состояли ли вы на учёте нуждающихся на момент договора?', 'Deductions.dc.html', 'Ответить на вопросы'] };
+      const r = M[n];
+      bot = r ? { p1: r[0], href: r[1], linkText: r[2], legal: true } : { p1: 'Эта статья не о вычете для вас. Спросите о своей ситуации — например, о возврате товара или о сроке гарантии.', legal: false };
+    }
+    this.setState({ msgs: st.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        if (i < plan.length - 1) { this.setState({ steps: plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i })) }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', ...bot }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  renderVals() {
+    const st = this.state; const isGuest = (this.props.audience ?? 'Пользователь') === 'Гость';
+    const q = st.q.toLowerCase().trim();
+    const hit = this.hit();
+    let qText = q.replace(/(?:ст\.?|статья|статьи|статье)\s*\d{1,3}/, '').replace(/^\d{1,3}(\s|$)/, '').replace(/\s\d{1,3}\s*(?=нк|зозпп)/, ' ').trim();
+    const match = (a) => {
+      if (st.topic !== 'all' && !a.topics.includes(st.topic)) return false;
+      if (st.status !== 'all' && a.status !== st.status) return false;
+      if (hit) return a.id === hit.id || !qText;
+      if (!qText) return true;
+      const hay = (a.short + ' ' + a.title + ' ' + a.req + ' ' + a.alias).toLowerCase();
+      return qText.split(/\s+/).every((w0) => { const w = w0.replace(/[«»"]/g, ''); return hay.includes(w.length > 5 ? w.slice(0, Math.max(4, w.length - 2)) : w); });
+    };
+    const list = this.ACTS.filter(match);
+    const acts = list.map((a) => ({ title: a.title, topic: a.topics[0],
+      sub: a.kind + ' ' + a.req + (/№/.test(a.short) ? '' : ' · ' + a.short),
+      isOk: a.status === 'ok', isPending: a.status === 'pending', isCard: a.status === 'card',
+      url: this.url(a, a.status === 'card'), urlAria: 'Открыть на pravo.by: ' + a.short, aria: 'Открыть: ' + a.title + (a.status === 'card' ? ' (только карточка)' : ''), open: () => this.open(a.id) }));
+    const GI = { tax: '#i-percent', consumer: '#i-bag', housing: '#i-home', banks: '#i-bank', work: '#i-work', benefits: '#i-baby', contracts: '#i-file', edu: '#i-grad', family: '#i-users', fines: '#i-warn', pd: '#i-lock', plenum: '#i-book' };
+    const groups = this.T.filter(([k]) => k !== 'all').map(([k, l]) => { const ga = acts.filter((x) => x.topic === k);
+      return { l, icon: GI[k], acts: ga, count: ga.length + ' ' + this.pl(ga.length, ['акт', 'акта', 'актов']) }; }).filter((g) => g.acts.length > 0);
+    const topics = this.T.map(([k, l]) => { const nn = k === 'all' ? this.ACTS.length : this.ACTS.filter((a) => a.topics.includes(k)).length;
+      return { l, n: nn, on: st.topic === k, cls: 'chip' + (st.topic === k ? ' on' : ''), pick: () => this.setState({ topic: k }) }; });
+    const statuses = [['all', 'Все'], ['ok', 'Действует'], ['pending', 'Есть изменения'], ['card', 'Только карточка']].map(([k, l]) => ({ l, on: st.status === k, cls: st.status === k ? 'on' : '', pick: () => this.setState({ status: k }) }));
+    const curA = st.act ? this.ACTS.find((x) => x.id === st.act) : null;
+    const cur = curA ? { ...curA, isOk: curA.status === 'ok', isPending: curA.status === 'pending', topicLabel: this.topicLabel(curA), url: this.url(curA, false), cardUrl: this.url(curA, true) } : { topics: [] };
+    // reader
+    let rd = { toc: [], paras: [] };
+    if (st.view === 'reader' && curA) {
+      const tx = this.TX[curA.id];
+      if (tx) {
+        const n = st.art; const art = tx.arts[n]; const idx = tx.order.indexOf(n);
+        rd = { part: tx.part, chapter: tx.chapter,
+          toc: tx.order.map((k) => ({ n: 'Ст. ' + k, t: tx.arts[k].t, cls: k === n ? 'on' : '', cur: k === n ? 'true' : 'false', pick: () => this.setState({ art: k }) })),
+          head: 'Статья ' + n + '. ' + art.t, hasMine: !isGuest && !!art.mine, mine: art.mine || '', mineHref: art.mineHref || 'Deductions.dc.html',
+          paras: art.paras.map((p) => ({ n: p.n, t: p.t, cls: 'lw-p' + (p.sub ? ' sub' : '') + (p.hl && !isGuest ? ' hl' : '') })),
+          hasRef: !!art.ref, openRef: () => this.open('C20200778'),
+          noPrev: idx <= 0, noNext: idx >= tx.order.length - 1,
+          prev: () => { if (idx > 0) this.setState({ art: tx.order[idx - 1] }); }, next: () => { if (idx < tx.order.length - 1) this.setState({ art: tx.order[idx + 1] }); },
+          copy: () => this.toast('Ссылка на ст. ' + n + ' скопирована'),
+          ask: () => this.setState({ chat: true, ctx: 'article', bell: false }) };
+      } else {
+        rd = { part: curA.short, chapter: 'Структура акта', toc: [{ n: 'Гл. 1', t: 'Общие положения', cls: 'on', cur: 'true', pick: () => {} }, { n: 'Гл. 2', t: '[Главы акта по структуре pravo.by]', cls: '', cur: 'false', pick: () => {} }],
+          head: 'Глава 1. Общие положения', hasMine: false, mine: '', mineHref: '', hasRef: false, openRef: () => {},
+          paras: [{ n: '1.', t: '[Текст акта в действующей редакции — загружается с pravo.by, разбит на статьи, пункты и подпункты]', cls: 'lw-p' }],
+          noPrev: true, noNext: true, prev: () => {}, next: () => {}, copy: () => this.toast('Ссылка на акт скопирована'), ask: () => this.setState({ chat: true, ctx: 'base', bell: false }) };
+      }
+    }
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const artCtx = st.ctx === 'article' && st.view === 'reader' && curA && this.TX[curA.id];
+    const sugg = (artCtx ? ['Объясните простыми словами', 'Положен ли мне этот вычет?'] : ['Можно ли вернуть пылесос через 10 дней?', 'Какие товары нельзя вернуть?']).map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', hasQuote: !!m.qText, hasP2: !!m.p2, hasBtn: !!m.btn, hasLink: !!m.href, legal: !!m.legal,
+      act: m.actKind === 'art28' ? () => this.open('H10200090', '28') : () => { this.open('C20200778'); this.setState({ chat: false }); } }));
+    const shortCur = curA ? (curA.id === 'Hk0900071' ? 'НК' : curA.short) : '';
+    const hasFilters = st.topic !== 'all' || st.status !== 'all' || !!q;
+    return {
+      isGuest, isUser: !isGuest, bodyCls: isGuest ? 'k-body lw-gbody' : 'k-body',
+      isCatalog: st.view === 'catalog', isReader: st.view === 'reader', isCard: st.view === 'card',
+      q: st.q, onQ: (e) => this.setState({ q: e.target.value }), onQKey: (e) => { if (e.key === 'Enter') { const h = this.hit(); if (h) this.open(h.id, h.n); } },
+      hasHit: !!hit, hit: hit ? { ...hit, open: () => this.open(hit.id, hit.n) } : { title: '', act: '', open: () => {} },
+      topics, statuses, groups, noActs: acts.length === 0, hasFilters,
+      listLabel: acts.length === this.ACTS.length ? 'Все ' + acts.length + ' актов стартового каталога' : 'Найдено: ' + acts.length + ' из ' + this.ACTS.length,
+      resetFilters: () => this.setState({ topic: 'all', status: 'all', q: '' }),
+      cur, rd, back: () => this.setState({ view: 'catalog', act: null, art: null }),
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatOpen: st.chat && !isGuest, openChat: () => this.setState({ chat: true, ctx: 'base', bell: false }), closeChat: () => this.setState({ chat: false }),
+      ctxLabel: artCtx ? 'Вижу: ' + shortCur + ', ст. ' + st.art : 'Вижу: База законов',
+      greet: artCtx ? 'Вижу, вы читаете ' + shortCur + ', ст. ' + st.art + '. Могу пересказать её простыми словами или проверить, касается ли она вас.' : 'Отвечаю только по текстам из этой базы — с цитатами и ссылками на pravo.by. Если нормы в базе нет, так и скажу.',
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

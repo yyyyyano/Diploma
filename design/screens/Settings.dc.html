@@ -1,0 +1,963 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Настройки</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: settings (set-) ===== */
+.set-wrap{display:flex;flex-direction:column;gap:20px;max-width:920px}
+.set-card{display:flex;flex-direction:column;gap:14px}
+.set-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.set-grow{flex:1 1 200px;min-width:0}
+.set-tabs{max-width:920px}
+.set-t{display:grid;font-size:14px}
+.set-th,.set-tr{display:grid;gap:12px;align-items:center;padding-left:12px;padding-right:12px}
+.set-th{background:var(--surface-2);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink-2);min-height:40px;border-radius:8px 8px 0 0}
+.set-tr{border-bottom:1px solid var(--line);padding-top:12px;padding-bottom:12px}
+.set-tr:last-child{border-bottom:0}
+.set-c-cons{grid-template-columns:minmax(220px,2fr) 110px 150px 110px;min-width:620px}
+.set-c-mx{grid-template-columns:minmax(0,1fr) 96px 96px}
+.set-c-mx > :nth-child(n+2){justify-self:center;text-align:center}
+.set-scroll{overflow-x:auto;margin:0 -20px;padding:0 20px;position:relative}
+.set-ctx{max-width:100%}
+.set-ctx span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.set-note{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:14px 16px;flex-wrap:wrap}
+.set-note-warn{background:var(--warn-soft);color:#5A2E00}
+.set-note-info{background:var(--brand-soft);color:var(--brand-ink)}
+.set-note-danger{background:var(--danger-soft);color:#7A1A14}
+.set-ic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;flex:none}
+.set-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.set-err{display:flex;align-items:center;gap:6px;color:var(--danger);font-size:13.5px;font-weight:600}
+.set-code{font-size:24px;font-weight:700;letter-spacing:.14em;padding:16px 20px;border:1.5px dashed var(--line-2);border-radius:12px;background:var(--surface-2);text-align:center}
+.set-sess{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.set-sess:last-child{border-bottom:0;padding-bottom:0}
+.set-mask{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.set-mask-b{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface-2);font-size:14px;line-height:1.7;display:flex;flex-direction:column;gap:6px}
+.set-tag{padding:1px 6px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.92em;white-space:nowrap}
+.set-pii{background:#FBE1DD;border-radius:4px;padding:0 3px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+.set-consent{max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:14px 16px;font-size:14px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2)}
+.set-consent b{font-weight:650}
+.set-check{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.set-check input{width:18px;height:18px;margin-top:2px;accent-color:var(--brand);flex:none;cursor:pointer}
+.set-feat{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.set-feat-i{border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:13.5px;background:var(--surface-2)}
+.set-feat-i svg{color:var(--brand)}
+.set-danger{border-color:#F0C3BE}
+.set-chips{display:flex;flex-wrap:wrap;gap:8px}
+.set-list{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.set-ok-ic{background:var(--income-soft);color:var(--income)}
+.set-chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.set-msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.set-steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.set-steps div{display:flex;align-items:center;gap:8px}
+.set-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.set-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.set-ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+.set-bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.set-nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.set-nt.unread{background:#F6FAF8}
+.set-nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.set-wide{width:min(620px,calc(100% - 32px));max-height:calc(100vh - 48px);overflow-y:auto}
+@media (max-width:760px){.set-form,.set-mask,.set-feat{grid-template-columns:minmax(0,1fr)}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a class="on" href="Settings.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Настройки</h1>
+      <p class="small muted">Вход, конфиденциальность, Telegram, уведомления и ваши данные</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="{{bellAria}}" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot" aria-hidden="true">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop set-bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="set-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><button class="btn btn-ghost btn-sm" onClick="{{goNotifTab}}">Настроить уведомления</button></div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <div class="tabs set-tabs" aria-label="Разделы настроек">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="5">
+        <button class="{{t.cls}}" aria-pressed="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}</button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{isProfile}}" hint-placeholder-val="{{true}}">
+      <div class="set-wrap">
+        <sc-if value="{{adminNote}}" hint-placeholder-val="{{true}}">
+          <div class="set-note set-note-warn" role="status">
+            <svg class="ic" aria-hidden="true" style="margin-top: 2px"><use href="#i-key"></use></svg>
+            <div class="set-grow" style="display: flex; flex-direction: column; gap: 4px">
+              <div class="strong">Пароль был сброшен администратором 21.10.2026 в 10:14</div>
+              <div class="small">Почта у вас не подтверждена, а Telegram не подключён, поэтому ссылку для сброса показали администратору — это записано в журнал. Если вы не просили сброс, смените пароль ниже и подтвердите почту.</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" onClick="{{dismissNote}}">Понятно</button>
+          </div>
+        </sc-if>
+
+        <section class="card set-card" aria-labelledby="em-t">
+          <h2 id="em-t" class="card-t">Электронная почта</h2>
+          <div class="set-row">
+            <span class="set-ic" style="background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2)" aria-hidden="true"><svg class="ic"><use href="#i-mail"></use></svg></span>
+            <div class="set-grow"><div class="strong">irina.k@example.by</div><div class="small muted">Сюда приходят ссылки для сброса пароля и важные письма.</div></div>
+            <span class="badge b-warn"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg>Не подтверждён</span>
+          </div>
+          <p class="small muted">Пользоваться Коштом можно и без подтверждения. Но сбросить пароль по почте получится только после него.</p>
+          <div class="row-btns">
+            <button class="btn btn-secondary" onClick="{{resend}}" disabled="{{mailSent}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-mail"></use></svg>{{resendLabel}}</button>
+            <a class="card-link" href="Mailbox.dc.html">Открыть локальный ящик (демо)<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a>
+          </div>
+        </section>
+
+        <section class="card set-card" aria-labelledby="pw-t">
+          <div><h2 id="pw-t" class="card-t">Пароль</h2><p class="small muted" style="margin-top: 4px">После смены пароля все другие сеансы завершатся.</p></div>
+          <div class="set-form">
+            <div class="field"><label for="pw-cur">Текущий пароль</label><input id="pw-cur" class="input" type="password" value="{{pwCur}}" onChange="{{onPwCur}}"></div>
+            <div class="field"><label for="pw-new">Новый пароль</label><input id="pw-new" class="input" type="password" value="{{pwNew}}" onChange="{{onPwNew}}"><span class="hint">Не короче 10 символов</span></div>
+            <div class="field"><label for="pw-rep">Повторите новый пароль</label><input id="pw-rep" class="input" type="password" value="{{pwRep}}" onChange="{{onPwRep}}"></div>
+          </div>
+          <sc-if value="{{hasPwErr}}" hint-placeholder-val="{{false}}"><div class="set-err" role="alert"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>{{pwErr}}</div></sc-if>
+          <div><button class="btn btn-primary" onClick="{{savePw}}">Сменить пароль</button></div>
+        </section>
+
+        <section class="card set-card" aria-labelledby="rc-t">
+          <div class="set-row">
+            <span class="set-ic" style="background: var(--brand-soft); color: var(--brand)" aria-hidden="true"><svg class="ic"><use href="#i-key"></use></svg></span>
+            <div class="set-grow"><h2 id="rc-t" class="card-t">Код восстановления</h2><p class="small muted" style="margin-top: 2px">Запасной способ войти, если вы забыли пароль, а почта и Telegram недоступны. Код показывается один раз — сохраните его в надёжном месте.</p></div>
+          </div>
+          <sc-if value="{{recNone}}" hint-placeholder-val="{{true}}">
+            <div class="row-btns"><button class="btn btn-secondary" onClick="{{makeCode}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Создать код восстановления</button><span class="small muted">Кода пока нет</span></div>
+          </sc-if>
+          <sc-if value="{{recShown}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <div class="set-code num" aria-label="Код восстановления">KQ7M-4XPD-9TJC-2HWR</div>
+              <div class="set-note set-note-warn"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 3px"><use href="#i-warn"></use></svg><span class="small set-grow">После закрытия код больше не покажется. Любой, у кого он есть, сможет задать новый пароль на странице входа.</span></div>
+              <div class="row-btns">
+                <button class="btn btn-secondary" onClick="{{copyCode}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>Скопировать</button>
+                <button class="btn btn-primary" onClick="{{savedCode}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Я сохранила код</button>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{recSaved}}" hint-placeholder-val="{{false}}">
+            <div class="set-row">
+              <span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Код создан 21.10.2026</span>
+              <span class="small muted set-grow">Если создать новый код, старый перестанет действовать.</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{makeCode}}">Создать новый</button>
+            </div>
+          </sc-if>
+        </section>
+
+        <section class="card set-card" aria-labelledby="ss-t">
+          <h2 id="ss-t" class="card-t">Где вы вошли</h2>
+          <div>
+            <div class="set-sess">
+              <span class="set-ic" style="width: 40px; height: 40px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2)" aria-hidden="true"><svg class="ic ic-s"><use href="#i-server"></use></svg></span>
+              <div class="set-grow"><div class="small strong">Этот компьютер · Chrome</div><div class="xs muted">http://localhost:8080 · сейчас</div></div>
+              <span class="badge b-ok">Текущий сеанс</span>
+            </div>
+            <div class="set-sess">
+              <span class="set-ic" style="width: 40px; height: 40px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2)" aria-hidden="true"><svg class="ic ic-s"><use href="#i-send"></use></svg></span>
+              <div class="set-grow"><div class="small strong">Telegram-бот</div><div class="xs muted">{{tgSessionText}}</div></div>
+            </div>
+          </div>
+          <div><a class="btn btn-secondary" href="Login.dc.html"><svg class="ic ic-s" aria-hidden="true"><use href="#i-logout"></use></svg>Выйти из аккаунта</a></div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isPrivacy}}" hint-placeholder-val="{{false}}">
+      <div class="set-wrap">
+        <section class="card set-card" aria-labelledby="cl-t">
+          <div class="set-row" style="align-items: flex-start">
+            <span class="set-ic" style="background: {{cloudIcBg}}; color: {{cloudIcFg}}" aria-hidden="true"><svg class="ic"><use href="{{cloudIcon}}"></use></svg></span>
+            <div class="set-grow" style="display: flex; flex-direction: column; gap: 6px">
+              <div class="row" style="flex-wrap: wrap; gap: 8px"><h2 id="cl-t" class="card-t">{{cloudTitle}}</h2><span class="{{cloudBadgeCls}}">{{cloudBadge}}</span></div>
+              <p class="small muted">{{cloudText}}</p>
+            </div>
+            <label class="sw" title="Облачные модели"><input type="checkbox" checked="{{cloud}}" onChange="{{onCloudSwitch}}" aria-label="Разрешить облачные ИИ-модели"><span></span></label>
+          </div>
+          <div class="set-note set-note-info">
+            <svg class="ic ic-s" aria-hidden="true" style="margin-top: 3px"><use href="#i-shield-ok"></use></svg>
+            <div class="small set-grow">Что бы вы ни выбрали: эмбеддинги (поиск по законам) всегда считаются на этом компьютере, а администратор не видит ваших финансов и переписки.</div>
+          </div>
+        </section>
+
+        <section class="card set-card" aria-labelledby="mk-t">
+          <div><h2 id="mk-t" class="card-t">Как работает маскирование</h2><p class="small muted" style="margin-top: 4px">Перед отправкой в облачную модель личные данные в тексте заменяются метками. Ответ модели получает обратно настоящие значения уже на вашем компьютере.</p></div>
+          <div class="set-mask">
+            <div class="set-mask-b">
+              <span class="eyebrow">Ваш текст</span>
+              <p><span class="set-pii">Сергей Иванов</span> вернул долг 150 рублей на счёт <span class="set-pii num">BY20 AKBB 3012 0000 0418 8000 0000</span>, его телефон <span class="set-pii num">+375 29 123-45-67</span></p>
+            </div>
+            <div class="set-mask-b">
+              <span class="eyebrow">Уходит в облако</span>
+              <p><span class="set-tag">[ИМЯ_1]</span> вернул долг 150 рублей на счёт <span class="set-tag">[СЧЁТ_1]</span>, его телефон <span class="set-tag">[ТЕЛЕФОН_1]</span></p>
+            </div>
+          </div>
+          <p class="xs muted">Маскируются ФИО, номера счетов, IBAN и карт, телефоны, email, идентификационный номер паспорта и адреса. Суммы, даты, магазины и категории остаются как есть — без них ассистент не сможет помочь. Фото чека при согласии уходит как есть: изображение замаскировать нельзя, а личных данных на чеке почти нет.</p>
+        </section>
+
+        <section class="card" aria-labelledby="hs-t">
+          <div class="card-h"><h2 id="hs-t" class="card-t">История согласий</h2><a class="card-link" href="Register.dc.html">Политика обработки данных</a></div>
+          <div class="set-scroll">
+            <div class="set-t" role="table" aria-label="История согласий">
+              <div class="set-th set-c-cons" role="row"><span role="columnheader">Согласие</span><span role="columnheader">Версия текста</span><span role="columnheader">Дата и время</span><span role="columnheader">Статус</span></div>
+              <sc-for list="{{consents}}" as="c" hint-placeholder-count="3">
+                <div class="set-tr set-c-cons" role="row"><span role="cell">{{c.kind}}</span><span role="cell" class="num">{{c.ver}}</span><span role="cell" class="num">{{c.date}}</span><span role="cell"><span class="{{c.cls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{c.icon}}"></use></svg>{{c.status}}</span></span></div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isTg}}" hint-placeholder-val="{{false}}">
+      <div class="set-wrap">
+        <sc-if value="{{tgOn}}" hint-placeholder-val="{{false}}">
+          <section class="card set-card" aria-labelledby="tgon-t">
+            <div class="set-row" style="align-items: flex-start">
+              <span class="set-ic set-ok-ic" aria-hidden="true"><svg class="ic"><use href="#i-check-c"></use></svg></span>
+              <div class="set-grow" style="display: flex; flex-direction: column; gap: 4px">
+                <div class="row" style="flex-wrap: wrap; gap: 8px"><h2 id="tgon-t" class="card-t">Telegram: подключён</h2><span class="badge b-ok">@irina_k</span></div>
+                <p class="small muted">С 21.10.2026. Бот «Кошт» принимает фото чеков, выписки, вопросы текстом и голосом и присылает уведомления.</p>
+              </div>
+              <button class="btn btn-secondary" onClick="{{askUnlink}}">Отключить</button>
+            </div>
+            <ul class="set-list">
+              <li>История переписки в боте своя и на сайте не показывается, а память ассистента — общая: что вы рассказали в боте, он знает и здесь.</li>
+              <li>Бот работает, пока Кошт запущен на этом компьютере. Сообщения, присланные во время выключения, обработаются при запуске.</li>
+              <li>Забыли пароль — в боте есть кнопка «Сбросить пароль», ссылка придёт туда.</li>
+            </ul>
+            <div class="row-btns"><button class="btn btn-ghost btn-sm" onClick="{{goNotifTab}}">Настроить уведомления в Telegram<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></button></div>
+          </section>
+        </sc-if>
+        <sc-if value="{{tgNotOn}}" hint-placeholder-val="{{true}}">
+          <section class="card set-card" aria-labelledby="tg-t">
+            <div class="set-row" style="align-items: flex-start">
+              <span class="set-ic" style="background: var(--brand); color: #fff" aria-hidden="true"><svg class="ic"><use href="#i-send"></use></svg></span>
+              <div class="set-grow"><h2 id="tg-t" class="card-t" style="font-size: 18px">Telegram-бот «Кошт»</h2><p class="small muted" style="margin-top: 4px">Тот же ассистент и та же память, что на сайте, — в телефоне. Удобно сфотографировать чек сразу у кассы.</p></div>
+            </div>
+            <div class="set-feat">
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-camera"></use></svg><b>Фото чека</b><span class="muted">Карточка с позициями и проверкой суммы</span></div>
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-file"></use></svg><b>Файл выписки</b><span class="muted">«Найдено 47 операций, 12 уже были. Импортировать 35?»</span></div>
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg><b>Голос</b><span class="muted">«Потратил пятнадцать рублей на кофе» — и операция записана</span></div>
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg><b>Уведомления с кнопками</b><span class="muted">Лимиты, вычеты, чеки — «Да», «Нет», «Отменить» прямо в чате</span></div>
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-menu"></use></svg><b>Быстрые команды</b><span class="muted num">/balance, /week, /limits, /undo, /new</span></div>
+              <div class="set-feat-i"><svg class="ic" aria-hidden="true"><use href="#i-key"></use></svg><b>Сброс пароля</b><span class="muted">Запасной способ, если забыли пароль</span></div>
+            </div>
+
+            <div class="set-note set-note-warn">
+              <svg class="ic" aria-hidden="true" style="margin-top: 1px"><use href="#i-warn"></use></svg>
+              <div class="set-grow" style="display: flex; flex-direction: column; gap: 10px">
+                <div class="small"><b>Переписка, фото чеков, файлы и уведомления проходят через серверы Telegram за рубежом.</b> Это отдельное согласие на передачу данных — оно не зависит от согласия на облачные модели. Отозвать его можно в любой момент, отключив бота.</div>
+                <label class="set-check"><input type="checkbox" checked="{{tgAgree}}" onChange="{{onTgAgree}}" disabled="{{tgWait}}"><span>Понимаю и согласна на передачу моих данных через Telegram</span></label>
+              </div>
+            </div>
+
+            <sc-if value="{{tgOff}}" hint-placeholder-val="{{true}}">
+              <div class="row-btns"><button class="btn btn-primary" onClick="{{connectTg}}" disabled="{{tgCantConnect}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-send"></use></svg>Подключить Telegram</button><span class="xs muted">{{tgHint}}</span></div>
+            </sc-if>
+            <sc-if value="{{tgWait}}" hint-placeholder-val="{{false}}">
+              <div class="set-note set-note-info" role="status" aria-live="polite">
+                <span class="spin" style="margin-top: 4px"></span>
+                <div class="set-grow" style="display: flex; flex-direction: column; gap: 8px">
+                  <div class="strong">Ожидаю нажатия «Старт» в боте…</div>
+                  <div class="small">Мы открыли чат с ботом по ссылке со скрытым одноразовым кодом — вводить ничего не нужно. Ссылка действует 10 минут.</div>
+                  <div class="row-btns"><a class="btn btn-secondary btn-sm" href="Telegram.dc.html">Открыть бота<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a><button class="btn btn-ghost btn-sm" onClick="{{cancelTg}}">Отмена</button></div>
+                </div>
+              </div>
+            </sc-if>
+          </section>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isNotif}}" hint-placeholder-val="{{false}}">
+      <div class="set-wrap">
+        <sc-if value="{{tgNotOn}}" hint-placeholder-val="{{true}}">
+          <div class="set-note set-note-info">
+            <svg class="ic ic-s" aria-hidden="true" style="margin-top: 3px"><use href="#i-send"></use></svg>
+            <div class="small set-grow">Подключите Telegram, чтобы получать уведомления и там — с кнопками «Да», «Нет», «Отменить».</div>
+            <button class="btn btn-secondary btn-sm" onClick="{{goTgTab}}">Подключить</button>
+          </div>
+        </sc-if>
+        <section class="card" aria-labelledby="nt-t">
+          <div class="card-h"><div><h2 id="nt-t" class="card-t">Что и куда присылать</h2><p class="small muted" style="margin-top: 4px">Изменения сохраняются сразу.</p></div></div>
+          <div class="set-t" role="table" aria-label="Какие уведомления и куда присылать">
+            <div class="set-th set-c-mx" role="row"><span role="columnheader">Уведомление</span><span role="columnheader">На сайте</span><span role="columnheader">В Telegram</span></div>
+            <sc-for list="{{notif}}" as="r" hint-placeholder-count="9">
+              <div class="set-tr set-c-mx" role="row">
+                <div role="cell" style="min-width: 0"><div class="strong small">{{r.name}}</div><div class="xs muted">{{r.desc}}</div></div>
+                <div role="cell"><label class="sw"><input type="checkbox" checked="{{r.site}}" onChange="{{r.togS}}" aria-label="{{r.ariaS}}"><span></span></label></div>
+                <div role="cell"><label class="sw" style="opacity: {{r.tgOp}}"><input type="checkbox" checked="{{r.tg}}" onChange="{{r.togT}}" disabled="{{r.tgDis}}" aria-label="{{r.ariaT}}"><span></span></label></div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section class="card set-card" aria-labelledby="wk-t">
+          <div><h2 id="wk-t" class="card-t">Итоги недели</h2><p class="small muted" style="margin-top: 4px">Короткая сводка: сколько потрачено, сравнение с обычной неделей, лимиты и платежи на новой неделе.</p></div>
+          <div class="set-row" style="align-items: flex-end">
+            <div class="field" style="width: 180px"><label for="wk-day">День</label>
+              <select id="wk-day" class="input" value="{{weekDay}}" onChange="{{onWeekDay}}">
+                <option value="Пн">Понедельник</option><option value="Вт">Вторник</option><option value="Ср">Среда</option><option value="Чт">Четверг</option><option value="Пт">Пятница</option><option value="Сб">Суббота</option><option value="Вс">Воскресенье</option>
+              </select>
+            </div>
+            <div class="field" style="width: 140px"><label for="wk-time">Время</label><input id="wk-time" class="input num" type="time" value="{{weekTime}}" onChange="{{onWeekTime}}"></div>
+            <div class="set-grow small muted row" style="gap: 6px; padding-bottom: 10px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-clock"></use></svg>{{weekNext}}</div>
+          </div>
+          <p class="xs muted">Если в это время компьютер был выключен, сводка придёт при следующем запуске Кошта.</p>
+        </section>
+
+        <section class="card set-card" aria-labelledby="rm-t">
+          <div><h2 id="rm-t" class="card-t">Напоминания календаря по умолчанию</h2><p class="small muted" style="margin-top: 4px">Для налогов, кредитов, страховок и ваших событий. У каждого события можно настроить отдельно.</p></div>
+          <div class="set-chips" aria-label="Когда напоминать">
+            <sc-for list="{{rems}}" as="m" hint-placeholder-count="4">
+              <button class="{{m.cls}}" aria-pressed="{{m.on}}" onClick="{{m.tog}}"><sc-if value="{{m.on}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg></sc-if>{{m.label}}</button>
+            </sc-for>
+          </div>
+          <p class="xs muted">Для гарантий напоминание за 30 дней приходит всегда: «Гарантия на пылесос заканчивается через 30 дней — проверьте, всё ли работает».</p>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isData}}" hint-placeholder-val="{{false}}">
+      <div class="set-wrap">
+        <section class="card set-card" aria-labelledby="ex-t">
+          <div class="set-row" style="align-items: flex-start">
+            <span class="set-ic" style="background: var(--brand-soft); color: var(--brand)" aria-hidden="true"><svg class="ic"><use href="#i-download"></use></svg></span>
+            <div class="set-grow" style="display: flex; flex-direction: column; gap: 6px">
+              <h2 id="ex-t" class="card-t">Скачать все мои данные</h2>
+              <p class="small muted">Один архив в машиночитаемом виде: операции, чеки и позиции, счета, факты профиля, лимиты, цели, события календаря, диалоги — и исходные файлы: фото чеков и выписки.</p>
+            </div>
+          </div>
+          <sc-if value="{{expIdle}}" hint-placeholder-val="{{true}}">
+            <div><button class="btn btn-primary" onClick="{{startExport}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-download"></use></svg>Подготовить архив</button></div>
+          </sc-if>
+          <sc-if value="{{exporting}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 8px" aria-live="polite">
+              <div class="row small" style="justify-content: space-between"><span class="row" style="gap: 8px"><span class="spin"></span>{{expStep}}</span><span class="num strong">{{expPct}}%</span></div>
+              <div class="bar" role="progressbar" aria-valuenow="{{expPct}}" aria-valuemin="0" aria-valuemax="100" aria-label="Подготовка архива"><span style="width: {{expPct}}%"></span></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{exported}}" hint-placeholder-val="{{false}}">
+            <div class="set-row" style="border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface-2)">
+              <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-file"></use></svg>
+              <div class="set-grow"><div class="small strong num">kosht_export_2026-10-21.zip</div><div class="xs muted">18,4 МБ · JSON и CSV + фото чеков и выписки · готов 21.10.2026</div></div>
+              <button class="btn btn-secondary btn-sm" onClick="{{downloadArchive}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-download"></use></svg>Скачать</button>
+            </div>
+          </sc-if>
+        </section>
+
+        <section class="card set-card set-danger" aria-labelledby="del-t">
+          <div class="set-row" style="align-items: flex-start">
+            <span class="set-ic" style="background: var(--danger-soft); color: var(--danger)" aria-hidden="true"><svg class="ic"><use href="#i-trash"></use></svg></span>
+            <div class="set-grow" style="display: flex; flex-direction: column; gap: 6px">
+              <h2 id="del-t" class="card-t">Удалить аккаунт</h2>
+              <p class="small muted">Все ваши данные будут удалены безвозвратно, привязка Telegram разорвётся. Если данные понадобятся — сначала скачайте архив.</p>
+            </div>
+          </div>
+          <div><button class="btn btn-secondary" style="color: var(--danger); border-color: #E7B3AD" onClick="{{openDelete}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg>Удалить аккаунт…</button></div>
+        </section>
+      </div>
+    </sc-if>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{mCloudOff}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="mco-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mco-t" class="card-t" style="font-size: 18px">Перейти в локальный режим?</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small">Чат, чеки, выписки и голос будут обрабатываться только на этом компьютере — медленнее: ответ ассистента может занять до минуты, распознавание чека — несколько минут.</p>
+      <ul class="set-list">
+        <li>Уже сохранённые данные останутся на месте.</li>
+        <li>Вверху чата появится плашка «Локальный режим: ответы медленнее».</li>
+        <li>Отзыв действует сразу; дать согласие снова можно в любой момент.</li>
+      </ul>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Оставить облако</button><button class="btn btn-primary" onClick="{{confirmCloudOff}}">Отозвать согласие</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mCloudOn}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal set-wide" role="dialog" aria-labelledby="mcn-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mcn-t" class="card-t" style="font-size: 18px">Согласие на облачную обработку</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small muted">Необязательное. Без него Кошт работает в локальном режиме — всё то же самое, только медленнее. Версия текста 1.2.</p>
+      <div class="set-consent">
+        <p><b>Что передаётся.</b> Замаскированный текст ваших сообщений и описаний операций, фото чеков — как есть, голосовые сообщения.</p>
+        <p><b>Куда.</b> Облачным провайдерам ИИ за пределами Беларуси: Groq (США) и Z.ai (Китай). Это трансграничная передача, в том числе в страны, где по Закону № 99-З «О защите персональных данных» не обеспечен надлежащий уровень защиты.</p>
+        <p><b>Риски.</b> Данные обрабатываются на серверах, которые мы не контролируем. Их могут затребовать органы страны провайдера; при утечке у провайдера к ним могут получить доступ третьи лица.</p>
+        <p><b>Обучение моделей.</b> Groq по договору не обучает модели на ваших данных. Условия Z.ai на бесплатном тарифе допускают использование переданных данных для обучения — [уточнить по актуальным условиям провайдера].</p>
+        <p><b>Как мы снижаем риск.</b> До отправки ФИО, номера счетов и карт, телефоны, email, идентификационный номер и адреса заменяются метками <span class="set-tag">[ИМЯ_1]</span>, <span class="set-tag">[СЧЁТ_1]</span> и подставляются обратно уже на вашем компьютере. Суммы, даты, магазины и категории не маскируются.</p>
+        <p><b>Ваши права.</b> Отозвать согласие можно в любой момент здесь, в настройках, — отзыв действует сразу.</p>
+      </div>
+      <label class="set-check"><input type="checkbox" checked="{{cloudAgree}}" onChange="{{onCloudAgree}}"><span>Я прочитала текст и согласна на передачу данных облачным провайдерам ИИ</span></label>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Не сейчас</button><button class="btn btn-primary" onClick="{{confirmCloudOn}}" disabled="{{cloudCantAgree}}">Дать согласие</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mUnlink}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="mul-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mul-t" class="card-t" style="font-size: 18px">Отключить Telegram?</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small">Бот перестанет принимать чеки и присылать уведомления, а согласие на передачу данных через Telegram будет отозвано. Ваши данные в Коште останутся.</p>
+      <p class="xs muted">Отключить можно и командой /unlink в самом боте.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Оставить</button><button class="btn btn-danger" onClick="{{confirmUnlink}}">Отключить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{mDelete}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal set-wide" role="dialog" aria-labelledby="mdl-t">
+      <div class="row" style="justify-content: space-between"><h2 id="mdl-t" class="card-t" style="font-size: 18px; color: var(--danger)">Удалить аккаунт безвозвратно</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeModal}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small">Будут удалены без возможности восстановить:</p>
+      <ul class="set-list">
+        <li>операции, счета, лимиты, цели и события календаря;</li>
+        <li>чеки с позициями и фото, выписки и история импортов;</li>
+        <li>факты профиля и диалоги с ассистентом;</li>
+        <li>записи об обращениях к ИИ, связанные с вами.</li>
+      </ul>
+      <p class="small">Привязка Telegram будет разорвана.</p>
+      <div class="field"><label for="del-pw">Пароль</label><input id="del-pw" class="input" type="password" value="{{delPw}}" onChange="{{onDelPw}}"></div>
+      <div class="field"><label for="del-txt">Чтобы подтвердить, введите слово УДАЛИТЬ</label><input id="del-txt" class="input" value="{{delText}}" onChange="{{onDelText}}"></div>
+      <sc-if value="{{delTried}}" hint-placeholder-val="{{false}}">
+        <div class="set-note set-note-danger" role="alert">
+          <svg class="ic ic-s" aria-hidden="true" style="margin-top: 3px"><use href="#i-alert"></use></svg>
+          <div class="small set-grow">Демо-аккаунт нельзя удалить — пересоздайте демо-данные в администрировании. <a href="Admin.dc.html">Открыть администрирование</a></div>
+        </div>
+      </sc-if>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-danger" onClick="{{tryDelete}}" disabled="{{cantDelete}}">Удалить навсегда</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="set-ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg><span>Вижу: Настройки · {{tabLabel}}</span></span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="set-chat-body" aria-live="polite">
+        <div class="set-msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Здравствуйте, Ирина! Подскажу, что значит каждая настройка и как она влияет на работу Кошта.</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="set-msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="set-msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.cloudK}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Кошт сразу перейдёт в <b>локальный режим</b>: чат, распознавание чеков, выписок и голоса будут работать только на этом компьютере. Это медленнее — ответ может занять до минуты. Сохранённые данные никуда не денутся, а согласие можно вернуть в любой момент.</p>
+                      <p>Согласие нужно потому, что передача данных за рубеж в страны без надлежащей защиты допускается при согласии человека, проинформированного о рисках, — <button class="lref" onClick="{{m.toggleLaw}}">ст. 9 Закона № 99-З</button>.</p>
+                      <sc-if value="{{m.lawOpen}}" hint-placeholder-val="{{false}}">
+                        <div class="lawq">
+                          <div class="lawq-h"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>Закон РБ «О защите персональных данных» № 99-З, ст. 9</div>
+                          <p class="lawq-t">«Трансграничная передача персональных данных запрещается, если на территории иностранного государства не обеспечивается надлежащий уровень защиты прав субъектов персональных данных, за исключением случаев, когда: дано согласие субъекта персональных данных при условии, что субъект персональных данных проинформирован о рисках, возникающих в связи с отсутствием надлежащего уровня их защиты…»</p>
+                          <div class="lawq-f"><span>Редакция на 21.10.2026</span><a href="https://pravo.by/document/?guid=3871&amp;p0=H12100099" target="_blank" rel="noopener" class="row" style="gap: 4px">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a></div>
+                        </div>
+                      </sc-if>
+                      <p class="xs faint">Не является юридической консультацией.</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.goPrivacy}}">Открыть «Конфиденциальность»</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.tgK}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <sc-if value="{{m.tgAlready}}" hint-placeholder-val="{{false}}"><p>Telegram уже подключён: <b>@irina_k</b>. Отправьте боту фото чека или напишите /balance.</p></sc-if>
+                      <sc-if value="{{m.tgNot}}" hint-placeholder-val="{{true}}">
+                        <div style="display: flex; flex-direction: column; gap: 8px">
+                          <p>Три шага, код вводить не нужно:</p>
+                          <ol class="set-list"><li>Откройте вкладку «Telegram» здесь, в настройках.</li><li>Отметьте согласие на передачу данных через Telegram и нажмите «Подключить Telegram».</li><li>В открывшемся чате с ботом нажмите «Старт» — на сайте появится «Telegram: подключён».</li></ol>
+                        </div>
+                      </sc-if>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.goTg}}">Перейти к Telegram</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с учётом ваших настроек.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="set-steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="set-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="2"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="set-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите о настройках, данных, Telegram…">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1360}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.N = [
+      ['Лимит: 80% и 100%', 'Когда траты по категории подходят к пределу или превышают его'],
+      ['Прогресс цели', 'Достигнуто 50% и 100%, цель отстаёт от графика'],
+      ['Найден налоговый вычет', 'Кошт нашёл в операциях основание для вычета'],
+      ['Чек и платёж по карте — одна покупка?', 'Вопрос о сопоставлении и сообщение об автоматической привязке'],
+      ['Чек требует проверки', 'Сумма строк не сошлась даже после перепроверки'],
+      ['Импорт выписки завершён', 'Сколько операций новых, а сколько уже было'],
+      ['Напоминания календаря', 'Налоги, кредиты, гарантии, страховки и ваши события'],
+      ['Итоги недели', 'Короткая сводка раз в неделю'],
+      ['Регулярный платёж не пришёл', 'Если ожидаемый платёж не появился через 10 дней']
+    ];
+    this.state = {
+      tab: 'profile', bell: false, read: false, toast: null,
+      mailSent: false, adminNote: true, pwCur: '', pwNew: '', pwRep: '', pwErr: '', rec: 'none',
+      cloud: true, modal: null, cloudAgree: false,
+      consents: [
+        { kind: 'Обработка персональных данных', ver: '1.0', date: '02.10.2026, 14:03', given: true },
+        { kind: 'Ознакомление с политикой обработки ПД', ver: '1.0', date: '02.10.2026, 14:03', given: true },
+        { kind: 'Облачные ИИ-модели', ver: '1.2', date: '02.10.2026, 14:03', given: true }
+      ],
+      tgAgree: false, tg: 'off',
+      site: [true, true, true, true, true, true, true, true, true], tgN: [true, true, true, true, true, false, true, true, true],
+      weekDay: 'Пн', weekTime: '09:00', rem: { d7: true, d1: true, d0: false, d14: false },
+      exporting: false, expPct: 0, expStep: '', exported: false,
+      delPw: '', delText: '', delTried: false,
+      chat: false, msgs: [], steps: [], busy: false, draft: '', lawOpen: {}
+    };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  now() { const d = new Date(); const z = (x) => String(x).padStart(2, '0'); return '21.10.2026, ' + z(d.getHours()) + ':' + z(d.getMinutes()); }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  addConsent(kind, ver, given) {
+    this.setState({ consents: this.state.consents.concat([{ kind, ver, date: this.now(), given }]) });
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('облак') || s.includes('соглас') || s.includes('отозв')) kind = 'cloud';
+    else if (s.includes('telegram') || s.includes('телеграм') || s.includes('бот')) kind = 'tg';
+    const plan = { cloud: ['Смотрю ваши согласия…', 'Проверяю цепочку провайдеров…', 'Смотрю ст. 9 Закона № 99-З…'], tg: ['Проверяю статус подключения…', 'Готовлю шаги…'], generic: ['Разбираю вопрос…'] }[kind];
+    const msgs = this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]);
+    this.setState({ msgs, busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        const steps = plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i }));
+        if (i < plan.length - 1) { this.setState({ steps }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  startExport() {
+    if (this.state.exporting) return;
+    const steps = [['Собираю операции и счета…', 18], ['Добавляю чеки и фото…', 42], ['Добавляю выписки…', 63], ['Факты, лимиты, цели, события и диалоги…', 84], ['Упаковываю архив…', 100]];
+    this.setState({ exporting: true, exported: false, expPct: 4, expStep: steps[0][0] });
+    steps.forEach(([t, p], i) => this.later(() => {
+      this.setState({ expPct: p, expStep: t });
+      if (i === steps.length - 1) this.later(() => {
+        this.setState({ exporting: false, exported: true });
+        this.toast('Архив kosht_export_2026-10-21.zip готов: операции, чеки и фото, выписки, счета, факты, лимиты, цели, события, диалоги');
+      }, 600);
+    }, 600 * (i + 1)));
+  }
+  renderVals() {
+    const st = this.state;
+    const tabsRaw = [['profile', 'Профиль и вход'], ['privacy', 'Конфиденциальность'], ['tg', 'Telegram'], ['notif', 'Уведомления'], ['data', 'Мои данные']];
+    const tabs = tabsRaw.map(([k, l]) => ({ label: l, sel: st.tab === k, cls: st.tab === k ? 'on' : '', pick: () => this.setState({ tab: k, bell: false }) }));
+    const tabLabel = (tabsRaw.find((t) => t[0] === st.tab) || ['', ''])[1];
+    const tgOn = st.tg === 'on';
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'set-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const notif = this.N.map((n, i) => ({
+      name: n[0], desc: n[1], site: st.site[i], tg: tgOn && st.tgN[i], tgDis: !tgOn, tgOp: tgOn ? 1 : 0.5,
+      ariaS: n[0] + ' — на сайте', ariaT: n[0] + ' — в Telegram',
+      togS: () => { const a = this.state.site.slice(); a[i] = !a[i]; this.setState({ site: a }); },
+      togT: () => { const a = this.state.tgN.slice(); a[i] = !a[i]; this.setState({ tgN: a }); }
+    }));
+    const weekOn = st.site[7] || (tgOn && st.tgN[7]);
+    const nextMap = { 'Пн': 'понедельник, 26.10.2026', 'Вт': 'вторник, 27.10.2026', 'Ср': 'среда, 28.10.2026', 'Чт': 'четверг, 22.10.2026', 'Пт': 'пятница, 23.10.2026', 'Сб': 'суббота, 24.10.2026', 'Вс': 'воскресенье, 25.10.2026' };
+    const remRaw = [['d14', 'За 14 дней'], ['d7', 'За 7 дней'], ['d1', 'За 1 день'], ['d0', 'В день события']];
+    const rems = remRaw.map(([k, l]) => ({ label: l, on: !!st.rem[k], cls: 'chip' + (st.rem[k] ? ' on' : ''), tog: () => this.setState({ rem: { ...this.state.rem, [k]: !this.state.rem[k] } }) }));
+    const consents = st.consents.slice().reverse().map((c) => ({ ...c, status: c.given ? 'Дано' : 'Отозвано', cls: c.given ? 'badge b-ok' : 'badge b-neutral', icon: c.given ? '#i-check' : '#i-undo' }));
+    const msgs = st.msgs.map((m) => ({
+      ...m, isUser: m.role === 'user', isBot: m.role === 'bot', cloudK: m.kind === 'cloud', tgK: m.kind === 'tg', generic: m.kind === 'generic',
+      tgAlready: tgOn, tgNot: !tgOn, lawOpen: !!st.lawOpen[m.id],
+      toggleLaw: () => this.setState({ lawOpen: { ...this.state.lawOpen, [m.id]: !this.state.lawOpen[m.id] } }),
+      goPrivacy: () => this.setState({ tab: 'privacy', chat: false }), goTg: () => this.setState({ tab: 'tg', chat: false })
+    }));
+    const sugg = ['Что будет, если отозвать облачное согласие?', 'Как подключить Telegram?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const close = () => this.setState({ modal: null });
+    return {
+      tabs, tabLabel, isProfile: st.tab === 'profile', isPrivacy: st.tab === 'privacy', isTg: st.tab === 'tg', isNotif: st.tab === 'notif', isData: st.tab === 'data',
+      notes, bellOpen: st.bell, hasUnread: !st.read, bellAria: st.read ? 'Уведомления' : 'Уведомления, новых: 3', toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      goNotifTab: () => this.setState({ tab: 'notif', bell: false }), goTgTab: () => this.setState({ tab: 'tg' }),
+      adminNote: st.adminNote, dismissNote: () => this.setState({ adminNote: false }),
+      mailSent: st.mailSent, resendLabel: st.mailSent ? 'Письмо отправлено' : 'Отправить письмо ещё раз',
+      resend: () => { this.setState({ mailSent: true }); this.toast('Письмо отправлено на irina.k@example.by (демо: в локальный ящик)'); },
+      pwCur: st.pwCur, pwNew: st.pwNew, pwRep: st.pwRep, hasPwErr: !!st.pwErr, pwErr: st.pwErr,
+      onPwCur: (e) => this.setState({ pwCur: e.target.value, pwErr: '' }), onPwNew: (e) => this.setState({ pwNew: e.target.value, pwErr: '' }), onPwRep: (e) => this.setState({ pwRep: e.target.value, pwErr: '' }),
+      savePw: () => {
+        if (!st.pwCur) return this.setState({ pwErr: 'Введите текущий пароль.' });
+        if (st.pwNew.length < 10) return this.setState({ pwErr: 'Новый пароль должен быть не короче 10 символов.' });
+        if (st.pwNew !== st.pwRep) return this.setState({ pwErr: 'Пароли не совпадают — проверьте повтор.' });
+        this.setState({ pwCur: '', pwNew: '', pwRep: '', pwErr: '', adminNote: false });
+        this.toast('Пароль изменён. Другие сеансы завершены.');
+      },
+      recNone: st.rec === 'none', recShown: st.rec === 'shown', recSaved: st.rec === 'saved',
+      makeCode: () => this.setState({ rec: 'shown' }), copyCode: () => this.toast('Код скопирован в буфер обмена'), savedCode: () => { this.setState({ rec: 'saved' }); this.toast('Код восстановления сохранён'); },
+      tgSessionText: tgOn ? 'Подключён как @irina_k · с 21.10.2026' : 'Не подключён',
+      cloud: st.cloud, cloudTitle: st.cloud ? 'Облачные ИИ-модели: разрешены с 02.10.2026' : 'Локальный режим',
+      cloudBadge: st.cloud ? 'Облачный режим' : 'Только этот компьютер', cloudBadgeCls: st.cloud ? 'badge b-brand' : 'badge b-neutral',
+      cloudText: st.cloud ? 'Чат, распознавание чеков, выписок и голоса работают быстро: запросы обрабатывают бесплатные облачные модели (Groq, Z.ai). Личные данные в тексте перед отправкой заменяются метками.' : 'Все задачи выполняют модели на этом компьютере. Ответы медленнее, зато данные не покидают компьютер. Вверху чата видна плашка «Локальный режим».',
+      cloudIcon: st.cloud ? '#i-cpu' : '#i-lock', cloudIcBg: st.cloud ? 'var(--brand-soft)' : '#ECF0EE', cloudIcFg: st.cloud ? 'var(--brand)' : 'var(--ink-2)',
+      onCloudSwitch: () => this.setState({ modal: st.cloud ? 'cloudOff' : 'cloudOn', cloudAgree: false }),
+      mCloudOff: st.modal === 'cloudOff', mCloudOn: st.modal === 'cloudOn', mUnlink: st.modal === 'unlink', mDelete: st.modal === 'delete', closeModal: close,
+      confirmCloudOff: () => { this.setState({ cloud: false, modal: null }); this.addConsent('Облачные ИИ-модели', '1.2', false); this.toast('Согласие отозвано — локальный режим включён сразу'); },
+      cloudAgree: st.cloudAgree, cloudCantAgree: !st.cloudAgree, onCloudAgree: () => this.setState({ cloudAgree: !st.cloudAgree }),
+      confirmCloudOn: () => { if (!st.cloudAgree) return; this.setState({ cloud: true, modal: null }); this.addConsent('Облачные ИИ-модели', '1.2', true); this.toast('Согласие дано — облачные модели снова работают'); },
+      consents,
+      tgOn, tgNotOn: !tgOn, tgOff: st.tg === 'off', tgWait: st.tg === 'wait', tgAgree: st.tgAgree, tgCantConnect: !st.tgAgree,
+      tgHint: st.tgAgree ? 'Откроется чат с ботом — нажмите там «Старт»' : 'Сначала отметьте согласие выше',
+      onTgAgree: () => this.setState({ tgAgree: !st.tgAgree }),
+      connectTg: () => {
+        if (!st.tgAgree) return;
+        this.setState({ tg: 'wait' });
+        this.later(() => { if (this.state.tg !== 'wait') return; this.setState({ tg: 'on' }); this.addConsent('Передача данных через Telegram', '1.0', true); this.toast('Готово: Telegram подключён'); }, 2200);
+      },
+      cancelTg: () => this.setState({ tg: 'off' }),
+      askUnlink: () => this.setState({ modal: 'unlink' }),
+      confirmUnlink: () => { this.setState({ tg: 'off', tgAgree: false, modal: null }); this.addConsent('Передача данных через Telegram', '1.0', false); this.toast('Telegram отключён'); },
+      notif, weekDay: st.weekDay, weekTime: st.weekTime,
+      onWeekDay: (e) => this.setState({ weekDay: e.target.value }), onWeekTime: (e) => this.setState({ weekTime: e.target.value }),
+      weekNext: weekOn ? 'Следующая сводка: ' + nextMap[st.weekDay] + ', ' + (st.weekTime || '09:00') : 'Итоги недели выключены в таблице выше',
+      rems,
+      expIdle: !st.exporting && !st.exported, exporting: st.exporting, exported: st.exported, expPct: st.expPct, expStep: st.expStep,
+      startExport: () => this.startExport(), downloadArchive: () => this.toast('Скачивание kosht_export_2026-10-21.zip началось'),
+      openDelete: () => this.setState({ modal: 'delete', delPw: '', delText: '', delTried: false }),
+      delPw: st.delPw, delText: st.delText, delTried: st.delTried,
+      onDelPw: (e) => this.setState({ delPw: e.target.value }), onDelText: (e) => this.setState({ delText: e.target.value }),
+      cantDelete: !(st.delPw.length > 0 && st.delText.trim().toUpperCase() === 'УДАЛИТЬ'),
+      tryDelete: () => this.setState({ delTried: true }),
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

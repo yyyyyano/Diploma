@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Календарь</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: calendar (cal-) ===== */
+.cal-bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.cal-nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cal-nt.unread{background:#F6FAF8}
+.cal-nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.cal-banner{display:flex;gap:14px;align-items:center;padding:16px 20px;flex-wrap:wrap}
+.cal-banner-ic{width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;flex:none}
+.cal-bar{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+.cal-nav{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:3px}
+.cal-month{min-width:150px;text-align:center;font-weight:650;font-size:15px}
+.cal-stats{display:flex;gap:8px 18px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2)}
+.cal-board{padding:0;overflow:hidden}
+.cal-wds{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:var(--surface-2);border-bottom:1px solid var(--line)}
+.cal-wd{padding:9px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.cal-wd.we{color:var(--ink-3)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cal-cell{min-height:122px;padding:6px 6px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:3px;min-width:0}
+.cal-cell:nth-child(7n){border-right:0}
+.cal-cell.out{background:#FAFBFA}
+.cal-cell.today{background:#F1F7F4}
+.cal-dn{align-self:flex-start;min-width:30px;height:30px;border-radius:99px;border:0;background:transparent;font-weight:600;font-size:14px;cursor:pointer;padding:0 7px;color:var(--ink);margin-bottom:2px}
+.cal-cell.out .cal-dn{color:var(--ink-3);font-weight:500}
+.cal-dn:hover{background:var(--brand-soft)}
+.cal-cell.today .cal-dn{background:var(--brand);color:#fff}
+.cal-pill{display:flex;align-items:center;gap:5px;width:100%;border:0;border-radius:6px;padding:3px 6px;font-size:12px;font-weight:600;cursor:pointer;text-align:left;min-height:24px;line-height:1.25}
+.cal-pill:hover{filter:brightness(.96)}
+.cal-pill .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-pill .a{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+.cal-pill.past{text-decoration:none}
+.cal-hint{display:none}
+.cal-pill.past .t{color:inherit}
+.cal-more{border:0;background:none;font-size:12px;color:var(--ink-2);text-align:left;padding:2px 6px;cursor:pointer;font-weight:600;border-radius:6px}
+.cal-more:hover{background:var(--surface-2);color:var(--ink)}
+.cal-leg{display:flex;flex-wrap:wrap;gap:8px 10px}
+.cal-leg span{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:3px 9px;border-radius:99px}
+.cal-grp{padding:0}
+.cal-grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cal-li{display:flex;align-items:center;gap:14px;padding:12px 20px;border:0;border-bottom:1px solid var(--line);width:100%;background:none;text-align:left;cursor:pointer}
+.cal-li:last-child{border-bottom:0}
+.cal-li:hover{background:var(--surface-2)}
+.cal-date{width:56px;height:52px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;flex:none}
+.cal-date b{font-size:18px}.cal-date small{font-size:11px;color:var(--ink-2)}
+.cal-ev-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none}
+.cal-src{display:flex;gap:10px;align-items:flex-start;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.cal-rem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.cal-rem:last-child{border-bottom:0}
+.cal-link{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:14px}
+.cal-check{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;min-height:32px}
+.cal-check input{width:18px;height:18px;accent-color:var(--brand)}
+.cal-chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.cal-msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.cal-steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.cal-steps div{display:flex;align-items:center;gap:8px}
+.cal-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.cal-chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.cal-ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px;max-width:100%;white-space:nowrap}
+.cal-ctx-t{overflow:hidden;text-overflow:ellipsis}
+.cal-ev-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+@media (max-width:900px){.cal-cell{min-height:86px;padding:4px}.cal-pill .a{display:none}.cal-pill{padding:3px 4px}}
+@media (max-width:600px){.cal-pill .t{display:none}.cal-pill{width:auto}.cal-hint{display:flex}.cal-cell{min-height:72px}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a class="on" href="Calendar.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Календарь</h1>
+      <p class="small muted">Сроки, платежи и напоминания · сегодня среда, 21 октября</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="seg" role="group" aria-label="Вид календаря">
+        <button class="{{segMonth}}" aria-pressed="{{isMonth}}" onClick="{{showMonth}}">Месяц</button>
+        <button class="{{segList}}" aria-pressed="{{isList}}" onClick="{{showList}}">Список</button>
+      </div>
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop cal-bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="cal-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+      <button class="btn btn-primary" onClick="{{openAdd}}"><svg class="ic" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить событие</button>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <sc-if value="{{carAsk}}" hint-placeholder-val="{{true}}">
+      <section class="card cal-banner" aria-labelledby="car-t">
+        <span class="cal-banner-ic" aria-hidden="true"><svg class="ic ic-l"><use href="#i-car"></use></svg></span>
+        <div style="flex: 1; min-width: 260px">
+          <h2 id="car-t" class="strong" style="font-size: 15px">Похоже, у вас есть автомобиль</h2>
+          <p class="small muted">Вижу траты на топливо и платёж страховой компании 12.03.2026. Напомнить о транспортном налоге и продлении ОСАГО?</p>
+        </div>
+        <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{carYes}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Да, есть автомобиль</button><button class="btn btn-secondary btn-sm" onClick="{{carNo}}">Нет</button></div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{isMonth}}" hint-placeholder-val="{{true}}">
+      <div style="display: flex; flex-direction: column; gap: 14px">
+        <div class="cal-bar">
+          <div class="row" style="gap: 10px; flex-wrap: wrap">
+            <div class="cal-nav" role="group" aria-label="Месяц">
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Предыдущий месяц" onClick="{{prevMonth}}" disabled="{{prevDisabled}}"><svg class="ic" aria-hidden="true"><use href="#i-chev-l"></use></svg></button>
+              <span class="cal-month" aria-live="polite">{{monthLabel}}</span>
+              <button class="btn btn-ghost btn-sm btn-icon" aria-label="Следующий месяц" onClick="{{nextMonth}}" disabled="{{nextDisabled}}"><svg class="ic" aria-hidden="true"><use href="#i-chev-r"></use></svg></button>
+            </div>
+            <button class="btn btn-ghost btn-sm" onClick="{{goToday}}">Сегодня</button>
+          </div>
+          <div class="cal-stats">
+            <span>{{statsLabel}}</span>
+            <span class="row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-repeat"></use></svg>платежи <b class="num" style="color: var(--ink)">{{statsOut}}</b></span>
+            <span class="row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-work"></use></svg>поступления <b class="num inc">{{statsIn}}</b></span>
+          </div>
+        </div>
+        <section class="card cal-board" aria-label="{{monthLabel}}">
+          <div class="cal-wds" aria-hidden="true">
+            <span class="cal-wd">Пн</span><span class="cal-wd">Вт</span><span class="cal-wd">Ср</span><span class="cal-wd">Чт</span><span class="cal-wd">Пт</span><span class="cal-wd we">Сб</span><span class="cal-wd we">Вс</span>
+          </div>
+          <div class="cal-grid">
+            <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+              <div class="{{c.cls}}">
+                <button class="cal-dn num" aria-label="{{c.aria}}" onClick="{{c.open}}">{{c.day}}</button>
+                <sc-for list="{{c.evs}}" as="e" hint-placeholder-count="1">
+                  <button class="{{e.cls}}" style="background: {{e.bg}}; color: {{e.fg}}" aria-label="{{e.aria}}" onClick="{{e.open}}">
+                    <svg class="ic" aria-hidden="true" style="width: 13px; height: 13px"><use href="{{e.icon}}"></use></svg>
+                    <span class="t">{{e.short}}</span>
+                    <span class="a">{{e.amt}}</span>
+                  </button>
+                </sc-for>
+                <sc-if value="{{c.hasMore}}" hint-placeholder-val="{{false}}"><button class="cal-more" onClick="{{c.open}}">{{c.moreText}}</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{isList}}" hint-placeholder-val="{{false}}">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+          <section class="card cal-grp" aria-label="{{g.title}}">
+            <div class="cal-grp-h"><h2 class="card-t">{{g.title}}</h2><span class="small muted num">{{g.sum}}</span></div>
+            <sc-for list="{{g.items}}" as="e" hint-placeholder-count="3">
+              <button class="cal-li" onClick="{{e.open}}" aria-label="{{e.aria}}">
+                <span class="cal-date"><b class="num">{{e.d}}</b><small>{{e.m}}</small></span>
+                <span class="cal-ev-ic" style="background: {{e.bg}}; color: {{e.fg}}" aria-hidden="true"><svg class="ic ic-s"><use href="{{e.icon}}"></use></svg></span>
+                <span style="flex: 1; min-width: 0; display: flex; flex-direction: column"><span class="strong" style="font-size: 14.5px">{{e.title}}</span><span class="xs muted">{{e.typeLabel}} · {{e.wd}} · {{e.rel}}</span></span>
+                <span class="num strong" style="color: {{e.amtColor}}">{{e.amtFull}}</span>
+              </button>
+            </sc-for>
+          </section>
+        </sc-for>
+        <sc-if value="{{noGroups}}" hint-placeholder-val="{{false}}"><div class="card empty">Впереди событий нет.</div></sc-if>
+      </div>
+    </sc-if>
+
+    <p class="cal-hint small muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>Нажмите на день, чтобы увидеть события, или переключитесь на «Список».</p>
+    <div class="cal-leg" aria-label="Типы событий">
+      <sc-for list="{{legend}}" as="l" hint-placeholder-count="7"><span style="background: {{l.bg}}; color: {{l.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{l.icon}}"></use></svg>{{l.label}}</span></sc-for>
+    </div>
+    <p class="xs faint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-bell"></use></svg>По умолчанию напоминаю за 7 дней и за 1 день — на сайте и в Telegram, если он подключён. Даты регулярных платежей — прогноз по истории.</p>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{evOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet" role="dialog" aria-label="Событие">
+      <div class="sheet-h">
+        <span class="cal-ev-ic" style="background: {{ev.bg}}; color: {{ev.fg}}" aria-hidden="true"><svg class="ic ic-s"><use href="{{ev.icon}}"></use></svg></span>
+        <h2 class="card-t" style="flex: 1">{{ev.typeLabel}}</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <h3 style="font-size: 22px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.25">{{ev.title}}</h3>
+          <div class="row small" style="gap: 8px; flex-wrap: wrap"><svg class="ic ic-s" aria-hidden="true"><use href="#i-cal"></use></svg><span>{{ev.dateFull}}</span><span class="{{ev.relCls}}">{{ev.rel}}</span></div>
+        </div>
+        <sc-if value="{{ev.hasAmt}}" hint-placeholder-val="{{true}}">
+          <div class="formula"><div class="formula-r"><span>{{ev.amtLabel}}</span><span class="num strong" style="color: {{ev.amtColor}}">{{ev.amtFull}}</span></div></div>
+        </sc-if>
+        <div>
+          <div class="lbl" style="margin-bottom: 8px">Откуда это событие</div>
+          <div class="cal-src"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 3px; color: var(--brand)"><use href="#i-info"></use></svg><span>{{ev.src}}</span></div>
+        </div>
+        <sc-if value="{{ev.isWarr}}" hint-placeholder-val="{{false}}">
+          <div class="lawq">
+            <div class="lawq-h"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>Закон РБ «О защите прав потребителей», ст. 21</div>
+            <p class="lawq-t">«…если гарантийный срок не установлен или составляет менее двух лет, требования в отношении недостатков товара потребитель вправе предъявить в течение двух лет со дня передачи товара…»</p>
+            <div class="lawq-f"><span>Редакция на 21.10.2026</span><a href="https://pravo.by/document/?guid=3871&amp;p0=H10200090" target="_blank" rel="noopener" class="row" style="gap: 4px">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ev.isFuture}}" hint-placeholder-val="{{true}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 4px">Напоминания</div>
+            <sc-for list="{{ev.rems}}" as="r" hint-placeholder-count="3">
+              <label class="cal-rem"><span class="small">{{r.label}}</span><span class="sw"><input type="checkbox" checked="{{r.on}}" onChange="{{r.toggle}}"><span></span></span></label>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ev.isPast}}" hint-placeholder-val="{{false}}">
+          <p class="small muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg>Событие прошло — платёж найден в операциях.</p>
+        </sc-if>
+        <sc-if value="{{ev.hasLinks}}" hint-placeholder-val="{{true}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 2px">Связанное</div>
+            <sc-for list="{{ev.links}}" as="k" hint-placeholder-count="2"><a class="cal-link" href="{{k.h}}"><span>{{k.t}}</span><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ev.isOwn}}" hint-placeholder-val="{{false}}">
+          <div><button class="btn btn-secondary" style="color: var(--danger)" onClick="{{ev.askDel}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-trash"></use></svg>Удалить событие</button></div>
+        </sc-if>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{dayOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet" role="dialog" aria-label="{{dayTitle}}">
+      <div class="sheet-h">
+        <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-cal"></use></svg>
+        <h2 class="card-t" style="flex: 1">{{dayTitle}}</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b" style="padding: 8px 0">
+        <sc-for list="{{dayEvs}}" as="e" hint-placeholder-count="2">
+          <button class="cal-li" onClick="{{e.open}}" aria-label="{{e.aria}}">
+            <span class="cal-ev-ic" style="background: {{e.bg}}; color: {{e.fg}}" aria-hidden="true"><svg class="ic ic-s"><use href="{{e.icon}}"></use></svg></span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column"><span class="strong">{{e.title}}</span><span class="xs muted">{{e.typeLabel}}</span></span>
+            <span class="num strong" style="color: {{e.amtColor}}">{{e.amtFull}}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{dayEmpty}}" hint-placeholder-val="{{false}}"><div class="empty small">В этот день событий нет.</div></sc-if>
+        <div style="padding: 12px 20px"><button class="btn btn-secondary btn-sm" onClick="{{addForDay}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить событие на этот день</button></div>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{delOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" style="z-index: 55" onClick="{{closeDel}}"></div>
+    <section class="modal" role="alertdialog" aria-labelledby="del-t" style="z-index: 56">
+      <h2 id="del-t" class="card-t" style="font-size: 18px">Удалить событие «{{delName}}»?</h2>
+      <p class="small muted">Напоминания по нему больше не придут.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeDel}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmDel}}">Удалить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeAdd}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="add-t" style="width: min(480px, calc(100% - 32px))">
+      <div class="row" style="justify-content: space-between"><h2 id="add-t" class="card-t" style="font-size: 18px">Новое событие</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeAdd}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="field"><label for="ad-name">Название</label><input id="ad-name" class="input" value="{{aName}}" onChange="{{onAName}}" placeholder="например, Оплатить садик"></div>
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <div class="field" style="flex: 1"><label for="ad-date">Дата</label><input id="ad-date" type="date" class="input" value="{{aDate}}" onChange="{{onADate}}"></div>
+        <div class="field" style="flex: 1"><label for="ad-sum">Сумма, BYN</label><input id="ad-sum" class="input num" inputmode="decimal" value="{{aSum}}" onChange="{{onASum}}" placeholder="необязательно"></div>
+      </div>
+      <div class="field"><label for="ad-type">Тип</label>
+        <select id="ad-type" class="input" value="{{aType}}" onChange="{{onAType}}">
+          <option value="own">Своё событие</option>
+          <option value="tax">Налог или сбор</option>
+          <option value="ins">Страховка</option>
+          <option value="credit">Платёж по кредиту</option>
+          <option value="warr">Конец гарантии</option>
+        </select>
+      </div>
+      <div class="field"><span class="lbl">Напомнить</span>
+        <label class="cal-check"><input type="checkbox" checked="{{aD7}}" onChange="{{onAD7}}">За 7 дней</label>
+        <label class="cal-check"><input type="checkbox" checked="{{aD1}}" onChange="{{onAD1}}">За 1 день</label>
+        <label class="cal-check"><input type="checkbox" checked="{{aD0}}" onChange="{{onAD0}}">В день события</label>
+      </div>
+      <sc-if value="{{aErr}}" hint-placeholder-val="{{false}}"><p class="small row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Укажите название и дату.</p></sc-if>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeAdd}}">Отмена</button><button class="btn btn-primary" onClick="{{saveAdd}}">Добавить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="cal-ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg><span class="cal-ctx-t">Вижу: Календарь · {{monthShort}}</span></span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="cal-chat-body" aria-live="polite">
+        <div class="cal-msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Могу создать напоминание или рассказать, что спишется в ближайшие дни. Просто напишите: «напомни 1 декабря оплатить кружок».</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="cal-msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="cal-msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.kruzhok}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <sc-if value="{{m.kOn}}" hint-placeholder-val="{{true}}">
+                        <div style="display: flex; flex-direction: column; gap: 10px">
+                          <div class="cal-ev-card">
+                            <span class="cal-ev-ic" style="background: #F4E8F0; color: #7E3F6B" aria-hidden="true"><svg class="ic ic-s"><use href="#i-bell"></use></svg></span>
+                            <div style="flex: 1; min-width: 0"><div class="xs muted">Создал событие</div><div class="small strong">Оплатить кружок</div><div class="xs muted">Вторник, 1 декабря 2026 · напомню за 1 день и в день события</div></div>
+                          </div>
+                          <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.undoK}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Отменить</button><button class="btn btn-ghost btn-sm" onClick="{{m.showK}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-cal"></use></svg>Показать в календаре</button></div>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{m.kOff}}" hint-placeholder-val="{{false}}"><p class="small muted row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Событие отменено — напоминания не будет.</p></sc-if>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.month}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>До конца октября спишется <b class="num">442,90 BYN</b>:</p>
+                      <div class="formula">
+                        <div class="formula-r"><span>Интернет и ТВ — завтра, 22.10</span><span class="num">32,90</span></div>
+                        <div class="formula-r"><span>Кредит, Беларусбанк — пятница, 23.10</span><span class="num">410,00</span></div>
+                      </div>
+                      <p class="small">А 25.10 ожидается зарплата <b class="num inc">+1 440,00</b>. ЖКХ за октябрь уже оплачено 14.10.</p>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.tax}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Налог на недвижимость нужно уплатить до <b>15.11.2026</b> — это воскресенье, поэтому лучше заплатить заранее. Сумму пришлёт налоговая в извещении.</p>
+                      <p class="small muted">Срок я взял из таблицы сроков уплаты, а наличие квартиры — из вашего профиля (по операциям, предположение).</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.openTax}}">Открыть событие</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с датами из вашего календаря.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="cal-steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="cal-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="3"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="cal-chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Например: напомни 5 ноября про садик">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { view: 'month', month: 9, sheet: null, bell: false, read: false, chat: false, msgs: [], steps: [], busy: false, draft: '', toast: null,
+      car: 'ask', kruzhok: false, extra: [], deleted: {}, rem: {}, delAsk: null,
+      add: false, aName: '', aDate: '2026-11-01', aSum: '', aType: 'own', aD7: true, aD1: true, aD0: false, aErr: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  num(v) { return parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0; }
+  plural(n, a, b, c) { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return a; if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return b; return c; }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  types() {
+    return { tax: { label: 'Налог', icon: '#i-percent', bg: '#E8EEF8', fg: '#2D4F8A' }, credit: { label: 'Кредит', icon: '#i-bank', bg: '#ECE8F5', fg: '#4F3F80' },
+      reg: { label: 'Регулярный платёж', icon: '#i-repeat', bg: '#ECF0EE', fg: '#3F4C48' }, inc: { label: 'Доход', icon: '#i-work', bg: '#E2F2E9', fg: '#146C43' },
+      warr: { label: 'Гарантия', icon: '#i-shield-ok', bg: '#FDF2D8', fg: '#7A5200' }, ins: { label: 'Страховка', icon: '#i-shield', bg: '#E3EFEA', fg: '#11564D' },
+      own: { label: 'Своё событие', icon: '#i-bell', bg: '#F4E8F0', fg: '#7E3F6B' } };
+  }
+  events() {
+    const st = this.state;
+    const R = (id, date, title, short, type, amt, src, approx) => ({ id, date, title, short, type, amt, src, approx: !!approx });
+    const srcY = 'По истории платежей: подписка, списывается 1-го числа с карты •• 4821.';
+    const srcA1 = 'По истории платежей: мобильная связь А1, каждый месяц 2-го.';
+    const srcVk = 'По истории платежей: подписка, 5-го числа с карты •• 0937.';
+    const srcAv = 'По истории поступлений: ООО «ТехноСофт», каждый месяц 10-го.';
+    const srcZh = 'По истории платежей через ЕРИП: около 14-го числа, сумма меняется от 172,10 до 201,40 — показываю среднее.';
+    const srcIc = 'По истории платежей: подписка iCloud+, 14-го числа.';
+    const srcIn = 'По истории платежей: Белтелеком, каждый месяц 22-го.';
+    const srcCr = 'По истории платежей: Беларусбанк, каждый месяц 23-го. Сумма постоянная.';
+    const srcZp = 'По истории поступлений: ООО «ТехноСофт», каждый месяц 25-го.';
+    let list = [
+      R('e1', '2026-10-01', 'Яндекс Плюс', 'Яндекс Плюс', 'reg', -15.99, srcY), R('e2', '2026-10-02', 'Мобильная связь, А1', 'А1', 'reg', -10, srcA1),
+      R('e3', '2026-10-05', 'VK Музыка', 'VK Музыка', 'reg', -12.99, srcVk), R('e4', '2026-10-10', 'Аванс', 'Аванс', 'inc', 960, srcAv),
+      R('e5', '2026-10-14', 'ЖКХ', 'ЖКХ', 'reg', -186.40, srcZh, true), R('e6', '2026-10-14', 'iCloud+', 'iCloud+', 'reg', -9.49, srcIc),
+      R('e7', '2026-10-22', 'Интернет и ТВ, Белтелеком', 'Интернет', 'reg', -32.90, srcIn), R('e8', '2026-10-23', 'Платёж по кредиту, Беларусбанк', 'Кредит', 'credit', -410, srcCr),
+      R('e9', '2026-10-25', 'Зарплата', 'Зарплата', 'inc', 1440, srcZp),
+      R('n1', '2026-11-01', 'Яндекс Плюс', 'Яндекс Плюс', 'reg', -15.99, srcY), R('n2', '2026-11-02', 'Мобильная связь, А1', 'А1', 'reg', -10, srcA1),
+      R('n3', '2026-11-05', 'VK Музыка', 'VK Музыка', 'reg', -12.99, srcVk), R('n4', '2026-11-10', 'Аванс', 'Аванс', 'inc', 960, srcAv),
+      R('n5', '2026-11-14', 'ЖКХ', 'ЖКХ', 'reg', -186.40, srcZh, true), R('n6', '2026-11-14', 'iCloud+', 'iCloud+', 'reg', -9.49, srcIc),
+      R('n7', '2026-11-15', 'Налог на недвижимость — срок уплаты', 'Налог на недвиж.', 'tax', null, 'По факту профиля «есть квартира» и таблице сроков уплаты (норма НК РБ, Особенная часть). Сумму пришлёт налоговая в извещении.'),
+      R('n8', '2026-11-18', 'Гарантия на наушники заканчивается', 'Гарантия: наушники', 'warr', null, 'По чеку Электросила от 18.11.2024: гарантия 2 года — ст. 21 Закона № 90-З «О защите прав потребителей». Напоминание за 30 дней пришло 19.10 — проверьте, всё ли работает.'),
+      R('n9', '2026-11-22', 'Интернет и ТВ, Белтелеком', 'Интернет', 'reg', -32.90, srcIn), R('n10', '2026-11-23', 'Платёж по кредиту, Беларусбанк', 'Кредит', 'credit', -410, srcCr),
+      R('n11', '2026-11-25', 'Зарплата', 'Зарплата', 'inc', 1440, srcZp),
+      R('d1', '2026-12-01', 'Яндекс Плюс', 'Яндекс Плюс', 'reg', -15.99, srcY), R('d2', '2026-12-02', 'Мобильная связь, А1', 'А1', 'reg', -10, srcA1), R('d3', '2026-12-05', 'VK Музыка', 'VK Музыка', 'reg', -12.99, srcVk),
+      R('l1', '2028-05-03', 'Гарантия на пылесос заканчивается', 'Гарантия: пылесос', 'warr', null, 'По чеку Электросила от 03.05.2026: гарантия 2 года — ст. 21 Закона № 90-З «О защите прав потребителей». Напомню за 30 дней.')
+    ];
+    if (st.car === 'yes') list = list.concat([
+      R('c1', '2027-03-05', 'ОСАГО — продлить полис', 'ОСАГО', 'ins', null, 'Похоже, вы оплатили ОСАГО 12.03.2026 (платёж страховой компании). Напомню заранее, чтобы не остаться без полиса.'),
+      R('c2', '2027-03-01', 'Транспортный налог', 'Трансп. налог', 'tax', null, 'По факту профиля «есть автомобиль» и таблице сроков: налог платится перед техосмотром. Дата ориентировочная — уточню по дате техосмотра.')].map((x) => x.id === 'c2' ? { ...x, note: 'перед техосмотром' } : x));
+    if (st.kruzhok) list.push({ id: 'k1', date: '2026-12-01', title: 'Оплатить кружок', short: 'Оплатить кружок', type: 'own', amt: null, src: 'Вы попросили ассистента 21.10.2026: «Напомни 1 декабря оплатить кружок».', own: true, fromChat: true });
+    list = list.concat(st.extra);
+    return list.filter((e) => !st.deleted[e.id]).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  }
+  dt(key) { const [y, m, d] = key.split('-').map(Number); return new Date(y, m - 1, d); }
+  diff(key) { return Math.round((this.dt(key) - new Date(2026, 9, 21)) / 86400000); }
+  rel(n) {
+    if (n < 0) return 'прошло'; if (n === 0) return 'сегодня'; if (n === 1) return 'завтра';
+    if (n <= 60) return 'через ' + n + ' ' + this.plural(n, 'день', 'дня', 'дней');
+    const mo = Math.round(n / 30.4); return 'через ' + mo + ' ' + this.plural(mo, 'месяц', 'месяца', 'месяцев');
+  }
+  decor(e) {
+    const T = this.types()[e.type] || this.types().own; const f = (n) => this.f(n);
+    const d = this.dt(e.date); const n = this.diff(e.date);
+    const wds = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+    const mg = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const ms = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    const hasAmt = e.amt != null;
+    const amtFull = hasAmt ? (e.amt > 0 ? '+' : '') + (e.approx ? '≈ ' : '') + f(e.amt) : (e.note || (e.type === 'tax' ? 'по извещению' : ''));
+    const abs = hasAmt ? Math.abs(e.amt) : 0;
+    const amtShort = hasAmt ? (e.amt > 0 ? '+' : '') + (e.approx ? '≈' : '') + (abs >= 1000 ? Math.round(abs).toLocaleString('ru-RU') : f(abs).replace(',00', '')) : '';
+    return { ...e, typeLabel: T.label, icon: T.icon, bg: T.bg, fg: T.fg, n, rel: this.rel(n), past: n < 0,
+      d: String(d.getDate()), m: ms[d.getMonth()] + (d.getFullYear() !== 2026 ? ' ’' + String(d.getFullYear()).slice(2) : ''), wd: wds[d.getDay()],
+      dateFull: wds[d.getDay()][0].toUpperCase() + wds[d.getDay()].slice(1) + ', ' + d.getDate() + ' ' + mg[d.getMonth()] + ' ' + d.getFullYear(),
+      hasAmt, amtFull, amtShort, amtColor: hasAmt ? (e.amt > 0 ? 'var(--income)' : 'var(--ink)') : 'var(--ink-2)',
+      aria: e.title + ', ' + d.getDate() + ' ' + mg[d.getMonth()] + (hasAmt ? ', ' + amtFull + ' BYN' : (amtFull ? ', ' + amtFull : '')) };
+  }
+  defRem(e) {
+    if (e.type === 'warr') return { d30: true, d7: true, d1: true, d0: false };
+    if (e.type === 'inc') return { d7: false, d1: false, d0: true };
+    if (e.rem) return e.rem;
+    if (e.id === 'k1') return { d7: false, d1: true, d0: true };
+    return { d7: true, d1: true, d0: false };
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('напомни') || s.includes('кружок')) kind = 'kruzhok';
+    else if (s.includes('до конца') || s.includes('платеж') || s.includes('платёж') || s.includes('спишет')) kind = 'month';
+    else if (s.includes('налог')) kind = 'tax';
+    const plan = { kruzhok: ['Разбираю дату: 1 декабря 2026…', 'Создаю событие и напоминание…'], month: ['Смотрю календарь до 31.10…', 'Считаю сумму платежей…'], tax: ['Ищу срок в таблице сроков уплаты…', 'Проверяю профиль: есть квартира…'], generic: ['Разбираю вопрос…'] }[kind];
+    this.setState({ msgs: this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        if (i < plan.length - 1) { this.setState({ steps: plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i })) }); return; }
+        const patch = { busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) };
+        if (kind === 'kruzhok') { patch.kruzhok = true; const dl = { ...this.state.deleted }; delete dl.k1; patch.deleted = dl; }
+        this.setState(patch);
+      }, 750 * (i + 1));
+    });
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n); const T = this.types();
+    const all = this.events().map((e) => this.decor(e));
+    const openEv = (id) => () => this.setState({ sheet: { kind: 'event', id }, bell: false });
+    // month grid
+    const mo = st.month; const first = new Date(2026, mo, 1); const off = (first.getDay() + 6) % 7;
+    const daysIn = new Date(2026, mo + 1, 0).getDate(); const total = Math.ceil((off + daysIn) / 7) * 7;
+    const mg = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    const key = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    const cells = [];
+    for (let i = 0; i < total; i++) {
+      const d = new Date(2026, mo, 1 - off + i); const k = key(d);
+      const evs = all.filter((e) => e.date === k); const inMonth = d.getMonth() === mo; const isToday = k === '2026-10-21';
+      const shown = evs.slice(0, 3).map((e) => ({ short: e.short, amt: e.amtShort, icon: e.icon, bg: e.past ? '#EEF1EF' : e.bg, fg: e.past ? '#56625E' : e.fg, aria: e.aria + (e.past ? ', прошло' : ''), cls: 'cal-pill' + (e.past ? ' past' : ''), open: openEv(e.id) }));
+      cells.push({ day: d.getDate(), evs: shown, hasMore: evs.length > 3, moreText: '+' + (evs.length - 3) + ' ещё',
+        cls: 'cal-cell' + (inMonth ? '' : ' out') + (isToday ? ' today' : ''),
+        aria: d.getDate() + ' ' + mg[d.getMonth()] + (isToday ? ', сегодня' : '') + (evs.length ? ', событий: ' + evs.length : ', событий нет'),
+        open: () => this.setState({ sheet: { kind: 'day', key: k }, bell: false }) });
+    }
+    const inMo = all.filter((e) => this.dt(e.date).getMonth() === mo && this.dt(e.date).getFullYear() === 2026 && e.amt != null);
+    const out = inMo.filter((e) => e.amt < 0).reduce((s, e) => s + e.amt, 0); const inc = inMo.filter((e) => e.amt > 0).reduce((s, e) => s + e.amt, 0);
+    // list groups
+    const fut = all.filter((e) => e.n >= 0);
+    const gdef = [['Эта неделя · 19–25 октября', (e) => e.date <= '2026-10-25'], ['Следующая неделя · 26 октября – 1 ноября', (e) => e.date >= '2026-10-26' && e.date <= '2026-11-01'], ['Ноябрь', (e) => e.date >= '2026-11-02' && e.date <= '2026-11-30'], ['Позже', (e) => e.date > '2026-11-30']];
+    const groups = gdef.map(([title, fn]) => {
+      const items = fut.filter(fn);
+      const o = items.filter((e) => e.amt != null && e.amt < 0).reduce((s, e) => s + e.amt, 0); const p = items.filter((e) => e.amt != null && e.amt > 0).reduce((s, e) => s + e.amt, 0);
+      const parts = []; if (o < 0) parts.push('спишется ' + f(-o)); if (p > 0) parts.push('поступит +' + f(p));
+      return { title, sum: parts.join(' · '), items: items.map((e) => ({ ...e, open: openEv(e.id), amtFull: e.amtFull })) };
+    }).filter((g) => g.items.length > 0);
+    // sheets
+    const sh = st.sheet; let ev = null; let dayEvs = []; let dayTitle = '';
+    if (sh && sh.kind === 'event') {
+      const e = all.find((x) => x.id === sh.id);
+      if (e) {
+        const r = { ...this.defRem(e), ...(st.rem[e.id] || {}) };
+        const labels = { d30: 'За 30 дней', d7: 'За 7 дней', d1: 'За 1 день', d0: 'В день события' };
+        const rems = Object.keys(r).map((k) => ({ label: labels[k], on: !!r[k], toggle: (evt) => this.setState({ rem: { ...this.state.rem, [e.id]: { ...r, [k]: evt.target.checked } } }) }));
+        const linkMap = { reg: [['Регулярные платежи', 'Recurring.dc.html'], ['Операции', 'Operations.dc.html']], credit: [['Регулярные платежи', 'Recurring.dc.html'], ['Операции по кредиту', 'Operations.dc.html']], inc: [['Регулярные платежи', 'Recurring.dc.html'], ['Операции', 'Operations.dc.html']],
+          tax: [['База законов — Налоговый кодекс', 'Laws.dc.html'], ['Что ассистент знает обо мне', 'Memory.dc.html']], warr: [['Чек в разделе «Чеки и документы»', 'Documents.dc.html'], ['Права потребителя — Закон № 90-З', 'Laws.dc.html']],
+          ins: [['Платёж страховой 12.03.2026', 'Operations.dc.html'], ['Что ассистент знает обо мне', 'Memory.dc.html']], own: e.fromChat ? [['Диалог с ассистентом', 'Assistant.dc.html']] : [] };
+        const links = (linkMap[e.type] || []).map(([t, h]) => ({ t, h }));
+        const isOwn = e.type === 'own' || !!e.own;
+        ev = { ...e, rems, links, hasLinks: links.length > 0, isOwn, isWarr: e.type === 'warr', isFuture: e.n >= 0, isPast: e.n < 0,
+          relCls: 'badge ' + (e.n < 0 ? 'b-neutral' : e.n <= 2 ? 'b-brand' : 'b-neutral'),
+          amtLabel: e.amt != null && e.amt > 0 ? 'Ожидаемая сумма' : 'Сумма платежа', askDel: () => this.setState({ delAsk: e.id }) };
+        if (!e.hasAmt && e.type === 'tax') { ev.hasAmt = true; ev.amtLabel = 'Сумма'; }
+      }
+    }
+    if (sh && sh.kind === 'day') {
+      const d = this.dt(sh.key); const wds = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+      dayTitle = wds[d.getDay()] + ', ' + d.getDate() + ' ' + mg[d.getMonth()];
+      dayEvs = all.filter((e) => e.date === sh.key).map((e) => ({ ...e, open: openEv(e.id) }));
+    }
+    const delEv = st.delAsk ? all.find((e) => e.id === st.delAsk) : null;
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'cal-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', kruzhok: m.kind === 'kruzhok', month: m.kind === 'month', tax: m.kind === 'tax', generic: m.kind === 'generic',
+      kOn: st.kruzhok && !st.deleted.k1, kOff: !st.kruzhok || !!st.deleted.k1,
+      undoK: () => this.setState({ kruzhok: false }), showK: () => this.setState({ month: 10, view: 'month', chat: false }),
+      openTax: () => this.setState({ chat: false, sheet: { kind: 'event', id: 'n7' } }) }));
+    const sugg = ['Напомни 1 декабря оплатить кружок', 'Какие платежи до конца месяца?', 'Когда платить налог на недвижимость?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    const setUndo = (patch, text, undoPatch) => { this.setState(patch); this.toast(text, () => this.setState(undoPatch)); };
+    return {
+      isMonth: st.view === 'month', isList: st.view === 'list', segMonth: st.view === 'month' ? 'on' : '', segList: st.view === 'list' ? 'on' : '',
+      showMonth: () => this.setState({ view: 'month' }), showList: () => this.setState({ view: 'list' }),
+      monthLabel: monthNames[mo] + ' 2026', monthShort: monthNames[mo].toLowerCase(), prevDisabled: mo <= 9, nextDisabled: mo >= 10,
+      prevMonth: () => this.setState({ month: 9 }), nextMonth: () => this.setState({ month: 10 }), goToday: () => this.setState({ month: 9, view: 'month' }),
+      statsLabel: 'В ' + (mo === 9 ? 'октябре' : 'ноябре') + ':', statsOut: f(out), statsIn: '+' + f(inc),
+      cells, groups, noGroups: groups.length === 0,
+      legend: ['tax', 'credit', 'reg', 'inc', 'warr', 'ins', 'own'].map((k) => T[k]),
+      carAsk: st.car === 'ask',
+      carYes: () => setUndo({ car: 'yes' }, 'Напомню об ОСАГО (05.03.2027) и транспортном налоге', { car: 'ask' }),
+      carNo: () => setUndo({ car: 'no' }, 'Понял, напоминаний про автомобиль не будет', { car: 'ask' }),
+      evOpen: !!ev, ev: ev || { rems: [], links: [] }, dayOpen: !!(sh && sh.kind === 'day'), dayTitle, dayEvs, dayEmpty: dayEvs.length === 0,
+      closeSheet: () => this.setState({ sheet: null }),
+      addForDay: () => this.setState({ sheet: null, add: true, aDate: sh && sh.key ? sh.key : '2026-11-01', aName: '', aSum: '', aErr: false, aType: 'own' }),
+      delOpen: !!delEv, delName: delEv ? delEv.title : '', closeDel: () => this.setState({ delAsk: null }),
+      confirmDel: () => { if (!delEv) return; const id = delEv.id; this.setState({ delAsk: null, sheet: null, deleted: { ...st.deleted, [id]: true } }); this.toast('Событие «' + delEv.title + '» удалено', () => { const d = { ...this.state.deleted }; delete d[id]; this.setState({ deleted: d }); }); },
+      openAdd: () => this.setState({ add: true, aName: '', aSum: '', aDate: '2026-11-01', aType: 'own', aD7: true, aD1: true, aD0: false, aErr: false, bell: false }),
+      addOpen: st.add, closeAdd: () => this.setState({ add: false }),
+      aName: st.aName, aDate: st.aDate, aSum: st.aSum, aType: st.aType, aD7: st.aD7, aD1: st.aD1, aD0: st.aD0, aErr: st.aErr,
+      onAName: (e) => this.setState({ aName: e.target.value }), onADate: (e) => this.setState({ aDate: e.target.value }), onASum: (e) => this.setState({ aSum: e.target.value }), onAType: (e) => this.setState({ aType: e.target.value }),
+      onAD7: (e) => this.setState({ aD7: e.target.checked }), onAD1: (e) => this.setState({ aD1: e.target.checked }), onAD0: (e) => this.setState({ aD0: e.target.checked }),
+      saveAdd: () => {
+        const name = st.aName.trim(); if (!name || !/^\d{4}-\d{2}-\d{2}$/.test(st.aDate)) { this.setState({ aErr: true }); return; }
+        const v = this.num(st.aSum); const id = 'u' + Date.now();
+        const evn = { id, date: st.aDate, title: name, short: name, type: st.aType, amt: v > 0 ? -v : null, src: 'Добавлено вами 21.10.2026.', own: true, rem: { d7: st.aD7, d1: st.aD1, d0: st.aD0 } };
+        const d = this.dt(st.aDate); const inGrid = d.getFullYear() === 2026 && (d.getMonth() === 9 || d.getMonth() === 10);
+        this.setState({ add: false, extra: st.extra.concat([evn]), month: inGrid ? d.getMonth() : st.month });
+        const dd = String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+        this.toast('Событие «' + name + '» — ' + dd + (inGrid ? '' : ', оно в списке «Ближайшие»'), () => this.setState({ extra: this.state.extra.filter((x) => x.id !== id) }));
+      },
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

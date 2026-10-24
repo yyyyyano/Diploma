@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Телефон, главная</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PHONE SHELL (ph-, одинаковый в телефонных экранах) ===== */
+.ph-root{width:390px;height:844px;position:relative;overflow:hidden;background:var(--bg);display:flex;flex-direction:column;font-size:15px}
+.ph-top{flex:none;display:flex;align-items:center;gap:10px;padding:12px 12px 8px 16px;background:var(--bg)}
+.ph-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:4px 16px 40px;display:flex;flex-direction:column;gap:14px}
+.ph-nav{flex:none;position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end;background:#fff;border-top:1px solid var(--line);padding:0 4px 18px;height:84px;z-index:20}
+.ph-tab{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-height:60px;border:0;background:transparent;color:var(--ink-2);font-size:12px;line-height:1.2;font-weight:600;text-decoration:none;cursor:pointer;border-radius:12px;padding:6px 0 2px}
+.ph-tab:hover{color:var(--ink);background:rgba(20,33,31,.04)}
+.ph-tab.on{color:var(--brand)}
+.ph-fab-wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;padding:0 0 2px;color:var(--ink-2);font-size:12px;line-height:1.2;font-weight:600;text-decoration:none;border-radius:12px}
+.ph-fab-wrap:hover{color:var(--ink)}
+.ph-fab{width:58px;height:58px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;box-shadow:0 6px 16px rgba(13,56,51,.32);border:4px solid #fff;flex:none}
+.ph-fab-wrap:hover .ph-fab{background:var(--brand-hover)}
+.ph-fab.on{background:var(--brand-ink)}
+.ph-root .small{font-size:15px}
+.ph-root .xs{font-size:13px}
+.ph-root .btn-sm{min-height:44px;font-size:14.5px;padding:0 14px}
+.ph-root .why{width:44px;height:44px;margin:-9px -9px -9px 0}
+.ph-scrim{position:absolute;inset:0;background:rgba(13,30,27,.4);z-index:40;animation:fadeIn .2s ease}
+.ph-sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:#fff;border-radius:22px 22px 0 0;z-index:50;display:flex;flex-direction:column;box-shadow:0 -12px 40px rgba(13,30,27,.2);animation:phUp .26s cubic-bezier(.2,.8,.2,1)}
+.ph-grab{width:40px;height:5px;border-radius:99px;background:var(--line-2);margin:8px auto 2px;flex:none}
+.ph-sheet-h{display:flex;align-items:center;gap:10px;padding:4px 8px 8px 20px;border-bottom:1px solid var(--line);flex:none}
+.ph-sheet-b{padding:16px 20px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-height:0}
+.ph-toast{position:absolute;left:12px;right:12px;bottom:96px;background:#14211F;color:#fff;border-radius:12px;padding:6px 6px 6px 14px;display:flex;align-items:center;gap:10px;z-index:60;font-size:14.5px;box-shadow:0 12px 32px rgba(0,0,0,.25);animation:phToast .25s ease;min-height:48px}
+.ph-toast span{flex:1}
+.ph-toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:0 12px;min-height:44px;border-radius:8px}
+.ph-more{display:flex;flex-direction:column}
+.ph-more a{display:flex;align-items:center;gap:14px;min-height:52px;padding:0 4px;color:var(--ink);text-decoration:none;font-size:16px;border-bottom:1px solid var(--line)}
+.ph-more a:last-child{border-bottom:0}
+.ph-more a .ic{color:var(--ink-2)}
+.ph-more a:hover{color:var(--brand)}
+.ph-iconbtn{width:44px;height:44px;border-radius:12px;border:0;background:transparent;display:grid;place-items:center;color:var(--ink);cursor:pointer;position:relative;text-decoration:none;flex:none}
+.ph-iconbtn:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.ph-dot{position:absolute;top:9px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--danger);border:2px solid var(--bg)}
+@keyframes phUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@keyframes phToast{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* ===== PAGE: mobile home (mh-) ===== */
+.mh-month{display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 12px 0 16px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-weight:600;font-size:15px;cursor:pointer}
+.mh-hello{font-size:15px;color:var(--ink-2)}
+.mh-hero{background:var(--brand-ink);color:#E9F2EF;border-radius:18px;padding:16px 16px 12px 18px;display:flex;flex-direction:column;gap:4px}
+.mh-hero .why{color:#BFD5CE}
+.mh-hero .why:hover{background:rgba(255,255,255,.1);color:#fff}
+.mh-hero-n{font-size:32px;font-weight:650;letter-spacing:-.02em;line-height:1.15;color:#fff}
+.mh-hero-n .cur{color:#BFD5CE}
+.mh-hero a{color:#F2D38A;font-weight:600;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;min-height:44px}
+.mh-hero a:hover{color:#fff}
+.mh-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mh-kpi{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--ink);min-height:74px}
+.mh-kpi:hover{color:var(--ink);border-color:var(--line-2)}
+.mh-kpi b{font-size:19px;font-weight:650}
+.mh-ded{display:flex;gap:12px;align-items:center;padding:14px;border-radius:16px;background:var(--amber-soft);border:1px solid #F1D9A2;text-decoration:none;color:var(--ink)}
+.mh-ded:hover{color:var(--ink);border-color:#E5C27A}
+.mh-ded-ic{width:44px;height:44px;border-radius:12px;background:var(--amber);color:#3A2700;display:grid;place-items:center;flex:none}
+.mh-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 16px 14px}
+.mh-sec{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mh-sec h2{font-size:16px;font-weight:650}
+.mh-link{font-size:15px;font-weight:600;text-decoration:none;min-height:44px;display:inline-flex;align-items:center;gap:2px}
+.mh-free{background:var(--brand-soft);border-color:var(--brand-soft-2)}
+.mh-lim{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-bottom:1px solid var(--line)}
+.mh-lim:last-child{border-bottom:0;padding-bottom:2px}
+.mh-up{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.mh-up:last-child{border-bottom:0;padding-bottom:2px}
+.mh-up-d{width:44px;height:46px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;flex:none}
+.mh-up-d b{font-size:16px}.mh-up-d small{font-size:12px;color:var(--ink-2)}
+.mh-opt{display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:16px;cursor:pointer;width:100%;text-align:left}
+.mh-opt.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.mh-nt{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.mh-nt:last-child{border-bottom:0}
+.mh-nt.unread{background:#F6FAF8;margin:0 -20px;padding:12px 20px}
+.mh-nt-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+</style>
+</helmet>
+<div class="ph-root">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+  <header class="ph-top">
+    <span class="k-mark" aria-hidden="true">К</span>
+    <button class="mh-month" onClick="{{openPeriod}}" aria-label="Период: {{monthLabel}}. Изменить">{{monthLabel}}<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-d"></use></svg></button>
+    <span style="flex: 1"></span>
+    <button class="ph-iconbtn" aria-label="Уведомления" onClick="{{openNotes}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg><sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="ph-dot"></span></sc-if></button>
+    <a class="ph-iconbtn" href="Settings.dc.html" aria-label="Настройки профиля"><span class="k-ava" style="width: 32px; height: 32px; font-size: 13px" aria-hidden="true">ИК</span></a>
+  </header>
+
+  <div class="ph-scroll">
+    <p class="mh-hello">Добрый день, Ирина</p>
+
+    <section class="mh-hero" aria-label="Деньги на счетах">
+      <div class="row" style="justify-content: space-between"><span style="font-size: 14.5px; color: #BFD5CE">На счетах</span><button class="why" aria-label="Откуда эта цифра: на счетах" onClick="{{openBalance}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+      <div class="mh-hero-n num">{{k.balance}}<span class="cur">BYN</span></div>
+      <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 4px 10px"><span style="font-size: 15px; color: #BFD5CE">{{k.balanceSub}}</span><a href="Accounts.dc.html">Все счета<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></div>
+    </section>
+
+    <div class="mh-kpis">
+      <a class="mh-kpi" href="Operations.dc.html"><span class="small muted">Доходы</span><b class="num inc">+{{k.income}}</b><span class="xs muted">{{k.incomeSub}}</span></a>
+      <a class="mh-kpi" href="Operations.dc.html"><span class="small muted">Расходы</span><b class="num">{{k.expense}}</b><span class="xs muted">{{k.expenseSub}}</span></a>
+    </div>
+
+    <a class="mh-ded" href="Deductions.dc.html">
+      <span class="mh-ded-ic" aria-hidden="true"><svg class="ic ic-l"><use href="#i-coins"></use></svg></span>
+      <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+        <span class="xs strong" style="color: var(--amber-ink); letter-spacing: .04em; text-transform: uppercase">Найден налоговый вычет</span>
+        <span style="font-size: 17px; font-weight: 650; line-height: 1.3">Можно вернуть до <span class="num">260,00 BYN</span></span>
+        <span class="small muted">За учёбу Максима в БГУ</span>
+      </span>
+      <svg class="ic" aria-hidden="true" style="color: var(--amber-ink)"><use href="#i-chev-r"></use></svg>
+    </a>
+
+    <section class="mh-card mh-free" aria-label="Свободный остаток">
+      <div class="row" style="justify-content: space-between"><span class="strong" style="color: var(--brand)">Свободный остаток</span><button class="why" aria-label="Откуда эта цифра: свободный остаток" onClick="{{openFree}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+      <div class="num" style="font-size: 26px; font-weight: 650; color: var(--brand-ink); letter-spacing: -.02em">1 722,23<span class="cur">BYN / мес</span></div>
+      <p class="small muted">Столько остаётся каждый месяц после обязательных платежей: ЖКХ, связь, кредит, подписки.</p>
+    </section>
+
+    <section class="mh-card" aria-labelledby="mh-lim-t">
+      <div class="mh-sec"><h2 id="mh-lim-t">Лимиты: {{monthLower}}</h2><a class="mh-link" href="Budget.dc.html">Все лимиты<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></div>
+      <sc-for list="{{limits}}" as="l" hint-placeholder-count="2">
+        <div class="mh-lim">
+          <div class="row" style="justify-content: space-between; align-items: baseline; font-size: 15px"><span>{{l.name}}</span><span class="num"><b>{{l.spent}}</b> <span class="muted small">из {{l.limit}}</span></span></div>
+          <div class="bar" role="progressbar" aria-label="{{l.name}}" aria-valuenow="{{l.pctNum}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{l.w}}%; background: {{l.color}}"></span></div>
+          <div class="row small strong" style="gap: 6px; color: {{l.tcolor}}">
+            <sc-if value="{{l.isWarn}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg></sc-if>
+            <sc-if value="{{l.isOver}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg></sc-if>
+            <span>{{l.pct}} · {{l.status}}</span>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section class="mh-card" aria-labelledby="mh-up-t">
+      <div class="mh-sec"><h2 id="mh-up-t">Ближайшие платежи</h2><a class="mh-link" href="Calendar.dc.html">Календарь<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></div>
+      <sc-for list="{{upcoming}}" as="u" hint-placeholder-count="3">
+        <div class="mh-up">
+          <div class="mh-up-d"><b class="num">{{u.d}}</b><small>{{u.m}}</small></div>
+          <div style="flex: 1; min-width: 0"><div class="strong" style="line-height: 1.3">{{u.t}}</div><div class="small muted">{{u.s}}</div></div>
+          <span class="num strong" style="color: {{u.c}}">{{u.a}}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section class="mh-card" aria-labelledby="mh-wk-t" style="display: flex; flex-direction: column; gap: 8px">
+      <span class="eyebrow">Итоги недели · 12–18 октября</span>
+      <h2 id="mh-wk-t" style="font-size: 16px; font-weight: 650; line-height: 1.35">Потрачено <span class="num">412,30 BYN</span> — на 18% больше обычного</h2>
+      <p class="small muted">Больше всего ушло на такси: 46,80 за 6 поездок. На этой неделе спишутся интернет и кредит — 442,90.</p>
+      <div><a class="mh-link" href="Main.dc.html">Подробнее на компьютере<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></div>
+    </section>
+  </div>
+
+  <nav class="ph-nav" aria-label="Нижнее меню">
+    <a class="ph-tab on" href="MobileHome.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a class="ph-tab" href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a class="ph-fab-wrap" href="MobileScan.dc.html" aria-label="Сканировать чек"><span class="ph-fab" aria-hidden="true"><svg class="ic ic-l"><use href="#i-camera"></use></svg></span>Чек</a>
+    <a class="ph-tab" href="MobileChat.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <button class="ph-tab" onClick="{{openMore}}" aria-label="Ещё разделы"><svg class="ic" aria-hidden="true"><use href="#i-menu"></use></svg>Ещё</button>
+  </nav>
+
+  <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+    <div>
+      <div class="ph-scrim" onClick="{{closeSheet}}"></div>
+      <section class="ph-sheet" role="dialog" aria-label="{{sheetTitle}}">
+        <div class="ph-grab" aria-hidden="true"></div>
+        <div class="ph-sheet-h"><h2 class="card-t" style="flex: 1; font-size: 17px">{{sheetTitle}}</h2><button class="ph-iconbtn" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+        <div class="ph-sheet-b">
+          <sc-if value="{{sFormula}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 14px">
+              <div><div class="small muted">{{fx.label}}</div><div class="big num">{{fx.value}}<span class="cur">BYN</span></div><div class="xs muted" style="margin-top: 2px">{{fx.period}}</div></div>
+              <div class="formula">
+                <sc-for list="{{fx.rows}}" as="r" hint-placeholder-count="4">
+                  <div class="formula-r"><span>{{r.l}}</span><span class="num strong">{{r.v}}</span></div>
+                </sc-for>
+                <div class="formula-t"><span>{{fx.totalLabel}}</span><span class="num">{{fx.value}}</span></div>
+              </div>
+              <p class="small muted">{{fx.note}}</p>
+              <p class="xs faint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Посчитано программой по вашим операциям, а не нейросетью.</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{sNotes}}" hint-placeholder-val="{{false}}">
+            <div>
+              <div class="row" style="justify-content: flex-end; margin-top: -6px"><button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button></div>
+              <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+                <div class="{{n.cls}}">
+                  <span class="mh-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                  <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                    <div style="font-size: 15px; line-height: 1.4">{{n.text}}</div>
+                    <div class="xs faint">{{n.time}}</div>
+                    <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{sPeriod}}" hint-placeholder-val="{{false}}">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <sc-for list="{{periods}}" as="p" hint-placeholder-count="2">
+                <button class="{{p.cls}}" onClick="{{p.pick}}" aria-pressed="{{p.on}}"><span>{{p.label}}</span><sc-if value="{{p.on}}" hint-placeholder-val="{{false}}"><svg class="ic" aria-hidden="true"><use href="#i-check"></use></svg></sc-if></button>
+              </sc-for>
+              <p class="small muted">Произвольный период и год — в полной версии на компьютере.</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{sMore}}" hint-placeholder-val="{{false}}">
+            <nav class="ph-more" aria-label="Все разделы">
+              <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+              <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+              <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+              <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+              <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+              <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+              <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+              <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+              <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+            </nav>
+          </sc-if>
+        </div>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+    <div class="ph-toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { month: 'oct', sheet: null, read: false, toast: null };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  formula(key) {
+    const oct = this.state.month === 'oct';
+    if (key === 'balance') return oct ? {
+      label: 'На всех счетах', value: '4 989,64', period: 'На 21.10.2026 · 5 счетов', totalLabel: 'Итого',
+      rows: [{ l: 'Беларусбанк •• 4821 (на 20.10, по выписке)', v: '1 284,37' }, { l: 'Приорбанк •• 0937 (на 18.10, по выписке)', v: '412,90' }, { l: 'Накопительный «Отпуск» •• 5530', v: '2 150,00' }, { l: 'Альфа-Банк: 320,00 USD × 2,9871', v: '955,87' }, { l: 'Наличные (по операциям)', v: '186,50' }],
+      note: 'Валюта пересчитана по курсу НБРБ на 21.10.2026: 1 USD = 2,9871 BYN. Остатки по картам — из выписок.' }
+      : { label: 'На всех счетах', value: '5 312,08', period: 'На 30.09.2026 · 5 счетов', totalLabel: 'Итого',
+        rows: [{ l: 'Беларусбанк •• 4821', v: '1 904,12' }, { l: 'Приорбанк •• 0937', v: '388,50' }, { l: 'Накопительный «Отпуск» •• 5530', v: '2 030,00' }, { l: 'Альфа-Банк: 320,00 USD × 2,9530', v: '944,96' }, { l: 'Наличные', v: '44,50' }],
+        note: 'Курс НБРБ на 30.09.2026: 1 USD = 2,9530 BYN.' };
+    return { label: 'Свободный остаток в месяц', value: '1 722,23', period: 'По 3 полным месяцам: июль–сентябрь 2026', totalLabel: 'Свободный остаток',
+      rows: [{ l: 'Средний регулярный доход', v: '+2 400,00' }, { l: 'ЖКХ', v: '−186,40' }, { l: 'Связь, интернет и ТВ', v: '−42,90' }, { l: 'Кредиты и займы', v: '−410,00' }, { l: 'Подписки', v: '−38,47' }],
+      note: 'Доход — «на руки», по выпискам. Обязательные платежи найдены по истории — их можно проверить в разделе «Регулярные платежи».' };
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n); const oct = st.month === 'oct';
+    const titles = { balance: 'Откуда эта цифра?', free: 'Откуда эта цифра?', notes: 'Уведомления', more: 'Все разделы', period: 'Период' };
+    const limRaw = oct ? [['Такси', 112.40, 100], ['Кафе, рестораны и доставка', 168, 200]] : [['Кафе, рестораны и доставка', 214.50, 200], ['Продукты', 698.30, 700]];
+    const limits = limRaw.map(([n, s, l]) => {
+      const p = s / l * 100; const over = p >= 100; const warn = !over && p >= 80; const left = l - s;
+      return { name: n, spent: f(s), limit: f(l), pct: Math.round(p) + '%', pctNum: Math.round(p), w: Math.min(p, 100).toFixed(1), isWarn: warn, isOver: over,
+        color: over ? 'var(--danger)' : warn ? '#C2700E' : 'var(--brand)', tcolor: over ? 'var(--danger)' : warn ? 'var(--warn)' : 'var(--ink-2)',
+        status: over ? 'превышен на ' + f(-left) : (oct ? 'осталось ' + f(left) + ' на 10 дней' : 'осталось ' + f(left)) };
+    });
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, href: n.href || '', act: n.act || '', cls: 'mh-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const periods = [['oct', 'Октябрь 2026'], ['sep', 'Сентябрь 2026']].map(([key, label]) => ({ label, on: st.month === key, cls: 'mh-opt' + (st.month === key ? ' on' : ''),
+      pick: () => { this.setState({ month: key, sheet: null }); this.toast('Показываю: ' + label.toLowerCase()); } }));
+    const isFormula = st.sheet === 'balance' || st.sheet === 'free';
+    const fx = isFormula ? this.formula(st.sheet) : { rows: [] };
+    return {
+      monthLabel: oct ? 'Октябрь' : 'Сентябрь', monthLower: oct ? 'октябрь' : 'сентябрь',
+      k: oct ? { balance: '4 989,64', balanceSub: '5 счетов · на 21.10', income: '972,40', incomeSub: 'ждём зарплату 25.10', expense: '1 492,92', expenseSub: 'с 1 по 21 октября' }
+        : { balance: '5 312,08', balanceSub: '5 счетов · на 30.09', income: '2 412,40', incomeSub: 'за сентябрь', expense: '4 318,60', expenseSub: 'с оплатой учёбы 2 000' },
+      limits,
+      upcoming: [
+        { d: '22', m: 'окт', t: 'Интернет и ТВ', s: 'Завтра · Белтелеком', a: '−32,90', c: 'var(--ink)' },
+        { d: '23', m: 'окт', t: 'Платёж по кредиту', s: 'Пятница · Беларусбанк', a: '−410,00', c: 'var(--ink)' },
+        { d: '25', m: 'окт', t: 'Зарплата', s: 'Воскресенье · ожидается', a: '+1 440,00', c: 'var(--income)' }],
+      notes, periods, hasUnread: !st.read, markRead: () => this.setState({ read: true }),
+      sheetOpen: !!st.sheet, sheetTitle: st.sheet ? titles[st.sheet] : '', closeSheet: () => this.setState({ sheet: null }),
+      sFormula: isFormula, sNotes: st.sheet === 'notes', sMore: st.sheet === 'more', sPeriod: st.sheet === 'period', fx,
+      openBalance: () => this.setState({ sheet: 'balance' }), openFree: () => this.setState({ sheet: 'free' }),
+      openNotes: () => this.setState({ sheet: 'notes' }), openMore: () => this.setState({ sheet: 'more' }), openPeriod: () => this.setState({ sheet: 'period' }),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

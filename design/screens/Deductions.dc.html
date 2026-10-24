@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Налоговые вычеты</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: shared chat/bell (как в Main) ===== */
+.bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.nt.unread{background:#F6FAF8}
+.nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.steps div{display:flex;align-items:center;gap:8px}
+.chat-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+/* ===== PAGE: deductions (dx-) ===== */
+.dx-hero{display:flex;gap:22px;background:var(--amber-soft);border-color:#F1D9A2;padding:24px 28px;align-items:flex-start;flex-wrap:wrap}
+.dx-hero-ic{width:56px;height:56px;border-radius:16px;background:var(--amber);color:#3A2700;display:grid;place-items:center;flex:none}
+.dx-hero-t{font-size:26px;font-weight:650;letter-spacing:-.02em;line-height:1.22}
+.dx-emp{display:flex;align-items:flex-start;gap:8px 10px;flex-wrap:wrap;margin-top:4px;padding-top:14px;border-top:1px solid #EFD9A6;font-size:14px}
+.dx-sec{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:6px}
+.dx-sec h2{font-size:19px;font-weight:650;letter-spacing:-.01em}
+.dx-card{display:flex;flex-direction:column;gap:18px;padding:24px}
+.dx-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.dx-amt{margin-left:auto;text-align:right}
+.dx-amt .num{font-size:26px;font-weight:650;letter-spacing:-.02em}
+.dx-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.dx-box{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.dx-cond{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.dx-cond .ic{margin-top:2px}
+.dx-ways{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.dx-way{display:flex;flex-direction:column;gap:4px;text-align:left;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line-2);background:#fff;cursor:pointer;min-height:76px}
+.dx-way:hover{border-color:var(--brand)}
+.dx-way.on{border-color:var(--brand);background:var(--brand-soft)}
+.dx-steps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.dx-steps li{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.dx-steps li span{width:24px;height:24px;border-radius:50%;background:#fff;border:1px solid var(--line-2);display:grid;place-items:center;font-size:12.5px;font-weight:700;flex:none;color:var(--brand)}
+.dx-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:28px}
+.dx-check{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--line)}
+.dx-check input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--brand);flex:none;cursor:pointer}
+.dx-check label{display:flex;flex-direction:column;gap:2px;cursor:pointer;flex:1;min-width:0}
+.dx-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--line)}
+.dx-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.dx-note{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
+.dx-q{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border-radius:12px;border:1px dashed var(--line-2);background:#fff}
+.dx-calc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;margin-top:18px}
+.dx-res{background:var(--brand-soft);border:1px solid var(--brand-soft-2);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+.dx-res .big{color:var(--brand-ink)}
+.dx-rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.dx-rule{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.dx-step{display:inline-flex;align-self:flex-start;align-items:center;border:1px solid var(--line-2);border-radius:10px;overflow:hidden;background:#fff}
+.dx-step button{width:40px;height:40px;border:0;background:#fff;cursor:pointer;font-size:18px;font-weight:600}
+.dx-step button:hover{background:var(--surface-2)}
+.dx-step span{min-width:44px;text-align:center;font-weight:700}
+.dx-select{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 10px;background:#fff;font-size:15px;width:100%}
+@media (max-width:1000px){.dx-cols,.dx-two,.dx-calc,.dx-rules,.dx-checks{grid-template-columns:minmax(0,1fr)}}
+.dx-tn{font-variant-numeric:tabular-nums}
+@media (max-width:640px){.dx-hero-ic{display:none}.dx-hero{padding:20px}.dx-hero-t{font-size:22px}.dx-ways{grid-template-columns:minmax(0,1fr)}.dx-amt{margin-left:0;text-align:left}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a class="on" href="Deductions.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Налоговые вычеты</h1>
+      <p class="small muted">Подоходный налог: что вам положено и как это получить</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+      <a class="btn btn-secondary" href="#dx-calc"><svg class="ic" aria-hidden="true"><use href="#i-percent"></use></svg>Посчитать вычет</a>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <section class="card dx-hero" aria-labelledby="dx-hero-t">
+      <span class="dx-hero-ic" aria-hidden="true"><svg class="ic ic-xl"><use href="#i-coins"></use></svg></span>
+      <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 260px">
+        <span class="eyebrow" style="color: var(--amber-ink)">{{hero.eyebrow}}</span>
+        <h2 id="dx-hero-t" class="dx-hero-t">{{hero.title}}</h2>
+        <p style="max-width: 680px">{{hero.sub}} Суммы считает программа по таблице ставок 2026 года, условия — по тексту Налогового кодекса.</p>
+        <div class="dx-emp">
+          <svg class="ic ic-s" aria-hidden="true" style="color: var(--amber-ink); margin-top: 2px"><use href="#i-work"></use></svg>
+          <span style="flex: 1; min-width: 240px">Вы — <b>наёмный работник</b> (из анкеты). С дохода по налогу на профессиональный доход (НПД) вычеты по ст. 209–211 не применяются.</span>
+          <a class="card-link" href="Memory.dc.html">Изменить в профиле<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <div class="dx-sec">
+      <h2>Найденные вычеты</h2>
+      <span class="small muted">Отклонённые больше не предлагаю — их можно вернуть отсюда же</span>
+    </div>
+
+    <sc-if value="{{edu.visible}}" hint-placeholder-val="{{true}}">
+      <section class="card dx-card" aria-labelledby="dx-edu-t">
+        <div class="dx-head">
+          <span class="cat-ic" style="background: #3E7CA6; width: 44px; height: 44px; border-radius: 12px" aria-hidden="true"><svg class="ic"><use href="#i-grad"></use></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+            <div class="row" style="flex-wrap: wrap; gap: 8px"><h3 id="dx-edu-t" style="font-size: 19px; font-weight: 650">Социальный вычет на обучение</h3>
+              <sc-if value="{{edu.isNew}}" hint-placeholder-val="{{true}}"><span class="badge b-amber"><svg class="ic ic-s" aria-hidden="true"><use href="#i-spark"></use></svg>Новый</span></sc-if>
+              <sc-if value="{{edu.isDone}}" hint-placeholder-val="{{false}}"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Оформлен 21.10.2026</span></sc-if>
+            </div>
+            <span class="muted">Первое высшее образование Максима · БГУ · <button class="lref" onClick="{{w.edu}}">ст. 210 НК</button></span>
+          </div>
+          <div class="dx-amt">
+            <div class="xs muted">Можно вернуть</div>
+            <div class="row" style="gap: 2px; justify-content: flex-end"><span class="num">до 260,00<span class="cur">BYN</span></span><button class="why" aria-label="Откуда эта цифра: вычет на обучение" onClick="{{w.edu}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+          </div>
+        </div>
+
+        <div class="dx-cols">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div class="dx-box">
+              <div class="row" style="justify-content: space-between; flex-wrap: wrap"><span class="lbl">Основание</span><a class="card-link" href="Operations.dc.html">Открыть операцию<svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a></div>
+              <div class="row" style="gap: 12px">
+                <span class="cat-ic" style="background: #3E7CA6" aria-hidden="true"><svg class="ic ic-s"><use href="#i-grad"></use></svg></span>
+                <div style="flex: 1; min-width: 0"><div class="small strong">Оплата обучения, БГУ</div><div class="xs muted">12.09.2026 · Беларусбанк, карта •• 4821</div></div>
+                <span class="num strong">−2 000,00</span>
+              </div>
+              <div class="row small" style="flex-wrap: wrap; gap: 6px; padding-top: 8px; border-top: 1px dashed var(--line)"><span class="muted">Расчёт:</span><span class="num strong">2 000,00 × 13% = 260,00 BYN</span></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <span class="lbl">Почему положен</span>
+              <div class="dx-cond"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg><span>Учреждение образования Республики Беларусь — БГУ</span></div>
+              <div class="dx-cond"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg><span>Первое высшее образование — <span class="muted">вы сказали в чате 12.10</span></span></div>
+              <div class="dx-cond"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg><span>Платите за близкого родственника — сына</span></div>
+              <div class="dx-cond"><svg class="ic ic-s" aria-hidden="true" style="color: var(--warn)"><use href="#i-warn"></use></svg><span>Облагаемый доход за 2026 год должен быть не меньше 2 000,00. <b>Оценка</b>: по выпискам ≈ 2 400,00 «на руки» в месяц, начисленная зарплата неизвестна — <a href="Memory.dc.html">уточнить</a></span></div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <span class="lbl">Как получить</span>
+            <div class="dx-ways" role="group" aria-label="Способ получения">
+              <button class="{{edu.wayEmpCls}}" aria-pressed="{{edu.wayEmp}}" onClick="{{edu.pickEmp}}"><span class="strong">У нанимателя</span><span class="xs muted">в течение года — налог уменьшат с ближайших зарплат</span></button>
+              <button class="{{edu.wayImnsCls}}" aria-pressed="{{edu.wayImns}}" onClick="{{edu.pickImns}}"><span class="strong">В ИМНС по декларации</span><span class="xs muted">до 31.03.2027 — переплату вернут на счёт</span></button>
+            </div>
+            <sc-if value="{{edu.wayEmp}}" hint-placeholder-val="{{true}}">
+              <ol class="dx-steps">
+                <li><span>1</span><div>Напишите заявление в бухгалтерию ООО «ТехноСофт» — в свободной форме.</div></li>
+                <li><span>2</span><div>Приложите документы из списка ниже.</div></li>
+                <li><span>3</span><div>Наниматель уменьшит подоходный налог с ближайших зарплат — деньги придут вместе с зарплатой.</div></li>
+              </ol>
+            </sc-if>
+            <sc-if value="{{edu.wayImns}}" hint-placeholder-val="{{false}}">
+              <ol class="dx-steps">
+                <li><span>1</span><div>После окончания 2026 года подайте декларацию в ИМНС по месту жительства — лично или через личный кабинет.</div></li>
+                <li><span>2</span><div>Приложите документы из списка ниже.</div></li>
+                <li><span>3</span><div>После проверки переплату налога вернут на ваш счёт. Вернуть переплату можно и за прошлые годы — в течение 5 лет.</div></li>
+              </ol>
+            </sc-if>
+            <div class="dx-note"><svg class="ic ic-s" aria-hidden="true" style="color: var(--ink-2); margin-top: 2px"><use href="#i-cal"></use></svg><span>Напомню о сроке 31.03.2027 в календаре и в Telegram, если вычет не оформите у нанимателя.</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="row" style="gap: 14px; margin-bottom: 4px; flex-wrap: wrap">
+            <span class="lbl">Документы</span>
+            <div class="bar" role="progressbar" aria-label="Готовность документов" aria-valuenow="{{edu.pct}}" aria-valuemin="0" aria-valuemax="100" style="flex: 1; min-width: 120px; max-width: 320px"><span style="width: {{edu.pct}}%"></span></div>
+            <span class="small muted num">{{edu.doneCount}} из 5 готово</span>
+          </div>
+          <div class="dx-checks">
+            <sc-for list="{{edu.checks}}" as="c" hint-placeholder-count="5">
+              <div class="dx-check">
+                <input type="checkbox" id="{{c.id}}" checked="{{c.on}}" onChange="{{c.toggle}}">
+                <label for="{{c.id}}"><span class="strong small">{{c.t}}</span><span class="xs muted">{{c.s}}</span></label>
+                <sc-if value="{{c.inKosht}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{c.dl}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-download"></use></svg>Скачать</button></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div class="dx-foot">
+          <sc-if value="{{edu.isNew}}" hint-placeholder-val="{{true}}"><button class="btn btn-primary" onClick="{{edu.markDone}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Отметить как оформленный</button></sc-if>
+          <sc-if value="{{edu.isDone}}" hint-placeholder-val="{{false}}"><button class="btn btn-secondary" onClick="{{edu.markNew}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Вернуть в новые</button></sc-if>
+          <button class="btn btn-ghost" onClick="{{edu.dismiss}}">Это не моё</button>
+          <span class="xs faint" style="margin-left: auto">Не является юридической консультацией</span>
+        </div>
+      </section>
+    </sc-if>
+    <sc-if value="{{edu.hidden}}" hint-placeholder-val="{{false}}">
+      <section class="card row" style="gap: 14px; flex-wrap: wrap">
+        <span class="cat-ic" style="background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line)" aria-hidden="true"><svg class="ic"><use href="#i-grad"></use></svg></span>
+        <div style="flex: 1; min-width: 220px"><div class="strong">Вычет на обучение скрыт</div><div class="small muted">Больше не предлагаю его на главной и в Telegram.</div></div>
+        <button class="btn btn-secondary btn-sm" onClick="{{edu.markNew}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Вернуть</button>
+      </section>
+    </sc-if>
+
+    <div class="dx-two">
+      <section class="card dx-card" aria-labelledby="dx-kids-t">
+        <div class="dx-head">
+          <span class="cat-ic" style="background: #6E9E5B; width: 44px; height: 44px; border-radius: 12px" aria-hidden="true"><svg class="ic"><use href="#i-baby"></use></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1">
+            <div class="row" style="flex-wrap: wrap; gap: 8px"><h3 id="dx-kids-t" style="font-size: 18px; font-weight: 650">Стандартный вычет на детей</h3>
+              <sc-if value="{{kids.isDone}}" hint-placeholder-val="{{false}}"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Оформлен</span></sc-if>
+              <sc-if value="{{kids.isShown}}" hint-placeholder-val="{{true}}"><span class="badge b-neutral">Показан</span></sc-if>
+            </div>
+            <span class="muted small">Максим, 17 лет · Алиса, 9 лет · <button class="lref" onClick="{{w.kids}}">ст. 209 НК</button></span>
+          </div>
+        </div>
+        <div class="row" style="align-items: baseline; gap: 6px; flex-wrap: wrap">
+          <span class="num" style="font-size: 28px; font-weight: 650; letter-spacing: -0.02em">31,20</span><span class="muted">BYN в месяц</span>
+          <button class="why" aria-label="Откуда эта цифра: вычет на детей" onClick="{{w.kids}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button>
+          <span class="small muted" style="margin-left: auto">374,40 в год</span>
+        </div>
+        <div class="dx-box" style="gap: 6px">
+          <div class="formula-r" style="padding: 4px 0"><span>120,00 × 2 ребёнка</span><span class="num strong">240,00 вычета в месяц</span></div>
+          <div class="formula-r" style="padding: 4px 0"><span>240,00 × 13%</span><span class="num strong">31,20 экономии</span></div>
+        </div>
+        <p class="small">Даёт наниматель: отнесите в бухгалтерию ООО «ТехноСофт» заявление и свидетельства о рождении детей — вычет начнут применять с месяца подачи.</p>
+        <div class="dx-note"><svg class="ic ic-s" aria-hidden="true" style="color: var(--ink-2); margin-top: 2px"><use href="#i-clock"></use></svg><span>14.03.2027 Максиму исполнится 18 лет — с апреля 2027 вычет будет 63 BYN на одного ребёнка (экономия 8,19 в месяц).</span></div>
+        <div class="dx-foot">
+          <sc-if value="{{kids.isShown}}" hint-placeholder-val="{{true}}"><button class="btn btn-primary btn-sm" onClick="{{kids.markDone}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Отметить как оформленный</button></sc-if>
+          <sc-if value="{{kids.isDone}}" hint-placeholder-val="{{false}}"><button class="btn btn-secondary btn-sm" onClick="{{kids.markShown}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Вернуть в новые</button></sc-if>
+          <a class="btn btn-ghost btn-sm" href="Memory.dc.html">Данные о детях</a>
+        </div>
+      </section>
+
+      <section class="card dx-card" aria-labelledby="dx-house-t" style="border-style: dashed">
+        <div class="dx-head">
+          <span class="cat-ic" style="background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); width: 44px; height: 44px; border-radius: 12px" aria-hidden="true"><svg class="ic"><use href="#i-home"></use></svg></span>
+          <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1">
+            <div class="row" style="flex-wrap: wrap; gap: 8px"><h3 id="dx-house-t" style="font-size: 18px; font-weight: 650">Вычет на жильё</h3><span class="badge b-neutral">Нужно уточнить</span></div>
+            <span class="muted small">Имущественный · <button class="lref" onClick="{{w.house}}">ст. 211 НК</button></span>
+          </div>
+        </div>
+        <p class="small">Я вижу ежемесячный платёж 410,00 в Беларусбанк. Если это кредит на жильё, может быть положен имущественный вычет. Ответьте на два вопроса — ответы сохраню, чтобы не спрашивать снова.</p>
+        <div class="dx-q">
+          <span class="strong small">Платёж 410,00 в Беларусбанк — это кредит на жильё?</span>
+          <div class="row-btns">
+            <button class="{{house.q1YesCls}}" aria-pressed="{{house.q1Yes}}" onClick="{{house.q1SetYes}}">Да, на жильё</button>
+            <button class="{{house.q1NoCls}}" aria-pressed="{{house.q1No}}" onClick="{{house.q1SetNo}}">Нет, другой кредит</button>
+          </div>
+        </div>
+        <sc-if value="{{house.askQ2}}" hint-placeholder-val="{{false}}">
+          <div class="dx-q">
+            <span class="strong small">Вы или члены семьи состояли на учёте нуждающихся в улучшении жилищных условий, когда заключали кредитный договор?</span>
+            <div class="row-btns">
+              <button class="{{house.q2YesCls}}" aria-pressed="{{house.q2Yes}}" onClick="{{house.q2SetYes}}">Да, состояли</button>
+              <button class="{{house.q2NoCls}}" aria-pressed="{{house.q2No}}" onClick="{{house.q2SetNo}}">Нет</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{house.resNotLoan}}" hint-placeholder-val="{{false}}">
+          <div class="dx-note"><svg class="ic ic-s" aria-hidden="true" style="color: var(--ink-2); margin-top: 2px"><use href="#i-info"></use></svg><span>Понял, отмечу кредит как потребительский. Вычет на жильё не положен — он только для расходов на строительство или покупку жилья.</span></div>
+        </sc-if>
+        <sc-if value="{{house.resNoQueue}}" hint-placeholder-val="{{false}}">
+          <div class="dx-note"><svg class="ic ic-s" aria-hidden="true" style="color: var(--ink-2); margin-top: 2px"><use href="#i-info"></use></svg><span>Вычет на жильё не положен: по ст. 211 НК его получают только те, кто состоит (или состоял на момент договора) на учёте нуждающихся вместе с семьёй.</span></div>
+        </sc-if>
+        <sc-if value="{{house.resYes}}" hint-placeholder-val="{{false}}">
+          <div class="dx-box" style="background: var(--amber-soft); border-color: #F1D9A2">
+            <div class="row" style="gap: 8px"><svg class="ic ic-s" aria-hidden="true" style="color: var(--amber-ink)"><use href="#i-coins"></use></svg><span class="strong">Похоже, вычет положен — это оценка</span></div>
+            <div class="formula-r" style="padding: 4px 0"><span>9 платежей в 2026 году × 410,00</span><span class="num strong">3 690,00</span></div>
+            <div class="formula-r" style="padding: 4px 0"><span>× 13%</span><span class="num strong">до 479,70 BYN</span></div>
+            <p class="xs muted">Уточню дату договора и субсидии господдержки: суммы, погашенные субсидией, в вычет не входят. Стандартные вычеты применяются раньше имущественного.</p>
+          </div>
+        </sc-if>
+        <div class="dx-foot">
+          <sc-if value="{{house.answered}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{house.reset}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Изменить ответы</button></sc-if>
+          <a class="btn btn-ghost btn-sm" href="Laws.dc.html">Открыть ст. 211</a>
+        </div>
+      </section>
+    </div>
+
+    <section class="card" id="dx-calc" aria-labelledby="dx-calc-t" style="padding: 24px">
+      <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 8px">
+        <div><h2 id="dx-calc-t" style="font-size: 19px; font-weight: 650">Посчитать вычет</h2><p class="small muted">Для своих сумм — «что если». Считает программа по таблице ставок 2026 года.</p></div>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Вид вычета" style="margin-top: 14px">
+        <sc-for list="{{calc.tabs}}" as="t" hint-placeholder-count="3"><button class="{{t.cls}}" role="tab" aria-selected="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+      </div>
+
+      <sc-if value="{{calc.isEdu}}" hint-placeholder-val="{{true}}">
+        <div class="dx-calc">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div class="field"><label for="dx-edu-sum">Сколько заплатили за обучение в году, BYN</label><input id="dx-edu-sum" class="input num" inputmode="decimal" value="{{calc.eduSum}}" onChange="{{calc.onEduSum}}"></div>
+            <div class="field"><label for="dx-edu-inc">Облагаемый доход за год, BYN <span class="faint" style="font-weight: 500">— если знаете</span></label><input id="dx-edu-inc" class="input num" inputmode="decimal" value="{{calc.eduInc}}" onChange="{{calc.onEduInc}}" placeholder="например, 34 884"><span class="hint">Начисленная зарплата до вычета налогов за весь год</span></div>
+          </div>
+          <div class="dx-res" aria-live="polite">
+            <div class="row" style="justify-content: space-between"><span class="small muted">Можно вернуть</span><button class="why" aria-label="Откуда эта цифра: расчёт" onClick="{{w.calc}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+            <div class="big num">до {{calc.eduRefund}}<span class="cur">BYN</span></div>
+            <div class="small dx-tn">{{calc.eduFormula}}</div>
+            <sc-if value="{{calc.eduHasCarry}}" hint-placeholder-val="{{false}}"><div class="small row" style="gap: 6px; color: var(--warn)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg><span>{{calc.eduCarry}}</span></div></sc-if>
+            <sc-if value="{{calc.eduNoInc}}" hint-placeholder-val="{{true}}"><div class="xs muted">Если облагаемого дохода за год меньше суммы оплаты — остаток вычета перенесётся на следующие годы.</div></sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{calc.isHouse}}" hint-placeholder-val="{{false}}">
+        <div class="dx-calc">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div class="field"><label for="dx-h-cost">Расходы на покупку или строительство жилья, BYN</label><input id="dx-h-cost" class="input num" inputmode="decimal" value="{{calc.hCost}}" onChange="{{calc.onHCost}}"></div>
+            <div class="field"><label for="dx-h-sal">Зарплата в месяц, BYN</label><input id="dx-h-sal" class="input num" inputmode="decimal" value="{{calc.hSal}}" onChange="{{calc.onHSal}}">
+              <div class="seg" role="group" aria-label="Какая это сумма" style="margin-top: 4px; align-self: flex-start">
+                <button class="{{calc.hGrossCls}}" aria-pressed="{{calc.hGross}}" onClick="{{calc.setGross}}">Начисленная</button>
+                <button class="{{calc.hNetCls}}" aria-pressed="{{calc.hNet}}" onClick="{{calc.setNet}}">«На руки»</button>
+              </div>
+            </div>
+            <div class="field"><label for="dx-h-oth">Другие вычеты в месяц, BYN <span class="faint" style="font-weight: 500">— например, на детей</span></label><input id="dx-h-oth" class="input num" inputmode="decimal" value="{{calc.hOther}}" onChange="{{calc.onHOther}}"><span class="hint">Стандартные вычеты применяются раньше имущественного — срок станет дольше</span></div>
+          </div>
+          <div class="dx-res" aria-live="polite">
+            <div class="row" style="justify-content: space-between"><span class="small muted">Сэкономите всего</span><button class="why" aria-label="Откуда эта цифра: расчёт" onClick="{{w.calc}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+            <div class="big num">до {{calc.hTotal}}<span class="cur">BYN</span></div>
+            <div class="small">Вычет будет использован примерно за <b class="num">{{calc.hMonths}}</b> ({{calc.hYears}})</div>
+            <div class="small num muted">Экономия в месяц до {{calc.hMonthly}} — пока вычет не закончится</div>
+            <sc-if value="{{calc.hIsNet}}" hint-placeholder-val="{{false}}"><div class="small row" style="gap: 6px; color: var(--warn); align-items: flex-start"><svg class="ic ic-s" aria-hidden="true" style="margin-top: 2px"><use href="#i-warn"></use></svg><span>Оценка: начисленная зарплата ≈ {{calc.hGrossVal}} (на руки ÷ 0,86 — с учётом 13% налога и 1% в ФСЗН)</span></div></sc-if>
+            <div class="xs muted">Суммы, погашенные субсидиями господдержки, в вычет не входят. Вычет — один раз, по одному жилью (кроме многодетных с господдержкой).</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{calc.isKids}}" hint-placeholder-val="{{false}}">
+        <div class="dx-calc">
+          <div style="display: flex; flex-direction: column; gap: 14px">
+            <div class="field"><span class="lbl" id="dx-kids-l">Детей до 18 лет</span>
+              <div class="dx-step" role="group" aria-labelledby="dx-kids-l"><button aria-label="Меньше" onClick="{{calc.kDec}}">−</button><span class="num">{{calc.kN}}</span><button aria-label="Больше" onClick="{{calc.kInc}}">+</button></div>
+            </div>
+            <div class="field"><label for="dx-k-sp">Особые условия</label>
+              <select id="dx-k-sp" class="dx-select" value="{{calc.kSp}}" onChange="{{calc.onKSp}}">
+                <option value="none">Нет</option>
+                <option value="dis">Ребёнок-инвалид</option>
+                <option value="single">Одинокий родитель, вдова или вдовец, опекун, приёмный родитель</option>
+              </select>
+            </div>
+          </div>
+          <div class="dx-res" aria-live="polite">
+            <div class="row" style="justify-content: space-between"><span class="small muted">Экономия в месяц</span><button class="why" aria-label="Откуда эта цифра: расчёт" onClick="{{w.calc}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+            <div class="big num">{{calc.kMonth}}<span class="cur">BYN</span></div>
+            <div class="small dx-tn">{{calc.kFormula}}</div>
+            <div class="small num muted">За год — {{calc.kYear}} BYN</div>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <section class="card" aria-labelledby="dx-rules-t" style="padding: 24px">
+      <h2 id="dx-rules-t" class="card-t" style="margin-bottom: 14px">Важно знать</h2>
+      <div class="dx-rules">
+        <div class="dx-rule"><svg class="ic ic-s" aria-hidden="true" style="color: var(--brand); margin-top: 3px"><use href="#i-shield-ok"></use></svg><span>Вычет уменьшает облагаемый доход — поэтому вернуть можно не больше налога, который реально удержали.</span></div>
+        <div class="dx-rule"><svg class="ic ic-s" aria-hidden="true" style="color: var(--brand); margin-top: 3px"><use href="#i-repeat"></use></svg><span>Неиспользованный остаток социального и имущественного вычета переносится на следующие годы.</span></div>
+        <div class="dx-rule"><svg class="ic ic-s" aria-hidden="true" style="color: var(--brand); margin-top: 3px"><use href="#i-ops"></use></svg><span>Стандартные вычеты применяются раньше имущественного — это увеличивает срок его использования.</span></div>
+        <div class="dx-rule"><svg class="ic ic-s" aria-hidden="true" style="color: var(--brand); margin-top: 3px"><use href="#i-clock"></use></svg><span>Переплату налога можно вернуть за прошлые годы — в течение 5 лет, через ИМНС по декларации (до 31 марта).</span></div>
+      </div>
+    </section>
+
+    <p class="xs faint row" style="gap: 8px; flex-wrap: wrap"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>Не является юридической консультацией · Ставки 2026 года из таблицы ставок, подтверждены 21.10.2026 · <a href="Laws.dc.html">Тексты норм в базе законов</a></p>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet" role="dialog" aria-label="Откуда эта цифра?">
+      <div class="sheet-h">
+        <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-info"></use></svg>
+        <h2 class="card-t" style="flex: 1">Откуда эта цифра?</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div><div class="small muted">{{sh.label}}</div><div class="big num">{{sh.value}}<span class="cur">{{sh.unit}}</span></div><div class="xs muted" style="margin-top: 4px">{{sh.period}}</div></div>
+        <div>
+          <div class="lbl" style="margin-bottom: 8px">Расчёт</div>
+          <div class="formula">
+            <sc-for list="{{sh.rows}}" as="r" hint-placeholder-count="4">
+              <div class="formula-r"><span>{{r.l}}</span><span class="num strong">{{r.v}}</span></div>
+            </sc-for>
+            <div class="formula-t"><span>{{sh.totalLabel}}</span><span class="num">{{sh.value}}</span></div>
+          </div>
+        </div>
+        <sc-if value="{{sh.hasLaw}}" hint-placeholder-val="{{false}}">
+          <div class="lawq">
+            <div class="lawq-h"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>{{sh.lawHead}}</div>
+            <p class="lawq-t">{{sh.lawText}}</p>
+            <div class="lawq-f"><span>Редакция на 21.10.2026</span><a href="https://pravo.by/document/?guid=3871&amp;p0=hk0900071" target="_blank" rel="noopener" class="row" style="gap: 4px">Открыть на pravo.by<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a></div>
+          </div>
+        </sc-if>
+        <p class="small muted">{{sh.note}}</p>
+        <sc-if value="{{sh.hasOps}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 6px">Операции-основания</div>
+            <sc-for list="{{sh.ops}}" as="o" hint-placeholder-count="1">
+              <a href="Operations.dc.html" class="row" style="justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink)"><span class="small"><span class="muted num">{{o.d}}</span> · {{o.t}}</span><span class="num small strong">{{o.v}}</span></a>
+            </sc-for>
+          </div>
+        </sc-if>
+        <p class="xs faint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Все суммы посчитаны программой по вашим данным и таблице ставок, а не нейросетью.</p>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg>Вижу: Налоговые вычеты</span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="chat-body" aria-live="polite">
+        <div class="msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Я вижу два найденных вычета: на обучение Максима и на детей. Спросите, как их получить, или что изменится при другом типе занятости.</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.emp}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Вычет на обучение можно получить у нанимателя уже в 2026 году. Напишите заявление в бухгалтерию ООО «ТехноСофт» и приложите договор с БГУ, документы об оплате и свидетельство о рождении Максима — оно подтверждает родство.</p>
+                      <div class="lawq">
+                        <div class="lawq-h"><svg class="ic ic-s" aria-hidden="true"><use href="#i-scale"></use></svg>НК РБ, ст. 210, п. 1, пп. 1.1</div>
+                        <p class="lawq-t">«…в сумме, уплаченной в течение налогового периода плательщиком за… обучение близких родственников… в учреждениях образования Республики Беларусь при получении ими первого высшего… образования…»</p>
+                        <div class="lawq-f"><span>Редакция на 21.10.2026</span><a href="https://pravo.by/document/?guid=3871&amp;p0=hk0900071" target="_blank" rel="noopener">pravo.by</a></div>
+                      </div>
+                      <p>Наниматель уменьшит подоходный налог с ближайших зарплат — до <b class="num">260,00 BYN</b> в сумме.</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.wEdu}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>Откуда 260,00</button></div>
+                      <p class="xs faint">Не является юридической консультацией.</p>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.npd}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>С дохода по налогу на профессиональный доход (НПД) вычеты по ст. 209–211 не предоставляются: НПД платится по своей ставке — 10%, а с дохода от организаций и ИП свыше 60 000 BYN в год — 20%.</p>
+                      <p>Если у вас одновременно есть зарплата, вычеты применяются к ней. Сейчас в профиле вы наёмный работник — найденные вычеты посчитаны верно.</p>
+                      <div class="row-btns"><a class="btn btn-secondary btn-sm" href="Memory.dc.html">Проверить тип занятости</a></div>
+                      <p class="xs faint">Не является юридической консультацией.</p>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с расчётами из ваших данных и ссылками на законы.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="chat-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="2"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите о вычетах, документах, сроках…">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1600}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { sheet: null, bell: false, read: false, chat: false, msgs: [], steps: [], busy: false, draft: '', toast: null,
+      edu: 'new', way: 'emp', checks: { contract: false, pay: true, birth: false, app: false, first: false },
+      kids: 'shown', q1: null, q2: null,
+      tab: 'edu', eduSum: '2 000', eduInc: '', hCost: '120 000', hSal: '2 500', hNet: false, hOther: '0', kN: 2, kSp: 'none' };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  p(s) { const v = parseFloat(String(s).replace(/[\s ]/g, '').replace(',', '.')); return isFinite(v) ? v : 0; }
+  pl(n, w) { const a = Math.abs(n) % 100; const b = a % 10; if (a > 10 && a < 20) return w[2]; if (b > 1 && b < 5) return w[1]; if (b === 1) return w[0]; return w[2]; }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('нанимател') || s.includes('как получить') || s.includes('заявлен')) kind = 'emp';
+    else if (s.includes('нпд') || s.includes('профессиональн') || s.includes('самозанят')) kind = 'npd';
+    const plan = {
+      emp: ['Смотрю найденные вычеты…', 'Открываю ст. 210 НК…', 'Собираю список документов…'],
+      npd: ['Смотрю ваш профиль…', 'Ищу нормы о налоге на профессиональный доход…'],
+      generic: ['Разбираю вопрос…']
+    }[kind];
+    this.setState({ msgs: this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        if (i < plan.length - 1) { this.setState({ steps: plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i })) }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  calc() {
+    const st = this.state; const f = (n) => this.f(n);
+    const eduSum = this.p(st.eduSum); const incRaw = String(st.eduInc).trim(); const inc = incRaw ? this.p(incRaw) : null;
+    const eduBase = inc !== null ? Math.min(eduSum, inc) : eduSum;
+    const eduRefund = eduBase * 0.13; const eduCarry = inc !== null && inc < eduSum ? eduSum - inc : 0;
+    const hCost = this.p(st.hCost); const hSal = this.p(st.hSal); const hOther = this.p(st.hOther);
+    const gross = st.hNet ? hSal / 0.86 : hSal; const base = Math.max(gross - hOther, 0);
+    const months = base > 0 ? hCost / base : 0; const mR = Math.round(months);
+    const kN = st.kN; const per = (kN >= 2 || (kN >= 1 && st.kSp !== 'none')) ? 120 : (kN === 1 ? 63 : 0);
+    const kDed = per * kN; const kMonth = kDed * 0.13;
+    return { eduSum, inc, eduBase, eduRefund, eduCarry, hCost, hSal, hOther, gross, base, months, mR, hTotal: hCost * 0.13, hMonthly: base * 0.13, kN, per, kDed, kMonth };
+  }
+  why(key) {
+    const f = (n) => this.f(n); const st = this.state;
+    if (key === 'edu') return { label: 'Социальный вычет на обучение', value: '260,00', unit: 'BYN', period: 'Налоговый период: 2026 год', totalLabel: 'Можно вернуть',
+      rows: [{ l: 'Оплата обучения — БГУ, 12.09.2026', v: '2 000,00' }, { l: 'На столько уменьшится облагаемый доход', v: '2 000,00' }, { l: 'Ставка подоходного налога', v: '× 13%' }],
+      hasLaw: true, lawHead: 'НК РБ (Особенная часть), ст. 210, п. 1, пп. 1.1',
+      lawText: '«…в сумме, уплаченной в течение налогового периода плательщиком за своё обучение, обучение близких родственников, опекаемых, подопечных в учреждениях образования Республики Беларусь при получении ими первого высшего, первого среднего специального или первого профессионально-технического образования…»',
+      note: 'Это оценка: начисленный доход за 2026 год неизвестен. Вернуть можно не больше налога, удержанного с вашей зарплаты. Уточните зарплату до вычета налогов — она есть в расчётном листке.',
+      ops: [{ d: '12.09', t: 'Оплата обучения, БГУ', v: '−2 000,00' }] };
+    if (key === 'kids') return { label: 'Стандартный вычет на детей', value: '31,20', unit: 'BYN / мес', period: 'Суммы 2026 года · 2 ребёнка до 18 лет', totalLabel: 'Экономия в месяц',
+      rows: [{ l: 'Вычет на каждого ребёнка при двух и более детях', v: '120,00' }, { l: 'Детей до 18 лет: Максим (17), Алиса (9)', v: '× 2' }, { l: 'Вычет в месяц', v: '240,00' }, { l: 'Ставка подоходного налога', v: '× 13%' }, { l: 'За год: 31,20 × 12', v: '374,40' }],
+      hasLaw: true, lawHead: 'НК РБ (Особенная часть), ст. 209, п. 1, пп. 1.3',
+      lawText: '«…в размере 120 белорусских рублей в месяц на каждого ребёнка до восемнадцати лет и (или) каждого иждивенца плательщикам, имеющим двух и более детей в возрасте до восемнадцати лет или ребёнка-инвалида в возрасте до восемнадцати лет…»',
+      note: 'Предоставляет наниматель по основному месту работы по вашему заявлению. Возраст детей считается на дату: после 14.03.2027 Максим в расчёт не войдёт. Вычет 216 BYN не положен: ваш доход выше 1 308 BYN в месяц (оценка по выпискам).', ops: [] };
+    if (key === 'house') return { label: 'Имущественный вычет на жильё', value: st.q1 === 'yes' && st.q2 === 'yes' ? '479,70' : '0,00', unit: 'BYN', period: 'Оценка за 2026 год', totalLabel: 'Можно вернуть',
+      rows: [{ l: 'Платежи по кредиту в 2026 году: 9 × 410,00', v: '3 690,00' }, { l: 'Ставка подоходного налога', v: '× 13%' }, { l: 'Условие: учёт нуждающихся', v: st.q2 === 'yes' ? 'да' : (st.q2 === 'no' ? 'нет' : 'не указано') }],
+      hasLaw: true, lawHead: 'НК РБ (Особенная часть), ст. 211, п. 1',
+      lawText: '«…в сумме, фактически израсходованной плательщиком и членами его семьи, состоящими на учёте нуждающихся в улучшении жилищных условий, на строительство или приобретение на территории Республики Беларусь жилого дома или квартиры, а также на погашение кредитов, полученных на эти цели, и процентов по ним…»',
+      note: 'Вычет положен только при учёте нуждающихся (или если вы состояли на учёте на момент договора). Суммы, погашенные субсидией господдержки, в вычет не входят.', ops: [{ d: '23.09', t: 'Платёж по кредиту, Беларусбанк', v: '−410,00' }] };
+    if (key === 'calc') {
+      const c = this.calc();
+      if (st.tab === 'edu') return { label: 'Вычет на обучение — ваш расчёт', value: f(c.eduRefund), unit: 'BYN', period: 'Ставки 2026 года', totalLabel: 'Можно вернуть',
+        rows: [{ l: 'Оплата обучения за год', v: f(c.eduSum) }].concat(c.inc !== null ? [{ l: 'Облагаемый доход за год', v: f(c.inc) }, { l: 'Вычет в этом году (меньшее из двух)', v: f(c.eduBase) }] : []).concat([{ l: 'Ставка подоходного налога', v: '× 13%' }]),
+        note: c.eduCarry > 0 ? 'Остаток вычета ' + f(c.eduCarry) + ' перенесётся на следующие годы.' : 'Вернуть можно не больше налога, удержанного за год.', ops: [] };
+      if (st.tab === 'house') return { label: 'Вычет на жильё — ваш расчёт', value: f(c.hTotal), unit: 'BYN', period: st.hNet ? 'Оценка: зарплата указана «на руки»' : 'По начисленной зарплате', totalLabel: 'Сэкономите всего',
+        rows: [{ l: 'Расходы на жильё', v: f(c.hCost) }, { l: 'Ставка подоходного налога', v: '× 13%' }, { l: st.hNet ? 'Начисленная зарплата: ' + f(c.hSal) + ' ÷ 0,86' : 'Начисленная зарплата в месяц', v: f(c.gross) }, { l: 'Минус другие вычеты в месяц', v: c.hOther > 0 ? '−' + f(c.hOther) : '0,00' }, { l: 'Срок: ' + f(c.hCost) + ' ÷ ' + f(c.base), v: c.base > 0 ? '≈ ' + c.mR + ' ' + this.pl(c.mR, ['месяц', 'месяца', 'месяцев']) : '—' }],
+        note: 'Каждый месяц вычет «съедает» облагаемый доход, пока не будет использован полностью. Остаток переносится на следующие годы.', ops: [] };
+      return { label: 'Вычет на детей — ваш расчёт', value: f(c.kMonth), unit: 'BYN / мес', period: 'Суммы 2026 года', totalLabel: 'Экономия в месяц',
+        rows: [{ l: 'Вычет на ребёнка', v: f(c.per) }, { l: 'Детей до 18 лет', v: '× ' + c.kN }, { l: 'Вычет в месяц', v: f(c.kDed) }, { l: 'Ставка подоходного налога', v: '× 13%' }, { l: 'За год', v: f(c.kMonth * 12) }],
+        note: 'При двух и более детях, ребёнке-инвалиде, а также одиноким родителям, вдовам и вдовцам, опекунам — 120 BYN на каждого ребёнка; иначе — 63 BYN.', ops: [] };
+    }
+    return null;
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n);
+    const sh = st.sheet ? this.why(st.sheet) : null;
+    const eduHidden = st.edu === 'dismissed';
+    const checksRaw = [
+      { k: 'contract', t: 'Договор с БГУ на обучение', s: 'Копия: подтверждает, что обучение платное и первое высшее' },
+      { k: 'pay', t: 'Документы об оплате', s: 'Есть в Коште: платёж 12.09.2026 по карте •• 4821', inKosht: true },
+      { k: 'birth', t: 'Свидетельство о рождении Максима', s: 'Подтверждает, что вы платите за близкого родственника' },
+      { k: 'app', t: st.way === 'emp' ? 'Заявление нанимателю' : 'Декларация о доходах за 2026 год', s: st.way === 'emp' ? 'В бухгалтерию ООО «ТехноСофт», в свободной форме' : 'В ИМНС до 31.03.2027 — лично или через личный кабинет' },
+      { k: 'first', t: 'Справка о первом образовании', s: 'Только если попросят — обычно хватает договора' }];
+    const doneCount = checksRaw.filter((c) => st.checks[c.k]).length;
+    const checks = checksRaw.map((c) => ({ ...c, id: 'dx-ch-' + c.k, on: !!st.checks[c.k], inKosht: !!c.inKosht,
+      toggle: () => this.setState({ checks: { ...this.state.checks, [c.k]: !this.state.checks[c.k] } }),
+      dl: () => this.toast('Скачиваю подтверждение оплаты: платёж и чек от 12.09.2026 (PDF)') }));
+    const c = this.calc();
+    const tabs = [['edu', 'Обучение'], ['house', 'Жильё'], ['kids', 'Дети']].map(([k, label]) => ({ label, on: st.tab === k, cls: st.tab === k ? 'on' : '', pick: () => this.setState({ tab: k }) }));
+    const segCls = (on) => on ? 'on' : '';
+    const ansCls = (on) => 'btn btn-sm ' + (on ? 'btn-primary' : 'btn-secondary');
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const sugg = ['Как получить вычет у нанимателя?', 'А если я плательщик НПД?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', emp: m.kind === 'emp', npd: m.kind === 'npd', generic: m.kind === 'generic', wEdu: () => this.setState({ sheet: 'edu' }) }));
+    return {
+      hero: eduHidden ? { eyebrow: 'Кошт нашёл 1 вычет', title: 'Можно экономить 31,20 BYN в месяц на детях', sub: 'Это 374,40 BYN в год. Нашёл по вашей анкете.' }
+        : { eyebrow: 'Кошт нашёл 2 вычета', title: 'Можно вернуть до 260,00 BYN и экономить 31,20 BYN в месяц', sub: 'За обучение — один раз за 2026 год, на детях — 374,40 BYN в год. Нашёл по вашим операциям и анкете.' },
+      edu: { visible: !eduHidden, hidden: eduHidden, isNew: st.edu === 'new', isDone: st.edu === 'done',
+        wayEmp: st.way === 'emp', wayImns: st.way === 'imns', wayEmpCls: 'dx-way' + (st.way === 'emp' ? ' on' : ''), wayImnsCls: 'dx-way' + (st.way === 'imns' ? ' on' : ''),
+        pickEmp: () => this.setState({ way: 'emp' }), pickImns: () => this.setState({ way: 'imns' }),
+        checks, doneCount, pct: doneCount / 5 * 100,
+        markDone: () => { this.setState({ edu: 'done' }); this.toast('Вычет на обучение отмечен как оформленный', () => this.setState({ edu: 'new' })); },
+        markNew: () => this.setState({ edu: 'new' }),
+        dismiss: () => { this.setState({ edu: 'dismissed' }); this.toast('Больше не предлагаю этот вычет', () => this.setState({ edu: 'new' })); } },
+      kids: { isDone: st.kids === 'done', isShown: st.kids !== 'done',
+        markDone: () => { this.setState({ kids: 'done' }); this.toast('Вычет на детей отмечен как оформленный', () => this.setState({ kids: 'shown' })); },
+        markShown: () => this.setState({ kids: 'shown' }) },
+      house: { q1Yes: st.q1 === 'yes', q1No: st.q1 === 'no', q1YesCls: ansCls(st.q1 === 'yes'), q1NoCls: ansCls(st.q1 === 'no'),
+        q2Yes: st.q2 === 'yes', q2No: st.q2 === 'no', q2YesCls: ansCls(st.q2 === 'yes'), q2NoCls: ansCls(st.q2 === 'no'),
+        askQ2: st.q1 === 'yes', resNotLoan: st.q1 === 'no', resNoQueue: st.q1 === 'yes' && st.q2 === 'no', resYes: st.q1 === 'yes' && st.q2 === 'yes',
+        answered: st.q1 !== null,
+        q1SetYes: () => this.setState({ q1: 'yes' }), q1SetNo: () => { this.setState({ q1: 'no', q2: null }); this.toast('Запомнил: кредит в Беларусбанке — не на жильё', () => this.setState({ q1: null })); },
+        q2SetYes: () => { this.setState({ q2: 'yes' }); this.toast('Запомнил: учёт нуждающихся — да. Изменить можно в «Что ассистент знает»', () => this.setState({ q2: null })); },
+        q2SetNo: () => { this.setState({ q2: 'no' }); this.toast('Запомнил: на учёте нуждающихся не состояли', () => this.setState({ q2: null })); },
+        reset: () => this.setState({ q1: null, q2: null }) },
+      calc: { tabs, isEdu: st.tab === 'edu', isHouse: st.tab === 'house', isKids: st.tab === 'kids',
+        eduSum: st.eduSum, eduInc: st.eduInc, onEduSum: (e) => this.setState({ eduSum: e.target.value }), onEduInc: (e) => this.setState({ eduInc: e.target.value }),
+        eduRefund: f(c.eduRefund), eduFormula: f(c.eduBase) + ' × 13% = ' + f(c.eduRefund) + ' BYN', eduHasCarry: c.eduCarry > 0, eduNoInc: c.inc === null,
+        eduCarry: 'Облагаемого дохода меньше суммы оплаты: остаток вычета ' + f(c.eduCarry) + ' перенесётся на следующие годы',
+        hCost: st.hCost, hSal: st.hSal, hOther: st.hOther, onHCost: (e) => this.setState({ hCost: e.target.value }), onHSal: (e) => this.setState({ hSal: e.target.value }), onHOther: (e) => this.setState({ hOther: e.target.value }),
+        hGross: !st.hNet, hNet: st.hNet, hGrossCls: segCls(!st.hNet), hNetCls: segCls(st.hNet), setGross: () => this.setState({ hNet: false }), setNet: () => this.setState({ hNet: true }),
+        hTotal: f(c.hTotal), hMonths: c.base > 0 ? c.mR + ' ' + this.pl(c.mR, ['месяц', 'месяца', 'месяцев']) : '—', hYears: c.base > 0 ? '≈ ' + (c.months / 12).toFixed(1).replace('.', ',') + ' ' + ((c.months / 12) < 5 ? 'года' : 'лет') : 'укажите зарплату',
+        hMonthly: f(c.hMonthly), hIsNet: st.hNet, hGrossVal: f(c.gross),
+        kN: st.kN, kInc: () => this.setState({ kN: Math.min(this.state.kN + 1, 9) }), kDec: () => this.setState({ kN: Math.max(this.state.kN - 1, 0) }),
+        kSp: st.kSp, onKSp: (e) => this.setState({ kSp: e.target.value }),
+        kMonth: f(c.kMonth), kFormula: f(c.per) + ' × ' + c.kN + ' = ' + f(c.kDed) + ' вычета; × 13% = ' + f(c.kMonth), kYear: f(c.kMonth * 12) },
+      w: { edu: () => this.setState({ sheet: 'edu' }), kids: () => this.setState({ sheet: 'kids' }), house: () => this.setState({ sheet: 'house' }), calc: () => this.setState({ sheet: 'calc' }) },
+      sheetOpen: !!sh, sh: sh ? { ...sh, hasLaw: !!sh.hasLaw, hasOps: !!(sh.ops && sh.ops.length) } : { rows: [], ops: [] }, closeSheet: () => this.setState({ sheet: null }),
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

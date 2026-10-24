@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Чеки и документы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+
+/* ===== PAGE: documents (doc-) ===== */
+.doc-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.doc-tile{display:flex;align-items:flex-start;gap:16px;text-align:left;padding:22px 24px;border-radius:16px;border:1.5px dashed var(--line-2);background:#fff;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;color:var(--ink)}
+.doc-tile:hover{border-color:var(--brand);background:#FBFDFC;box-shadow:0 6px 20px rgba(13,56,51,.08)}
+.doc-tile-ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:none}
+.doc-tile-t{display:block;font-size:18px;font-weight:650;letter-spacing:-.01em;margin-bottom:4px}
+.doc-tile-d{display:block;font-size:14px;color:var(--ink-2);line-height:1.45}
+.doc-tile-n{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12.5px;color:var(--ink-3)}
+.doc-proc{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;align-items:start}
+.doc-paper{position:relative;background:#fff;border:1px solid var(--line);border-radius:6px;box-shadow:0 10px 24px rgba(13,30,27,.10);padding:16px 14px 18px;font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:11px;line-height:1.55;color:#2B2F2E;overflow:hidden}
+.doc-paper-h{text-align:center;font-weight:700;font-size:12px;letter-spacing:.04em}
+.doc-paper-sep{border-top:1px dashed #B9C1BD;margin:7px 0}
+.doc-paper-l{display:flex;justify-content:space-between;gap:8px}
+.doc-paper-l span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-qr{width:58px;height:58px;margin:10px auto 0;background:repeating-conic-gradient(#2B2F2E 0 25%,#fff 0 50%) 0 0/9px 9px;border:3px solid #2B2F2E;border-radius:2px}
+.doc-scanline{position:absolute;left:0;right:0;height:3px;background:var(--brand);box-shadow:0 0 14px 3px rgba(17,86,77,.45);animation:docScan 1.3s ease-in-out infinite alternate}
+@keyframes docScan{from{top:6%}to{top:92%}}
+.doc-tag{position:absolute;top:8px;left:8px;font-family:'Onest',system-ui,sans-serif;font-size:11px;font-weight:600;color:var(--ink-2);background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+.doc-steps{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13.5px;color:var(--ink-3)}
+.doc-steps > div{display:flex;align-items:center;gap:7px}
+.doc-steps .on{color:var(--ink);font-weight:600}
+.doc-steps .done{color:var(--income)}
+.doc-pend{width:14px;height:14px;border-radius:50%;border:2px solid var(--line-2);flex:none}
+.doc-lines{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.doc-line{display:grid;grid-template-columns:28px minmax(0,1fr) 150px 24px;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:14px;animation:rise .25s ease}
+.doc-line:last-child{border-bottom:0}
+.doc-line.bad{background:var(--warn-soft)}
+.doc-recheck{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--warn-soft);color:var(--warn);font-size:13.5px;font-weight:600;border-bottom:1px solid #F3D3B0;animation:rise .2s ease}
+.doc-total{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;background:var(--surface-2);font-weight:650;font-size:14px;animation:rise .25s ease}
+.doc-okbadge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;background:var(--income-soft);color:var(--income);font-weight:700;font-size:15px;animation:docPop .4s cubic-bezier(.2,1.4,.4,1)}
+@keyframes docPop{from{transform:scale(.8);opacity:0}to{transform:none;opacity:1}}
+.doc-cats{display:flex;flex-wrap:wrap;gap:8px}
+.doc-catchip{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 8px;border-radius:99px;border:1px solid var(--line);background:#fff;font-size:13.5px}
+.doc-dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.doc-note{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px}
+.doc-prog{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.doc-prog span{display:block;height:100%;background:var(--brand);border-radius:99px;transition:width .5s ease}
+.doc-pv{border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+.doc-pv-r{display:grid;grid-template-columns:62px minmax(220px,1.4fr) minmax(150px,1fr) minmax(150px,1fr) 96px 92px;gap:10px;align-items:center;padding:9px 12px;border-bottom:1px solid var(--line);font-size:13.5px;min-width:820px}
+.doc-pv-r:last-child{border-bottom:0}
+.doc-pv-h{background:var(--surface-2);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.doc-raw{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-disp{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:14px 16px;border-radius:12px;background:var(--brand-soft);border:1px solid var(--brand-soft-2)}
+.doc-map{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2);animation:rise .2s ease}
+.doc-list{display:flex;flex-direction:column}
+.doc-rrow{display:grid;grid-template-columns:40px minmax(0,1.6fr) minmax(120px,.8fr) 110px minmax(200px,1.2fr) 20px;gap:14px;align-items:center;padding:12px 16px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;cursor:pointer;width:100%;color:var(--ink);font-size:14px}
+.doc-rrow:hover{background:#F8FAF9}
+.doc-rrow:last-child{border-bottom:0}
+.doc-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+.doc-b{display:flex;flex-wrap:wrap;gap:6px}
+.doc-irow{display:grid;grid-template-columns:92px minmax(170px,1.3fr) minmax(140px,1fr) 96px minmax(150px,1fr) minmax(130px,.9fr) 120px;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);font-size:13.5px;min-width:940px}
+.doc-file{display:inline-flex;align-items:center;gap:8px;max-width:100%;border:0;background:none;padding:4px 0;cursor:pointer;color:var(--brand);font-weight:600;font-size:13.5px;text-align:left}
+.doc-file span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-file:hover span{text-decoration:underline}
+.doc-line-wait{background:#FAFBFA}
+.doc-how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.doc-how > div{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+.doc-how-n{width:28px;height:28px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-weight:700;font-size:13.5px;display:grid;place-items:center;flex:none}
+.doc-irow:last-child{border-bottom:0}
+.doc-ihead{background:var(--surface-2);font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.doc-sheet{width:min(640px,100%)}
+.doc-pos{display:grid;grid-template-columns:24px minmax(0,1fr) 128px 74px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.doc-pos.bad{background:var(--warn-soft);margin:0 -10px;padding:8px 10px;border-radius:8px;border-bottom-color:transparent}
+.doc-pos-c{grid-column:2 / -1;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);margin-top:-2px}
+.doc-fix{display:flex;flex-direction:column;gap:12px;padding:14px;border:1px solid #F3D3B0;background:#FFFAF4;border-radius:12px;animation:rise .2s ease}
+.doc-fix-r{display:grid;grid-template-columns:minmax(0,1fr) 120px minmax(150px,auto);gap:10px;align-items:center;font-size:13.5px}
+.doc-mns{display:flex;flex-direction:column;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:12px}
+.doc-copy{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 10px 8px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;font-size:13px;overflow-wrap:anywhere}
+.doc-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.doc-err{display:flex;gap:16px;align-items:flex-start;padding:18px 20px;border-radius:14px;background:var(--danger-soft);border:1px solid #F4C9C5}
+.doc-tips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.doc-tip{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);font-size:14px}
+.bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px);animation:rise .16s ease}
+.nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.nt.unread{background:#F6FAF8}
+.nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.steps div{display:flex;align-items:center;gap:8px}
+.chat-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.op-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px}
+@media (max-width:1000px){.doc-proc{grid-template-columns:minmax(0,1fr)}.doc-proc > .doc-paper{max-width:260px}.doc-tips,.doc-how{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.doc-tiles,.doc-map{grid-template-columns:minmax(0,1fr)}.doc-rrow{grid-template-columns:40px minmax(0,1fr) auto;row-gap:8px}.doc-rrow > span:nth-child(3),.doc-rrow > svg:last-child{display:none}.doc-rrow > .doc-b{grid-column:2 / -1}.doc-fix-r{grid-template-columns:minmax(0,1fr) 110px}.doc-fix-r > span{grid-column:1 / -1}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a class="on" href="Documents.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a href="Recurring.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Чеки и документы</h1>
+      <p class="small muted">Фото чеков и выписки из банка — Кошт разберёт их сам и не задвоит покупки</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <section class="doc-tiles" aria-label="Загрузка">
+      <button class="doc-tile" onClick="{{startScan}}">
+        <span class="doc-tile-ic" style="background: var(--brand); color: #fff" aria-hidden="true"><svg class="ic ic-l"><use href="#i-camera"></use></svg></span>
+        <span>
+          <span class="doc-tile-t">Сканировать чек</span>
+          <span class="doc-tile-d">Сфотографируйте чек или перетащите фото сюда. Можно несколько сразу — JPG, PNG, HEIC.</span>
+          <span class="doc-tile-n"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check-c"></use></svg>Проверю каждую строку и разложу по категориям</span>
+        </span>
+      </button>
+      <button class="doc-tile" onClick="{{startStmt}}">
+        <span class="doc-tile-ic" style="background: var(--brand-soft); color: var(--brand)" aria-hidden="true"><svg class="ic ic-l"><use href="#i-upload"></use></svg></span>
+        <span>
+          <span class="doc-tile-t">Загрузить выписку</span>
+          <span class="doc-tile-d">PDF, Excel или CSV из интернет-банкинга любого банка. Перед импортом покажу, что нашёл.</span>
+          <span class="doc-tile-n"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Операции, которые уже были, пропущу сам</span>
+        </span>
+      </button>
+    </section>
+
+    <sc-if value="{{isError}}" hint-placeholder-val="{{false}}">
+      <section class="doc-err" role="alert">
+        <span class="doc-tile-ic" style="width: 44px; height: 44px; background: #fff; color: var(--danger)" aria-hidden="true"><svg class="ic"><use href="#i-alert"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 8px; flex: 1">
+          <h2 class="card-t" style="font-size: 17px">Не удалось разобрать выписку statement_09.xls</h2>
+          <p class="small">Что случилось: в файле не нашлось колонки с суммами — похоже, это отчёт другого вида. Ничего не импортировано, ваши данные не изменились.</p>
+          <p class="small"><b>Что сделать:</b> скачайте в интернет-банкинге выписку в PDF или CSV — или укажите колонки вручную.</p>
+          <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{startStmt}}">Указать колонки</button><button class="btn btn-secondary btn-sm" onClick="{{startStmt}}">Загрузить другой файл</button></div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{scanVisible}}" hint-placeholder-val="{{false}}">
+      <section class="card" aria-live="polite" aria-labelledby="scan-t">
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px">
+          <div><span class="eyebrow">Новый чек · gippo_18-10.heic</span><h2 id="scan-t" class="card-t" style="margin-top: 2px; font-size: 18px">{{scanTitle}}</h2></div>
+          <div class="doc-steps" aria-label="Этапы обработки">
+            <sc-for list="{{scanSteps}}" as="s" hint-placeholder-count="4">
+              <div class="{{s.cls}}">
+                <sc-if value="{{s.isDone}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.isOn}}" hint-placeholder-val="{{false}}"><span class="spin"></span></sc-if>
+                <sc-if value="{{s.isWait}}" hint-placeholder-val="{{true}}"><span class="doc-pend"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="doc-proc">
+          <div class="doc-paper" aria-hidden="true">
+            <span class="doc-tag">Фото чека</span>
+            <sc-if value="{{scanReading}}" hint-placeholder-val="{{false}}"><div class="doc-scanline"></div></sc-if>
+            <div class="doc-paper-h" style="margin-top: 24px">ГИППО</div>
+            <div style="text-align: center">г. Минск, ул. Мстиславца, 8</div>
+            <div class="doc-paper-sep"></div>
+            <div class="doc-paper-l"><span>Кофе молотый 250г</span><span>9,89</span></div>
+            <div class="doc-paper-l"><span>Сок яблочн 1л 3x2,49</span><span>7,47</span></div>
+            <div class="doc-paper-l"><span>Макароны 500г 2x1,65</span><span>3,30</span></div>
+            <div class="doc-paper-l"><span>Масло слив 82,5%</span><span>4,59</span></div>
+            <div class="doc-paper-l"><span>Шампунь 400мл</span><span>8,95</span></div>
+            <div class="doc-paper-l"><span>Пакет</span><span>0,25</span></div>
+            <div class="doc-paper-sep"></div>
+            <div class="doc-paper-l" style="font-weight: 700; font-size: 12px"><span>ИТОГ</span><span>34,45</span></div>
+            <div class="doc-paper-l"><span>Карта **4821</span><span>34,45</span></div>
+            <div>18.10.2026 19:05</div>
+            <div class="doc-qr"></div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+            <sc-if value="{{scanReading}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <p class="small muted row" style="gap: 8px"><span class="spin"></span>Читаю чек: магазин, дату, позиции, итог и QR-код…</p>
+                <div class="sk" style="height: 38px"></div><div class="sk" style="height: 38px; width: 92%"></div><div class="sk" style="height: 38px; width: 96%"></div><div class="sk" style="height: 38px; width: 88%"></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{scanLinesOn}}" hint-placeholder-val="{{false}}">
+              <div class="doc-lines" role="list" aria-label="Проверка строк чека">
+                <sc-for list="{{scanLines}}" as="l" hint-placeholder-count="3">
+                  <div>
+                    <sc-if value="{{l.shown}}" hint-placeholder-val="{{true}}">
+                      <div class="{{l.cls}}" role="listitem">
+                        <span class="num faint">{{l.n}}</span>
+                        <span style="min-width: 0"><span class="strong">{{l.name}}</span><sc-if value="{{l.fixed}}" hint-placeholder-val="{{false}}"><span class="xs" style="display: block; color: var(--warn)">исправлено при перепроверке</span></sc-if></span>
+                        <span class="num" style="text-align: right">{{l.calc}}</span>
+                        <span style="color: {{l.icColor}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{l.icon}}"></use></svg><span class="doc-sr">{{l.sr}}</span></span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{l.recheck}}" hint-placeholder-val="{{false}}"><div class="doc-recheck" role="status"><span class="spin" style="border-color: #F3D3B0; border-top-color: var(--warn)"></span>Перепроверка строки 2: 3 × 2,49 ≠ 8,47 — отправляю фото модели ещё раз…</div></sc-if>
+                    <sc-if value="{{l.pending}}" hint-placeholder-val="{{false}}"><div class="doc-line doc-line-wait" aria-hidden="true"><span class="num faint">{{l.n}}</span><span class="sk" style="height: 12px; width: 55%"></span><span class="sk" style="height: 12px; width: 70%; margin-left: auto"></span><span></span></div></sc-if>
+                  </div>
+                </sc-for>
+                <sc-if value="{{scanTotal}}" hint-placeholder-val="{{false}}"><div class="doc-total"><span>Сумма строк 34,45 = итог 34,45</span><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg></div></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{scanDone}}" hint-placeholder-val="{{false}}">
+              <div style="display: flex; flex-direction: column; gap: 14px">
+                <div class="row" style="flex-wrap: wrap; gap: 12px"><span class="doc-okbadge"><svg class="ic" aria-hidden="true"><use href="#i-check-c"></use></svg>Сумма сходится 100%</span><span class="small muted">Гиппо · 18.10.2026, 19:05 · 6 позиций · <b class="num" style="color: var(--ink)">34,45 BYN</b></span></div>
+                <div class="doc-cats">
+                  <span class="doc-catchip"><span class="doc-dot" style="background: #1F6F63"></span>Продукты <b class="num">25,25</b></span>
+                  <span class="doc-catchip"><span class="doc-dot" style="background: #A0668C"></span>Красота и гигиена <b class="num">8,95</b></span>
+                  <span class="doc-catchip"><span class="doc-dot" style="background: #6F8F8A"></span>Бытовая химия и хозтовары <b class="num">0,25</b></span>
+                </div>
+                <div class="doc-note"><svg class="ic" aria-hidden="true" style="color: var(--ink-2)"><use href="#i-clock"></use></svg><span>Оплата картой •• 4821 — платёж в выписке пока не найден: операция «ожидает выписки» и не меняет остаток. Когда загрузите выписку, я сам свяжу чек с платежом — покупка не задвоится.</span></div>
+                <sc-if value="{{scanUnsaved}}" hint-placeholder-val="{{true}}">
+                  <div class="row-btns">
+                    <button class="btn btn-primary" onClick="{{scanOk}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Верно</button>
+                    <button class="btn btn-secondary" onClick="{{openGippo}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Изменить</button>
+                    <button class="btn btn-ghost" onClick="{{scanCancel}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Отменить</button>
+                  </div>
+                </sc-if>
+                <sc-if value="{{scanSaved}}" hint-placeholder-val="{{false}}">
+                  <div class="row" style="flex-wrap: wrap; gap: 10px"><span class="badge b-ok"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Сохранено</span><span class="small muted">Чек появился в списке ниже.</span><button class="btn btn-ghost btn-sm" onClick="{{hideScan}}">Скрыть</button></div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{scanDup}}" hint-placeholder-val="{{false}}">
+      <section class="card row" style="gap: 14px; align-items: flex-start" role="status">
+        <span class="doc-tile-ic" style="width: 44px; height: 44px; background: var(--brand-soft); color: var(--brand)" aria-hidden="true"><svg class="ic"><use href="#i-copy"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 8px; flex: 1">
+          <h2 class="card-t">Этот чек уже загружен: Гиппо от 18.10, 34,45 BYN</h2>
+          <p class="small muted">Узнал его по QR-коду (уникальный идентификатор чека 9B10E4F7…). Повторно не сохраняю — так покупка не задвоится.</p>
+          <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{openGippo}}">Открыть чек</button><button class="btn btn-ghost btn-sm" onClick="{{hideScan}}">Понятно</button></div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{stmtParsing}}" hint-placeholder-val="{{false}}">
+      <section class="card" aria-live="polite" style="display: flex; flex-direction: column; gap: 12px">
+        <div class="row" style="justify-content: space-between; flex-wrap: wrap"><div class="row"><span class="doc-ic" aria-hidden="true"><svg class="ic"><use href="#i-file"></use></svg></span><div><div class="strong">prior_0937_oct.pdf</div><div class="xs muted">412 КБ · загружено только что</div></div></div><span class="num strong">{{pctText}}</span></div>
+        <div class="doc-prog" role="progressbar" aria-label="Разбор выписки" aria-valuenow="{{pct}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{pct}}%"></span></div>
+        <p class="small muted row" style="gap: 8px"><span class="spin"></span>{{pmsg}}</p>
+        <p class="xs faint">Можно уйти с этой страницы — разбор идёт в фоне, результат придёт уведомлением.</p>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{stmtPreview}}" hint-placeholder-val="{{false}}">
+      <section class="card" aria-labelledby="pv-t" style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 8px">
+          <span class="eyebrow">Предпросмотр импорта · prior_0937_oct.pdf</span>
+          <h2 id="pv-t" style="font-size: 20px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.3">Нашёл 23 операции по карте Приорбанк •• 0937 за 01.10–20.10. 6 из них уже были загружены.</h2>
+          <div class="row-btns"><span class="badge b-brand">Новых: 17</span><span class="badge b-neutral">Уже были: 6</span><span class="badge b-neutral">Ошибок: 0</span><span class="badge b-neutral">Способ разбора: универсальный</span></div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom: 8px">Первые 5 строк — всё верно?</div>
+          <div class="doc-pv" role="table" aria-label="Первые строки выписки">
+            <div class="doc-pv-r doc-pv-h" role="row"><span role="columnheader">Дата</span><span role="columnheader">В выписке</span><span role="columnheader">Как запишу</span><span role="columnheader">Категория</span><span role="columnheader" style="text-align: right">Сумма</span><span role="columnheader">Статус</span></div>
+            <sc-for list="{{pvRows}}" as="p" hint-placeholder-count="5">
+              <div class="doc-pv-r" role="row">
+                <span role="cell" class="num">{{p.d}}</span>
+                <span role="cell" class="doc-raw" title="{{p.raw}}">{{p.raw}}</span>
+                <span role="cell" class="strong">{{p.name}}</span>
+                <span role="cell" class="row" style="gap: 6px"><span class="doc-dot" style="background: {{p.color}}"></span>{{p.cat}}</span>
+                <span role="cell" class="num strong" style="text-align: right; color: {{p.amtColor}}">{{p.amt}}</span>
+                <span role="cell"><span class="{{p.stCls}}">{{p.st}}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div class="doc-disp" role="group" aria-labelledby="disp-t">
+          <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-ops"></use></svg>
+          <div style="flex: 1 1 360px; min-width: 0">
+            <div id="disp-t" class="strong">17.10 · Перевод 150,00 на карту •• 7714 — это ваш счёт или перевод другому человеку?</div>
+            <div class="small muted">{{dispNote}}</div>
+          </div>
+          <sc-if value="{{dispOpen}}" hint-placeholder-val="{{true}}">
+            <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{dispMine}}">Мой счёт</button><button class="btn btn-secondary btn-sm" onClick="{{dispOther}}">Другому человеку</button></div>
+          </sc-if>
+          <sc-if value="{{dispDone}}" hint-placeholder-val="{{false}}"><button class="btn btn-ghost btn-sm" onClick="{{dispReset}}">Изменить ответ</button></sc-if>
+        </div>
+        <sc-if value="{{colsOpen}}" hint-placeholder-val="{{false}}">
+          <div class="doc-map" role="group" aria-label="Сопоставление колонок">
+            <div class="field"><label for="m-date">Дата операции</label><select id="m-date" class="input"><option>Колонка A — «Дата операции»</option><option>Колонка B — «Дата обработки»</option></select></div>
+            <div class="field"><label for="m-desc">Описание</label><select id="m-desc" class="input"><option>Колонка C — «Описание операции»</option><option>Колонка D — «Место совершения»</option></select></div>
+            <div class="field"><label for="m-sum">Сумма</label><select id="m-sum" class="input"><option>Колонка E — «Сумма в валюте счёта»</option><option>Колонка F — «Сумма в валюте операции»</option></select></div>
+            <div class="field"><label for="m-sign">Знак суммы</label><select id="m-sign" class="input"><option>По знаку «−» в сумме</option><option>По колонке «Тип операции»</option></select></div>
+            <p class="hint" style="grid-column: 1 / -1">Я определил колонки сам. Поменяйте, если что-то не так, — предпросмотр пересчитается.</p>
+          </div>
+        </sc-if>
+        <div class="row-btns">
+          <button class="btn btn-primary" onClick="{{doImport}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-download"></use></svg>Импортировать 17</button>
+          <button class="btn btn-secondary" onClick="{{toggleCols}}">Исправить колонки</button>
+          <button class="btn btn-ghost" onClick="{{cancelStmt}}">Отмена</button>
+          <span class="xs faint" style="margin-left: auto">Исходный файл сохранится — его можно будет открыть из любой операции.</span>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{stmtDone}}" hint-placeholder-val="{{false}}">
+      <section class="card row" style="gap: 16px; align-items: flex-start; flex-wrap: wrap" role="status">
+        <span class="doc-tile-ic" style="width: 44px; height: 44px; background: var(--income-soft); color: var(--income)" aria-hidden="true"><svg class="ic"><use href="#i-check-c"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1 1 400px">
+          <h2 class="card-t" style="font-size: 17px">Импортировано 17 операций, 6 пропущено как дубли, 1 чек привязан</h2>
+          <p class="small muted">Чек из Короны (19.10, 132,80) привязан к платежу по карте •• 0937 — покупка учтена один раз. {{dispSummary}}</p>
+          <div class="row-btns" style="margin-top: 4px"><a class="btn btn-secondary btn-sm" href="Operations.dc.html">Открыть операции</a><button class="btn btn-ghost btn-sm" onClick="{{rollNew}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Откатить импорт</button><button class="btn btn-ghost btn-sm" onClick="{{cancelStmt}}">Готово</button></div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+      <section class="card" style="display: flex; flex-direction: column; gap: 18px">
+        <div class="empty" style="padding: 24px 20px 8px">
+          <svg class="ic ic-xl" aria-hidden="true"><use href="#i-receipt"></use></svg>
+          <div class="strong" style="color: var(--ink); font-size: 18px">Здесь появятся ваши чеки и выписки</div>
+          <div class="small" style="max-width: 520px">Начните с любого: сфотографируйте сегодняшний чек или загрузите выписку за прошлый месяц.</div>
+        </div>
+        <div>
+          <div class="lbl" style="margin-bottom: 10px">Как сфотографировать чек, чтобы всё распозналось</div>
+          <div class="doc-tips">
+            <div class="doc-tip"><svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-scan"></use></svg><b>Целиком и ровно</b><span class="muted">Чек полностью в кадре, без сгибов — от названия магазина до итога.</span></div>
+            <div class="doc-tip"><svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-eye"></use></svg><b>При хорошем свете</b><span class="muted">Без бликов и тени от телефона. Мелкий шрифт должен читаться.</span></div>
+            <div class="doc-tip"><svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-shield-ok"></use></svg><b>С QR-кодом</b><span class="muted">По нему я узнаю чек и не загружу его второй раз.</span></div>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+
+    <sc-if value="{{showLists}}" hint-placeholder-val="{{true}}">
+      <section class="card" style="padding: 0; overflow: hidden">
+        <div class="tabs" role="tablist" aria-label="Документы" style="padding: 0 12px">
+          <button role="tab" class="{{tabRcptCls}}" aria-selected="{{tabRcpt}}" onClick="{{showRcpt}}">Чеки ({{rcptCount}})</button>
+          <button role="tab" class="{{tabImpCls}}" aria-selected="{{tabImp}}" onClick="{{showImp}}">Выписки ({{impCount}})</button>
+        </div>
+        <sc-if value="{{tabRcpt}}" hint-placeholder-val="{{true}}">
+          <div class="doc-list" role="tabpanel" aria-label="Чеки">
+            <sc-for list="{{receipts}}" as="r" hint-placeholder-count="4">
+              <button class="doc-rrow" onClick="{{r.open}}" aria-label="{{r.aria}}">
+                <span class="doc-ic" aria-hidden="true"><svg class="ic"><use href="#i-receipt"></use></svg></span>
+                <span style="min-width: 0"><span class="strong" style="display: block">{{r.store}}</span><span class="xs muted num">{{r.when}} · {{r.items}}</span></span>
+                <span class="small muted">{{r.pay}}</span>
+                <span class="num strong" style="text-align: right">{{r.totalText}}</span>
+                <span class="doc-b">
+                  <span class="{{r.stCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{r.stIcon}}"></use></svg>{{r.stText}}</span>
+                  <sc-if value="{{r.isNew}}" hint-placeholder-val="{{false}}"><span class="badge b-brand">Новый</span></sc-if>
+                  <sc-if value="{{r.hasWarranty}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield"></use></svg>Гарантия до 03.05.2028</span></sc-if>
+                </span>
+                <svg class="ic ic-s" aria-hidden="true" style="color: var(--ink-3)"><use href="#i-chev-r"></use></svg>
+              </button>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{tabImp}}" hint-placeholder-val="{{false}}">
+          <div role="tabpanel" aria-label="Выписки" style="overflow-x: auto">
+            <div class="doc-irow doc-ihead"><span>Загружена</span><span>Файл</span><span>Банк и счёт</span><span>Период</span><span>Способ разбора</span><span>Операции</span><span><span class="doc-sr">Действия</span></span></div>
+            <sc-for list="{{imports}}" as="im" hint-placeholder-count="3">
+              <div class="doc-irow">
+                <span class="num">{{im.date}}</span>
+                <span style="min-width: 0"><button class="doc-file" onClick="{{im.openFile}}" title="Открыть исходный файл"><svg class="ic ic-s" aria-hidden="true"><use href="#i-file"></use></svg><span>{{im.file}}</span></button></span>
+                <span>{{im.bank}}</span>
+                <span class="num">{{im.per}}</span>
+                <span><span style="display: block">{{im.how}}</span><span class="xs muted">{{im.fmt}}</span></span>
+                <span><span class="num" style="display: block"><b>{{im.nw}} новых</b> из {{im.found}}</span><span class="xs muted num">{{im.rest}}</span></span>
+                <span style="display: flex; justify-content: flex-end">
+                  <sc-if value="{{im.isRolled}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Откачен</span></sc-if>
+                  <sc-if value="{{im.canRoll}}" hint-placeholder-val="{{true}}"><button class="btn btn-secondary btn-sm" onClick="{{im.roll}}" aria-label="{{im.rollLabel}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Откатить</button></sc-if>
+                </span>
+              </div>
+            </sc-for>
+            <p class="xs faint" style="padding: 12px 16px">Точный разборщик — для банков, чей формат проверен на реальном образце. Универсальный разбор подходит для выписки любого банка.</p>
+          </div>
+        </sc-if>
+      </section>
+      <section class="card" aria-labelledby="how-t">
+        <h2 id="how-t" class="card-t" style="margin-bottom: 14px">Как Кошт не задваивает покупки</h2>
+        <div class="doc-how">
+          <div><span class="doc-how-n" aria-hidden="true">1</span><span><b>Чек</b> даёт позиции и категории. Если оплачен картой, а выписки ещё нет, трата учитывается сразу, но остаток карты не меняется.</span></div>
+          <div><span class="doc-how-n" aria-hidden="true">2</span><span><b>Выписка</b> даёт точную сумму и дату платежа. Операции, которые уже были загружены, пропускаются.</span></div>
+          <div><span class="doc-how-n" aria-hidden="true">3</span><span><b>Чек + платёж</b> с той же суммой и магазином в пределах двух дней — это одна покупка. Если не уверен — спрошу вас.</span></div>
+        </div>
+      </section>
+    </sc-if>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet doc-sheet" role="dialog" aria-label="Чек">
+      <div class="sheet-h">
+        <span class="doc-ic" aria-hidden="true" style="width: 34px; height: 34px"><svg class="ic ic-s"><use href="#i-receipt"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><h2 class="card-t">{{rs.store}}</h2><div class="xs muted">{{rs.addr}}</div></div>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div style="display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 18px; align-items: start">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+          <div class="doc-paper" style="font-size: 9.5px; padding: 12px 10px 14px">
+            <span class="doc-tag">Фото чека</span>
+            <div class="doc-paper-h" style="margin-top: 22px; font-size: 11px">{{rs.storeUp}}</div>
+            <div class="doc-paper-sep"></div>
+            <sc-for list="{{rs.paper}}" as="pl" hint-placeholder-count="5"><div class="doc-paper-l"><span>{{pl.n}}</span><span>{{pl.s}}</span></div></sc-for>
+            <div class="doc-paper-sep"></div>
+            <div class="doc-paper-l" style="font-weight: 700"><span>ИТОГ</span><span>{{rs.totalPlain}}</span></div>
+            <div class="doc-qr" style="width: 44px; height: 44px"></div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onClick="{{openPhoto}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-image"></use></svg>Открыть фото</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0">
+            <div class="big num">{{rs.totalText}}<span class="cur">BYN</span></div>
+            <div class="small muted num">{{rs.date}}, {{rs.time}} · {{rs.pay}}</div>
+            <div><span class="{{rs.stCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{rs.stIcon}}"></use></svg>{{rs.stText}}</span></div>
+            <div style="margin-top: 6px">
+              <div class="lbl" style="margin-bottom: 4px">По категориям</div>
+              <sc-for list="{{rs.split}}" as="sp" hint-placeholder-count="2"><div class="row small" style="justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line)"><span class="row" style="gap: 8px; min-width: 0"><span class="doc-dot" style="background: {{sp.color}}"></span>{{sp.c}}</span><b class="num">{{sp.v}}</b></div></sc-for>
+            </div>
+          </div>
+        </div>
+
+        <sc-if value="{{rs.isOk}}" hint-placeholder-val="{{true}}">
+          <div class="doc-note" style="background: var(--income-soft); border-color: #C9E6D5"><svg class="ic" aria-hidden="true" style="color: var(--income)"><use href="#i-check-c"></use></svg><span><b>Сумма сходится 100%.</b> Каждая строка: количество × цена − скидка = сумма строки; сумма строк = итог чека.</span></div>
+        </sc-if>
+        <sc-if value="{{rs.isBad}}" hint-placeholder-val="{{false}}">
+          <div class="doc-note" style="background: var(--warn-soft); border-color: #F3D3B0; flex-direction: column">
+            <div class="row" style="gap: 8px; color: var(--warn); font-weight: 600"><svg class="ic" aria-hidden="true"><use href="#i-warn"></use></svg>Требует проверки: строки 5 и 9</div>
+            <span>После двух перепроверок строки не сошлись. Чек учтён по итогу 132,80, а нераспознанный остаток <b class="num">1,37</b> отнесён к «Прочему». Поправьте строки по фото — и статус пересчитается.</span>
+            <sc-if value="{{rs.fixClosed}}" hint-placeholder-val="{{true}}"><button class="btn btn-secondary btn-sm" style="align-self: flex-start" onClick="{{openFix}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Исправить строки</button></sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{rs.fixOpen}}" hint-placeholder-val="{{false}}">
+          <div class="doc-fix" role="group" aria-label="Исправление строк">
+            <div class="doc-fix-r">
+              <label for="k5"><b>Строка 5</b> · Кофе в зёрнах 1 кг<span class="xs muted" style="display: block">На фото: 1 × 32,90. Укажите сумму строки</span></label>
+              <input id="k5" class="input num" inputmode="decimal" value="{{k5}}" onChange="{{onK5}}">
+              <span class="row small" style="gap: 6px; color: {{fx.c5}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{fx.i5}}"></use></svg>{{fx.t5}}</span>
+            </div>
+            <div class="doc-fix-r">
+              <label for="k9"><b>Строка 9</b> · Сок апельсиновый 1 л<span class="xs muted" style="display: block">На фото: 2 шт., сумма 6,38. Укажите цену</span></label>
+              <input id="k9" class="input num" inputmode="decimal" value="{{k9}}" onChange="{{onK9}}">
+              <span class="row small" style="gap: 6px; color: {{fx.c9}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{fx.i9}}"></use></svg>{{fx.t9}}</span>
+            </div>
+            <div class="row" style="justify-content: space-between; flex-wrap: wrap; gap: 10px"><span class="small strong" style="color: {{fx.cT}}">{{fx.tT}}</span><div class="row-btns"><button class="btn btn-ghost btn-sm" onClick="{{closeFix}}">Отмена</button><button class="btn btn-primary btn-sm" onClick="{{saveFix}}">Сохранить</button></div></div>
+          </div>
+        </sc-if>
+
+        <div>
+          <div class="row" style="justify-content: space-between; margin-bottom: 4px"><span class="lbl">Позиции ({{rs.count}})</span><span class="xs muted">Категория — по названию товара</span></div>
+          <sc-for list="{{rs.lines}}" as="ln" hint-placeholder-count="5">
+            <div class="{{ln.cls}}">
+              <span class="num faint">{{ln.i}}</span>
+              <span class="strong" style="min-width: 0">{{ln.n}}</span>
+              <span class="num muted" style="text-align: right">{{ln.qp}}</span>
+              <span class="num strong" style="text-align: right">{{ln.s}}</span>
+              <span class="doc-pos-c"><span class="doc-dot" style="background: {{ln.color}}"></span>{{ln.cat}}<sc-if value="{{ln.isBad}}" hint-placeholder-val="{{false}}"><span class="badge b-warn" style="margin-left: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg>{{ln.badText}}</span></sc-if><sc-if value="{{ln.isWarranty}}" hint-placeholder-val="{{false}}"><span class="badge b-neutral" style="margin-left: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield"></use></svg>гарантия 2 года — событие в календаре</span></sc-if></span>
+            </div>
+          </sc-for>
+        </div>
+
+        <a class="op-card" href="Operations.dc.html" style="text-decoration: none; color: var(--ink)"><svg class="ic" aria-hidden="true" style="color: var(--ink-2)"><use href="#i-link"></use></svg><div class="small" style="flex: 1"><div class="xs muted">Операция</div><div class="strong">{{rs.op}}</div></div><svg class="ic ic-s" aria-hidden="true"><use href="#i-chev-r"></use></svg></a>
+
+        <div>
+          <div class="lbl" style="margin-bottom: 4px">История</div>
+          <sc-for list="{{rs.hist}}" as="h" hint-placeholder-count="2"><div class="row small" style="gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--line); align-items: flex-start"><span class="num faint" style="white-space: nowrap">{{h.d}}</span><span>{{h.t}}</span></div></sc-for>
+        </div>
+
+        <div class="doc-mns">
+          <div class="row" style="gap: 8px"><svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-shield-ok"></use></svg><span class="strong">Проверить на сайте МНС</span></div>
+          <p class="small muted">Сервис «Проверка чека» покажет чек, переданный кассой в налоговую. Скопируйте данные и вставьте их на сайте.</p>
+          <div class="field"><span class="lbl">Уникальный идентификатор (УИ)</span><div class="doc-copy"><span>{{rs.ui}}</span><button class="btn btn-ghost btn-sm" onClick="{{copyUi}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>Скопировать</button></div></div>
+          <div class="field"><span class="lbl">Дата чека</span><div class="doc-copy"><span>{{rs.date}}</span><button class="btn btn-ghost btn-sm" onClick="{{copyDate}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-copy"></use></svg>Скопировать</button></div></div>
+          <a class="btn btn-secondary btn-sm" style="align-self: flex-start" href="https://ch.info-center.by/" target="_blank" rel="noopener">Открыть проверку чека<svg class="ic ic-s" aria-hidden="true"><use href="#i-ext"></use></svg></a>
+          <p class="xs faint">Проверку открываете вы — автоматически сайт МНС мы не опрашиваем: он защищён капчей.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{modalRoll}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeModal}}"></div>
+    <section class="modal" role="alertdialog" aria-labelledby="rb-t" aria-describedby="rb-d">
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <span class="doc-tile-ic" style="width: 40px; height: 40px; border-radius: 12px; background: var(--danger-soft); color: var(--danger)" aria-hidden="true"><svg class="ic"><use href="#i-undo"></use></svg></span>
+        <div style="display: flex; flex-direction: column; gap: 4px"><h2 id="rb-t" class="card-t" style="font-size: 18px">{{rb.title}}</h2><p id="rb-d" class="small muted">{{rb.text}}</p></div>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeModal}}">Отмена</button><button class="btn btn-danger" onClick="{{rb.go}}">Откатить импорт</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg>Вижу: {{ctxTab}}</span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="chat-body" aria-live="polite" ref="{{chatRef}}">
+        <div class="msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Помогу разобраться с чеками и выписками: что не сошлось, что не привязано, что уже загружено. Фото чека можно прислать и прямо в чат.</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.korona}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>В чеке из Короны (19.10, 132,80) не сходятся две строки:</p>
+                      <div class="op-card" style="flex-direction: column; align-items: stretch; gap: 6px">
+                        <div class="small"><b>Строка 5</b>, «Кофе в зёрнах»: 1 × 32,90, а распознано <span class="num">31,53</span></div>
+                        <div class="small"><b>Строка 9</b>, «Сок апельсиновый»: 2 × 3,91 ≠ 6,38 — вероятно, цена 3,19</div>
+                      </div>
+                      <p class="small muted">Пока 1,37 BYN отнесены к «Прочему». Сам чек учтён по итогу 132,80 — в расходах ошибки нет.</p>
+                      <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{m.fix}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Исправить строки</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.unlinked}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Без пары один чек: <b>Гиппо, 18.10, 34,45</b> — оплачен картой •• 4821. Выписку Беларусбанка после 17.10 вы ещё не загружали; как загрузите — привяжу сам.</p>
+                      <p class="small muted">Чек из аптеки оплачен наличными — пара ему не нужна, он списан со счёта «Наличные».</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.openG}}">Открыть чек Гиппо</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ по вашим чекам и выпискам.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="chat-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="2"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите о чеках и выписках…">
+        <button class="btn btn-secondary btn-icon" aria-label="Прикрепить фото или файл"><svg class="ic" aria-hidden="true"><use href="#i-clip"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["Данные","Пусто","Ошибка"],"default":"Данные","section":"Состояние экрана"},"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { scan: 'idle', shown: 0, l2: 'bad', total: false, step: 0, scanSaved: false, gippo: false,
+      stmt: 'idle', pct: 0, pmsg: '', disp: null, cols: false, impAdded: false, rolled: {},
+      tab: 'rcpt', sheet: null, kFix: false, k5: '31,53', k9: '3,91', kFixed: false, modal: null, toast: null,
+      chat: false, msgs: [], steps: [], busy: false, draft: '', bell: false, read: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  componentDidUpdate() {
+    const key = this.state.msgs.length + ':' + this.state.busy + ':' + this.state.steps.length;
+    if (this.chatEl && key !== this.chatKey) { this.chatKey = key; this.chatEl.scrollTop = this.chatEl.scrollHeight; }
+  }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  num(v) { return parseFloat(String(v).replace(/\s| /g, '').replace(',', '.')) || 0; }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  colors() {
+    return { 'Продукты': '#1F6F63', 'Красота и гигиена': '#A0668C', 'Бытовая химия и хозтовары': '#6F8F8A', 'Здоровье и аптека': '#C0574A', 'Электроника и техника': '#56708A', 'Кафе, рестораны и доставка': '#B5655A', 'Одежда и обувь': '#8A7F5A', 'Связь, интернет и ТВ': '#5B8C85', 'Проценты и кешбэк': '#2F8A5B', 'Подписки и онлайн-сервисы': '#9C5A86', 'Прочее': '#AEB7B3' };
+  }
+  rc() {
+    const P = 'Продукты', K = 'Красота и гигиена', B = 'Бытовая химия и хозтовары';
+    return {
+      evroopt: { store: 'Евроопт', addr: 'Минск, ул. Сурганова, 57', date: '12.10.2026', time: '14:32', pay: 'Карта •• 4821', total: 47.30, st: 'linked', stText: 'Привязан к платежу 13.10', ui: '4F2A9C01B7E3D58A6C0F1E29', op: 'Платёж по карте •• 4821 от 13.10, −47,30',
+        lines: [['Молоко 3,2% 1 л', '2 × 2,49', 4.98, P], ['Хлеб ржаной', '1 × 1,85', 1.85, P], ['Бананы', '1,236 кг × 4,29', 5.30, P], ['Сыр 200 г', '1 × 6,79', 6.79, P], ['Яйца С1 10 шт', '1 × 3,89', 3.89, P], ['Куриное филе', '0,842 кг × 12,99', 10.94, P], ['Йогурт питьевой', '3 × 1,19', 3.57, P], ['Яблоки', '0,803 кг × 2,79', 2.24, P], ['Средство для посуды', '1 × 3,49', 3.49, B], ['Зубная паста', '1 × 4,25', 4.25, K]],
+        hist: [['12.10 14:40', 'Фото загружено через сайт; распознано 10 позиций'], ['12.10 14:40', 'Арифметика сходится: сумма строк 47,30 = итог'], ['12.10 14:40', 'Оплата картой •• 4821: предварительная операция «ожидает выписки»'], ['18.10 21:15', 'Привязан к платежу по карте •• 4821 от 13.10 из выписки Беларусбанка — покупка учтена один раз']] },
+      gippo: { store: 'Гиппо', addr: 'Минск, ул. Мстиславца, 8', date: '18.10.2026', time: '19:05', pay: 'Карта •• 4821', total: 34.45, st: 'pending', stText: 'Ожидает выписки', ui: '9B10E4F7A2C35D68E01F4A7C', op: 'Предварительная операция на карте •• 4821, −34,45 (остаток не меняет)',
+        lines: [['Кофе молотый 250 г', '1 × 9,89', 9.89, P], ['Сок яблочный 1 л', '3 × 2,49', 7.47, P, 'fixed'], ['Макароны 500 г', '2 × 1,65', 3.30, P], ['Масло сливочное 82,5%', '1 × 4,59', 4.59, P], ['Шампунь 400 мл', '1 × 8,95', 8.95, K], ['Пакет', '1 × 0,25', 0.25, B]],
+        hist: [['18.10 19:05', 'Фото загружено через сайт; распознано 6 позиций'], ['18.10 19:06', 'Строка 2: 3 × 2,49 ≠ 8,47 → перепроверка → 7,47'], ['18.10 19:06', 'Сумма сходится 100% (была перепроверка)'], ['18.10 19:06', 'Платёж в выписке не найден: предварительная операция на карте •• 4821']] },
+      korona: { store: 'Корона', addr: 'Минск, пр. Победителей, 65', date: '19.10.2026', time: '12:47', pay: 'Карта •• 0937', total: 132.80, st: 'check', stText: 'Требует проверки', ui: '71C0D3A9F2B84E6A0C1D5F38', op: 'Платёж по карте •• 0937 от 19.10, −132,80',
+        lines: [['Филе индейки', '1,224 кг × 18,90', 23.13, P], ['Картофель 2,5 кг', '1 × 3,29', 3.29, P], ['Сметана 20%', '1 × 2,15', 2.15, P], ['Огурцы', '0,780 кг × 6,49', 5.06, P], ['Кофе в зёрнах 1 кг', '1 × 32,90', 31.53, P, 'bad5'], ['Шоколад 90 г', '4 × 2,79', 11.16, P], ['Стиральный порошок 3 кг', '1 × 24,90', 24.90, B], ['Влажные салфетки', '1 × 2,39', 2.39, K], ['Сок апельсиновый 1 л', '2 × 3,91', 6.38, P, 'bad9'], ['Хлеб тостовый', '1 × 2,88', 2.88, P], ['Сыр полутвёрдый', '0,486 кг × 23,49', 11.42, P], ['Минеральная вода 1,5 л', '6 × 1,19', 7.14, P]],
+        hist: [['19.10 12:49', 'Фото загружено через сайт; распознано 12 позиций'], ['19.10 12:49', 'Строки 5 и 9 не сходятся → перепроверка (2 попытки)'], ['19.10 12:50', 'Расхождение осталось: статус «Требует проверки», остаток 1,37 → «Прочее»']] },
+      apteka: { store: 'Аптека «Белфармация» №15', addr: 'Минск, ул. Немига, 12', date: '15.10.2026', time: '11:20', pay: 'Наличные', total: 23.45, st: 'ok', stText: 'Сумма сходится', ui: '2E8B47C1D09A3F56B7E2C410', op: 'Расход со счёта «Наличные» от 15.10, −23,45',
+        lines: [['Ибупрофен 200 мг №50', '1 × 6,85', 6.85, 'Здоровье и аптека'], ['Витамин D3', '1 × 12,40', 12.40, 'Здоровье и аптека'], ['Пластырь', '2 × 2,10', 4.20, 'Здоровье и аптека']],
+        hist: [['15.10 11:24', 'Фото загружено через сайт; распознано 3 позиции'], ['15.10 11:24', 'Сумма сходится; оплата наличными — пара в выписке не нужна']] },
+      elektrosila: { store: 'Электросила', addr: 'Минск, ул. Кальварийская, 24', date: '03.05.2026', time: '16:02', pay: 'Карта •• 4821', total: 389.00, st: 'linked', stText: 'Привязан к платежу 04.05', ui: 'C5A10F9E37B24D8E6A1F0B92', op: 'Платёж по карте •• 4821 от 04.05, −389,00', warranty: true,
+        lines: [['Пылесос беспроводной', '1 × 389,00', 389.00, 'Электроника и техника', 'warranty']],
+        hist: [['03.05 16:10', 'Фото загружено через сайт; распознана 1 позиция'], ['03.05 16:10', 'Товар с гарантией: создано событие «конец гарантии» 03.05.2028'], ['15.05 20:02', 'Привязан к платежу по карте •• 4821 от 04.05']] }
+    };
+  }
+  startScan() {
+    const s = this.state.scan;
+    if (s === 'reading' || s === 'checking') return;
+    if (this.state.gippo) { this.setState({ scan: 'dup' }); return; }
+    this.setState({ scan: 'reading', shown: 0, l2: 'bad', total: false, step: 0, scanSaved: false });
+    [[1500, { scan: 'checking', step: 1, shown: 1 }], [1950, { shown: 2 }], [3500, { l2: 'ok' }], [3800, { shown: 3 }], [4150, { shown: 4 }], [4500, { shown: 5 }], [4850, { shown: 6 }], [5300, { total: true }], [5800, { step: 2 }], [6300, { step: 3 }], [7000, { scan: 'done', step: 4, gippo: true }]]
+      .forEach(([ms, p]) => this.later(() => this.setState(p), ms));
+  }
+  startStmt() {
+    if (this.state.stmt === 'parsing') return;
+    this.setState({ stmt: 'parsing', pct: 6, pmsg: 'Читаю файл prior_0937_oct.pdf…', disp: null, cols: false });
+    [[600, 32, 'Определяю колонки, формат дат и сумм…'], [1200, 58, 'Очищаю названия контрагентов…'], [1800, 84, 'Ищу дубли с прошлыми выписками…'], [2400, 100, 'Сверяю с чеками…']]
+      .forEach(([ms, pct, pmsg]) => this.later(() => this.setState({ pct, pmsg }), ms));
+    this.later(() => this.setState({ stmt: 'preview' }), 2800);
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('корон') || s.includes('не так')) kind = 'korona';
+    else if (s.includes('привяз') || s.includes('пар')) kind = 'unlinked';
+    const plan = { korona: ['Открываю чек «Корона» от 19.10…', 'Сверяю строки с итогом…'], unlinked: ['Сверяю чеки с выписками…', 'Проверяю способ оплаты…'], generic: ['Разбираю вопрос…'] }[kind];
+    this.setState({ msgs: this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        const steps = plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i }));
+        if (i < plan.length - 1) { this.setState({ steps }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n); const col = this.colors();
+    const view = this.props.view ?? 'Данные';
+    const R = this.rc();
+    const sc = st.scan;
+    const stepNames = ['Читаю чек', 'Проверяю арифметику', 'Раскладываю по категориям', 'Ищу платёж в выписке'];
+    const scanSteps = stepNames.map((t, i) => {
+      const done = st.step > i; const on = st.step === i && sc !== 'done';
+      return { t, isDone: done, isOn: on, isWait: !done && !on, cls: done ? 'done' : on ? 'on' : '' };
+    });
+    const gl = [['Кофе молотый 250 г', '1 × 9,89 = 9,89'], ['Сок яблочный 1 л', ''], ['Макароны 500 г', '2 × 1,65 = 3,30'], ['Масло сливочное 82,5%', '1 × 4,59 = 4,59'], ['Шампунь 400 мл', '1 × 8,95 = 8,95'], ['Пакет', '1 × 0,25 = 0,25']];
+    const scanLines = gl.map(([name, calc], i) => {
+      const is2 = i === 1; const shown = i < st.shown; const bad = is2 && shown && st.l2 === 'bad';
+      return { n: i + 1, name, shown, pending: !shown, calc: is2 ? (bad ? '3 × 2,49 = 8,47' : '3 × 2,49 = 7,47') : calc, cls: 'doc-line' + (bad ? ' bad' : ''), recheck: bad, fixed: is2 && shown && !bad,
+        icon: bad ? '#i-warn' : '#i-check', icColor: bad ? 'var(--warn)' : 'var(--income)', sr: bad ? 'не сходится' : 'сходится' };
+    });
+    const scanTitle = sc === 'reading' ? 'Читаю чек…' : sc === 'checking' ? (st.l2 === 'bad' && st.shown >= 2 ? 'Нашёл расхождение — перепроверяю строку 2…' : 'Проверяю арифметику построчно…') : 'Чек из Гиппо разобран';
+    // receipts list
+    const order = (st.gippo ? ['gippo'] : []).concat(['korona', 'apteka', 'evroopt', 'elektrosila']);
+    const stInfo = (key, r) => {
+      if (key === 'korona' && st.kFixed) return { cls: 'badge b-ok', icon: '#i-check', text: 'Сумма сходится' };
+      if (r.st === 'check') return { cls: 'badge b-warn', icon: '#i-warn', text: r.stText };
+      if (r.st === 'pending') return { cls: 'badge b-neutral', icon: '#i-clock', text: r.stText };
+      if (r.st === 'linked') return { cls: 'badge b-ok', icon: '#i-link', text: r.stText };
+      return { cls: 'badge b-ok', icon: '#i-check', text: r.stText };
+    };
+    const receipts = order.map((k) => {
+      const r = R[k]; const si = stInfo(k, r); const n = r.lines.length;
+      return { store: r.store, when: r.date + ', ' + r.time, items: n + (n === 1 ? ' позиция' : n < 5 ? ' позиции' : ' позиций'), pay: r.pay, totalText: f(r.total),
+        stCls: si.cls, stIcon: si.icon, stText: si.text, isNew: k === 'gippo', hasWarranty: !!r.warranty, aria: r.store + ', ' + r.date + ', ' + f(r.total) + ' BYN, ' + si.text,
+        open: () => this.setState({ sheet: k, kFix: false }) };
+    });
+    // imports
+    const impBase = [
+      { id: 'i1', date: '18.10.2026', file: 'belarusbank_4821.pdf', bank: 'Беларусбанк •• 4821', per: '18.09–17.10', fmt: 'PDF', how: 'Точный разборщик', c: [47, 35, 12, 0] },
+      { id: 'i2', date: '02.10.2026', file: 'prior_0937_sep.pdf', bank: 'Приорбанк •• 0937', per: '01.09–30.09', fmt: 'PDF', how: 'Универсальный разбор', c: [52, 52, 0, 0] },
+      { id: 'i3', date: '15.09.2026', file: 'alfa_2208_summer.xlsx', bank: 'Альфа-Банк •• 2208', per: '01.06–31.08', fmt: 'XLSX', how: 'Универсальный разбор', c: [18, 18, 0, 0] }];
+    const impAll = (st.impAdded ? [{ id: 'i0', date: '21.10.2026', file: 'prior_0937_oct.pdf', bank: 'Приорбанк •• 0937', per: '01.10–20.10', fmt: 'PDF', how: 'Универсальный разбор', c: [23, 17, 6, 0] }] : []).concat(impBase);
+    const imports = impAll.map((im) => ({ ...im, counts: im.c.join(' / '), found: im.c[0], nw: im.c[1], rest: im.c[2] + ' дубл' + (im.c[2] === 1 ? 'ь' : im.c[2] > 1 && im.c[2] < 5 ? 'я' : 'ей') + ' · ' + im.c[3] + ' ошибок', rollLabel: 'Откатить импорт ' + im.file, isRolled: !!st.rolled[im.id], canRoll: !st.rolled[im.id],
+      openFile: () => this.toast('Открываю исходный файл ' + im.file),
+      roll: () => this.setState({ modal: { kind: 'roll', id: im.id } }) }));
+    let rb = {};
+    if (st.modal && st.modal.kind === 'roll') {
+      const im = impAll.find((x) => x.id === st.modal.id);
+      if (im) rb = { title: 'Откатить импорт от ' + im.date + '?', text: 'Будут удалены ' + im.c[1] + ' операций, добавленных этим импортом (' + im.bank + ', ' + im.per + '). Сам файл и чеки останутся, но связи чеков с этими платежами разорвутся.',
+        go: () => { const id = im.id; this.setState({ modal: null, rolled: { ...this.state.rolled, [id]: true }, stmt: id === 'i0' ? 'idle' : this.state.stmt }); this.toast('Импорт от ' + im.date + ' откачен: удалено ' + im.c[1] + ' операций', () => { const r2 = { ...this.state.rolled }; delete r2[id]; this.setState({ rolled: r2 }); }); } };
+    }
+    // receipt sheet
+    let rs = { paper: [], lines: [], hist: [] };
+    const key = st.sheet; const r = key ? R[key] : null;
+    let fx = {};
+    if (r) {
+      const isKor = key === 'korona';
+      const fixed = isKor && st.kFixed;
+      const si = stInfo(key, r);
+      const lines = r.lines.map(([n, qp, s, cat, flag], i) => {
+        const bad = isKor && !fixed && (flag === 'bad5' || flag === 'bad9');
+        let sum = s; let qpT = qp;
+        if (isKor && fixed && flag === 'bad5') sum = 32.90;
+        if (isKor && fixed && flag === 'bad9') qpT = '2 × 3,19';
+        return { i: i + 1, n, qp: qpT, s: f(sum), cat, color: col[cat] || '#AEB7B3', cls: 'doc-pos' + (bad ? ' bad' : ''), isBad: bad,
+          badText: flag === 'bad5' ? '1 × 32,90 ≠ 31,53' : '2 × 3,91 ≠ 6,38', isWarranty: flag === 'warranty' };
+      });
+      const paper = r.lines.slice(0, 7).map(([n, qp, s]) => ({ n: n.length > 16 ? n.slice(0, 15) + '…' : n, s: f(s) }));
+      if (r.lines.length > 7) paper.push({ n: '… ещё ' + (r.lines.length - 7), s: '' });
+      const splitMap = {};
+      r.lines.forEach(([n, qp, s0, cat, flag]) => { const v = isKor && fixed && flag === 'bad5' ? 32.90 : s0; splitMap[cat] = (splitMap[cat] || 0) + v; });
+      if (isKor && !fixed) splitMap['Прочее'] = 1.37;
+      const split = Object.keys(splitMap).map((c) => ({ c: c === 'Прочее' ? 'Прочее (остаток чека)' : c, v: f(splitMap[c]), color: col[c] || '#AEB7B3' }));
+      rs = { split, store: r.store, storeUp: r.store.toUpperCase(), addr: r.addr, date: r.date, time: r.time, pay: r.pay, totalText: f(r.total), totalPlain: f(r.total), ui: r.ui, op: r.op,
+        stCls: si.cls, stIcon: si.icon, stText: si.text, isOk: !isKor || fixed, isBad: isKor && !fixed, fixOpen: isKor && !fixed && st.kFix, fixClosed: !st.kFix,
+        count: r.lines.length, lines, paper, hist: r.hist.concat(fixed ? [['21.10', 'Вы исправили строки 5 и 9 — сумма сходится 100%']] : []).map(([d, t]) => ({ d, t })) };
+      if (isKor) {
+        const v5 = this.num(st.k5); const v9 = this.num(st.k9);
+        const ok5 = Math.abs(v5 - 32.90) < 0.005; const ok9 = Math.abs(2 * v9 - 6.38) < 0.005;
+        const sumLines = 131.43 - 31.53 + v5;
+        fx = { c5: ok5 ? 'var(--income)' : 'var(--warn)', i5: ok5 ? '#i-check' : '#i-warn', t5: ok5 ? '1 × 32,90 = ' + f(v5) : '1 × 32,90 ≠ ' + f(v5),
+          c9: ok9 ? 'var(--income)' : 'var(--warn)', i9: ok9 ? '#i-check' : '#i-warn', t9: ok9 ? '2 × ' + f(v9) + ' = 6,38' : '2 × ' + f(v9) + ' = ' + f(2 * v9) + ' ≠ 6,38',
+          cT: ok5 && ok9 ? 'var(--income)' : 'var(--ink-2)', tT: ok5 && ok9 ? 'Сумма строк ' + f(sumLines) + ' = итог 132,80 — сходится' : 'Сумма строк ' + f(sumLines) + ' · итог 132,80' };
+      }
+    }
+    const pvRows = [
+      ['01.10', 'CASHBACK PRIORBANK 09.2026', 'Кешбэк', 'Проценты и кешбэк', 12.40, false],
+      ['05.10', 'VK MUSIC 7000 MINSK', 'VK Музыка', 'Подписки и онлайн-сервисы', -12.99, false],
+      ['08.10', 'WILDBERRIES.BY OOO VAILDBERRIZ', 'Wildberries', 'Одежда и обувь', -114.80, true],
+      ['11.10', 'VOZVRAT MARK FORMELLE TC GALILEO', 'Возврат: Mark Formelle', 'Одежда и обувь', 24.90, true],
+      ['16.10', 'KOFEINYA ZERNO UL. NEMIGA 5', 'Кофейня «Зерно»', 'Кафе, рестораны и доставка', -7.20, true]
+    ].map(([d, raw, name, cat, a, isNew]) => ({ d, raw, name, cat, color: col[cat] || '#AEB7B3', amt: a > 0 ? '+' + f(a) : f(a), amtColor: a > 0 ? 'var(--income)' : 'var(--ink)', st: isNew ? 'новая' : 'уже была', stCls: isNew ? 'badge b-brand' : 'badge b-neutral' }));
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const sugg = ['Что не так с чеком из Короны?', 'Какие чеки ещё не привязаны к платежам?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', korona: m.kind === 'korona', unlinked: m.kind === 'unlinked', generic: m.kind === 'generic',
+      fix: () => this.setState({ chat: false, sheet: 'korona', kFix: true }), openG: () => this.setState({ chat: false, sheet: 'gippo' }) }));
+    const showLists = view !== 'Пусто';
+    return {
+      isEmpty: view === 'Пусто', isError: view === 'Ошибка', showLists,
+      startScan: () => this.startScan(), startStmt: () => this.startStmt(),
+      scanVisible: sc === 'reading' || sc === 'checking' || sc === 'done', scanReading: sc === 'reading', scanLinesOn: sc === 'checking' || sc === 'done', scanDone: sc === 'done', scanDup: sc === 'dup',
+      scanTitle, scanSteps, scanLines, scanTotal: st.total, scanSaved: st.scanSaved, scanUnsaved: !st.scanSaved,
+      scanOk: () => { this.setState({ scanSaved: true }); this.toast('Чек сохранён: Гиппо, 34,45 BYN'); },
+      scanCancel: () => { this.setState({ scan: 'idle', gippo: false }); this.toast('Чек удалён', () => this.setState({ scan: 'done', gippo: true })); },
+      hideScan: () => this.setState({ scan: 'idle' }),
+      openGippo: () => this.setState({ sheet: 'gippo', kFix: false }),
+      stmtParsing: st.stmt === 'parsing', stmtPreview: st.stmt === 'preview', stmtDone: st.stmt === 'done', pct: st.pct, pctText: st.pct + '%', pmsg: st.pmsg, pvRows,
+      dispOpen: !st.disp, dispDone: !!st.disp,
+      dispNote: st.disp === 'mine' ? 'Запишу как перевод между своими счетами — это не расход. Карту •• 7714 добавлю в ваши счета.' : st.disp === 'other' ? 'Запишу как расход «Прочее» — перевод другому человеку.' : 'От ответа зависит, попадёт ли сумма в расходы.',
+      dispMine: () => this.setState({ disp: 'mine' }), dispOther: () => this.setState({ disp: 'other' }), dispReset: () => this.setState({ disp: null }),
+      dispSummary: st.disp === 'mine' ? 'Перевод 150,00 на •• 7714 записан как перевод между своими счетами.' : st.disp === 'other' ? 'Перевод 150,00 на •• 7714 записан как расход.' : 'Перевод 150,00 на •• 7714 ждёт вашего ответа — спрошу в уведомлении.',
+      colsOpen: st.cols, toggleCols: () => this.setState({ cols: !st.cols }),
+      doImport: () => { this.setState({ stmt: 'done', impAdded: true, tab: 'imp' }); this.toast('Импортировано 17 операций', () => this.setState({ stmt: 'preview', impAdded: false })); },
+      cancelStmt: () => this.setState({ stmt: 'idle' }),
+      rollNew: () => this.setState({ modal: { kind: 'roll', id: 'i0' } }),
+      modalRoll: !!(st.modal && st.modal.kind === 'roll'), rb, closeModal: () => this.setState({ modal: null }),
+      tabRcpt: st.tab === 'rcpt', tabImp: st.tab === 'imp', tabRcptCls: st.tab === 'rcpt' ? 'on' : '', tabImpCls: st.tab === 'imp' ? 'on' : '',
+      showRcpt: () => this.setState({ tab: 'rcpt' }), showImp: () => this.setState({ tab: 'imp' }),
+      rcptCount: receipts.length, impCount: impAll.length, receipts, imports,
+      sheetOpen: !!r, rs, fx, closeSheet: () => this.setState({ sheet: null, kFix: false }),
+      openFix: () => this.setState({ kFix: true }), closeFix: () => this.setState({ kFix: false, k5: '31,53', k9: '3,91' }),
+      k5: st.k5, k9: st.k9, onK5: (e) => this.setState({ k5: e.target.value }), onK9: (e) => this.setState({ k9: e.target.value }),
+      saveFix: () => {
+        const ok5 = Math.abs(this.num(st.k5) - 32.90) < 0.005; const ok9 = Math.abs(2 * this.num(st.k9) - 6.38) < 0.005;
+        if (!ok5 || !ok9) { this.toast('Строка ' + (!ok5 ? '5' : '9') + ' всё ещё не сходится — сверьтесь с фото чека'); return; }
+        this.setState({ kFixed: true, kFix: false });
+        this.toast('Чек исправлен: сумма сходится 100%', () => this.setState({ kFixed: false, k5: '31,53', k9: '3,91' }));
+      },
+      openPhoto: () => this.toast('Открываю исходное фото чека'),
+      copyUi: () => this.toast('УИ скопирован'), copyDate: () => this.toast('Дата скопирована'),
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell }), markRead: () => this.setState({ read: true }),
+      chatRef: (el) => { this.chatEl = el; },
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false }), closeChat: () => this.setState({ chat: false }),
+      ctxTab: st.tab === 'rcpt' ? 'Чеки и документы' : 'Выписки',
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

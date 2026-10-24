@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Кошт — Регулярные платежи</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400..600&amp;family=Onest:wght@400..700&amp;display=swap">
+<style>
+/* ===== KIT (одинаковый во всех экранах) ===== */
+:root{--bg:#F3F5F3;--surface:#FFFFFF;--surface-2:#F8FAF9;--line:#E1E6E3;--line-2:#CDD5D1;--ink:#14211F;--ink-2:#4E5B57;--ink-3:#63706B;--brand:#11564D;--brand-hover:#0B4740;--brand-ink:#0D3833;--brand-soft:#E3EFEA;--brand-soft-2:#CBE2D9;--amber:#F2B53A;--amber-hover:#E4A52A;--amber-soft:#FDF2D8;--amber-ink:#7A5200;--income:#146C43;--income-soft:#E2F2E9;--warn:#9A4D00;--warn-soft:#FCEBD8;--danger:#B3261E;--danger-soft:#FCE8E6;--law:#2D4F8A;--law-soft:#E8EEF8;--r:14px;--r-sm:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:var(--brand)}a:hover{color:var(--brand-hover)}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3,h4,p{margin:0}
+h1,h2,h3,h4{text-wrap:balance}p{text-wrap:pretty}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.k-sprite{position:absolute;width:0;height:0;overflow:hidden}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;display:block}
+.ic-s{width:16px;height:16px}.ic-l{width:24px;height:24px}.ic-xl{width:32px;height:32px}
+.k-app{display:flex;flex-wrap:wrap;min-height:100vh;background:var(--bg);position:relative}
+.k-side{flex:0 0 248px;background:var(--brand-ink);color:#D3E3DE;padding:18px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.k-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 14px;text-decoration:none;color:#fff}
+.k-logo:hover{color:#fff}
+.k-mark{width:30px;height:30px;border-radius:9px;background:var(--amber);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:17px;line-height:1}
+.k-word{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.k-nav{display:flex;flex-direction:column;gap:2px}
+.k-nav a{display:flex;align-items:center;gap:12px;padding:9px 12px;min-height:42px;border-radius:10px;color:#C9DBD5;text-decoration:none;font-size:14.5px;font-weight:500}
+.k-nav a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-nav a.on{background:#F3F5F3;color:var(--brand-ink);font-weight:600}
+.k-nav-label{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:#8FB0A7;padding:14px 12px 4px}
+.k-pill{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--amber);color:#2B1D00;font-size:12px;font-weight:700;display:grid;place-items:center}
+.k-user{margin-top:auto;display:flex;align-items:center;gap:10px;padding:14px 10px 4px;border-top:1px solid rgba(255,255,255,.1)}
+.k-ava{width:36px;height:36px;border-radius:50%;background:#2A5A52;color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.k-user-n{font-size:14px;font-weight:600;color:#fff;line-height:1.2}
+.k-user-e{font-size:12px;color:#9DBDB4}
+.k-user a{margin-left:auto;color:#C9DBD5;display:grid;place-items:center;width:36px;height:36px;border-radius:8px}
+.k-user a:hover{background:rgba(255,255,255,.08);color:#fff}
+.k-main{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.k-top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:18px 32px;border-bottom:1px solid var(--line);background:var(--bg)}
+.k-top-title{flex:1 1 220px;min-width:0}
+.k-top h1{font-size:24px;line-height:1.25;font-weight:650;letter-spacing:-.015em}
+.k-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.k-body{padding:28px 32px 120px;display:flex;flex-direction:column;gap:20px;width:100%;max-width:1260px}
+.k-dot{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:99px;background:var(--danger);color:#fff;font-size:11.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.pos-rel{position:relative}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border-radius:10px;border:1px solid transparent;font-weight:600;font-size:14.5px;line-height:1.2;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-hover);color:#fff}
+.btn-secondary{background:#fff;border-color:var(--line-2);color:var(--ink)}.btn-secondary:hover{border-color:#9AA6A1;color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink-2)}.btn-ghost:hover{background:rgba(20,33,31,.06);color:var(--ink)}
+.btn-amber{background:var(--amber);color:#2B1D00}.btn-amber:hover{background:var(--amber-hover);color:#2B1D00}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#951E17;color:#fff}
+.btn-sm{min-height:32px;padding:0 12px;font-size:13.5px;border-radius:8px;gap:6px}
+.btn-icon{width:40px;padding:0}.btn-sm.btn-icon{width:32px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;box-shadow:0 1px 2px rgba(20,33,31,.04)}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.card-t{font-size:16px;font-weight:650;letter-spacing:-.01em}
+.card-link{font-size:13.5px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+.muted{color:var(--ink-2)}.faint{color:var(--ink-3)}.small{font-size:13.5px}.xs{font-size:12.5px}.strong{font-weight:600}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.big{font-size:30px;font-weight:650;line-height:1.15;letter-spacing:-.02em}
+.big,.big .num,p .num,h1 .num,h2 .num,h3 .num,.bubble-b .num{font-variant-numeric:proportional-nums}
+.cur{font-size:.55em;font-weight:500;color:var(--ink-2);margin-left:5px;letter-spacing:0}
+.inc{color:var(--income)}.exp{color:var(--ink)}
+.row{display:flex;align-items:center;gap:10px}
+.row-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12.5px;font-weight:600;line-height:20px;white-space:nowrap}
+.b-ok{background:var(--income-soft);color:var(--income)}.b-warn{background:var(--warn-soft);color:var(--warn)}.b-danger{background:var(--danger-soft);color:var(--danger)}.b-law{background:var(--law-soft);color:var(--law)}.b-amber{background:var(--amber-soft);color:var(--amber-ink)}.b-neutral{background:#ECF0EE;color:var(--ink-2)}.b-brand{background:var(--brand-soft);color:var(--brand)}
+.cat-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.why{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:99px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;vertical-align:middle;padding:0}
+.why:hover{background:var(--brand-soft);color:var(--brand)}
+.lref{display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:6px;background:var(--law-soft);color:var(--law);font-weight:600;font-size:.93em;border:0;cursor:pointer;line-height:1.6;text-decoration:none}
+.lref:hover{background:#D7E2F3;color:var(--law)}
+.bar{height:8px;border-radius:99px;background:#E6EBE8;overflow:hidden}
+.bar span{display:block;height:100%;border-radius:99px;background:var(--brand);transition:width .4s ease}
+.input{height:42px;border:1px solid var(--line-2);border-radius:10px;padding:0 12px;background:#fff;font-size:15px;width:100%;min-width:0}
+.input:focus{outline:2px solid var(--brand);outline-offset:-1px;border-color:var(--brand)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.lbl{font-size:13.5px;font-weight:600}
+.hint{font-size:12.5px;color:var(--ink-2)}
+.seg{display:inline-flex;background:#E7ECE9;border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;min-height:32px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;font-size:14.5px;color:var(--ink-2);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--brand)}
+.sw{position:relative;display:inline-block;width:44px;height:26px;flex:none}
+.sw input{opacity:0;width:0;height:0;position:absolute}
+.sw span{position:absolute;inset:0;background:#C3CCC8;border-radius:99px;transition:.2s;cursor:pointer}
+.sw span::before{content:"";position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.sw input:checked + span{background:var(--brand)}
+.sw input:checked + span::before{transform:translateX(18px)}
+.sw input:focus-visible + span{outline:2px solid var(--brand);outline-offset:2px}
+.scrim{position:fixed;inset:0;background:rgba(13,30,27,.32);z-index:40;animation:fadeIn .2s ease}
+.sheet{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:#fff;box-shadow:-16px 0 48px rgba(13,30,27,.18);z-index:50;display:flex;flex-direction:column;animation:slideIn .24s cubic-bezier(.2,.8,.2,1)}
+.sheet-h{display:flex;align-items:center;gap:10px;padding:16px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.sheet-b{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 32px));background:#fff;border-radius:16px;box-shadow:0 24px 64px rgba(13,30,27,.24);z-index:50;padding:24px;display:flex;flex-direction:column;gap:16px;animation:popIn .2s ease}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#14211F;color:#fff;border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:14px;z-index:60;box-shadow:0 12px 32px rgba(0,0,0,.25);font-size:14.5px;animation:toastIn .25s ease;max-width:calc(100% - 32px)}
+.toast button{background:transparent;border:0;color:var(--amber);font-weight:700;cursor:pointer;padding:6px 10px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.pop{position:absolute;z-index:30;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(13,30,27,.16);animation:rise .16s ease}
+.formula{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:6px 14px}
+.formula-r{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.formula-r:last-child{border-bottom:0}
+.formula-t{display:flex;justify-content:space-between;gap:16px;padding:10px 0 4px;font-weight:700;font-size:15px;border-top:1.5px solid var(--ink)}
+.lawq{border:1px solid #D6E0F0;background:#F7F9FD;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.lawq-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--law);font-weight:600}
+.lawq-t{font-family:'Literata',Georgia,'Times New Roman',serif;font-size:15px;line-height:1.6;color:#1C2B45}
+.lawq-f{font-size:12px;color:var(--ink-2);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--brand-soft-2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;flex:none}
+.sk{background:linear-gradient(90deg,#E6EBE8 25%,#F1F4F2 50%,#E6EBE8 75%);background-size:200% 100%;animation:sk 1.4s infinite linear;border-radius:8px}
+.fab{position:fixed;right:28px;bottom:28px;z-index:35;display:inline-flex;align-items:center;gap:10px;min-height:52px;padding:0 20px 0 16px;border-radius:99px;border:0;background:var(--brand);color:#fff;font-weight:600;font-size:15px;cursor:pointer;box-shadow:0 10px 28px rgba(13,56,51,.35)}
+.fab:hover{background:var(--brand-hover)}
+.bot-ava{width:32px;height:32px;border-radius:10px;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
+.bubble-u{background:var(--brand-ink);color:#F1F6F4;border-radius:16px 16px 4px 16px;padding:10px 14px;max-width:85%;margin-left:auto;font-size:14.5px}
+.bubble-b{background:var(--surface-2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:12px 14px;font-size:14.5px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 12px;border-radius:99px;border:1px solid var(--line-2);background:#fff;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);text-decoration:none}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.tbl td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:hover td{background:#F8FAF9}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:40px 20px;color:var(--ink-2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes popIn{from{opacity:0;transform:translate(-50%,-48%) scale(.98)}to{opacity:1}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (max-width:860px){.k-side{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:2px;padding:10px 12px 8px}.k-logo{padding:4px 6px 6px}.k-nav{flex:1 1 100%;min-width:0;max-width:100%;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:4px;scrollbar-width:none;padding-bottom:2px}.k-nav::-webkit-scrollbar{display:none}.k-nav a{white-space:nowrap;flex:none;min-height:40px}.k-nav-label{display:none}.k-user{display:none}.k-top,.k-body{padding-left:16px;padding-right:16px}.fab span{display:none}.fab{padding:0 16px;right:16px;bottom:16px}}
+/* ===== PAGE: recurring (rec-) ===== */
+.rec-bell-pop{right:0;top:calc(100% + 8px);width:380px;max-width:calc(100vw - 32px)}
+.rec-nt{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.rec-nt.unread{background:#F6FAF8}
+.rec-nt-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none}
+.rec-hero{padding:24px 24px 22px;display:flex;flex-direction:column;gap:20px}
+.rec-hero-top{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.rec-free{font-size:40px;font-weight:700;letter-spacing:-.025em;line-height:1.05;color:var(--brand-ink)}
+.rec-free.num{font-variant-numeric:proportional-nums}
+.rec-stats{display:flex;gap:12px;flex-wrap:wrap}
+.rec-stat{display:flex;flex-direction:column;gap:2px;min-width:180px;padding:12px 16px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rec-stat-v{font-size:20px;font-weight:650;letter-spacing:-.01em;font-variant-numeric:proportional-nums}
+.rec-wf{display:flex;flex-direction:column;gap:8px}
+.rec-wf-r{display:grid;grid-template-columns:240px minmax(0,1fr) 120px;gap:16px;align-items:center;font-size:14px}
+.rec-wf-r .num{text-align:right}
+.rec-wf-t{position:relative;height:22px;background:#F1F4F2;border-radius:6px}
+.rec-wf-t span{position:absolute;top:0;bottom:0;border-radius:5px;display:block;transition:left .4s ease,width .4s ease}
+.rec-wf-r.tot{border-top:1px solid var(--line);padding-top:10px;margin-top:2px;font-weight:700}
+.rec-wf-lab{display:flex;align-items:center;gap:8px;min-width:0}
+.rec-wf-lab i{width:10px;height:10px;border-radius:3px;flex:none;display:block}
+.rec-dec{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:16px}
+.rec-call{display:flex;gap:14px;align-items:flex-start;padding:18px 20px}
+.rec-call-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.rec-filter{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.rec-sec{padding:0}
+.rec-sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rec-sec-h > div:last-child{margin-left:auto}
+.rec-flag{display:none;margin-top:6px}
+.rec-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.15fr) 150px minmax(0,1fr) 170px 40px;gap:14px;align-items:center;padding:12px 16px 12px 20px;border-bottom:1px solid var(--line);position:relative}
+.rec-row:last-child{border-bottom:0}
+.rec-amt{text-align:right;display:flex;flex-direction:column;align-items:flex-end}
+.rec-amt-v{display:flex;align-items:center;gap:2px;font-weight:650;font-size:15px}
+.rec-menu{right:12px;top:calc(100% - 8px);width:250px;padding:6px;display:flex;flex-direction:column}
+.rec-menu button,.rec-menu a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;border:0;background:none;text-align:left;font-size:14px;cursor:pointer;text-decoration:none;color:var(--ink);min-height:40px}
+.rec-menu button:hover,.rec-menu a:hover{background:var(--surface-2);color:var(--ink)}
+.rec-menu .rec-danger{color:var(--danger)}
+.rec-how{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.rec-how-i{display:flex;flex-direction:column;gap:6px;padding:14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line)}
+.rec-how-n{font-size:20px;font-weight:700;color:var(--brand)}
+.rec-type{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rec-type button{border:1px solid var(--line-2);background:#fff;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;font-size:14px;font-weight:600;min-height:44px}
+.rec-type button.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+.rec-chat-body{flex:1;overflow-y:auto;padding:18px 18px 8px;display:flex;flex-direction:column;gap:14px}
+.rec-msg{display:flex;gap:10px;align-items:flex-start;animation:rise .25s ease}
+.rec-steps{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:var(--ink-2);padding:2px 0 0 42px}
+.rec-steps div{display:flex;align-items:center;gap:8px}
+.rec-sugg{display:flex;flex-wrap:wrap;gap:8px;padding:8px 18px}
+.rec-chat-in{display:flex;gap:8px;padding:12px 16px 16px;border-top:1px solid var(--line)}
+.rec-ctx{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:2px 9px;max-width:100%;white-space:nowrap}
+.rec-ctx-t{overflow:hidden;text-overflow:ellipsis}
+.rec-li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.rec-li:last-child{border-bottom:0}
+@media (max-width:1100px){.rec-flag{display:inline-flex}.rec-stats{width:100%}.rec-row{grid-template-columns:minmax(0,1.5fr) 140px minmax(0,1fr) 40px}.rec-row .rec-hide{display:none}}
+@media (max-width:760px){.rec-row{grid-template-columns:minmax(0,1fr) auto 40px}.rec-row .rec-hide2{display:none}.rec-wf-r{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}.rec-wf-t{grid-column:1 / -1;height:14px;order:3}.rec-wf-r > .num{order:2}.rec-dec,.rec-how{grid-template-columns:minmax(0,1fr)}.rec-stat{flex:1 1 140px;min-width:0}.rec-free{font-size:34px}.rec-hero{padding:20px 16px}.rec-row{padding:12px 8px 12px 14px;gap:10px}.rec-sec-h{padding:16px 14px 12px}}
+</style>
+</helmet>
+<div class="k-app">
+<svg class="k-sprite" aria-hidden="true"><defs>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></symbol>
+<symbol id="i-ops" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M8 7h8"></path><path d="M8 11h8"></path><path d="M8 15h5"></path></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></symbol>
+<symbol id="i-repeat" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"></path><path d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path d="m7 22-4-4 4-4"></path><path d="M21 13v1a4 4 0 0 1-4 4H3"></path></symbol>
+<symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></symbol>
+<symbol id="i-coins" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"></circle><path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path><path d="M7 6h1v4"></path><path d="m16.71 13.88.7.71-2.82 2.82"></path></symbol>
+<symbol id="i-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></symbol>
+<symbol id="i-scale" viewBox="0 0 24 24"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"></path><path d="M7 21h10"></path><path d="M12 3v18"></path><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"></path></symbol>
+<symbol id="i-mind" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"></rect><circle cx="12" cy="11" r="3"></circle><path d="M7 22v-2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"></path><path d="M8 2v2"></path><path d="M16 2v2"></path></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M21 4h-7"></path><path d="M10 4H3"></path><path d="M21 12h-9"></path><path d="M8 12H3"></path><path d="M21 20h-5"></path><path d="M12 20H3"></path><path d="M14 2v4"></path><path d="M8 10v4"></path><path d="M16 18v4"></path></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path></symbol>
+<symbol id="i-shield-ok" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.27 21a2 2 0 0 0 3.46 0"></path><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"></path></symbol>
+<symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><path d="M7 12h10"></path></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="M12 5v14"></path></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol>
+<symbol id="i-check-c" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></symbol>
+<symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4"></path><path d="M12 16h.01"></path></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></symbol>
+<symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></symbol>
+<symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></symbol>
+<symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"></path></symbol>
+<symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></symbol>
+<symbol id="i-ext" viewBox="0 0 24 24"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m7 10 5 5 5-5"></path><path d="M12 15V3"></path></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="m17 8-5-5-5 5"></path><path d="M12 3v12"></path></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M16 13H8"></path><path d="M16 17H8"></path><path d="M10 9H8"></path></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.54 21.69a.5.5 0 0 0 .94-.03l6.5-19a.5.5 0 0 0-.64-.63l-19 6.5a.5.5 0 0 0-.02.93l7.93 3.18a2 2 0 0 1 1.11 1.11z"></path><path d="m21.85 2.15-10.94 10.94"></path></symbol>
+<symbol id="i-clip" viewBox="0 0 24 24"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06l-6.14-1.58a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96L15.5 14.06a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"></path></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M12 7v14"></path><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"></path></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></symbol>
+<symbol id="i-edit" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0-3.99-3.99L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></symbol>
+<symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></symbol>
+<symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></symbol>
+<symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7 13.5 15.5 8.5 10.5 2 17"></path><path d="M16 7h6v6"></path></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"></path><path d="m21 2-9.6 9.6"></path><circle cx="7.5" cy="15.5" r="5.5"></circle></symbol>
+<symbol id="i-piggy" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path><path d="M2 9v1c0 1.1.9 2 2 2h1"></path><path d="M16 11h.01"></path></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="14" height="14" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></symbol>
+<symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.09-3.09a2 2 0 0 0-2.82 0L6 21"></path></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"></path><circle cx="12" cy="12" r="3"></circle></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M15 2v2"></path><path d="M15 20v2"></path><path d="M2 15h2"></path><path d="M2 9h2"></path><path d="M20 15h2"></path><path d="M20 9h2"></path><path d="M9 2v2"></path><path d="M9 20v2"></path></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></symbol>
+<symbol id="i-pulse" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"></path></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"></rect><rect x="2" y="14" width="20" height="8" rx="2"></rect><path d="M6 6h.01"></path><path d="M6 18h.01"></path></symbol>
+<symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5 5 19"></path><circle cx="6.5" cy="6.5" r="2.5"></circle><circle cx="17.5" cy="17.5" r="2.5"></circle></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 12h16"></path><path d="M4 6h16"></path><path d="M4 18h16"></path></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></symbol>
+<symbol id="i-cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></symbol>
+<symbol id="i-coffee" viewBox="0 0 24 24"><path d="M10 2v2"></path><path d="M14 2v2"></path><path d="M6 2v2"></path><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"></path></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></symbol>
+<symbol id="i-taxi" viewBox="0 0 24 24"><path d="M10 2h4"></path><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.65 5H8.35a2 2 0 0 0-1.85 1.3L5 10 3 8"></path><path d="M7 14h.01"></path><path d="M17 14h.01"></path><rect x="3" y="10" width="18" height="8" rx="2"></rect><path d="M5 18v2"></path><path d="M19 18v2"></path></symbol>
+<symbol id="i-bank" viewBox="0 0 24 24"><path d="M10 18v-7"></path><path d="M11.12 2.2a2 2 0 0 1 1.76 0l7.87 3.85c.47.23.31.95-.22.95H3.47c-.53 0-.69-.72-.22-.95z"></path><path d="M14 18v-7"></path><path d="M18 18v-7"></path><path d="M3 22h18"></path><path d="M6 18v-7"></path></symbol>
+<symbol id="i-baby" viewBox="0 0 24 24"><path d="M9 12h.01"></path><path d="M15 12h.01"></path><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"></path><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"></path></symbol>
+<symbol id="i-pill" viewBox="0 0 24 24"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"></rect><path d="M12 18h.01"></path></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="15" rx="2"></rect><path d="m17 2-5 5-5-5"></path></symbol>
+<symbol id="i-shirt" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></symbol>
+<symbol id="i-grad" viewBox="0 0 24 24"><path d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M22 10v6"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path><rect x="2" y="6" width="20" height="14" rx="2"></rect></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2"></circle><path d="M6 12h.01M18 12h.01"></path></symbol>
+<symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"></rect><path d="M2 10h20"></path></symbol>
+<symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13"></path><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path></symbol>
+<symbol id="i-fun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><path d="M9 9h.01"></path><path d="M15 9h.01"></path></symbol>
+<symbol id="i-sound" viewBox="0 0 24 24"><path d="M2 10v3"></path><path d="M6 6v11"></path><path d="M10 3v18"></path><path d="M14 8v7"></path><path d="M18 5v13"></path><path d="M22 10v3"></path></symbol>
+</defs></svg>
+
+<aside class="k-side" aria-label="Основное меню">
+  <a class="k-logo" href="Main.dc.html" aria-label="Кошт — на главную"><span class="k-mark" aria-hidden="true">К</span><span class="k-word">Кошт</span></a>
+  <nav class="k-nav" aria-label="Разделы">
+    <a href="Main.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-dash"></use></svg>Главная</a>
+    <a href="Assistant.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-chat"></use></svg>Ассистент</a>
+    <div class="k-nav-label">Деньги</div>
+    <a href="Operations.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-ops"></use></svg>Операции</a>
+    <a href="Documents.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-receipt"></use></svg>Чеки и документы</a>
+    <a href="Accounts.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-wallet"></use></svg>Счета</a>
+    <a class="on" href="Recurring.dc.html" aria-current="page"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg>Регулярные платежи</a>
+    <a href="Budget.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-target"></use></svg>Лимиты и цели</a>
+    <a href="Calendar.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-cal"></use></svg>Календарь</a>
+    <div class="k-nav-label">Право и выгода</div>
+    <a href="Deductions.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-coins"></use></svg>Налоговые вычеты<span class="k-pill" aria-label="1 новый">1</span></a>
+    <a href="Afford.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-bag"></use></svg>Крупная покупка</a>
+    <a href="Laws.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-scale"></use></svg>База законов</a>
+    <div class="k-nav-label">Профиль</div>
+    <a href="Memory.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-mind"></use></svg>Что ассистент знает</a>
+    <a href="Settings.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-sliders"></use></svg>Настройки</a>
+    <a href="Admin.dc.html"><svg class="ic" aria-hidden="true"><use href="#i-shield"></use></svg>Администрирование</a>
+  </nav>
+  <div class="k-user">
+    <span class="k-ava" aria-hidden="true">ИК</span>
+    <div><div class="k-user-n">Ирина Ковальчук</div><div class="k-user-e">демо-пользователь</div></div>
+    <a href="Login.dc.html" aria-label="Выйти"><svg class="ic" aria-hidden="true"><use href="#i-logout"></use></svg></a>
+  </div>
+</aside>
+
+<main class="k-main">
+  <header class="k-top">
+    <div class="k-top-title">
+      <h1>Регулярные платежи</h1>
+      <p class="small muted">Найдены по истории операций · обновлено 21.10.2026</p>
+    </div>
+    <div class="k-top-actions">
+      <div class="pos-rel">
+        <button class="btn btn-secondary btn-icon" aria-label="Уведомления" aria-expanded="{{bellOpen}}" onClick="{{toggleBell}}"><svg class="ic" aria-hidden="true"><use href="#i-bell"></use></svg></button>
+        <sc-if value="{{hasUnread}}" hint-placeholder-val="{{true}}"><span class="k-dot">3</span></sc-if>
+        <sc-if value="{{bellOpen}}" hint-placeholder-val="{{false}}">
+          <div class="pop rec-bell-pop" role="dialog" aria-label="Уведомления">
+            <div class="row" style="justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line)">
+              <span class="strong">Уведомления</span>
+              <button class="btn btn-ghost btn-sm" onClick="{{markRead}}">Прочитать все</button>
+            </div>
+            <sc-for list="{{notes}}" as="n" hint-placeholder-count="5">
+              <div class="{{n.cls}}">
+                <span class="rec-nt-ic" style="background: {{n.bg}}; color: {{n.fg}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{n.icon}}"></use></svg></span>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                  <div class="small">{{n.text}}</div>
+                  <div class="xs faint">{{n.time}}</div>
+                  <sc-if value="{{n.hasAct}}" hint-placeholder-val="{{false}}"><div><a class="btn btn-secondary btn-sm" href="{{n.href}}">{{n.act}}</a></div></sc-if>
+                </div>
+              </div>
+            </sc-for>
+            <div style="padding: 10px 16px"><a class="card-link" href="Settings.dc.html">Настроить уведомления</a></div>
+          </div>
+        </sc-if>
+      </div>
+      <button class="btn btn-primary" onClick="{{openAdd}}"><svg class="ic" aria-hidden="true"><use href="#i-plus"></use></svg>Добавить вручную</button>
+    </div>
+  </header>
+
+  <div class="k-body">
+    <section class="card rec-hero" aria-labelledby="free-t">
+      <div class="rec-hero-top">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <div class="row" style="gap: 4px"><h2 id="free-t" class="eyebrow" style="color: var(--brand)">Свободный остаток</h2><button class="why" aria-label="Откуда эта цифра: свободный остаток" onClick="{{whyFree}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></div>
+          <div class="rec-free num">{{free}}<span class="cur">BYN в месяц</span></div>
+          <p class="muted small" style="max-width: 440px">Столько в среднем остаётся каждый месяц после обязательных платежей. Считаем по трём полным месяцам: июль–сентябрь.</p>
+        </div>
+        <div class="rec-stats">
+          <div class="rec-stat"><span class="xs muted">Средний доход</span><span class="rec-stat-v num inc">+{{incTotal}}</span><span class="xs muted">зарплата и аванс</span></div>
+          <div class="rec-stat"><span class="xs muted">Обязательные платежи</span><span class="rec-stat-v num">−{{mustTotal}}</span><span class="xs muted">{{mustShare}} дохода</span></div>
+        </div>
+      </div>
+      <div class="rec-wf" role="img" aria-label="Водопад: из среднего дохода вычитаются обязательные платежи, остаётся свободный остаток">
+        <sc-for list="{{wf}}" as="w" hint-placeholder-count="6">
+          <div class="{{w.cls}}">
+            <div class="rec-wf-lab"><i style="background: {{w.color}}"></i><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{w.label}}</span></div>
+            <div class="rec-wf-t"><span style="left: {{w.left}}%; width: {{w.width}}%; background: {{w.color}}"></span></div>
+            <span class="num">{{w.val}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <sc-if value="{{hasDecisions}}" hint-placeholder-val="{{true}}">
+      <section aria-labelledby="dec-t" style="display: flex; flex-direction: column; gap: 12px">
+        <h2 id="dec-t" class="card-t">Нужно ваше решение</h2>
+        <div class="rec-dec">
+          <sc-if value="{{robotAsk}}" hint-placeholder-val="{{true}}">
+            <div class="card rec-call">
+              <span class="rec-call-ic" style="background: var(--brand-soft); color: var(--brand)"><svg class="ic" aria-hidden="true"><use href="#i-repeat"></use></svg></span>
+              <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0">
+                <div><div class="strong">Похоже, это регулярный платёж</div><p class="small muted">Кружок робототехники, <b class="num" style="color: var(--ink)">60,00 BYN</b>, каждый месяц 9-го — нашёл 3 повтора (09.08, 09.09, 09.10).</p></div>
+                <div class="row-btns"><button class="btn btn-primary btn-sm" onClick="{{robotYes}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-check"></use></svg>Да, регулярный</button><button class="btn btn-secondary btn-sm" onClick="{{robotNo}}">Это не регулярный</button></div>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{fitAsk}}" hint-placeholder-val="{{true}}">
+            <div class="card rec-call">
+              <span class="rec-call-ic" style="background: var(--warn-soft); color: var(--warn)"><svg class="ic" aria-hidden="true"><use href="#i-warn"></use></svg></span>
+              <div style="display: flex; flex-direction: column; gap: 10px; flex: 1; min-width: 0">
+                <div><div class="strong">Платёж не пришёл в срок</div><p class="small muted">Фитнес-клуб, <b class="num" style="color: var(--ink)">55,00 BYN</b>, ожидался 12.10 — прошло 9 дней. Возможно, абонемент прекращён.</p></div>
+                <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{fitStop}}">Да, прекращён</button><button class="btn btn-ghost btn-sm" onClick="{{fitWait}}">Ещё придёт</button></div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </section>
+    </sc-if>
+
+    <div class="rec-filter">
+      <div class="seg" role="group" aria-label="Показать">
+        <sc-for list="{{filters}}" as="fl" hint-placeholder-count="4"><button class="{{fl.cls}}" aria-pressed="{{fl.on}}" onClick="{{fl.pick}}">{{fl.t}}</button></sc-for>
+      </div>
+      <span class="small muted">{{countText}}</span>
+    </div>
+
+    <sc-for list="{{sections}}" as="s" hint-placeholder-count="4">
+      <sc-if value="{{s.show}}" hint-placeholder-val="{{true}}">
+        <section class="card rec-sec" aria-label="{{s.title}}">
+          <div class="rec-sec-h">
+            <div><h2 class="card-t">{{s.title}}</h2><p class="xs muted">{{s.sub}}</p></div>
+            <div style="text-align: right"><div class="num strong" style="color: {{s.totalColor}}">{{s.total}}</div><div class="xs muted num">{{s.total2}}</div></div>
+          </div>
+          <sc-for list="{{s.rows}}" as="r" hint-placeholder-count="3">
+            <div class="{{r.cls}}">
+              <div class="row" style="min-width: 0; gap: 12px">
+                <span class="cat-ic" style="background: {{r.color}}" aria-hidden="true"><svg class="ic ic-s"><use href="{{r.icon}}"></use></svg></span>
+                <div style="min-width: 0"><div class="strong" style="line-height: 1.3">{{r.name}}</div><div class="xs muted" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.who}}</div><sc-if value="{{r.flag}}" hint-placeholder-val="{{false}}"><span class="{{r.flagCls}}"><svg class="ic ic-s" aria-hidden="true"><use href="{{r.flagIcon}}"></use></svg>{{r.badge}}</span></sc-if></div>
+              </div>
+              <div class="rec-hide" style="min-width: 0"><div class="small">{{r.periodText}}</div><div class="xs muted" style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.cat}}</div></div>
+              <div class="rec-amt">
+                <div class="rec-amt-v num" style="color: {{r.amtColor}}">{{r.amt}}<sc-if value="{{r.hasRange}}" hint-placeholder-val="{{false}}"><button class="why" aria-label="Откуда эта цифра: среднее ЖКХ" onClick="{{r.why}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg></button></sc-if></div>
+                <div class="xs muted num">{{r.amtSub}}</div>
+              </div>
+              <div class="rec-hide2" style="min-width: 0"><div class="small num">{{r.next}}</div><div class="xs" style="color: {{r.relColor}}">{{r.rel}}</div></div>
+              <div class="rec-hide"><span class="{{r.badgeCls}}"><sc-if value="{{r.isMaybe}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-warn"></use></svg></sc-if>{{r.badge}}</span></div>
+              <div>
+                <button class="btn btn-ghost btn-sm btn-icon" aria-label="{{r.menuLabel}}" aria-expanded="{{r.menuOpen}}" onClick="{{r.toggleMenu}}"><svg class="ic" aria-hidden="true"><use href="#i-more"></use></svg></button>
+              </div>
+              <sc-if value="{{r.menuOpen}}" hint-placeholder-val="{{false}}">
+                <div class="pop rec-menu" role="menu" aria-label="{{r.menuLabel}}">
+                  <button role="menuitem" onClick="{{r.edit}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-edit"></use></svg>Исправить сумму и дату</button>
+                  <a role="menuitem" href="Operations.dc.html"><svg class="ic ic-s" aria-hidden="true"><use href="#i-ops"></use></svg>Показать операции</a>
+                  <button role="menuitem" class="rec-danger" onClick="{{r.exclude}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-x"></use></svg>Это не регулярный</button>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{s.empty}}" hint-placeholder-val="{{false}}"><div class="empty small">В этом разделе пока ничего нет.</div></sc-if>
+        </section>
+      </sc-if>
+    </sc-for>
+
+    <sc-if value="{{hasStopped}}" hint-placeholder-val="{{false}}">
+      <section class="card" aria-labelledby="stop-t">
+        <div class="card-h" style="margin-bottom: 8px"><h2 id="stop-t" class="card-t">Прекращённые</h2><span class="xs muted">не учитываются в прогнозах</span></div>
+        <div class="row" style="justify-content: space-between; flex-wrap: wrap">
+          <div class="row"><span class="cat-ic" style="background: #AEB7B3" aria-hidden="true"><svg class="ic ic-s"><use href="#i-fun"></use></svg></span><div><div class="strong">Фитнес-клуб</div><div class="xs muted">55,00 BYN · последний платёж 12.09.2026</div></div></div>
+          <button class="btn btn-secondary btn-sm" onClick="{{fitUndo}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-undo"></use></svg>Вернуть в регулярные</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <section class="card" aria-labelledby="how-t">
+      <div class="card-h"><h2 id="how-t" class="card-t">Как Кошт находит регулярные платежи</h2><span class="xs muted">Пороги можно уточнить у администратора</span></div>
+      <div class="rec-how">
+        <div class="rec-how-i"><span class="rec-how-n">3+</span><span class="small">повтора у одного получателя. Для ежегодных платежей хватает двух.</span></div>
+        <div class="rec-how-i"><span class="rec-how-n">±15%</span><span class="small">допустимое отличие суммы — ЖКХ каждый месяц немного разное.</span></div>
+        <div class="rec-how-i"><span class="rec-how-n">±5 дней</span><span class="small">допустимый сдвиг даты для ежемесячных платежей.</span></div>
+        <div class="rec-how-i"><span class="rec-how-n">10 дней</span><span class="small">после ожидаемой даты без платежа — помечаю «возможно прекращён» и спрашиваю вас.</span></div>
+      </div>
+      <p class="xs faint row" style="gap: 6px; margin-top: 14px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Поиск и все суммы считает программа по вашим операциям, а не нейросеть.</p>
+    </section>
+  </div>
+</main>
+
+<button class="fab" onClick="{{openChat}}" aria-label="Спросить ассистента"><svg class="ic" aria-hidden="true"><use href="#i-spark"></use></svg><span>Спросить ассистента</span></button>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeSheet}}"></div>
+    <section class="sheet" role="dialog" aria-label="Откуда эта цифра?">
+      <div class="sheet-h">
+        <svg class="ic" aria-hidden="true" style="color: var(--brand)"><use href="#i-info"></use></svg>
+        <h2 class="card-t" style="flex: 1">Откуда эта цифра?</h2>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeSheet}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="sheet-b">
+        <div><div class="small muted">{{sh.label}}</div><div class="big num">{{sh.value}}<span class="cur">BYN</span></div><div class="xs muted" style="margin-top: 4px">{{sh.period}}</div></div>
+        <div>
+          <div class="lbl" style="margin-bottom: 8px">Расчёт</div>
+          <div class="formula">
+            <sc-for list="{{sh.rows}}" as="x" hint-placeholder-count="4">
+              <div class="formula-r"><span>{{x.l}}</span><span class="num strong">{{x.v}}</span></div>
+            </sc-for>
+            <div class="formula-t"><span>{{sh.totalLabel}}</span><span class="num">{{sh.value}}</span></div>
+          </div>
+        </div>
+        <p class="small muted">{{sh.note}}</p>
+        <sc-if value="{{sh.hasOps}}" hint-placeholder-val="{{false}}">
+          <div>
+            <div class="lbl" style="margin-bottom: 6px">Операции-основания</div>
+            <sc-for list="{{sh.ops}}" as="o" hint-placeholder-count="3">
+              <a href="Operations.dc.html" class="row" style="justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink)"><span class="small"><span class="muted num">{{o.d}}</span> · {{o.t}}</span><span class="num small strong">{{o.v}}</span></a>
+            </sc-for>
+          </div>
+        </sc-if>
+        <p class="xs faint row" style="gap: 6px"><svg class="ic ic-s" aria-hidden="true"><use href="#i-shield-ok"></use></svg>Все суммы посчитаны программой по вашим операциям, а не нейросетью.</p>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{editOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeEdit}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="edit-t">
+      <div class="row" style="justify-content: space-between"><h2 id="edit-t" class="card-t" style="font-size: 18px">Исправить: {{editName}}</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeEdit}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <p class="small muted">Новые значения сразу учтутся в свободном остатке, прогнозах и календаре.</p>
+      <div class="field"><label for="ed-sum">Сумма, BYN</label><input id="ed-sum" class="input num" inputmode="decimal" value="{{editSum}}" onChange="{{onEditSum}}"></div>
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <div class="field" style="flex: 1"><label for="ed-per">Периодичность</label>
+          <select id="ed-per" class="input" value="{{editPeriod}}" onChange="{{onEditPeriod}}">
+            <option value="еженедельно">Еженедельно</option>
+            <option value="ежемесячно">Ежемесячно</option>
+            <option value="ежеквартально">Ежеквартально</option>
+            <option value="ежегодно">Ежегодно</option>
+          </select>
+        </div>
+        <div class="field" style="width: 120px"><label for="ed-day">День месяца</label><input id="ed-day" class="input num" inputmode="numeric" value="{{editDay}}" onChange="{{onEditDay}}"></div>
+      </div>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeEdit}}">Отмена</button><button class="btn btn-primary" onClick="{{saveEdit}}">Сохранить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{exOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeEx}}"></div>
+    <section class="modal" role="alertdialog" aria-labelledby="ex-t">
+      <h2 id="ex-t" class="card-t" style="font-size: 18px">Исключить «{{exName}}» из регулярных?</h2>
+      <p class="small muted">Платёж перестанет учитываться в свободном остатке, прогнозах и календаре. Сами операции останутся в истории, а похожие платежи в будущем я не буду считать регулярными.</p>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeEx}}">Отмена</button><button class="btn btn-danger" onClick="{{confirmEx}}">Исключить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeAdd}}"></div>
+    <section class="modal" role="dialog" aria-labelledby="add-t" style="width: min(500px, calc(100% - 32px))">
+      <div class="row" style="justify-content: space-between"><h2 id="add-t" class="card-t" style="font-size: 18px">Добавить регулярный платёж</h2><button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeAdd}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button></div>
+      <div class="field"><span class="lbl">Что это</span>
+        <div class="rec-type" role="group" aria-label="Тип платежа">
+          <sc-for list="{{addTypes}}" as="t" hint-placeholder-count="4"><button class="{{t.cls}}" aria-pressed="{{t.on}}" onClick="{{t.pick}}">{{t.label}}</button></sc-for>
+        </div>
+        <span class="hint">{{addTypeHint}}</span>
+      </div>
+      <div class="field"><label for="ad-name">Получатель или название</label><input id="ad-name" class="input" value="{{addName}}" onChange="{{onAddName}}" placeholder="например, Аренда гаража"></div>
+      <div class="row" style="gap: 12px; align-items: flex-start">
+        <div class="field" style="flex: 1"><label for="ad-sum">Сумма, BYN</label><input id="ad-sum" class="input num" inputmode="decimal" value="{{addSum}}" onChange="{{onAddSum}}" placeholder="0,00"></div>
+        <div class="field" style="flex: 1"><label for="ad-per">Периодичность</label>
+          <select id="ad-per" class="input" value="{{addPeriod}}" onChange="{{onAddPeriod}}">
+            <option value="еженедельно">Еженедельно</option>
+            <option value="ежемесячно">Ежемесячно</option>
+            <option value="ежеквартально">Ежеквартально</option>
+            <option value="ежегодно">Ежегодно</option>
+          </select>
+        </div>
+        <div class="field" style="width: 100px"><label for="ad-day">День</label><input id="ad-day" class="input num" inputmode="numeric" value="{{addDay}}" onChange="{{onAddDay}}" placeholder="1–31"></div>
+      </div>
+      <sc-if value="{{addError}}" hint-placeholder-val="{{false}}"><p class="small row" style="gap: 6px; color: var(--danger)"><svg class="ic ic-s" aria-hidden="true"><use href="#i-alert"></use></svg>Укажите название и сумму больше нуля.</p></sc-if>
+      <div class="row-btns" style="justify-content: flex-end"><button class="btn btn-ghost" onClick="{{closeAdd}}">Отмена</button><button class="btn btn-primary" onClick="{{saveAdd}}">Добавить</button></div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{chatOpen}}" hint-placeholder-val="{{false}}">
+  <div>
+    <div class="scrim" onClick="{{closeChat}}"></div>
+    <section class="sheet" role="dialog" aria-label="Ассистент">
+      <div class="sheet-h">
+        <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+        <div style="flex: 1; min-width: 0"><div class="strong">Ассистент</div><span class="rec-ctx"><svg class="ic ic-s" aria-hidden="true"><use href="#i-eye"></use></svg><span class="rec-ctx-t">Вижу: {{filterLabel}}</span></span></div>
+        <a class="btn btn-ghost btn-sm" href="Assistant.dc.html">Открыть чат</a>
+        <button class="btn btn-ghost btn-icon" aria-label="Закрыть" onClick="{{closeChat}}"><svg class="ic" aria-hidden="true"><use href="#i-x"></use></svg></button>
+      </div>
+      <div class="rec-chat-body" aria-live="polite">
+        <div class="rec-msg">
+          <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+          <div class="bubble-b"><p>Здесь собраны платежи, которые повторяются каждый месяц. Спросите, сколько уходит на подписки или что спишется в ближайшие дни.</p></div>
+        </div>
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="0">
+          <div>
+            <sc-if value="{{m.isUser}}" hint-placeholder-val="{{false}}"><div class="rec-msg"><div class="bubble-u">{{m.text}}</div></div></sc-if>
+            <sc-if value="{{m.isBot}}" hint-placeholder-val="{{false}}">
+              <div class="rec-msg">
+                <span class="bot-ava" aria-hidden="true"><svg class="ic ic-s"><use href="#i-spark"></use></svg></span>
+                <div class="bubble-b">
+                  <sc-if value="{{m.subs}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>На подписки уходит <b class="num">{{m.subMonth}} BYN</b> в месяц — это <b class="num">{{m.subYear}}</b> в год.</p>
+                      <div class="formula">
+                        <sc-for list="{{m.subList}}" as="x" hint-placeholder-count="3"><div class="formula-r"><span>{{x.n}}</span><span class="num">{{x.y}} в год</span></div></sc-for>
+                      </div>
+                      <p class="small muted">Если каким-то сервисом больше не пользуетесь — отметьте его «Это не регулярный», и я пересчитаю свободный остаток.</p>
+                      <div class="row-btns"><button class="btn btn-secondary btn-sm" onClick="{{m.showSubs}}">Показать подписки</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.week}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>До воскресенья, 25.10, спишется <b class="num">442,90 BYN</b>:</p>
+                      <div class="formula">
+                        <div class="formula-r"><span>Интернет и ТВ, Белтелеком — завтра, 22.10</span><span class="num">32,90</span></div>
+                        <div class="formula-r"><span>Кредит, Беларусбанк — пятница, 23.10</span><span class="num">410,00</span></div>
+                      </div>
+                      <p class="small">А в воскресенье, 25.10, ожидается зарплата <b class="num inc">+1 440,00</b>.</p>
+                      <div class="row-btns"><a class="btn btn-secondary btn-sm" href="Calendar.dc.html">Открыть календарь</a></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.zhkh}}" hint-placeholder-val="{{false}}">
+                    <div style="display: flex; flex-direction: column; gap: 10px">
+                      <p>Сумма ЖКХ меняется от месяца к месяцу — в основном из-за отопления и воды: июль <b class="num">172,10</b>, август <b class="num">185,70</b>, сентябрь <b class="num">201,40</b>.</p>
+                      <p class="small muted">В расчётах я беру среднее за 3 месяца — 186,40. Отклонение до 15% для регулярного платежа считается нормальным.</p>
+                      <div class="row-btns"><button class="btn btn-ghost btn-sm" onClick="{{m.whyZhkh}}"><svg class="ic ic-s" aria-hidden="true"><use href="#i-info"></use></svg>Откуда цифры</button></div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{m.generic}}" hint-placeholder-val="{{false}}">
+                    <p>В этом прототипе ассистент отвечает на подсказки ниже. В рабочей версии здесь будет живой ответ с расчётами из ваших данных.</p>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-if value="{{busy}}" hint-placeholder-val="{{false}}">
+          <div class="rec-steps" aria-label="Ассистент работает">
+            <sc-for list="{{steps}}" as="s" hint-placeholder-count="2">
+              <div>
+                <sc-if value="{{s.done}}" hint-placeholder-val="{{false}}"><svg class="ic ic-s" aria-hidden="true" style="color: var(--income)"><use href="#i-check"></use></svg></sc-if>
+                <sc-if value="{{s.going}}" hint-placeholder-val="{{true}}"><span class="spin"></span></sc-if>
+                <span>{{s.t}}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      <div class="rec-sugg">
+        <sc-for list="{{sugg}}" as="q" hint-placeholder-count="3"><button class="chip" onClick="{{q.ask}}" disabled="{{q.off}}">{{q.t}}</button></sc-for>
+      </div>
+      <div class="rec-chat-in">
+        <label for="chat-draft" style="position: absolute; left: -9999px">Сообщение ассистенту</label>
+        <input id="chat-draft" class="input" value="{{draft}}" onChange="{{onDraft}}" onKeyDown="{{onKey}}" placeholder="Спросите о платежах, подписках…">
+        <button class="btn btn-secondary btn-icon" aria-label="Надиктовать"><svg class="ic" aria-hidden="true"><use href="#i-mic"></use></svg></button>
+        <button class="btn btn-primary btn-icon" aria-label="Отправить" onClick="{{send}}"><svg class="ic" aria-hidden="true"><use href="#i-send"></use></svg></button>
+      </div>
+    </section>
+  </div>
+</sc-if>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{false}}">
+  <div class="toast" role="status"><span>{{toastText}}</span><sc-if value="{{toastUndo}}" hint-placeholder-val="{{false}}"><button onClick="{{undoToast}}">Отменить</button></sc-if></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(...a) {
+    super(...a);
+    this.state = { filter: 'all', sheet: null, bell: false, read: false, chat: false, msgs: [], steps: [], busy: false, draft: '', toast: null, menu: null,
+      robot: 'ask', fit: 'ask', excluded: {}, edits: {}, added: [],
+      edit: null, editSum: '', editPeriod: 'ежемесячно', editDay: '', ex: null,
+      add: false, addType: 'must', addName: '', addSum: '', addPeriod: 'ежемесячно', addDay: '', addErr: false };
+    this.timers = [];
+  }
+  componentWillUnmount() { this.timers.forEach((t) => clearTimeout(t)); }
+  later(fn, ms) { this.timers.push(setTimeout(fn, ms)); }
+  f(n) {
+    const neg = n < 0; const p = Math.abs(n).toFixed(2).split('.');
+    return (neg ? '−' : '') + p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ',' + p[1];
+  }
+  num(v) { return parseFloat(String(v).replace(/\s/g, '').replace(',', '.')) || 0; }
+  plural(n, a, b, c) { const m10 = n % 10, m100 = n % 100; if (m10 === 1 && m100 !== 11) return a; if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return b; return c; }
+  toast(text, undo) {
+    const id = Date.now() + Math.random();
+    this.setState({ toast: { text, undo, id } });
+    this.later(() => { if (this.state.toast && this.state.toast.id === id) this.setState({ toast: null }); }, 5000);
+  }
+  base() {
+    return [
+      { id: 'salary', sec: 'inc', name: 'Зарплата', who: 'ООО «ТехноСофт»', cat: 'Зарплата', color: '#146C43', icon: '#i-work', period: 'ежемесячно', day: '25', sum: 1440, nextD: 25, nextM: 10, status: 'active' },
+      { id: 'avans', sec: 'inc', name: 'Аванс', who: 'ООО «ТехноСофт»', cat: 'Зарплата', color: '#146C43', icon: '#i-work', period: 'ежемесячно', day: '10', sum: 960, nextD: 10, nextM: 11, status: 'active' },
+      { id: 'credit', sec: 'must', group: 'credit', name: 'Кредит', who: 'Беларусбанк', cat: 'Кредиты и займы', color: '#4A6FA5', icon: '#i-bank', period: 'ежемесячно', day: '23', sum: 410, nextD: 23, nextM: 10, status: 'active' },
+      { id: 'zhkh', sec: 'must', group: 'zhkh', name: 'ЖКХ', who: 'ЕРИП «Расчёт ЖКУ»', cat: 'ЖКХ', color: '#C98A1B', icon: '#i-home', period: 'ежемесячно', day: '14', approx: true, sum: 186.40, range: 'от 172,10 до 201,40', nextD: 14, nextM: 11, status: 'active' },
+      { id: 'inet', sec: 'must', group: 'tel', name: 'Интернет и ТВ', who: 'Белтелеком', cat: 'Связь, интернет и ТВ', color: '#5B8C85', icon: '#i-phone', period: 'ежемесячно', day: '22', sum: 32.90, nextD: 22, nextM: 10, status: 'active' },
+      { id: 'a1', sec: 'must', group: 'tel', name: 'Мобильная связь', who: 'А1', cat: 'Связь, интернет и ТВ', color: '#5B8C85', icon: '#i-phone', period: 'ежемесячно', day: '2', sum: 10, nextD: 2, nextM: 11, status: 'active' },
+      { id: 'yplus', sec: 'sub', group: 'sub', name: 'Яндекс Плюс', who: 'Онлайн-сервис · карта •• 4821', cat: 'Подписки и онлайн-сервисы', color: '#9C5A86', icon: '#i-tv', period: 'ежемесячно', day: '1', sum: 15.99, nextD: 1, nextM: 11, status: 'sub' },
+      { id: 'vk', sec: 'sub', group: 'sub', name: 'VK Музыка', who: 'Онлайн-сервис · карта •• 0937', cat: 'Подписки и онлайн-сервисы', color: '#9C5A86', icon: '#i-tv', period: 'ежемесячно', day: '5', sum: 12.99, nextD: 5, nextM: 11, status: 'sub' },
+      { id: 'icloud', sec: 'sub', group: 'sub', name: 'iCloud+', who: 'Онлайн-сервис · карта •• 0937', cat: 'Подписки и онлайн-сервисы', color: '#9C5A86', icon: '#i-tv', period: 'ежемесячно', day: '14', sum: 9.49, nextD: 14, nextM: 11, status: 'sub' },
+      { id: 'robot', sec: 'other', name: 'Кружок робототехники', who: 'Центр «РобоКлуб»', cat: 'Дети', color: '#6E9E5B', icon: '#i-baby', period: 'ежемесячно', day: '9', sum: 60, nextD: 9, nextM: 11, status: 'guess' },
+      { id: 'fitness', sec: 'other', name: 'Фитнес-клуб', who: 'Клуб «Атлетик»', cat: 'Развлечения, спорт и хобби', color: '#5E7FA0', icon: '#i-fun', period: 'ежемесячно', day: '12', sum: 55, nextD: 12, nextM: 10, status: 'maybe' }
+    ];
+  }
+  rows() {
+    const st = this.state;
+    return this.base().concat(st.added).map((r) => {
+      const e = st.edits[r.id]; const x = { ...r };
+      if (e) { x.sum = e.sum; x.period = e.period; x.day = e.day; x.approx = false; x.range = null; const d = parseInt(e.day, 10); if (d >= 1 && d <= 31) { x.nextD = d; x.nextM = d > 21 ? 10 : 11; } }
+      if (r.id === 'robot') { if (st.robot === 'yes') x.status = 'active'; if (st.robot === 'no') x.hidden = true; }
+      if (r.id === 'fitness' && st.fit === 'stopped') x.hidden = true;
+      if (st.excluded[r.id]) x.hidden = true;
+      return x;
+    }).filter((r) => !r.hidden);
+  }
+  rel(r) {
+    if (r.status === 'maybe') return { next: 'Ожидался 12.10', rel: 'не пришёл 9 дней', color: 'var(--warn)' };
+    const d = new Date(2026, r.nextM - 1, r.nextD); const today = new Date(2026, 9, 21);
+    const n = Math.round((d - today) / 86400000);
+    const dd = String(r.nextD).padStart(2, '0') + '.' + String(r.nextM).padStart(2, '0');
+    let t = n === 0 ? 'сегодня' : n === 1 ? 'завтра' : 'через ' + n + ' ' + this.plural(n, 'день', 'дня', 'дней');
+    return { next: 'Следующий — ' + dd, rel: t, color: n <= 2 ? 'var(--brand)' : 'var(--ink-2)' };
+  }
+  why(key, groups, I, free) {
+    const f = (n) => this.f(n);
+    if (key === 'free') return { label: 'Свободный остаток в месяц', value: f(free), period: 'По 3 полным месяцам: июль–сентябрь 2026', totalLabel: 'Свободный остаток',
+      rows: [{ l: 'Средний регулярный доход (зарплата + аванс)', v: '+' + f(I) }].concat(groups.filter((g) => g.v > 0).map((g) => ({ l: g.label, v: '−' + f(g.v) }))),
+      note: 'Доход — «на руки», по выпискам. Обязательные платежи — ЖКХ, связь, аренда, кредиты и подписки. Кружок, спорт и другие необязательные регулярные траты в свободный остаток не входят.',
+      ops: [{ d: '25.09', t: 'Зарплата, ООО «ТехноСофт»', v: '+1 440,00' }, { d: '23.09', t: 'Кредит, Беларусбанк', v: '−410,00' }, { d: '14.09', t: 'ЖКХ, ЕРИП', v: '−201,40' }, { d: '10.09', t: 'Аванс, ООО «ТехноСофт»', v: '+960,00' }] };
+    if (key === 'zhkh') return { label: 'ЖКХ — средний платёж', value: '186,40', period: 'Июль–сентябрь 2026 · 3 платежа через ЕРИП', totalLabel: 'Среднее за 3 месяца',
+      rows: [{ l: 'Июль (14.07)', v: '172,10' }, { l: 'Август (13.08)', v: '185,70' }, { l: 'Сентябрь (14.09)', v: '201,40' }, { l: 'Сумма за 3 месяца ÷ 3', v: '559,20 ÷ 3' }],
+      note: 'Сумма ЖКХ меняется от месяца к месяцу — отопление, вода, перерасчёты. Отклонение до 15% от среднего не мешает считать платёж регулярным.',
+      ops: [{ d: '14.10', t: 'ЖКХ, ЕРИП «Расчёт ЖКУ»', v: '−186,40' }, { d: '14.09', t: 'ЖКХ, ЕРИП «Расчёт ЖКУ»', v: '−201,40' }, { d: '13.08', t: 'ЖКХ, ЕРИП «Расчёт ЖКУ»', v: '−185,70' }] };
+    return null;
+  }
+  ask(q) {
+    if (this.state.busy || !q.trim()) return;
+    const s = q.toLowerCase();
+    let kind = 'generic';
+    if (s.includes('подпис')) kind = 'subs';
+    else if (s.includes('недел') || s.includes('спишет') || s.includes('ближайш')) kind = 'week';
+    else if (s.includes('жкх') || s.includes('разн')) kind = 'zhkh';
+    const plan = { subs: ['Ищу подписки среди регулярных платежей…', 'Считаю сумму за год…'], week: ['Смотрю регулярные платежи…', 'Проверяю календарь до 25.10…'], zhkh: ['Беру платежи ЖКХ за 3 месяца…', 'Считаю среднее…'], generic: ['Разбираю вопрос…'] }[kind];
+    this.setState({ msgs: this.state.msgs.concat([{ id: Date.now(), role: 'user', text: q }]), busy: true, draft: '', steps: [{ t: plan[0], done: false }] });
+    plan.forEach((t, i) => {
+      this.later(() => {
+        if (i < plan.length - 1) { this.setState({ steps: plan.slice(0, i + 2).map((x, j) => ({ t: x, done: j <= i })) }); return; }
+        this.setState({ busy: false, steps: [], msgs: this.state.msgs.concat([{ id: Date.now() + 1, role: 'bot', kind }]) });
+      }, 750 * (i + 1));
+    });
+  }
+  renderVals() {
+    const st = this.state; const f = (n) => this.f(n);
+    const rows = this.rows();
+    const inc = rows.filter((r) => r.sec === 'inc'); const must = rows.filter((r) => r.sec === 'must');
+    const sub = rows.filter((r) => r.sec === 'sub'); const other = rows.filter((r) => r.sec === 'other');
+    const I = inc.reduce((s, r) => s + r.sum, 0);
+    const sumG = (g) => must.filter((r) => r.group === g).reduce((s, r) => s + r.sum, 0);
+    const subSum = sub.reduce((s, r) => s + r.sum, 0);
+    const groups = [
+      { key: 'credit', label: 'Кредиты и займы', v: sumG('credit'), color: '#4A6FA5' },
+      { key: 'zhkh', label: 'ЖКХ', v: sumG('zhkh'), color: '#C98A1B' },
+      { key: 'tel', label: 'Связь, интернет и ТВ', v: sumG('tel'), color: '#5B8C85' },
+      { key: 'other', label: 'Другие обязательные', v: sumG('other'), color: '#6F8F8A' },
+      { key: 'sub', label: 'Подписки', v: subSum, color: '#9C5A86' }];
+    const mustSum = must.reduce((s, r) => s + r.sum, 0);
+    const free = I - mustSum - subSum;
+    let run = I;
+    const wf = [{ label: 'Средний регулярный доход', val: '+' + f(I), left: 0, width: 100, color: '#2F8A5B', cls: 'rec-wf-r' }];
+    groups.filter((g) => g.v > 0).forEach((g) => { run -= g.v; wf.push({ label: g.label, val: '−' + f(g.v), left: Math.max(run / I * 100, 0).toFixed(2), width: (g.v / I * 100).toFixed(2), color: g.color, cls: 'rec-wf-r' }); });
+    wf.push({ label: 'Свободный остаток', val: f(free), left: 0, width: Math.max(free / I * 100, 0).toFixed(2), color: 'var(--brand)', cls: 'rec-wf-r tot' });
+    const badges = { active: ['badge b-ok', 'активен'], sub: ['badge b-brand', 'подписка'], guess: ['badge b-neutral', 'предположение'], maybe: ['badge b-warn', 'возможно прекращён'] };
+    const mk = (r) => {
+      const rl = this.rel(r); const b = badges[r.status] || badges.active;
+      const isInc = r.sec === 'inc';
+      return { name: r.name, who: r.who, icon: r.icon, color: r.color, cat: r.cat,
+        periodText: r.period[0].toUpperCase() + r.period.slice(1) + (r.day ? ', ' + r.day + '-го' : ''),
+        amt: (isInc ? '+' : '') + (r.approx ? '≈ ' : '') + f(r.sum), amtColor: isInc ? 'var(--income)' : 'var(--ink)',
+        amtSub: r.range ? r.range : (r.approx ? 'в среднем' : 'в месяц'), hasRange: !!r.range,
+        why: () => this.setState({ sheet: 'zhkh', menu: null }),
+        next: rl.next, rel: rl.rel, relColor: rl.color, badgeCls: b[0], badge: b[1], isMaybe: r.status === 'maybe',
+        cls: 'rec-row',
+        flag: r.status === 'maybe' || r.status === 'guess', flagCls: 'rec-flag ' + b[0], flagIcon: r.status === 'maybe' ? '#i-warn' : '#i-info',
+        menuOpen: st.menu === r.id, menuLabel: 'Действия: ' + r.name,
+        toggleMenu: () => this.setState({ menu: st.menu === r.id ? null : r.id, bell: false }),
+        edit: () => this.setState({ menu: null, edit: r.id, editSum: f(r.sum).replace(/ /g, ' '), editPeriod: r.period, editDay: r.day || '' }),
+        exclude: () => this.setState({ menu: null, ex: r.id }) };
+    };
+    const fl = st.filter;
+    const sections = [
+      { key: 'inc', title: 'Доходы', sub: 'Учитываются в свободном остатке как средний доход', total: '+' + f(I), total2: 'в месяц', totalColor: 'var(--income)', rows: inc.map(mk), show: fl === 'all' || fl === 'inc' },
+      { key: 'must', title: 'Обязательные платежи', sub: 'ЖКХ, связь, кредиты — без них не обойтись', total: f(mustSum), total2: 'в месяц', totalColor: 'var(--ink)', rows: must.map(mk), show: fl === 'all' || fl === 'must' },
+      { key: 'sub', title: 'Подписки', sub: 'Онлайн-сервисы — тоже входят в обязательные', total: f(subSum), total2: 'в месяц · ' + f(subSum * 12) + ' в год', totalColor: 'var(--ink)', rows: sub.map(mk), show: fl === 'all' || fl === 'sub' },
+      { key: 'other', title: 'Другие регулярные', sub: 'Повторяются, но не обязательны — в свободный остаток не входят', total: '', total2: '', totalColor: 'var(--ink)', rows: other.map(mk), show: fl === 'all' && other.length > 0 }
+    ].map((s) => ({ ...s, empty: s.rows.length === 0 }));
+    const visibleCount = sections.filter((s) => s.show).reduce((n, s) => n + s.rows.length, 0);
+    const filters = [['all', 'Все'], ['inc', 'Доходы'], ['must', 'Обязательные'], ['sub', 'Подписки']].map(([k, t]) => ({ t, on: fl === k, cls: fl === k ? 'on' : '', pick: () => this.setState({ filter: k, menu: null }) }));
+    const notes = [
+      { icon: '#i-warn', bg: 'var(--warn-soft)', fg: 'var(--warn)', text: 'Вы потратили 84% лимита на кафе, а до конца месяца 10 дней.', time: '2 часа назад', href: 'Budget.dc.html', act: 'Открыть лимиты', hasAct: true, unread: true },
+      { icon: '#i-link', bg: 'var(--brand-soft)', fg: 'var(--brand)', text: 'Чек из Евроопта привязан к платежу по карте •• 4821 от 13.10.', time: 'Вчера, 18:40', href: 'Operations.dc.html', act: 'Это разные покупки', hasAct: true, unread: true },
+      { icon: '#i-coins', bg: 'var(--amber-soft)', fg: 'var(--amber-ink)', text: 'Найден вычет: обучение в БГУ — можно вернуть до 260,00 BYN.', time: '19.10, 09:00', href: 'Deductions.dc.html', act: 'Показать', hasAct: true, unread: true },
+      { icon: '#i-file', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Выписка по карте •• 4821 импортирована: 35 новых операций, 12 уже были.', time: '18.10, 21:15', hasAct: false, unread: false },
+      { icon: '#i-trend', bg: '#ECF0EE', fg: 'var(--ink-2)', text: 'Итоги недели 12–18 октября готовы.', time: '19.10, 09:00', hasAct: false, unread: false }
+    ].map((n) => ({ ...n, cls: 'rec-nt' + (n.unread && !st.read ? ' unread' : '') }));
+    const sh = st.sheet ? this.why(st.sheet, groups, I, free) : null;
+    const subList = sub.map((r) => ({ n: r.name + ' — ' + f(r.sum) + ' в месяц', y: f(r.sum * 12) }));
+    const msgs = st.msgs.map((m) => ({ ...m, isUser: m.role === 'user', isBot: m.role === 'bot', subs: m.kind === 'subs', week: m.kind === 'week', zhkh: m.kind === 'zhkh', generic: m.kind === 'generic',
+      subMonth: f(subSum), subYear: f(subSum * 12), subList,
+      showSubs: () => this.setState({ filter: 'sub', chat: false }), whyZhkh: () => this.setState({ sheet: 'zhkh', chat: false }) }));
+    const sugg = ['Сколько я плачу за подписки в год?', 'Что спишется на этой неделе?', 'Почему ЖКХ каждый месяц разное?'].map((t) => ({ t, off: st.busy, ask: () => this.ask(t) }));
+    const exRow = st.ex ? this.base().concat(st.added).find((r) => r.id === st.ex) : null;
+    const editRow = st.edit ? this.base().concat(st.added).find((r) => r.id === st.edit) : null;
+    const typeHints = { must: 'Будет учитываться в свободном остатке и прогнозах как обязательный.', sub: 'Подписка на онлайн-сервис — входит в обязательные платежи.', inc: 'Регулярный доход — войдёт в средний доход.', other: 'Повторяющаяся, но необязательная трата — в свободный остаток не входит.' };
+    const setUndo = (patch, text, undoPatch) => { this.setState(patch); this.toast(text, () => this.setState(undoPatch)); };
+    return {
+      free: f(free), incTotal: f(I),
+      mustTotal: f(mustSum + subSum), mustShare: I > 0 ? Math.round((mustSum + subSum) / I * 100) + '%' : '—',
+      wf, whyFree: () => this.setState({ sheet: 'free' }),
+      sheetOpen: !!sh, sh: sh ? { ...sh, hasOps: sh.ops && sh.ops.length > 0 } : { rows: [], ops: [] }, closeSheet: () => this.setState({ sheet: null }),
+      hasDecisions: st.robot === 'ask' || st.fit === 'ask', robotAsk: st.robot === 'ask', fitAsk: st.fit === 'ask',
+      robotYes: () => setUndo({ robot: 'yes' }, 'Отметил как регулярный: Кружок робототехники', { robot: 'ask' }),
+      robotNo: () => setUndo({ robot: 'no' }, 'Больше не считаю регулярным: Кружок робототехники', { robot: 'ask' }),
+      fitStop: () => setUndo({ fit: 'stopped' }, 'Фитнес-клуб перенесён в прекращённые', { fit: 'ask' }),
+      fitWait: () => setUndo({ fit: 'wait' }, 'Подожду ещё 10 дней и спрошу снова', { fit: 'ask' }),
+      hasStopped: st.fit === 'stopped', fitUndo: () => this.setState({ fit: 'wait' }),
+      filters, filterLabel: { all: 'Регулярные платежи', inc: 'Регулярные · доходы', must: 'Регулярные · обязательные', sub: 'Регулярные · подписки' }[fl],
+      countText: visibleCount + ' ' + this.plural(visibleCount, 'платёж', 'платежа', 'платежей'),
+      sections,
+      editOpen: !!editRow, editName: editRow ? editRow.name : '', editSum: st.editSum, editPeriod: st.editPeriod, editDay: st.editDay,
+      onEditSum: (e) => this.setState({ editSum: e.target.value }), onEditPeriod: (e) => this.setState({ editPeriod: e.target.value }), onEditDay: (e) => this.setState({ editDay: e.target.value }),
+      closeEdit: () => this.setState({ edit: null }),
+      saveEdit: () => {
+        const v = this.num(st.editSum); if (v <= 0 || !editRow) return;
+        const id = st.edit; const prev = st.edits[id];
+        const edits = { ...st.edits, [id]: { sum: v, period: st.editPeriod, day: String(st.editDay).replace(/\D/g, '') } };
+        this.setState({ edits, edit: null });
+        this.toast('Сохранено: ' + editRow.name + ' — ' + f(v), () => { const e2 = { ...this.state.edits }; if (prev) e2[id] = prev; else delete e2[id]; this.setState({ edits: e2 }); });
+      },
+      exOpen: !!exRow, exName: exRow ? exRow.name : '', closeEx: () => this.setState({ ex: null }),
+      confirmEx: () => {
+        if (!exRow) return; const id = st.ex; const name = exRow.name;
+        this.setState({ ex: null, excluded: { ...st.excluded, [id]: true } });
+        this.toast('«' + name + '» больше не считается регулярным', () => { const x = { ...this.state.excluded }; delete x[id]; this.setState({ excluded: x }); });
+      },
+      openAdd: () => this.setState({ add: true, addName: '', addSum: '', addDay: '', addErr: false, addType: 'must', addPeriod: 'ежемесячно', bell: false }),
+      addOpen: st.add, closeAdd: () => this.setState({ add: false }),
+      addTypes: [['must', 'Обязательный'], ['sub', 'Подписка'], ['inc', 'Доход'], ['other', 'Другой']].map(([k, l]) => ({ label: l, on: st.addType === k, cls: st.addType === k ? 'on' : '', pick: () => this.setState({ addType: k }) })),
+      addTypeHint: typeHints[st.addType], addName: st.addName, addSum: st.addSum, addPeriod: st.addPeriod, addDay: st.addDay, addError: st.addErr,
+      onAddName: (e) => this.setState({ addName: e.target.value }), onAddSum: (e) => this.setState({ addSum: e.target.value }), onAddPeriod: (e) => this.setState({ addPeriod: e.target.value }), onAddDay: (e) => this.setState({ addDay: e.target.value }),
+      saveAdd: () => {
+        const v = this.num(st.addSum); const name = st.addName.trim();
+        if (!name || v <= 0) { this.setState({ addErr: true }); return; }
+        const d = Math.min(Math.max(parseInt(st.addDay, 10) || 1, 1), 31);
+        const meta = { must: ['must', 'other', 'Обязательный платёж', '#6F8F8A', '#i-repeat', 'active'], sub: ['sub', 'sub', 'Подписки и онлайн-сервисы', '#9C5A86', '#i-tv', 'sub'], inc: ['inc', null, 'Прочие доходы', '#146C43', '#i-work', 'active'], other: ['other', null, 'Прочее', '#AEB7B3', '#i-more', 'active'] }[st.addType];
+        const id = 'u' + Date.now();
+        const row = { id, sec: meta[0], group: meta[1], name, who: 'Добавлено вручную', cat: meta[2], color: meta[3], icon: meta[4], period: st.addPeriod, day: String(d), sum: v, nextD: d, nextM: d > 21 ? 10 : 11, status: meta[5] };
+        this.setState({ add: false, added: st.added.concat([row]) });
+        this.toast('Добавлено: ' + name + ' — ' + f(v), () => this.setState({ added: this.state.added.filter((r) => r.id !== id) }));
+      },
+      notes, bellOpen: st.bell, hasUnread: !st.read, toggleBell: () => this.setState({ bell: !st.bell, menu: null }), markRead: () => this.setState({ read: true }),
+      chatOpen: st.chat, openChat: () => this.setState({ chat: true, bell: false, menu: null }), closeChat: () => this.setState({ chat: false }),
+      msgs, busy: st.busy, steps: st.steps.map((s) => ({ ...s, going: !s.done })), sugg, draft: st.draft,
+      onDraft: (e) => this.setState({ draft: e.target.value }), onKey: (e) => { if (e.key === 'Enter') this.ask(this.state.draft); }, send: () => this.ask(st.draft),
+      hasToast: !!st.toast, toastText: st.toast ? st.toast.text : '', toastUndo: !!(st.toast && st.toast.undo),
+      undoToast: () => { const u = st.toast && st.toast.undo; this.setState({ toast: null }); if (u) u(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

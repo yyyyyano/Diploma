@@ -23,8 +23,7 @@
   словаря `formulas`.
 
 ## Можно зависеть от
-Только `@kosht/kernel` (правило `calc-only-kernel` в `.dependency-cruiser.mjs`). Внешних пакетов нет; `fast-check` —
-только в тестах.
+Только `@kosht/kernel` (правило `calc-only-kernel` в `.dependency-cruiser.mjs`); `fast-check` — только в тестах.
 
 ## Запреты
 - Ни БД, ни сети, ни файлов, ни `Date.now()`/`new Date()`/`Math.random()`/`Intl` (проверяет `calc-no-clock.mjs`).

@@ -1,7 +1,8 @@
 // Дифференциальный тест аудитора SQL против настоящего Postgres (ADR-0006, ARCHITECTURE §15). Аудитор читает
 // текст регулярками поверх своего лексера; здесь проверяется, что он читает его так же, как база. Одни и те же
 // запросы записываются по-разному (пробел, таб, перевод строки, комментарии, ключевое слово вплотную к кавычке,
-// регистр, "имя", public., ONLY, U&"…", E-строки со склейкой, $tag$…$tag$, «;» в конце), выбор — детерминированный
+// регистр, "имя", public. и <база>.public., ONLY, U&"…", E-строки со склейкой, $tag$…$tag$, «;» в конце, слова
+// from/in внутри выражений SET и WHERE, алиасы-ключевые слова и имена с $ и кириллицей), выбор — детерминированный
 // (свой ГПСЧ с фиксированным зерном). Каждый вариант Postgres выполняет в транзакции с откатом, оракул — сама база:
 //  - какие пользовательские таблицы запрос реально тронул — дельта pg_stat_xact_user_tables (видит и вставку
 //    MERGE, и вторую команду через «;», а отброшенное планом `where false` — нет); FK-триггеры выключены
@@ -32,12 +33,17 @@ const SEED = Number(process.env["AUDIT_DIFF_SEED"] ?? 20_261_024);
 
 let db: TestDb;
 let client: pg.PoolClient;
+let receiptA = "";
 let receiptB = "";
+/** Имя тестовой базы: Postgres принимает <текущая_база>.public.t. */
+let catalog = "";
 
 // ── Запросы: шаблон — токены через пробел; каждый пробел — «зазор», который вариант пишет по-своему ─────────
-// K:слово — ключевое слово (регистр), T:имя — таблица (кавычки, public., ONLY, U&), C:кол — колонка (кавычки,
-// регистр), Q:алиас.кол — квалифицированная колонка, % — необязательный «шумный» литерал в списке select,
-// прочее — как есть. safe — с own у каждой таблицы, leak — данные B утекают, если база выполнит запрос.
+// K:слово — ключевое слово (регистр), T:имя — таблица (кавычки, public., <база>.public., ONLY, U&), C:кол —
+// колонка (кавычки, регистр), Q:алиас.кол — квалифицированная колонка, % — необязательный «шумный» литерал
+// в списке select, X: — значение со словом from внутри (is distinct from, extract, substring…), Y: — такое же
+// условие, W: — алиас-ключевое слово или имя с $ и не-ASCII буквой, прочее — как есть. safe — с own у каждой
+// таблицы, leak — данные B утекают, если база выполнит запрос.
 
 interface Base {
   readonly name: string;
@@ -135,6 +141,19 @@ const BASES: readonly Base[] = [
     params: () => [A],
   },
   {
+    name: "UPDATE: from внутри выражений SET и WHERE",
+    kind: "safe",
+    template:
+      "K:update T:fx_receipts K:set note = X: K:where C:household_id = $1 K:and Y: K:returning id , household_id",
+    params: () => [A],
+  },
+  {
+    name: "чтение: from внутри выражений WHERE",
+    kind: "safe",
+    template: "K:select note % K:from T:fx_receipts K:where Y: K:and C:household_id = $1",
+    params: () => [A],
+  },
+  {
     name: "чтение без фильтра",
     kind: "leak",
     template: "K:select note % K:from T:fx_receipts",
@@ -194,6 +213,46 @@ const BASES: readonly Base[] = [
     kind: "leak",
     template: "K:update T:fx_receipts K:set C:household_id = $2 K:where C:household_id = $1",
     params: () => [A, B],
+  },
+  {
+    name: "SET: значение со словом from, затем household_id = B",
+    kind: "leak",
+    template:
+      "K:update T:fx_receipts K:set note = X: , C:household_id = $2 K:where C:household_id = $1",
+    params: () => [A, B],
+  },
+  {
+    name: "ON CONFLICT DO UPDATE SET: значение со словом from, затем household_id = B",
+    kind: "leak",
+    template:
+      "K:insert K:into T:fx_receipts ( C:household_id , id , user_id , merchant , total_minor ) " +
+      "K:values ( $1 , $4 , $2 , 'm' , 1 ) K:on K:conflict ( household_id , id ) K:do K:update " +
+      "K:set note = X: , C:household_id = $3",
+    params: () => [A, scopeA.userId, B, receiptA],
+  },
+  {
+    name: "алиас-ключевое слово: предикаты по имени таблицы фильтруют другое обращение",
+    kind: "leak",
+    template:
+      "K:select * K:from T:fx_receipts , T:fx_receipts W: K:where Q:fx_receipts.household_id = $1 " +
+      "K:and Q:fx_receipts.household_id = $1",
+    params: () => [A],
+  },
+  {
+    name: 'tablesample — не алиас: предикаты "tablesample" — у другой таблицы',
+    kind: "leak",
+    template:
+      'K:select * K:from T:fx_receipts K:tablesample K:system ( 100 ) , T:fx_receipt_items "tablesample" ' +
+      'K:where "tablesample".household_id = $1 K:and "tablesample".household_id = $1',
+    params: () => [A],
+  },
+  {
+    name: "(a).household_id дважды — второе обращение без фильтра",
+    kind: "leak",
+    template:
+      "K:select * K:from T:fx_receipts A:a , T:fx_receipts A:b K:where ( a ) .household_id = $1 " +
+      "K:and ( a ) .household_id = $1",
+    params: () => [A],
   },
   {
     name: "DELETE без own",
@@ -303,8 +362,58 @@ function table(name: string, pick: Pick): string {
     `only ${name}`,
     `ONLY "${name}"`,
     `U&"${escaped}"`,
+    `${catalog}.public.${name}`,
+    `"${catalog}"."public"."${name}"`,
+    `${catalog.toUpperCase()} . PUBLIC . "${name}"`,
+    `${catalog}/**/.public/**/.${name}`,
   ]);
 }
+
+/** Значения со словом from (и in) внутри выражения: первое — для канонического варианта. */
+const FROM_VALUES = [
+  "1 is distinct from 2",
+  "1 is not distinct from 2",
+  "extract ( year from now ( ) ) ::text",
+  "substring ( 'abc' from 1 for 2 )",
+  "trim ( both from ' x ' )",
+  "overlay ( 'abc' placing 'z' from 2 )",
+  "position ( 'a' in 'abc' ) ::text",
+  "( select 'v' from fx_rates limit 1 )",
+  "'x'",
+];
+
+const FROM_PREDICATES = [
+  "1 is distinct from 2",
+  "note is not distinct from note",
+  "extract ( year from now ( ) ) > 0",
+  "position ( 'a' in 'abc' ) > 0",
+  "substring ( 'abc' from 1 for 2 ) = 'ab'",
+  "trim ( both from ' x ' ) = 'x'",
+  "overlay ( 'abc' placing 'z' from 2 ) = 'azc'",
+];
+
+/** Выражение: слова — в случайном регистре, пробелы — зазоры. */
+function expression(options: readonly string[], pick: Pick): string {
+  const words = pick(options).split(" ");
+  return words
+    .map(
+      (word, i) =>
+        (i === 0 ? "" : pick(GAPS)) + (/^[a-z]+$/.test(word) ? keyword(word, pick) : word),
+    )
+    .join("");
+}
+
+/** Алиас, который аудитор легко принять за ключевое слово или обрезать по \w. */
+const KEYWORD_ALIASES = [
+  "values",
+  "set",
+  "overriding",
+  "AS values",
+  "чек",
+  "a$b",
+  "VALUES",
+  '"set"',
+];
 
 function column(name: string, pick: Pick): string {
   return pick([name, name, `"${name}"`, name.toUpperCase()]);
@@ -347,6 +456,9 @@ function render(template: string, pick: Pick): string {
     if (token.startsWith("Q:")) return qualified(token.slice(2), pick);
     if (token.startsWith("A:")) return alias(token.slice(2), pick);
     if (token === "%") return pick(NOISE);
+    if (token === "X:") return expression(FROM_VALUES, pick);
+    if (token === "Y:") return expression(FROM_PREDICATES, pick);
+    if (token === "W:") return pick(KEYWORD_ALIASES);
     return token;
   });
   let text = pick(["", "", "\n", "/* lead */", "-- lead\n"]);
@@ -467,8 +579,10 @@ beforeAll(async () => {
       .insert(fxTransactions)
       .values({ description: label, amountMinor: -1000, receiptId: id });
     if (scope === scopeB) receiptB = id;
+    else receiptA = id;
   }
   client = await db.pool.connect();
+  catalog = db.name;
   hashB = await hashOfB();
 });
 afterAll(async () => {
@@ -522,7 +636,8 @@ describe("ROLE-01, SEC-04: аудитор читает запрос не сла�
           }
           if (!outcome.leaked && reason !== undefined) {
             falsePositives.push(`[${reason}] ${base.name}: ${JSON.stringify(text)}`);
-            byReason.set(reason, (byReason.get(reason) ?? 0) + 1);
+            const key = `${reason}: ${base.name}`;
+            byReason.set(key, (byReason.get(key) ?? 0) + 1);
           }
         }
       }

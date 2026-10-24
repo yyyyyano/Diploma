@@ -7,7 +7,7 @@ describe("бренды id", () => {
     ["UserId", UserId],
     ["HouseholdId", HouseholdId],
     ["TraceId", TraceId],
-  ])("%s разбирает uuidv7 и не пропускает не-uuid", (_name, schema) => {
+  ])("%s разбирает uuid и не пропускает не-uuid", (_name, schema) => {
     expect(schema.parse("0190f0a0-0000-7000-8000-00000000000a")).toBe(
       "0190f0a0-0000-7000-8000-00000000000a",
     );

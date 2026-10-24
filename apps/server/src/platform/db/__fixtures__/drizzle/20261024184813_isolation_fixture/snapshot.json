@@ -1,0 +1,689 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "5309e736-0f94-462e-a873-a9c3736a4413",
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "fx_rates"],
+      "writes": [
+        "s|tbl|public.fx_rates",
+        "n|tbl|public.fx_rates",
+        "e|tbl|public.fx_rates",
+        "n|rel|public.fx_rates",
+        "n|type|public.fx_rates",
+        "n|rel|public.fx_rates_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "fx_receipt_items"],
+      "writes": [
+        "s|tbl|public.fx_receipt_items",
+        "n|tbl|public.fx_receipt_items",
+        "e|tbl|public.fx_receipt_items",
+        "n|rel|public.fx_receipt_items",
+        "n|type|public.fx_receipt_items",
+        "n|rel|public.fx_receipt_items_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "fx_receipts"],
+      "writes": [
+        "s|tbl|public.fx_receipts",
+        "n|tbl|public.fx_receipts",
+        "e|tbl|public.fx_receipts",
+        "n|rel|public.fx_receipts",
+        "n|type|public.fx_receipts",
+        "n|rel|public.fx_receipts_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "fx_settings"],
+      "writes": [
+        "s|tbl|public.fx_settings",
+        "n|tbl|public.fx_settings",
+        "e|tbl|public.fx_settings",
+        "n|rel|public.fx_settings",
+        "n|type|public.fx_settings",
+        "n|rel|public.fx_settings_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "fx_transactions"],
+      "writes": [
+        "s|tbl|public.fx_transactions",
+        "n|tbl|public.fx_transactions",
+        "e|tbl|public.fx_transactions",
+        "n|rel|public.fx_transactions",
+        "n|type|public.fx_transactions",
+        "n|rel|public.fx_transactions_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "fx_receipt_items",
+        "fx_receipt_items_receipt_id_fk_idx"
+      ],
+      "writes": [
+        "s|idx|public.fx_receipt_items_receipt_id_fk_idx",
+        "n|idx|public.fx_receipt_items_receipt_id_fk_idx",
+        "e|idx|public.fx_receipt_items_receipt_id_fk_idx",
+        "n|rel|public.fx_receipt_items_receipt_id_fk_idx"
+      ],
+      "reads": [
+        "n|tbl|public.fx_receipt_items",
+        "n|sch|public",
+        "n|col|public.fx_receipt_items.household_id",
+        "n|col|public.fx_receipt_items.receipt_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "fx_transactions",
+        "fx_transactions_receipt_id_fk_idx"
+      ],
+      "writes": [
+        "s|idx|public.fx_transactions_receipt_id_fk_idx",
+        "n|idx|public.fx_transactions_receipt_id_fk_idx",
+        "e|idx|public.fx_transactions_receipt_id_fk_idx",
+        "n|rel|public.fx_transactions_receipt_id_fk_idx"
+      ],
+      "reads": [
+        "n|tbl|public.fx_transactions",
+        "n|sch|public",
+        "n|col|public.fx_transactions.household_id",
+        "n|col|public.fx_transactions.receipt_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "fx_receipt_items"],
+      "writes": [
+        "s|fk|public.fx_receipt_items.fx_receipt_items_receipt_id_fk",
+        "n|fk|public.fx_receipt_items.fx_receipt_items_receipt_id_fk",
+        "e|fk|public.fx_receipt_items.fx_receipt_items_receipt_id_fk",
+        "n|con|public.fx_receipt_items.fx_receipt_items_receipt_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.fx_receipt_items",
+        "n|sch|public",
+        "n|tbl|public.fx_receipts",
+        "n|sch|public",
+        "n|col|public.fx_receipt_items.household_id",
+        "n|col|public.fx_receipt_items.receipt_id",
+        "n|col|public.fx_receipts.household_id",
+        "n|col|public.fx_receipts.id",
+        "e|uniqueness|public.fx_receipts.household_id.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "fx_transactions"],
+      "writes": [
+        "s|fk|public.fx_transactions.fx_transactions_receipt_id_fk",
+        "n|fk|public.fx_transactions.fx_transactions_receipt_id_fk",
+        "e|fk|public.fx_transactions.fx_transactions_receipt_id_fk",
+        "n|con|public.fx_transactions.fx_transactions_receipt_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.fx_transactions",
+        "n|sch|public",
+        "n|tbl|public.fx_receipts",
+        "n|sch|public",
+        "n|col|public.fx_transactions.household_id",
+        "n|col|public.fx_transactions.receipt_id",
+        "n|col|public.fx_receipts.household_id",
+        "n|col|public.fx_receipts.id",
+        "e|uniqueness|public.fx_receipts.household_id.id"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "fx_rates",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "fx_receipt_items",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "fx_receipts",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "fx_settings",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "fx_transactions",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "table": "fx_rates",
+      "name": "code",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_rates",
+      "name": "rate_micros",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "uuidv7()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "household_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "user_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "receipt_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "sum_minor",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "uuidv7()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "household_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "user_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "merchant",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "total_minor",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "status",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'recognizing'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "note",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_settings",
+      "name": "key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_settings",
+      "name": "value",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "uuidv7()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "household_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "user_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "amount_minor",
+      "type": "bigint",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "receipt_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "fx_receipt_items_receipt_id_fk_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "household_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "receipt_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "fx_transactions_receipt_id_fk_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "household_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "receipt_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "fx_receipt_items_receipt_id_fk",
+      "nameExplicit": true,
+      "columns": ["household_id", "receipt_id"],
+      "schemaTo": "public",
+      "tableTo": "fx_receipts",
+      "columnsTo": ["household_id", "id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "fx_transactions_receipt_id_fk",
+      "nameExplicit": true,
+      "columns": ["household_id", "receipt_id"],
+      "schemaTo": "public",
+      "tableTo": "fx_receipts",
+      "columnsTo": ["household_id", "id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipt_items",
+      "name": "fx_receipt_items_pkey",
+      "columns": ["household_id", "id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_receipts",
+      "name": "fx_receipts_pkey",
+      "columns": ["household_id", "id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_transactions",
+      "name": "fx_transactions_pkey",
+      "columns": ["household_id", "id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_rates",
+      "name": "fx_rates_pkey",
+      "columns": ["code"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "fx_settings",
+      "name": "fx_settings_pkey",
+      "columns": ["key"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    }
+  ]
+}

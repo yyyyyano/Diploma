@@ -54,6 +54,7 @@
     "data/**",
     "models/**",
     "secrets/**",
-    "**/__cassettes__/**"
+    "**/__cassettes__/**",
+    "tooling/architecture/fixtures/**"
   ]
 }

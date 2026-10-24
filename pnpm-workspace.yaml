@@ -16,3 +16,10 @@ minimumReleaseAge: 1440
 # Пакеты, которым разрешены скрипты установки; новая нативная зависимость — новая строка (ADR-0001).
 allowBuilds:
   lefthook: true
+
+# dependency-cruiser 18.7 не понимает TypeScript 7 и молча проверяет 0 файлов: даём ему свой TypeScript 6
+# (ADR-0002). Снимается, когда dependency-cruiser поддержит TS ≥ 7.1.
+packageExtensions:
+  dependency-cruiser@18:
+    dependencies:
+      typescript: 6.0.3

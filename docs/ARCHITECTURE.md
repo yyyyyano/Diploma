@@ -71,7 +71,7 @@ yana/                         (корень репозитория)
 │        │                    blob-store, secrets, settings, http, rate-limit, telemetry, tools
 │        └─ modules/<id>/     36 модулей (docs/CAPABILITIES.md), у каждого CLAUDE.md-паспорт
 ├─ packages/
-│  ├─ kernel/                 Money, LocalDate, Period, Scope, бренды id, TraceNode — общие примитивы
+│  ├─ kernel/                 Money, LocalDate, Period, Clock, Scope, бренды id, TraceNode — общие примитивы
 │  ├─ calc/                   все числа P1/P2: чистые функции → { value, trace }
 │  ├─ contract/               oRPC-контракт + Zod DTO, каталог ошибок, части сообщений чата, PageContext, события сайта
 │  ├─ i18n/                   словари ru (be — задел), типизированные ключи, formatMoney/formatDate (DES-17, NFR-23)
@@ -687,10 +687,11 @@ apps/web/src/
    «каждое правило ловит своё», `make capabilities`, области коммитов из карты. T-056: `isolation.mjs`,
    `no-raw-colors.mjs`, `calc-no-clock.mjs`, `jsx-literals.mjs` (литералы в JSX), `floor.mjs` («Пол» `CONSTRAINTS.md`)
    — цель `make static-checks` в `make check` и `check-quick`; `bundle-size.mjs` — для `check-full` (T-011).
-3. **Общие пакеты (T-003).** `kernel` (Money, LocalDate, Period, Scope с брендом, бренды id, TraceNode), `calc`
-   (`Calc<T>`, помощники трассы, `freeBalance` с тестами-примерами), `contract` (каталог ошибок, общие схемы,
-   `health`, `PageContext`, части сообщений чата, `events.stream`), `i18n` (ru, типизированные ключи, форматы),
-   `testing` (фабрики, `FakeClock`; остальное в `testing` добавляют задачи, которым оно нужно).
+3. **Общие пакеты (T-003, T-057).** T-003: `kernel` (Money, LocalDate, Period, интерфейс `Clock`, Scope с брендом,
+   бренды id, TraceNode), `calc` (`Calc<T>`, помощники трассы, правила округления, `freeBalance` с тестами-примерами),
+   `testing` (фабрики, `FakeClock`; остальное в `testing` добавляют задачи, которым оно нужно), покрытие `calc` и
+   `kernel` в `make test`. T-057: `contract` (каталог ошибок, общие схемы, `health`, `PageContext`, части сообщений
+   чата, `events.stream`), `i18n` (ru, типизированные ключи, форматы).
 4. **База данных и платформа сервера (T-004…T-006).** T-004: сервис `db` в `compose.yaml`, db (пул, `ScopedDb`,
    аудитор, `userOwnedTable`/`systemTable`/`publicTable`/`ownedFk`, `SystemDb`, первая ручная миграция с `vector`
    и `pg_trgm`, миграции при старте, проверка `casing` drizzle-kit), канарейки аудитора, шаблонная БД на тестовый файл.

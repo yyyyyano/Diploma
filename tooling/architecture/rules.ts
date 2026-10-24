@@ -30,6 +30,18 @@ export const PLATFORM_DB = {
 } as const;
 
 /**
+ * Внутренности platform/db, которые модулям не выдаются (ADR-0006): аудитор и Drizzle с произвольным режимом
+ * аудита (`auditedDrizzle(pool, { kind: "scoped", householdId })` подставил бы любое домохозяйство), пул и
+ * миграции. Пул и миграции нужны ещё корню композиции (main/, T-007).
+ */
+export const PLATFORM_DB_INTERNALS = {
+  audit: `${PLATFORM}/db/audit`,
+  audited: `${PLATFORM}/db/audited`,
+  connection: `${PLATFORM}/db/connection`,
+  migrate: `${PLATFORM}/db/migrate`,
+} as const;
+
+/**
  * Пути PLATFORM_DB, которых нет на диске, хотя папка platform/db уже есть. Правила no-unsafe-db,
  * cross-tenant-only-in-sweeps и system-db-only-for-flagged-modules смотрят только на эти пути: файл, названный
  * иначе, или общий platform/db/index.ts выключили бы их молча (ARCHITECTURE §15). Пока папки нет — пусто.
@@ -326,6 +338,27 @@ function isolationRules(modules: readonly ModuleDef[]): ForbiddenRule[] {
       "unsafeRaw — только миграции (platform/db) и тесты; данные пользователя — через ScopedDb (ADR-0006).",
       { pathNot: [`^${PLATFORM}/db/`, ...TEST_CODE] },
       { path: fileOrDir(PLATFORM_DB.unsafe) },
+    ),
+    rule(
+      "db-internals-only-in-platform-db",
+      "Аудитор и auditedDrizzle — только внутри platform/db и в тестах: режим аудита с householdId выдаёт " +
+        "ScopedDb из scope запроса, а не модуль (ADR-0006, ARCHITECTURE §6.2).",
+      { pathNot: [`^${PLATFORM}/db/`, ...TEST_CODE] },
+      {
+        path: [fileOrDir(PLATFORM_DB_INTERNALS.audit), fileOrDir(PLATFORM_DB_INTERNALS.audited)],
+      },
+    ),
+    rule(
+      "db-internals-only-in-platform-db",
+      "Пул и миграции — только platform/db, корень композиции main/ и тесты: модуль получает s: ScopedDb, " +
+        "а не соединение (ADR-0006, ARCHITECTURE §6.2).",
+      { pathNot: [`^${PLATFORM}/db/`, `^${SERVER}/main/`, ...TEST_CODE] },
+      {
+        path: [
+          fileOrDir(PLATFORM_DB_INTERNALS.connection),
+          fileOrDir(PLATFORM_DB_INTERNALS.migrate),
+        ],
+      },
     ),
     rule(
       "cross-tenant-only-in-sweeps",

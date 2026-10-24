@@ -120,6 +120,12 @@ const EXPECTED: Record<string, string[]> = {
     `${M}/receipts/index.ts → ${M}/receipts/infrastructure/db/receipts.repo.ts`,
   ],
   "no-unsafe-db": [`${M}/receipts/infrastructure/db/receipts.repo.ts → ${P}/db/unsafe-raw.ts`],
+  "db-internals-only-in-platform-db": [
+    `apps/server/src/main/compose.ts → ${P}/db/audited.ts`,
+    `${M}/receipts/infrastructure/db/receipts.repo.ts → ${P}/db/audit.ts`,
+    `${M}/receipts/infrastructure/db/receipts.repo.ts → ${P}/db/audited.ts`,
+    `${P}/jobs/define-job.ts → ${P}/db/connection.ts`,
+  ],
   "cross-tenant-only-in-sweeps": [
     `${M}/calendar/infrastructure/db/reminders.repo.ts → ${P}/db/cross-tenant.ts`,
     `${M}/calendar/jobs/remind.job.ts → ${P}/db/cross-tenant.ts`,

@@ -1,7 +1,7 @@
 // Правила границ dependency-cruiser (ADR-0002, ADR-0003, CONSTRAINTS.md «Архитектурные запреты»): состав
 // правил выводится из карты модулей, а запреты библиотек узнают пакет в обеих раскладках путей — по имени из
 // импорта (пакет не установлен) и по пути pnpm (node_modules/.pnpm/…/node_modules/<пакет>/).
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import { MODULES } from "./modules.ts";
 import {
   EXCLUDE,
   PLATFORM_DB,
+  PLATFORM_DB_INTERNALS,
   buildConfig,
   buildForbiddenRules,
   missingPlatformDbPaths,
@@ -149,6 +150,13 @@ describe("PLATFORM_DB — пути возможностей БД совпада�
 
   it("в репозитории каждый путь PLATFORM_DB существует, как только появилась папка platform/db", () => {
     expect(missingPlatformDbPaths(repoRoot)).toEqual([]);
+  });
+
+  it("внутренности PLATFORM_DB_INTERNALS — существующие файлы: переименование не выключит правило молча", () => {
+    const missing = Object.values(PLATFORM_DB_INTERNALS).filter(
+      (path) => !existsSync(join(repoRoot, `${path}.ts`)),
+    );
+    expect(missing).toEqual([]);
   });
 
   it("папки platform/db ещё нет — сверять нечего", () => {

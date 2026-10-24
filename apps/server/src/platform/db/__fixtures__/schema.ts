@@ -1,6 +1,7 @@
 // Тестовая схема механизма изоляции (не боевая): чек, его позиции, операция со ссылкой на чек, системная и
 // общая таблицы. Префикс fx_ — чтобы не столкнуться с таблицами модулей в одной тестовой базе.
-// Миграции — рядом, в drizzle/ (make db-generate-fixtures); в apps/server/drizzle они не попадают.
+// Миграции — рядом, в drizzle/ (make db-generate DRIZZLE_CONFIG=…/__fixtures__/drizzle.config.ts);
+// в apps/server/drizzle они не попадают.
 import { bigint, text, uuid } from "drizzle-orm/pg-core";
 import { ownedFk, publicTable, systemTable, userOwnedTable } from "../tables.ts";
 

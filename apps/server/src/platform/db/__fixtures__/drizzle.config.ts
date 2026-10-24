@@ -1,4 +1,5 @@
-// drizzle-kit для тестовой схемы механизма изоляции (make db-generate-fixtures); боевая — apps/server/drizzle.config.ts.
+// drizzle-kit для тестовой схемы механизма изоляции; боевая — apps/server/drizzle.config.ts.
+// Генерация: make db-generate DRIZZLE_CONFIG=apps/server/src/platform/db/__fixtures__/drizzle.config.ts
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({

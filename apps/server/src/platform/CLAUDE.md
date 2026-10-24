@@ -23,6 +23,8 @@
 
 ## Запреты
 - `drizzle()`, `pg`, `$client`, `unsafeRaw` вне `platform/db` и тестов; `ISOLATION_VIOLATION` не ловить и не глушить.
+- `audit.ts`, `audited.ts` вне `platform/db` и тестов; `connection.ts`, `migrate.ts` — ещё и в `main/`
+  (правило `db-internals-only-in-platform-db`, пути — `PLATFORM_DB_INTERNALS` в `tooling/architecture/rules.ts`).
 - `ISOLATION_VIOLATION` не входит в каталог ошибок `@kosht/contract`: наружу (T-005) — как `INTERNAL`.
 - `VIEW`, функции и триггеры в `public`; `household_id` nullable; таблица вне реестров (`schema-check.ts`).
 
@@ -32,7 +34,7 @@
 - Тестовая схема `fx_*` и её миграции — `db/__fixtures__/` (`make db-generate DRIZZLE_CONFIG=…/__fixtures__/drizzle.config.ts`).
 
 ## Подводные камни
-- Аудитор проверяет текст: `… OR true`, предикат в `select`, VIEW и функции он не видит. Незагруженная схема не
-  аудируется — старт (T-007) и `production-schema.int.test.ts` импортируют все схемы модулей.
+- Аудитор проверяет текст (лексер + белый список команд): `… OR true`, предикат в `select`, VIEW и функции
+  он не видит. Незагруженная схема не аудируется — старт (T-007) и `production-schema.int.test.ts` импортируют все схемы модулей.
 - Drizzle закреплён точно (`1.0.0-rc.5`): после обновления красные канарейки = стоп (запасной путь — наследник `Pool`).
 - `ON DELETE SET NULL` на составном FK drizzle-kit пишет неверно — правьте миграцию на `SET NULL (col)`.

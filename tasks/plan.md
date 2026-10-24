@@ -40,7 +40,7 @@
   коммитом T-001: без этого коммиты дирижёра `docs(plan): …` отклонит хук с фазы 2.
 
 ### T-001 · Ворота качества: монорепозиторий, проверки, хуки git и Makefile
-- Статус: todo
+- Статус: done · 1a5faab..1191080
 - Модули: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tooling/tsconfig.base.json`, `.oxlintrc.json`,
   `.oxfmtrc.json`, `lefthook.yml`, `commitlint.config.ts`, `tooling/check-commit-size.mjs`, `tooling/git-hooks/`,
   `Makefile`, `.env.example`

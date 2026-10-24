@@ -89,7 +89,7 @@
 - Зависимости: —
 
 ### T-002 · Архитектура как код: карта 36 модулей, правила границ и `deps-guard`
-- Статус: todo
+- Статус: done · d77da67..2d1b06d
 - Модули: `tooling/architecture/modules.ts`, `.dependency-cruiser.mjs`, `tooling/checks/`,
   `tooling/architecture/fixtures/`, `docs/CAPABILITIES.md`, `commitlint.config.ts`, `Makefile`, `package.json`,
   `pnpm-workspace.yaml`, `vitest.config.ts`, `tsconfig.json`, `.oxlintrc.json`, `.oxfmtrc.json`

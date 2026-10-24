@@ -55,6 +55,10 @@
   покрытия в `vitest.config.ts` и Makefile, резолв `@kosht/*`, `Clock` и `FakeClock`, бренды на `z.$brand`), контракт
   и тексты вынесены в новую **T-057** (по файлу — после T-003, до T-004; `Риск: high`); зависимости T-005 и T-008
   дополнены T-057. Задач в плане теперь 57.
+- Критик T-057 (REVISE) заменил расплывчатые критерии проверяемыми; принято (обратимо): точный формат `formatMoney`
+  и дат, форма контракта (`pickErrors`, `events.stream`, `PageContext`), правило `i18n-allowed-deps`; проверка
+  «каждый ключ трассы `calc` имеет подпись в `formulas`» в T-057 сужена до `fin.freeBalance`, общий реестр ключей
+  перенесён в T-014 (панель «Откуда эта цифра?»).
 - По ревью T-002 (R1-1, R1-4) в критерии T-004 добавлен пункт: файлы возможностей `platform/db` согласованы с
   `PLATFORM_DB` в `rules.ts`, а правило `drizzle-and-pg-only-in-db` пускает `packages/testing/db` — так буква
   CONSTRAINTS согласуется с ARCHITECTURE §12, где шаблонной БД нужен `pg` (обратимо; если исключение нежелательно —
@@ -183,22 +187,39 @@
 
 ### T-057 · Контракт и тексты: contract, i18n
 - Статус: todo
-- Модули: `@kosht/contract`, `@kosht/i18n`, `pnpm-workspace.yaml`
+- Модули: `@kosht/contract`, `@kosht/i18n`, `pnpm-workspace.yaml`, `tooling/architecture/rules.ts`
+  (+ фикстура правила)
 - SPEC: NFR-19, NFR-23, DES-17, P1
 - Критерии приёмки:
-  - [ ] `contract`: каталог ошибок (код → HTTP-статус, `retryable`; базовый набор: `VALIDATION` 400, `UNAUTHORIZED` 401,
-    `FORBIDDEN` 403, `NOT_FOUND` 404, `CONFLICT` 409, `RATE_LIMITED` 429 `retryable`, `INTERNAL` 500, `UNAVAILABLE`
-    503 `retryable`); общие схемы (`Money`, `LocalDate`, `PageNumber`, `PageSize` ≤ 100 с умолчанием 50, `RowCount`);
-    `system.health` как `publicProc` без БД (не заменяет `/healthz`); минимальные `PageContext` и событие
-    `events.stream` (виды `progress` и `changed`: сущность и id, без данных); части сообщений чата — только
-    text/step/card, расширения — в T-006, T-010 и T-043; зависит только от `zod`, `@orpc/contract`, `kernel`;
-    ключей `userId` / `householdId` / `ownerId` в контракте нет (`isolation.mjs` проверяет весь `packages/contract`).
-  - [ ] `i18n`: i18next (точная версия), `createT` без React; словари ru (`common`, `errors`, `formulas`, `tools`),
-    типизированные ключи (несуществующий ключ не компилируется — тест с `@ts-expect-error`), русские множественные
-    числа (ключ `common` с `count`); `formatMoney` → `1 234,56 BYN` с неразрывными пробелами (U+00A0) и знаком
-    минуса, `formatDate` → `21.10.2026`, `formatRelativeDay(date, today)`, всё по `Europe/Minsk`; точные символы —
-    в тестах; тесты: у каждого кода каталога ошибок есть текст, у каждого ключа трассы `calc` (`fin.freeBalance`)
-    есть подпись в `formulas`.
+  - [ ] `contract`, каталог ошибок: 8 базовых кодов (`VALIDATION` 400, `UNAUTHORIZED` 401, `FORBIDDEN` 403,
+    `NOT_FOUND` 404, `CONFLICT` 409, `RATE_LIMITED` 429 `retryable`, `INTERNAL` 500, `UNAVAILABLE` 503 `retryable`);
+    помощник `pickErrors(...codes)` выдаёт карту ошибок oRPC со статусом и схемой `data = { requestId, params }`;
+    тип `ErrorCode`, `retryable` читается из каталога; процедура не может объявить код вне каталога (тест).
+  - [ ] `contract`, общие схемы: `Money` и `LocalDate` реэкспортируются из `kernel`, а не дублируются; `PageNumber` —
+    целое ≥ 1, `PageSize` — 1..100 (по умолчанию 50), `RowCount` — целое ≥ 0; тесты на границы 0, 1, 100, 101.
+  - [ ] `contract`, процедуры: `system.health` без входа и без ошибок, ответ `{ status: "ok" }` (`/healthz` не
+    заменяет; доступ `publicProc` ставит T-005 на сервере, в паспорте контракта это сказано); `events.stream` — поток
+    событий `progress` (сущность, id, доля 0..100 или без неё) и `changed` (сущность, id), без данных; `PageContext` —
+    `{ route, params, selected? }` со строгими `.max()`; части сообщений чата — `text`, `step`, `card` (`card` пока
+    `{ kind, id }`), расширения — в T-006, T-010 и T-043; зависит только от `zod`, `@orpc/contract`, `kernel`; ключей
+    `userId` / `householdId` / `ownerId` в контракте нет (`isolation.mjs` зелёный). Если для маршрутов или потока
+    нужен `@orpc/server` или `@orpc/openapi` (в v2 `route` заменён на `.meta(openapi(...))`) — `ESCALATE`, а не
+    расширение правила `contract-allowed-deps`; версия `@orpc/contract` — точная, через `catalog:`; итог проверки
+    oRPC — в итог задачи.
+  - [ ] `i18n`: `i18next` (точная версия через `catalog:`), `createT` без React, словари ru `common`, `errors`,
+    `formulas`, `tools`; ключи типизированы (тест с `@ts-expect-error`); множественные числа (`_one/_few/_many/_other`)
+    проверены на 0, 1, 2, 5, 11–14, 21, 22, 25, 101, 111 и на дробь.
+  - [ ] `i18n`, форматы: `formatMoney({ minor, currency })`: `123456` → `1 234,56 BYN`, `-84000` → `−840,00 BYN`,
+    `-5` → `−0,05 BYN`, `0` → `0,00 BYN`, `100000000` → `1 000 000,00 BYN`, `Number.MAX_SAFE_INTEGER` без потери
+    цифр; пробелы между разрядами и перед кодом — U+00A0, минус — U+2212, десятичная запятая, каждый символ
+    проверяется кодом; десятичная строка собирается из `minor` через `BigInt` (без деления в float), код валюты
+    дописывается руками; `formatDate(LocalDate)` → `21.10.2026` без `Intl`; `formatRelativeDay(date, today)`: сегодня,
+    вчера, завтра, послезавтра, «через N дн.» и «N дн. назад» до ±7 дней, дальше `formatDate`; тесты на переход через
+    границу месяца и года; часовой пояс — только в `LocalDate.fromInstant` (`Europe/Minsk`).
+  - [ ] Тесты соответствия: у каждого `ErrorCode` есть текст в `errors` (`satisfies Record<ErrorCode, string>` и
+    проверка по данным), у ключа `fin.freeBalance` — подпись в `formulas` (`calc` импортируется только в тесте;
+    общий реестр ключей трассы — в T-014); правило `i18n-allowed-deps` в `rules.ts` (`i18n` → только `kernel`,
+    `contract`, `i18next`; в тестах разрешён и `calc`) с фикстурой и тестом «ловит своё».
   - [ ] Пакеты подключены в workspace; паспорта `packages/{contract,i18n}/CLAUDE.md` по
     `docs/templates/package-passport.md`.
 - Проверка: make check; pnpm vitest run packages
@@ -497,7 +518,8 @@
     ответов (`confirm`); одна функция `actions.confirm(s, pendingId, answer)` для всех каналов; повторный ответ — без
     эффекта; распознавание короткого «да / нет» текстом — чистая функция для чата и бота (ARCHITECTURE §5).
   - [ ] `explain`: `explain.save(s, calc)` → `traceId`; `explain.get(s, traceId)` возвращает ровно сохранённую трассу —
-    тест меняет исходные данные и получает прежний расчёт (EXPL-02); инструмент `explain_number` (`read`, `core`).
+    тест меняет исходные данные и получает прежний расчёт (EXPL-02); инструмент `explain_number` (`read`, `core`);
+    общий реестр ключей трассы и тест: у каждого ключа, который строят расчёты `calc`, есть подпись в `formulas`.
   - [ ] Сайт: `WhyButton` → панель (Sheet на компьютере, нижняя шторка на телефоне) с формулой из подписей словаря
     `formulas`, периодом и ссылками на основания; `UndoToast` и `ConfirmDialog` подключены к `actions` через
     `lib/api`; компонентные тесты; панель в `/dev/gallery` на трассе `freeBalance`.

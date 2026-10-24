@@ -10,5 +10,4 @@ export interface DepsGuardResult {
 export declare function runDepsGuard(options: {
   baseDir: string;
   minModules: number;
-  cache?: boolean;
 }): Promise<DepsGuardResult>;

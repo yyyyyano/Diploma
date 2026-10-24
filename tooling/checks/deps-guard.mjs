@@ -24,20 +24,15 @@ const configPath = join(repoRoot, ".dependency-cruiser.mjs");
 
 /**
  * Обход корней baseDir с правилами .dependency-cruiser.mjs.
- * @param {{ baseDir: string, minModules: number, cache?: boolean }} options
+ * Без кэша dependency-cruiser: его проверка совместимости не сверяет набор правил, и правка
+ * .dependency-cruiser.mjs или обновление пакета отдали бы старый результат; выигрыш — доли секунды.
+ * @param {{ baseDir: string, minModules: number }} options
  * @returns {Promise<{ code: 0 | 1 | 2, files: number, messages: string[] }>}
  */
-export async function runDepsGuard({ baseDir, minModules, cache = false }) {
+export async function runDepsGuard({ baseDir, minModules }) {
   const roots = ROOTS.filter((root) => existsSync(join(baseDir, root)));
   const options = await extractDepcruiseOptions(configPath);
-  const cruiseOptions = {
-    ...options,
-    baseDir,
-    validate: true,
-    ...(cache
-      ? { cache: { folder: "node_modules/.cache/dependency-cruiser", strategy: "content" } }
-      : {}),
-  };
+  const cruiseOptions = { ...options, baseDir, validate: true };
   const result = roots.length === 0 ? null : (await cruise(roots, cruiseOptions)).output;
 
   const modules = result?.modules ?? [];
@@ -79,7 +74,6 @@ async function main() {
   const { code, files, messages } = await runDepsGuard({
     baseDir: repoRoot,
     minModules: MIN_MODULES,
-    cache: true,
   });
   for (const message of messages) console.error(`\n✖ ${message}\n`);
   const seconds = ((performance.now() - started) / 1000).toFixed(1);

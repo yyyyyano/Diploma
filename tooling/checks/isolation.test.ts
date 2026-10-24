@@ -1,6 +1,7 @@
 // Замок 4 изоляции (ROLE-01, SEC-04, ARCHITECTURE §6.2, §6.4): isolation.mjs на фикстурах с настоящей
 // раскладкой путей. Нарушение каждого вида называет файл и строку; чистая фикстура с похожим, но законным кодом
-// (ToolDef.execute, makeScope на входах, SQL в репозитории, sweep с householdId) проходит.
+// (ToolDef.execute, makeScope на входах и в адаптере инструментов, SQL в репозитории, sweep с householdId)
+// проходит. Соседи исключений лежат в нарушениях: расширенное исключение проверка заметит.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -68,9 +69,24 @@ describe("isolation: нарушения на фикстуре", () => {
     );
   });
 
-  it("ничего лишнего: ровно 15 нарушений, код 1, сообщение «файл:строка — что исправить»", () => {
+  it("исключения не шире своих папок: соседи входов, platform/db и infrastructure/db проверяются", () => {
+    expect(violations).toEqual(
+      expect.arrayContaining([
+        "apps/server/src/platform/realtime/channel.ts:1 scope-outside-entry",
+        "apps/server/src/modules/telegram/application/link.ts:1 scope-outside-entry",
+        "packages/contract/src/scope.ts:1 scope-outside-entry",
+        "apps/server/src/platform/http/raw.ts:1 db-client-bypass",
+        "apps/server/src/platform/http/raw.ts:4 db-client-bypass",
+        "apps/server/src/platform/http/raw.ts:5 raw-sql-outside-db",
+        "apps/server/src/platform/http/raw.ts:6 db-client-bypass",
+        `${receipts}/infrastructure/ocr-client.ts:1 raw-sql-outside-db`,
+      ]),
+    );
+  });
+
+  it("ничего лишнего: ровно 26 нарушений, код 1, сообщение «файл:строка — что исправить»", () => {
     const result = runIsolation({ baseDir: join(fixtures, "violation") });
-    expect({ code: result.code, count: violations.length }).toEqual({ code: 1, count: 15 });
+    expect({ code: result.code, count: violations.length }).toEqual({ code: 1, count: 26 });
     expect(result.messages).toContain(
       `${receipts}/application/forge-scope.ts:5 — ` +
         "Scope собирается только на входах (ARCHITECTURE §6.4), найдено «as Scope»: " +

@@ -34,8 +34,15 @@ describe("jsx-literals: текст литералом в JSX", () => {
     );
   });
 
-  it("ничего лишнего: ровно 8 нарушений, код 1, сообщение называет ключ i18n", () => {
-    expect({ code: result.code, count: found.length }).toEqual({ code: 1, count: 8 });
+  it("исключение — только dev.gallery: другие маршруты в routes проверяются", () => {
+    expect(result.messages.filter((m) => m.startsWith("apps/web/src/routes/"))).toEqual([
+      "apps/web/src/routes/operations.tsx:1 — текст «Операции» литералом в JSX (NFR-19): " +
+        'выведите его через t("ns:экран.ключ") из словаря @kosht/i18n.',
+    ]);
+  });
+
+  it("ничего лишнего: ровно 9 нарушений, код 1, сообщение называет ключ i18n", () => {
+    expect({ code: result.code, count: found.length }).toEqual({ code: 1, count: 9 });
     expect(result.messages).toContain(
       `${page}:4 — текст «Операции» литералом в JSX (NFR-19): выведите его через t("ns:экран.ключ") ` +
         "из словаря @kosht/i18n.",

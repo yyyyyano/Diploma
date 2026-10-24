@@ -45,6 +45,10 @@ describe("no-raw-colors: «сырые» значения вне ui/theme", () =>
     ]);
   });
 
+  it("исключение — только ui/theme: соседние ui/components проверяются", () => {
+    expect(violations).toContain("apps/web/src/ui/components/Dot.tsx:1 raw-color #11564D");
+  });
+
   it("в обычном .ts вне темы — тоже нарушение; код 1 и сообщение с подсказкой токена", () => {
     const result = runNoRawColors({ baseDir: join(fixtures, "violation") });
     expect(result.code).toBe(1);

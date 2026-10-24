@@ -529,6 +529,42 @@ describe("ROLE-01, SEC-04: лексер читает текст так же, к�
     expect(violation(() => audit({ sql: text, params })).reason).toBe("INSERT_NOT_STANDALONE");
   });
 
+  it.each([
+    [
+      "WITH … MERGE … WHEN NOT MATCHED THEN INSERT с чужим household_id (вставка без слова into)",
+      "with x as (select 1) merge into fx_receipts t using x on t.household_id = $1 " +
+        "when not matched then insert (household_id, user_id) values ($2, $3)",
+      [A, B, "u"],
+    ],
+    [
+      "WITH … MERGE … WHEN MATCHED THEN UPDATE SET household_id",
+      "with x as (select 1) merge into fx_receipts t using x on t.household_id = $1 " +
+        "when matched then update set household_id = $2",
+      [A, B],
+    ],
+    [
+      "MERGE внутри CTE (PostgreSQL 17+), снаружи — чтение с own",
+      "with m as (merge into fx_receipts t using fx_rates r on t.household_id = $1 when matched then delete " +
+        "returning t.id) select id from fx_receipts where household_id = $1 and household_id = $1",
+      [A],
+    ],
+    [
+      "MERGE в системную таблицу внутри WITH",
+      "with x as (select 1) merge into fx_settings s using x on true when matched then delete",
+      [],
+    ],
+  ])("%s → STATEMENT_NOT_ALLOWED во всех режимах", (_name, text, params) => {
+    expect(violation(() => audit({ sql: text, params })).reason).toBe("STATEMENT_NOT_ALLOWED");
+    expect(violation(() => audit({ sql: text, params }, system)).reason).toBe(
+      "STATEMENT_NOT_ALLOWED",
+    );
+  });
+
+  it("слово merge как имя колонки, а не команда, — проходит", () => {
+    const text = "select merge from fx_receipts where household_id = $1";
+    expect(() => audit({ sql: text, params: [A] })).not.toThrow();
+  });
+
   it("построитель: with(cte).insert(t).values(чужой household_id) с setWhere own → INSERT_NOT_STANDALONE", () => {
     const query = db
       .with(mine)

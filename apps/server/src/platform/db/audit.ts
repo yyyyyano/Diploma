@@ -8,7 +8,8 @@
 // /* /* */ */), имена в кавычках (регистр сохраняется; имя с пробелом, «;», «=» — заглушка "Q_<hex>"), имена без
 // кавычек — в нижний регистр только ASCII. Поэтому кавычка, «/*» или «--» внутри строки не прячет код, а код за
 // «--…\r» виден. Дальше: одна команда из белого списка (select, insert, update, delete, with, values, транзакции;
-// DO, COPY, CALL, SET, DDL и прочее — нарушение), без U&"…" и без функций, исполняющих SQL из строки
+// DO, COPY, CALL, SET, DDL и прочее — нарушение; MERGE — нигде в тексте: после WITH и в CTE он вставляет без
+// «insert into», WHEN NOT MATCHED THEN INSERT), без U&"…" и без функций, исполняющих SQL из строки
 // (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config); у каждого обращения к
 // пользовательской таблице, в том числе UPDATE/DELETE … RETURNING внутри CTE, — свой «household_id = $n» со
 // значением домохозяйства scope; SET (в том числе кортежный) не меняет household_id; INSERT в пользовательскую
@@ -259,6 +260,9 @@ const HIDDEN_SQL_CALL = new RegExp(
 const ALLOWED_COMMANDS = new Set(
   "select insert update delete with values begin commit rollback savepoint release".split(" "),
 );
+
+/** MERGE в любом месте текста: имя в кавычках ("merge") — не ключевое слово, колонка merge без into — не команда. */
+const MERGE_ANYWHERE = /(?<![\w"$.])merge\s+into(?![\w"$])/;
 
 const patterns = new WeakMap<ReadonlySet<string>, RegExp>();
 
@@ -521,6 +525,16 @@ function auditStatement(parsed: Parsed, sqlText: string): void {
       undefined,
       `команда «${command.slice(0, 20)}» недоступна через ScopedDb, SystemDb и crossTenant: только select, ` +
         "insert, update, delete, with, values и транзакции; DDL и обслуживание — миграции (platform/db/migrate.ts)",
+      sqlText,
+    );
+  }
+  if (MERGE_ANYWHERE.test(text)) {
+    // MERGE пишет без «insert into» (WHEN NOT MATCHED THEN INSERT) и разрешён в WITH и в CTE — его строки не разобрать.
+    throw new IsolationViolation(
+      "STATEMENT_NOT_ALLOWED",
+      undefined,
+      "MERGE недоступен через ScopedDb, SystemDb и crossTenant, в том числе после WITH и внутри CTE: " +
+        "вставка — s.insert(…).values(…), правка — s.update(…), удаление — s.delete(…)",
       sqlText,
     );
   }

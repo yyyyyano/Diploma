@@ -100,6 +100,11 @@ const EXPECTED: Record<string, string[]> = {
     `packages/contract/src/receipts.ts → ${P}/http/procedures.ts`,
     "packages/contract/src/receipts.ts → @orpc/server",
   ],
+  "i18n-allowed-deps": [
+    "packages/i18n/src/format.ts → apps/web/src/main.ts",
+    "packages/i18n/src/format.ts → date-fns",
+    "packages/i18n/src/format.ts → packages/calc/src/index.ts",
+  ],
   "testing-not-in-prod": [
     `${M}/receipts/application/recognize.ts → ${M}/receipts/__fixtures__/receipt.ts`,
     `${M}/receipts/application/recognize.ts → packages/testing/src/index.ts`,

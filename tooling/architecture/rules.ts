@@ -255,6 +255,13 @@ function packageRules(): ForbiddenRule[] {
       { pathNot: ["^packages/(contract|kernel)/", npmPattern(["zod", "@orpc/contract"])] },
     ),
     rule(
+      "i18n-allowed-deps",
+      "@kosht/i18n — тексты и форматы: только i18next, @kosht/kernel и @kosht/contract, без приложений и " +
+        "серверного кода (ARCHITECTURE §2); @kosht/calc — только в тестах соответствия словарей.",
+      { path: "^packages/i18n/", pathNot: TEST_CODE },
+      { pathNot: ["^packages/(i18n|kernel|contract)/", npmPattern(["i18next"])] },
+    ),
+    rule(
       "testing-not-in-prod",
       "@kosht/testing, тесты, фикстуры и кассеты — только для тестов, не в боевом коде (ARCHITECTURE §2).",
       {

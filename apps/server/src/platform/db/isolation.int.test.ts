@@ -143,6 +143,32 @@ const LEAKS: [string, Leak][] = [
         totalMinor: 1,
       }),
   ],
+  [
+    "кортежный SET переносит строку A в B",
+    (s) =>
+      s.db.execute(
+        sql`update ${fxReceipts} set (household_id, note) = (${scopeB.householdId}, 'подброс') where ${s.own(fxReceipts)}`,
+      ),
+  ],
+  [
+    "литералы '/*' и '*/' прячут подзапрос без own",
+    (s) =>
+      s.db.execute(
+        sql`select '/*', (select string_agg(note, ',') from fx_receipts), '*/' as c from ${fxReceipts} where ${s.own(fxReceipts)}`,
+      ),
+  ],
+  [
+    "DO-блок с UPDATE внутри $$…$$",
+    (s) => s.db.execute(sql.raw("do $$ begin update fx_receipts set note = 'взлом'; end $$")),
+  ],
+  [
+    "query_to_xml читает таблицу из строки",
+    (s) => s.db.execute(sql`select query_to_xml('select note from fx_receipts', true, false, '')`),
+  ],
+  [
+    "вторая команда через «;»",
+    (s) => s.db.execute(sql.raw("select 1; update fx_receipts set note = 'взлом'")),
+  ],
 ];
 
 describe("ROLE-01, SEC-04: дырявый запрос не доходит до базы, данные B не меняются", () => {

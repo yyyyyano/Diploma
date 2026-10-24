@@ -2,9 +2,20 @@
 // итоговым текстом запроса: Drizzle вызывает её из Logger.logQuery ДО отправки (drizzle-orm 1.0.0-rc.5,
 // pg-core/async/session.js), исключение отменяет запрос. Поэтому неважно, как запрос написан — построителем,
 // JOIN, подзапросом, CTE или сырым sql: проверяется то, что ушло бы в базу.
-// Это проверка текста, а не доказательство: `… OR true`, предикат в списке select, представления и SQL-функции
-// она не видит — их закрывают проверка схемы (schema-check.ts) и ревью. Ошибается она в сторону «громко»:
-// безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»).
+//
+// Что видит. Текст разбирается одним проходом лексера (scan): строки ('…', E'…', $tag$…$tag$), комментарии
+// (в том числе вложенные /* /* */ */) и имена в кавычках распознаются так же, как их читает Postgres, поэтому
+// кавычка или «/*» внутри строки не прячет код. Дальше: одна команда из белого списка (select, insert, update,
+// delete, with, values, транзакции; DO, COPY, CALL, SET, DDL и прочее — нарушение), без U&"…" и без функций,
+// исполняющих SQL из строки (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config);
+// у каждого обращения к пользовательской таблице — свой «household_id = $n» со значением домохозяйства scope;
+// SET (в том числе кортежный) не меняет household_id; INSERT — только VALUES со своим household_id.
+//
+// Чего не видит — это проверка текста, а не доказательство: предикат, который не сужает выборку
+// (`… OR true`, `NOT household_id = $1`, `household_id = $1` в списке select или в ветке CASE), SQL внутри
+// представлений и функций базы (их запрещает проверка схемы, schema-check.ts), SELECT … INTO. Это закрывают
+// построитель ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в
+// сторону «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»).
 
 export type AuditMode =
   /** ScopedDb: каждое обращение к пользовательской таблице ограничено household_id из scope. */
@@ -23,7 +34,10 @@ export type ViolationReason =
   | "UPSERT_TARGET"
   | "SYSTEM_TOUCHES_USER_DATA"
   | "CROSS_TENANT_NOT_SELECT"
-  | "CROSS_TENANT_COLUMNS";
+  | "CROSS_TENANT_COLUMNS"
+  | "STATEMENT_NOT_ALLOWED"
+  | "MULTIPLE_STATEMENTS"
+  | "HIDDEN_SQL";
 
 /**
  * Запрос нарушает изоляцию — баг запроса, а не помеха: не ловить и не глушить (CONSTRAINTS «Пол»). Код
@@ -53,11 +67,12 @@ export function auditQuery(
   mode: AuditMode,
   owned: ReadonlySet<string>,
 ): void {
+  const parsed = parse(sqlText, owned);
+  auditStatement(parsed, sqlText);
   if (mode.kind === "cross-tenant") {
-    auditCrossTenant(sqlText);
+    auditCrossTenant(parsed.text, sqlText);
     return;
   }
-  const parsed = parse(sqlText, owned);
   if (mode.kind === "system") {
     if (parsed.mentions.length > 0) {
       const tables = [...new Set(parsed.mentions)].join(", ");
@@ -99,6 +114,14 @@ interface Insert {
 }
 
 interface Parsed {
+  /** Код запроса в нижнем регистре: строки — '', комментарии — пробел, `public.` снят. */
+  readonly text: string;
+  /** Первое слово команды (после открывающих скобок). */
+  readonly command: string;
+  /** После первой `;` есть ещё код. */
+  readonly multiple: boolean;
+  /** Имя в форме U&"…" или вызов функции, исполняющей SQL из строки. */
+  readonly hidden: string | undefined;
   /** Обращения к пользовательским таблицам (кроме цели INSERT). */
   readonly refs: readonly Ref[];
   /** Предикаты `[алиас.]household_id = $n`. */
@@ -141,7 +164,8 @@ function parse(sqlText: string, owned: ReadonlySet<string>): Parsed {
 }
 
 function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
-  const text = stripLiterals(sqlText).toLowerCase();
+  const scanned = scan(sqlText, "''");
+  const text = scanned.code.toLowerCase().replace(/(?<![\w."$])"?public"?\s*\.\s*/g, "");
   const insert = parseInsert(text, owned);
   const mentions: string[] = [];
   const refs: Ref[] = [];
@@ -165,15 +189,48 @@ function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
   for (const m of text.matchAll(PREDICATE_REVERSED)) {
     predicates.push({ qualifier: m[2] ?? m[3] ?? null, param: Number(m[1]) });
   }
-  // Присваивание household_id в SET (UPDATE, ON CONFLICT DO UPDATE) запрещено целиком — поэтому такое
-  // «household_id = $n» и не засчитывается как фильтр.
+  // Присваивание household_id в SET (UPDATE, ON CONFLICT DO UPDATE), в том числе кортежное
+  // `SET (household_id, …) = (…)`, запрещено целиком — поэтому такое «household_id = $n» и не фильтр.
   const ownerChange = setClauses(text).some(([from, to]) =>
-    /(?<![\w"])"?household_id"?\s*=/.test(text.slice(from, to)),
+    splitTopLevel(text.slice(from, to)).some((item) => setTargets(item).includes("household_id")),
   )
     ? (insert?.table ?? refs[0]?.table)
     : undefined;
-  return { refs, predicates, mentions, insert, ownerChange };
+  const command = /^[\s(]*([a-z_]+)/.exec(text)?.[1] ?? "";
+  const multiple = text.replace(/;\s*$/, "").includes(";");
+  const hidden = scanned.unicodeIdentifier ? 'U&"…"' : HIDDEN_SQL_CALL.exec(text)?.[1];
+  return { text, command, multiple, hidden, refs, predicates, mentions, insert, ownerChange };
 }
+
+/** Колонки слева от `=` в элементе SET: `col`, `"col"`, `(a, b)`, `col[1]`, `col.field`. */
+function setTargets(item: string): string[] {
+  const target = item.split("=")[0] ?? "";
+  return target
+    .replace(/[()"\s]/g, "")
+    .split(",")
+    .map((name) => name.split(/[.[]/)[0] ?? "");
+}
+
+/**
+ * Функции, исполняющие SQL или читающие таблицу по имени из строки (аудитор строки не разбирает), и set_config —
+ * настройка (search_path), которая осталась бы на соединении пула для следующих запросов.
+ */
+const HIDDEN_SQL_CALL = new RegExp(
+  String.raw`(?<![\w$])"?(` +
+    [
+      "(?:query|table|cursor|schema|database)_to_xml(?:schema|_and_xmlschema)?",
+      "ts_stat",
+      "ts_rewrite",
+      "dblink\\w*",
+      "set_config",
+    ].join("|") +
+    String.raw`)"?\s*\(`,
+);
+
+/** Первые слова разрешённых команд (Drizzle: запросы, транзакции, SAVEPOINT, setTransaction). */
+const ALLOWED_COMMANDS = new Set(
+  "select insert update delete with values begin commit rollback savepoint release".split(" "),
+);
 
 const patterns = new WeakMap<ReadonlySet<string>, RegExp>();
 
@@ -194,26 +251,111 @@ function ownedPattern(owned: ReadonlySet<string>): RegExp {
   return pattern;
 }
 
-/** Комментарии и строки (в том числе E'…' и $$…$$) — не код; `public.` перед именем таблицы снимается. */
-function stripLiterals(sqlText: string): string {
-  return sqlText
-    .replace(/--[^\n]*/g, " ")
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/\$([A-Za-z_]\w*)?\$[\s\S]*?\$\1\$/g, "''")
-    .replace(/[eE]'(?:[^'\\]|\\.|'')*'/g, "''")
-    .replace(/'(?:[^']|'')*'/g, "''")
-    .replace(/(?<![\w."])"?public"?\s*\.\s*/gi, "");
+interface Scanned {
+  /** Текст, где строка заменена на `literal`, комментарий — на пробел; имена в кавычках — как есть. */
+  readonly code: string;
+  /** Встретилось имя U&"…": в нём экранирование (\005f) прячет имя таблицы от сравнения. */
+  readonly unicodeIdentifier: boolean;
+}
+
+const WORD = /[A-Za-z_\u0080-\uffff][\w$\u0080-\uffff]*/y;
+const DOLLAR_TAG = /\$(?:[A-Za-z_\u0080-\uffff][\w\u0080-\uffff]*)?\$/y;
+
+/**
+ * Лексер одним проходом: что строка, что комментарий, что имя — решается слева направо, как в Postgres
+ * (standard_conforming_strings = on). Незакрытая строка или комментарий тянутся до конца текста: такой
+ * запрос база отвергнет синтаксической ошибкой.
+ */
+function scan(sqlText: string, literal: string): Scanned {
+  let code = "";
+  let unicodeIdentifier = false;
+  let i = 0;
+  while (i < sqlText.length) {
+    const ch = sqlText.charAt(i);
+    const next = sqlText.charAt(i + 1);
+    if (ch === "-" && next === "-") {
+      const end = sqlText.indexOf("\n", i);
+      i = end < 0 ? sqlText.length : end;
+      code += " ";
+    } else if (ch === "/" && next === "*") {
+      i = blockCommentEnd(sqlText, i);
+      code += " ";
+    } else if (ch === "'") {
+      i = quotedEnd(sqlText, i, false);
+      code += literal;
+    } else if (ch === '"') {
+      const end = quotedEnd(sqlText, i, false);
+      code += sqlText.slice(i, end);
+      i = end;
+    } else if (ch === "$") {
+      DOLLAR_TAG.lastIndex = i;
+      const tag = DOLLAR_TAG.exec(sqlText)?.[0];
+      if (tag === undefined) {
+        code += ch;
+        i += 1;
+      } else {
+        const close = sqlText.indexOf(tag, i + tag.length);
+        i = close < 0 ? sqlText.length : close + tag.length;
+        code += literal;
+      }
+    } else if ((ch === "u" || ch === "U") && next === "&" && /["']/.test(sqlText.charAt(i + 2))) {
+      const end = quotedEnd(sqlText, i + 2, false);
+      if (sqlText.charAt(i + 2) === '"') {
+        unicodeIdentifier = true;
+        code += sqlText.slice(i + 2, end);
+      } else code += literal;
+      i = end;
+    } else {
+      WORD.lastIndex = i;
+      const word = /[A-Za-z_\u0080-\uffff]/.test(ch) ? (WORD.exec(sqlText)?.[0] ?? ch) : ch;
+      const prefix = word.toLowerCase();
+      if (sqlText.charAt(i + word.length) === "'" && ["e", "b", "x", "n"].includes(prefix)) {
+        // E'…' — с экранированием обратной косой чертой; B'…', X'…', N'…' — как обычная строка.
+        i = quotedEnd(sqlText, i + 1, prefix === "e");
+        code += literal;
+      } else {
+        code += word;
+        i += word.length;
+      }
+    }
+  }
+  return { code, unicodeIdentifier };
+}
+
+/** Позиция после закрывающей кавычки (удвоенная кавычка — экранирование; в E'…' ещё и `\\`). */
+function quotedEnd(text: string, open: number, backslash: boolean): number {
+  const quote = text.charAt(open);
+  let i = open + 1;
+  while (i < text.length) {
+    const ch = text.charAt(i);
+    if (backslash && ch === "\\") i += 2;
+    else if (ch === quote && text.charAt(i + 1) === quote) i += 2;
+    else if (ch === quote) return i + 1;
+    else i += 1;
+  }
+  return text.length;
+}
+
+/** Позиция после комментария `/* … *\/`; в Postgres такие комментарии вкладываются. */
+function blockCommentEnd(text: string, open: number): number {
+  let depth = 0;
+  let i = open;
+  while (i < text.length) {
+    if (text.startsWith("/*", i)) {
+      depth += 1;
+      i += 2;
+    } else if (text.startsWith("*/", i)) {
+      depth -= 1;
+      i += 2;
+      if (depth === 0) return i;
+    } else i += 1;
+  }
+  return text.length;
 }
 
 /** Текст для сообщения: без комментариев, строки заменены на '…', не длиннее 300 символов. */
 function maskSql(sqlText: string): string {
-  const masked = sqlText
-    .replace(/--[^\n]*/g, " ")
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/\$([A-Za-z_]\w*)?\$[\s\S]*?\$\1\$/g, "'…'")
-    .replace(/[eE]?'(?:[^'\\]|\\.|'')*'/g, "'…'")
-    .replace(/\s+/g, " ")
-    .trim();
+  const masked = scan(sqlText, "'…'").code.replace(/\s+/g, " ").trim();
   return masked.length > 300 ? `${masked.slice(0, 300)}…` : masked;
 }
 
@@ -311,6 +453,37 @@ function splitTopLevel(text: string): string[] {
 
 // ── Режимы ───────────────────────────────────────────────────────────────────────────────────────────
 
+/** Для всех режимов: одна команда из белого списка, без SQL, спрятанного в строку или имя. */
+function auditStatement(parsed: Parsed, sqlText: string): void {
+  const { command, text } = parsed;
+  if (!ALLOWED_COMMANDS.has(command) && !/^\s*set\s+transaction(?![\w"$])/.test(text)) {
+    throw new IsolationViolation(
+      "STATEMENT_NOT_ALLOWED",
+      undefined,
+      `команда «${command.slice(0, 20)}» недоступна через ScopedDb, SystemDb и crossTenant: только select, ` +
+        "insert, update, delete, with, values и транзакции; DDL и обслуживание — миграции (platform/db/migrate.ts)",
+      sqlText,
+    );
+  }
+  if (parsed.multiple) {
+    throw new IsolationViolation(
+      "MULTIPLE_STATEMENTS",
+      undefined,
+      "в одном запросе несколько команд через «;» — отправляйте каждую отдельным запросом",
+      sqlText,
+    );
+  }
+  if (parsed.hidden !== undefined) {
+    throw new IsolationViolation(
+      "HIDDEN_SQL",
+      undefined,
+      `${parsed.hidden}: SQL или имя таблицы внутри строки аудитор не проверяет — пишите запрос построителем ` +
+        "или sql`…` с ${s.own(таблица)}; имена — без U&",
+      sqlText,
+    );
+  }
+}
+
 function auditScoped(
   parsed: Parsed,
   params: readonly unknown[],
@@ -407,8 +580,8 @@ const WRITE_OR_LOCK =
   /(?<![\w"])(?:insert|update|delete|merge|truncate|copy|alter|drop|create|grant|revoke|call|lock|share)(?![\w"])/;
 const OWNER_COLUMN = /^(?:"?\w+"?\s*\.\s*)?"?(?:id|household_id|user_id)"?$/;
 
-function auditCrossTenant(sqlText: string): void {
-  const text = stripLiterals(sqlText).toLowerCase().trim();
+function auditCrossTenant(code: string, sqlText: string): void {
+  const text = code.trim();
   if (!/^select(?![\w"])/.test(text) || WRITE_OR_LOCK.test(text) || text.includes(";")) {
     throw new IsolationViolation(
       "CROSS_TENANT_NOT_SELECT",

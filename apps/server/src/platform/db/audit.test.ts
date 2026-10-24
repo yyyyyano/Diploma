@@ -330,6 +330,112 @@ describe("ROLE-01, SEC-04: аудитор останавливает дыряв�
   });
 });
 
+describe("ROLE-01, SEC-04: формы, которые прячут обращение от разбора, — ISOLATION_VIOLATION", () => {
+  it.each([
+    [
+      "UPDATE: кортежный SET переносит строку в другое домохозяйство",
+      "update fx_receipts set (household_id, status) = ($1, $2) where fx_receipts.household_id = $3",
+      [B, "x", A],
+    ],
+    [
+      "UPDATE: household_id не первый в кортежном SET",
+      'update fx_receipts set ("status", "household_id") = ($1, $2) where fx_receipts.household_id = $3',
+      ["x", B, A],
+    ],
+    [
+      "UPSERT: кортежный SET в ON CONFLICT DO UPDATE",
+      "insert into fx_receipts (household_id, user_id) values ($1, $2) on conflict (household_id, id) do update set (household_id) = row($3)",
+      [A, "u", B],
+    ],
+  ])("%s → OWNER_CHANGE", (_name, text, params) => {
+    expect(violation(() => audit({ sql: text, params })).reason).toBe("OWNER_CHANGE");
+  });
+
+  it("литералы '/*' и '*/' не стирают код между ними: подзапрос без own виден", () => {
+    const text =
+      "select '/*', (select count(*) from fx_receipt_items), '*/' as c from fx_receipts where fx_receipts.household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).table).toBe("fx_receipt_items");
+  });
+
+  it("«--» внутри литерала не гасит остаток строки", () => {
+    const text =
+      "select '--' as c, (select count(*) from fx_receipt_items) from fx_receipts where fx_receipts.household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).table).toBe("fx_receipt_items");
+  });
+
+  it("кавычка внутри комментария не открывает строку и не прячет код за ней", () => {
+    const text =
+      "select 1 /* ' */ , (select count(*) from fx_receipt_items) /* ' */ from fx_receipts where fx_receipts.household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).table).toBe("fx_receipt_items");
+  });
+
+  it("вложенный комментарий /* /* */ */ закрывается целиком, код после него виден", () => {
+    const text =
+      "select 1 /* a /* b */ c */, (select count(*) from fx_receipt_items) from fx_receipts where fx_receipts.household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).table).toBe("fx_receipt_items");
+  });
+
+  it.each([
+    ["DO $$ … $$", "do $$ begin perform 1 from fx_receipts; end $$"],
+    ["COPY", "copy fx_receipts to stdout"],
+    ["COPY (запрос)", "copy (select * from fx_receipts where household_id = $1) to stdout"],
+    ["CALL", "call some_proc()"],
+    ["EXECUTE", "execute stmt1"],
+    ["PREPARE", "prepare stmt1 as select * from fx_receipts"],
+    ["SET search_path", "set search_path = other"],
+    ["RESET", "reset all"],
+    ["DDL", "create table fx_copy as select * from fx_receipts"],
+    ["TRUNCATE", "truncate fx_receipts"],
+    ["MERGE", "merge into fx_receipts using fx_rates on true when matched then delete"],
+    ["TABLE", "table fx_receipts"],
+  ])("команда вне белого списка (%s) → STATEMENT_NOT_ALLOWED", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("STATEMENT_NOT_ALLOWED");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
+      "STATEMENT_NOT_ALLOWED",
+    );
+  });
+
+  it.each([
+    ["select 1; delete from fx_receipts", "select 1; delete from fx_receipts"],
+    ["две команды с own", "select 1 from fx_rates; select 1 from fx_rates"],
+  ])("несколько команд в одном тексте (%s) → MULTIPLE_STATEMENTS", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("MULTIPLE_STATEMENTS");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
+      "MULTIPLE_STATEMENTS",
+    );
+  });
+
+  it.each([
+    ["query_to_xml", "select query_to_xml('select * from fx_receipts', true, false, '')"],
+    [
+      "pg_catalog.query_to_xml в кавычках",
+      'select "pg_catalog"."query_to_xml"($1, true, false, \'\')',
+    ],
+    ["table_to_xml", "select table_to_xml('fx_receipts', true, false, '')"],
+    ["ts_stat", "select * from ts_stat('select to_tsvector(merchant) from fx_receipts')"],
+    ["dblink", "select * from dblink('dbname=x', 'select 1') as t(a int)"],
+    ["set_config", "select set_config('search_path', 'other', false)"],
+    ['U&"…" — имя таблицы с экранированием', 'select * from U&"fx\\005freceipts"'],
+  ])("SQL, спрятанный в строку или имя (%s) → HIDDEN_SQL", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("HIDDEN_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe("HIDDEN_SQL");
+  });
+
+  it.each([
+    ["begin с уровнем изоляции", "begin isolation level serializable"],
+    ["set transaction (Drizzle setTransaction)", "set transaction read only"],
+    ["union в скобках", "(select 1 from fx_rates) union (select 1 from fx_rates)"],
+    ["values", "values (1), (2)"],
+    ["точка с запятой в конце", "select 1;"],
+    ["; и -- внутри строки", "select ';' as a, '--' as b, '/*' as c"],
+    ["E-строка с экранированной кавычкой", "select E'it\\'s; delete' as a"],
+    ["$tag$-строка", "select $body$ ; delete from fx_receipts $body$ as a"],
+    ["кавычки внутри имени", 'select 1 as "a""b"'],
+  ])("правильная форма проходит: %s", (_name, text) => {
+    expect(() => audit({ sql: text, params: [] })).not.toThrow();
+  });
+});
+
 describe("PRIV-07: SystemDb не касается пользовательских таблиц", () => {
   it.each([
     ["чтение", "select id from fx_receipts where household_id = $1"],

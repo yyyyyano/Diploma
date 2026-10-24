@@ -83,6 +83,19 @@ describe("jsx-literals: не смог проверить — код 2, а не �
     }
   });
 
+  it("Oxlint вернул диагностику другого правила (переименовали jsx-no-literals) — код 2, а не «чисто»", () => {
+    const { bin, dir } = fakeOxlint(
+      '{"diagnostics":[{"code":"react(no-literals)","message":"x","filename":"a.tsx","labels":[]}],"number_of_files":2}',
+    );
+    try {
+      const result = runJsxLiterals({ baseDir: join(fixtures, "clean"), oxlint: bin });
+      expect(result.code).toBe(2);
+      expect(result.messages.join("\n")).toContain("react(no-literals)");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it("Oxlint вернул не JSON — код 2", () => {
     const { bin, dir } = fakeOxlint("panic");
     try {

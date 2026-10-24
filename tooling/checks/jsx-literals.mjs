@@ -69,10 +69,18 @@ export function runJsxLiterals({ baseDir, oxlint = oxlintBin }) {
   if ("error" in lint) {
     return { code: 2, files: files.length, findings: [], messages: [lint.error] };
   }
+  // В конфиге одно правило: чужой код или диагностика без места значат, что Oxlint изменился, — иначе проверка
+  // молча пустеет.
+  const foreign = lint.diagnostics.find((d) => d.code !== RULE_CODE || !d.labels?.[0]?.span);
+  if (foreign) {
+    const message =
+      `Oxlint вернул диагностику «${foreign.code}» без места или вместо ${RULE_CODE}: ` +
+      "проверьте имя правила и формат --format json.";
+    return { code: 2, files: files.length, findings: [], messages: [message] };
+  }
   const findings = [];
   for (const diagnostic of lint.diagnostics) {
-    const span = diagnostic.labels?.[0]?.span;
-    if (diagnostic.code !== RULE_CODE || !span) continue;
+    const span = diagnostic.labels[0].span;
     const bytes = readFileSync(join(baseDir, diagnostic.filename));
     const text = bytes.subarray(span.offset, span.offset + span.length).toString("utf8");
     // У атрибута в отметке и имя (alt=""), буквы ищутся только в значении.

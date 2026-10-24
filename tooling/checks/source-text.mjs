@@ -35,7 +35,8 @@ const REGEX_AFTER_WORD = new Set([
   "yield",
   "await",
 ]);
-const REGEX_AFTER_CHAR = new Set("(,=:[!&|?{};+-*%<>~^");
+// Без `<` и `}`: в .tsx это закрывающий тег (`</a>`) и текст после выражения (`{a}/{b}`), а не начало регэкспа.
+const REGEX_AFTER_CHAR = new Set("(,=:[!&|?{;+-*%>~^");
 
 /**
  * Делит исходник на код, комментарии и строки. В `code` комментарии, текст строк и тела регулярных выражений
@@ -108,7 +109,7 @@ export function splitSource(text) {
         put("/", "none");
         i += 2;
       }
-    } else if (ch === "/" && regexAllowed(code)) {
+    } else if (ch === "/" && next !== ">" && regexAllowed(code)) {
       i = skipRegex(text, i, put);
     } else if (ch === '"' || ch === "'") {
       put(ch, "code");
@@ -253,18 +254,19 @@ export function listFiles(baseDir, roots, { extensions, skip = () => false }) {
  */
 export function checkResult({ roots, files, findings }) {
   const empty = roots.filter((root) => !files.some((file) => file.startsWith(`${root}/`)));
+  const messages = findings.map((f) => `${f.file}:${f.line} — ${f.message}`);
   if (empty.length > 0) {
     return {
       code: 2,
       files: files.length,
       findings,
       messages: [
+        ...messages,
         `Корни есть, а проверяемых файлов в них 0: ${empty.join(", ")}.\n` +
           "  Проверка, скорее всего, пуста: исключения съели все файлы или расширения не те.",
       ],
     };
   }
-  const messages = findings.map((f) => `${f.file}:${f.line} — ${f.message}`);
   return { code: findings.length > 0 ? 1 : 0, files: files.length, findings, messages };
 }
 

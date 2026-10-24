@@ -56,6 +56,23 @@ describe("splitSource: код, комментарии и строки — отд
   });
 });
 
+describe("splitSource на JSX: закрывающие теги и /> не начинают регулярное выражение", () => {
+  it("после </a> строка с цветом остаётся строкой", () => {
+    const parts = splitSource(`<a>{t("a")}</a> <b color="#fff" />`);
+    expect(parts.strings).toContain("#fff");
+  });
+
+  it("после style={{…}} /> код до конца строки остаётся кодом", () => {
+    const parts = splitSource(`<Box style={{ a: 1 }} /> <C p={13} />`);
+    expect(parts.code).toBe(`<Box style={{ a: 1 }} /> <C p={13} />`);
+  });
+
+  it("косая черта между выражениями в тексте JSX — не регулярное выражение", () => {
+    const parts = splitSource(`<p>{a}/{b} <i title="Итог" /></p>`);
+    expect(parts.strings).toContain("Итог");
+  });
+});
+
 describe("findAll: совпадения с номерами строк", () => {
   it("называет строку каждого совпадения и само совпадение", () => {
     expect(findAll("a\nfoo bar\nfoo", /foo/g)).toEqual([
@@ -141,6 +158,15 @@ describe("checkResult: код выхода по общим правилам", ()
     });
     expect(result.code).toBe(2);
     expect(result.messages.join("\n")).toContain("apps/web/src");
+  });
+
+  it("при коде 2 найденные нарушения всё равно печатаются", () => {
+    const result = checkResult({
+      roots: ["packages/calc", "apps/web/src"],
+      files: ["packages/calc/a.ts"],
+      findings: [finding],
+    });
+    expect(result.messages).toContain("packages/calc/a.ts:3 — уберите Date.now()");
   });
 
   it("корней нет вовсе — код 0 и 0 файлов: код ещё не написан", () => {

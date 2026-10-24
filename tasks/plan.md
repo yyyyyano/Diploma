@@ -35,9 +35,16 @@
 **Решено без пользователя (2026-10-24)** — пользователь может пересмотреть:
 
 - Задачи T-002, T-006 и T-010 по определению риска относятся к `high` (замок изоляции, сигналы между домохозяйствами,
-  инвариант `cloudAllowed`): фиксер на них сразу Opus. Текст задач не менялся.
+  инвариант `cloudAllowed`): фиксер на них сразу Opus. Текст T-006 и T-010 не менялся; в T-002 поле «Риск» исправлено
+  в тексте (см. ниже).
 - `plan` добавляется в служебные области `scope-enum` commitlint и в список областей корневого `CLAUDE.md` одним
   коммитом T-001: без этого коммиты дирижёра `docs(plan): …` отклонит хук с фазы 2.
+- Текст T-002 уточнён по ответу критика (REVISE, правка обратимая, коммит `docs: уточнить задачу T-002 в плане`):
+  `tables` вместо булевых `userData`/`systemTables`; список правил границ дополнен правилами ADR-0014 и
+  ARCHITECTURE §4.2 (`no-circular`, `not-to-unresolvable`, слои модуля, `web-layers-down`, `web-feature-isolation`,
+  `web-routes-thin`, `ui-is-presentational`, `server-not-to-web`), смысл `admin-no-user-data` зафиксирован явно;
+  добавлены `floor.mjs` («Пол» CONSTRAINTS, закрывает R1-4 из T-001) и цель `make static-checks` в `check`;
+  фикстуры исключены из tsc/oxlint/oxfmt/vitest/`deps-check`; `Риск: high`.
 
 ### T-001 · Ворота качества: монорепозиторий, проверки, хуки git и Makefile
 - Статус: done · 1a5faab..1191080
@@ -75,33 +82,52 @@
 ### T-002 · Архитектура как код: карта 36 модулей, правила границ и свои проверки
 - Статус: todo
 - Модули: `tooling/architecture/modules.ts`, `.dependency-cruiser.mjs`, `tooling/checks/`,
-  `tooling/architecture/fixtures/`, `docs/CAPABILITIES.md`, `commitlint.config.ts`
+  `tooling/architecture/fixtures/`, `docs/CAPABILITIES.md`, `commitlint.config.ts`, `Makefile`, `package.json`,
+  `pnpm-workspace.yaml`, `vitest.config.ts`, `tsconfig.json`, `.oxlintrc.json`, `.oxfmtrc.json`
 - SPEC: NFR-10, NFR-13, ROLE-01, SEC-04, NFR-19, DES-01, P1
 - Критерии приёмки:
-  - [ ] `modules.ts` — 36 модулей (`id`, `tier`, `dependsOn`, `userData`, `systemTables`, а также требования,
-    ответственность и публикуемые события для таблиц) ровно как в `docs/CAPABILITIES.md`; тест: 36 id в kebab-case,
-    нет циклов, зависимости только своего или нижнего яруса.
+  - [ ] `modules.ts` — 36 модулей (`id`, `tier`, `dependsOn`, `tables: ("user" | "system" | "public")[]`, а также
+    требования, ответственность и публикуемые события) ровно как в `docs/CAPABILITIES.md`: из `tables` выводятся
+    `userData` (есть `user`) и `systemTables` (есть `system` или `public`); столбцы SPEC, «Ответственность»
+    и «Публикует» хранятся дословными строками, чтобы diff генерации был пуст; тест: 36 id в kebab-case, нет циклов,
+    зависимости только своего или нижнего яруса.
   - [ ] `make capabilities` генерирует таблицы ярусов в `docs/CAPABILITIES.md` (остальной текст файла сохраняется);
     прогон на чистом дереве не меняет смысл таблиц (`git diff docs/CAPABILITIES.md` — пусто или только формат,
     объяснённый в итоге); `scope-enum` commitlint генерируется из `modules.ts` + служебные области корневого
-    `CLAUDE.md`.
-  - [ ] `.dependency-cruiser.mjs` генерируется из карты: `module-public-api-only`, `deps-of-<id>`, ярусы,
-    `platform` не импортирует модули, `web-not-to-server`, `web-only-shared-packages`, `calc-only-kernel`,
-    `kernel-only-zod`, зависимости `contract`, `schema-only-in-infrastructure`, `no-cross-module-repo`, `no-unsafe-db`,
-    `cross-tenant-only-in-sweeps`, `system-db-only-for-flagged-modules`, `admin-no-user-data`, `testing` не в боевом
-    коде, ограничения библиотек (`@ai-sdk/*`, `ai`, `pg-boss`, `grammy`, `drizzle-orm`/`pg`, `@orpc/server`) —
-    по CONSTRAINTS «Архитектурные запреты»; `typescript@6` рядом через `packageExtensions`.
-  - [ ] Для **каждого** правила — фикстура нарушения и тест «правило ловит своё»; чистая фикстура проходит.
+    `CLAUDE.md` (нет строки со служебными областями — понятная ошибка); шапка `docs/CAPABILITIES.md` сообщает
+    «таблицы генерируются, не править».
+  - [ ] `.dependency-cruiser.mjs` генерируется из карты при загрузке (закоммиченной копии правил нет): `no-circular`,
+    `not-to-unresolvable`, `module-public-api-only`, `deps-of-<id>`, ярусы, слои модуля (`domain-is-pure`, `api-thin`,
+    `infrastructure-not-to-application`, ARCHITECTURE §4.2), `platform` не импортирует модули, `server-not-to-web`,
+    `web-not-to-server`, `web-only-shared-packages`, `web-layers-down`, `web-feature-isolation`, `web-routes-thin`,
+    `ui-is-presentational` (ADR-0014), `calc-only-kernel`, `kernel-only-zod`, зависимости `contract`,
+    `schema-only-in-infrastructure`, `no-cross-module-repo`, `no-unsafe-db`, `cross-tenant-only-in-sweeps`,
+    `system-db-only-for-flagged-modules`, `admin-no-user-data` (admin не импортирует `infrastructure/db` ни одного
+    модуля и ходит в чужие модули только через `index.ts`), `testing` не в боевом коде, ограничения библиотек
+    (`@ai-sdk/*`, `ai`, `pg-boss`, `grammy`, `drizzle-orm`/`pg`, `@orpc/server`) — по CONSTRAINTS «Архитектурные
+    запреты»; запреты сопоставляют и имя из импорта, и путь pnpm (`node_modules/.pnpm/…/node_modules/<пакет>/`),
+    unit-тест регэкспов — на строках путей обеих раскладок; `typescript@6` рядом через `packageExtensions`.
+  - [ ] Для **каждого** правила — фикстура нарушения и тест «правило ловит своё»: тест гоняет правило отдельно
+    (`forbidden: [правило]`) и проверяет, что сработало именно оно; чистая фикстура проходит. Фикстуры исключены
+    из `tsc`, oxlint, oxfmt, vitest и `deps-check` (правка конфигов планки — только это исключение, пороги
+    не меняются; в итог).
   - [ ] `tooling/checks/deps-guard.mjs`: проверено меньше `MIN_MODULES` файлов → код 2, неразрешённый импорт → код 1
-    (порог — по реально существующим файлам; T-007 поднимает его).
+    (корни — только существующие из `apps packages e2e tooling`; порог — по реально существующим файлам, число —
+    в итог; T-007 поднимает его).
   - [ ] Свои проверки с тестами на фикстурах, кодом 0/1 и сообщением «что и где исправить»: `isolation.mjs`
     (`makeScope`/`as Scope` вне входов, `sql.raw`/`.execute` вне `infrastructure/db`, `$client`/`unsafeRaw`,
     `userId`/`householdId` во входной схеме процедуры, инструмента и в нагрузке задачи, `db.query.*`),
-    `no-raw-colors.mjs`, `calc-no-clock.mjs`, `bundle-size.mjs` (бюджеты CONSTRAINTS), проверка литералов текста в JSX.
+    `no-raw-colors.mjs` (`#hex`, `rgb(`, `hsl(`, числовые padding/margin/radius в `style`), `calc-no-clock.mjs`
+    (`Date.now`, `new Date()` без аргументов, `Math.random`, `Intl`), `floor.mjs` («Пол» CONSTRAINTS: `it.fails`,
+    `*-disable` без причины, `TODO` без ID, `Not implemented`), проверка литералов текста в JSX и `bundle-size.mjs`
+    (бюджеты CONSTRAINTS; проверяется на фикстуре `dist`, в `check` не входит — `check-full` добавит T-011); цель
+    `make static-checks` (isolation, no-raw-colors, calc-no-clock, jsx-literals, floor) входит в `check`; допустимые
+    места `makeScope`/`as Scope` и пути `platform/db` (unsafe, cross-tenant, system) — константы вверху скриптов,
+    список — в итог (T-004, T-005, T-006, T-052 уточнят).
   - [ ] `make deps-check` ≤ 10 с, входит в `check` и `check-quick`; намеренный импорт мимо `index.ts` делает
     `make check` красным.
-- Проверка: make check; make deps-check (время — в итоге); pnpm vitest run tooling; make capabilities && git diff --stat docs/CAPABILITIES.md
-- Риск: medium — правило, которое молча ничего не ловит, обнуляет статический замок изоляции (ARCHITECTURE §15)
+- Проверка: make check; make deps-check (время — в итоге); make static-checks; pnpm vitest run tooling; make capabilities && git diff --stat docs/CAPABILITIES.md
+- Риск: high — правило, которое молча ничего не ловит, обнуляет статический замок изоляции (ARCHITECTURE §15)
 - Зависимости: T-001
 
 ### T-003 · Общие пакеты: деньги, даты, трасса расчёта, контракт, тексты и помощники тестов

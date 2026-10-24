@@ -436,6 +436,127 @@ describe("ROLE-01, SEC-04: формы, которые прячут обраще�
   });
 });
 
+describe("ROLE-01, SEC-04: лексер читает текст так же, как Postgres", () => {
+  it("комментарий «--» кончается и на \\r: таблица после него видна", () => {
+    const error = violation(() => audit({ sql: "select id -- x\rfrom fx_receipts", params: [] }));
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.table).toBe("fx_receipts");
+  });
+
+  it("комментарий «--» кончается и на \\r: вторая команда видна → MULTIPLE_STATEMENTS", () => {
+    const text = "select 1 --\r; delete from fx_receipts";
+    expect(violation(() => audit({ sql: text, params: [] })).reason).toBe("MULTIPLE_STATEMENTS");
+    expect(violation(() => audit({ sql: text, params: [] }, system)).reason).toBe(
+      "MULTIPLE_STATEMENTS",
+    );
+  });
+
+  it("продолжение E-строки через перевод строки читается с экранированием: подзапрос виден", () => {
+    // Postgres: E'x' + '\' , (select 1) ' — одна строка, дальше код с подзапросом к fx_receipts.
+    const text =
+      "select E'x'\n'\\' , (select 1) ', (select note from fx_receipts), '' as c from fx_rates";
+    expect(violation(() => audit({ sql: text, params: [] })).table).toBe("fx_receipts");
+  });
+
+  it("имя в кавычках с заглавными — другой алиас: «A» и a не путаются", () => {
+    const text =
+      'select * from fx_receipts "A", fx_receipts a where a.household_id = $1 and a.household_id = $1';
+    const error = violation(() => audit({ sql: text, params: [A] }));
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.message).toMatch(/fx_receipts \(A\)/);
+  });
+
+  it("имя в кавычках с «household_id = $1» внутри — не предикат", () => {
+    const text = 'select id as " household_id = $1" from fx_receipts';
+    expect(violation(() => audit({ sql: text, params: [A] })).table).toBe("fx_receipts");
+  });
+
+  it("«;» внутри имени в кавычках — не вторая команда", () => {
+    expect(() => audit({ sql: 'select 1 as "a;b" from fx_rates', params: [] })).not.toThrow();
+  });
+
+  it.each([
+    [
+      "WITH … INSERT: значение household_id в VALUES не проверяется построчно",
+      "with c as (select 1) insert into fx_receipts (household_id, user_id) values ($1, $2) " +
+        "on conflict (household_id, id) do update set note = $3 where fx_receipts.household_id = $4",
+      [B, "u", "x", A],
+    ],
+    [
+      "INSERT внутри CTE, снаружи — чтение с own",
+      "with x as (insert into fx_receipts (household_id, user_id) values ($1, $2) returning id) " +
+        "select id from fx_receipts where fx_receipts.household_id = $3 and fx_receipts.household_id = $3",
+      [B, "u", A],
+    ],
+    [
+      "INSERT … SELECT внутри CTE в кавычках и с public.",
+      'with x as (insert into "public"."fx_receipts" select * from fx_receipts where household_id = $1 ' +
+        "returning id) select 1",
+      [A],
+    ],
+  ])("%s → INSERT_NOT_STANDALONE", (_name, text, params) => {
+    expect(violation(() => audit({ sql: text, params })).reason).toBe("INSERT_NOT_STANDALONE");
+  });
+
+  it("построитель: with(cte).insert(t).values(чужой household_id) с setWhere own → INSERT_NOT_STANDALONE", () => {
+    const query = db
+      .with(mine)
+      .insert(fxReceipts)
+      .values({ householdId: B, userId: "u", merchant: "m", totalMinor: 1 })
+      .onConflictDoUpdate({
+        target: [fxReceipts.householdId, fxReceipts.id],
+        set: { note: "x" },
+        setWhere: own(fxReceipts),
+      });
+    expect(violation(() => audit(query)).reason).toBe("INSERT_NOT_STANDALONE");
+  });
+
+  it.each([
+    [
+      "UPDATE … RETURNING в CTE с own",
+      "with x as (update fx_receipts set note = $1 where fx_receipts.household_id = $2 returning id) select id from x",
+      ["n", A],
+    ],
+    [
+      "DELETE … RETURNING в CTE с own",
+      "with x as (delete from fx_receipts where fx_receipts.household_id = $1 returning id) select id from x",
+      [A],
+    ],
+    [
+      "SELECT … FOR UPDATE, $1::uuid и = ANY($2)",
+      "select id from fx_receipts where fx_receipts.household_id = $1::uuid and id = any($2) for update",
+      [A, ["x"]],
+    ],
+    [
+      "операторы @> и ? над jsonb",
+      "select id from fx_receipts where household_id = $1 and '{}'::jsonb @> '{}'::jsonb and '{}'::jsonb ? 'k'",
+      [A],
+    ],
+    [
+      'алиас в кавычках с заглавными (alias(t, "otherItems"))',
+      'select "otherItems"."name" from "fx_receipt_items" "otherItems" where "otherItems"."household_id" = $1',
+      [A],
+    ],
+  ])("правильная форма проходит: %s", (_name, text, params) => {
+    expect(() => audit({ sql: text, params })).not.toThrow();
+  });
+
+  it.each([
+    [
+      "UPDATE … RETURNING в CTE без own",
+      "with x as (update fx_receipts set note = $1 returning id) select id from x",
+      ["n"],
+    ],
+    [
+      "DELETE … RETURNING в CTE без own",
+      "with x as (delete from fx_receipts returning id) select id from x",
+      [],
+    ],
+  ])("модифицирующий CTE без own → MISSING_HOUSEHOLD_FILTER: %s", (_name, text, params) => {
+    expect(violation(() => audit({ sql: text, params })).reason).toBe("MISSING_HOUSEHOLD_FILTER");
+  });
+});
+
 describe("PRIV-07: SystemDb не касается пользовательских таблиц", () => {
   it.each([
     ["чтение", "select id from fx_receipts where household_id = $1"],

@@ -169,6 +169,57 @@ const LEAKS: [string, Leak][] = [
     "вторая команда через «;»",
     (s) => s.db.execute(sql.raw("select 1; update fx_receipts set note = 'взлом'")),
   ],
+  [
+    "«--…\\r» прячет таблицу от аудитора",
+    (s) => s.db.execute(sql.raw("select note -- x\rfrom fx_receipts")),
+  ],
+  [
+    "«--\\r» прячет вторую команду",
+    (s) => s.db.execute(sql.raw("select 1 --\r; update fx_receipts set note = 'взлом'")),
+  ],
+  [
+    "продолжение E-строки прячет подзапрос",
+    (s) =>
+      s.db.execute(
+        sql.raw(
+          "select E'x'\n'\\' , (select 1) ', (select string_agg(note, ',') from fx_receipts), '' as c",
+        ),
+      ),
+  ],
+  [
+    "алиас «A» в кавычках и a без кавычек — один own на двоих",
+    (s) =>
+      s.db.execute(
+        sql`select "A".note from fx_receipts "A", fx_receipts a where a.household_id = ${s.scope.householdId} and a.household_id = ${s.scope.householdId}`,
+      ),
+  ],
+  [
+    "WITH … INSERT с чужим household_id и setWhere own (построитель)",
+    (s) => {
+      const mine = s.db.$with("mine").as(s.db.select().from(fxReceipts).where(s.own(fxReceipts)));
+      return s.db
+        .with(mine)
+        .insert(fxReceipts)
+        .values({
+          householdId: scopeB.householdId,
+          userId: scopeA.userId,
+          merchant: "подброс",
+          totalMinor: 1,
+        })
+        .onConflictDoUpdate({
+          target: [fxReceipts.householdId, fxReceipts.id],
+          set: { note: "взлом" },
+          setWhere: s.own(fxReceipts),
+        });
+    },
+  ],
+  [
+    "INSERT с чужим household_id внутри CTE",
+    (s) =>
+      s.db.execute(
+        sql`with x as (insert into fx_receipts (household_id, user_id, merchant, total_minor) values (${scopeB.householdId}, ${scopeA.userId}, 'подброс', 1) returning id) select id from ${fxReceipts} where ${s.own(fxReceipts)} and ${s.own(fxReceipts)}`,
+      ),
+  ],
 ];
 
 describe("ROLE-01, SEC-04: дырявый запрос не доходит до базы, данные B не меняются", () => {

@@ -3,19 +3,26 @@
 // pg-core/async/session.js), исключение отменяет запрос. Поэтому неважно, как запрос написан — построителем,
 // JOIN, подзапросом, CTE или сырым sql: проверяется то, что ушло бы в базу.
 //
-// Что видит. Текст разбирается одним проходом лексера (scan): строки ('…', E'…', $tag$…$tag$), комментарии
-// (в том числе вложенные /* /* */ */) и имена в кавычках распознаются так же, как их читает Postgres, поэтому
-// кавычка или «/*» внутри строки не прячет код. Дальше: одна команда из белого списка (select, insert, update,
-// delete, with, values, транзакции; DO, COPY, CALL, SET, DDL и прочее — нарушение), без U&"…" и без функций,
-// исполняющих SQL из строки (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config);
-// у каждого обращения к пользовательской таблице — свой «household_id = $n» со значением домохозяйства scope;
-// SET (в том числе кортежный) не меняет household_id; INSERT — только VALUES со своим household_id.
+// Что видит. Текст разбирается одним проходом лексера (scan) по правилам scan.l Postgres 18: строки ('…',
+// E'…' и её продолжение за переводом строки, $tag$…$tag$), комментарии («--» до \n или \r, вложенные
+// /* /* */ */), имена в кавычках (регистр сохраняется; имя с пробелом, «;», «=» — заглушка "Q_<hex>"), имена без
+// кавычек — в нижний регистр только ASCII. Поэтому кавычка, «/*» или «--» внутри строки не прячет код, а код за
+// «--…\r» виден. Дальше: одна команда из белого списка (select, insert, update, delete, with, values, транзакции;
+// DO, COPY, CALL, SET, DDL и прочее — нарушение), без U&"…" и без функций, исполняющих SQL из строки
+// (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config); у каждого обращения к
+// пользовательской таблице, в том числе UPDATE/DELETE … RETURNING внутри CTE, — свой «household_id = $n» со
+// значением домохозяйства scope; SET (в том числе кортежный) не меняет household_id; INSERT в пользовательскую
+// таблицу — только отдельной командой в начале текста и только VALUES со своим household_id (WITH … INSERT и
+// INSERT внутри CTE — нарушение: их строки не разобрать).
 //
 // Чего не видит — это проверка текста, а не доказательство: предикат, который не сужает выборку
-// (`… OR true`, `NOT household_id = $1`, `household_id = $1` в списке select или в ветке CASE), SQL внутри
-// представлений и функций базы (их запрещает проверка схемы, schema-check.ts), SELECT … INTO. Это закрывают
-// построитель ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в
-// сторону «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»).
+// (`… OR true`, `NOT household_id = $1`, `household_id = $1` в списке select или в ветке CASE); к какой таблице
+// относится предикат без квалификатора (предикаты считаются штуками: два `household_id = $1` без алиаса
+// засчитываются двум обращениям); SQL внутри представлений и функций базы (их запрещает проверка схемы,
+// schema-check.ts), SELECT … INTO. Лексер полагается на standard_conforming_strings = on (умолчание Postgres; SET и
+// set_config аудитор не пропускает): при off обычная строка '…\'…' читалась бы иначе. Это закрывают построитель
+// ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в сторону
+// «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»).
 
 export type AuditMode =
   /** ScopedDb: каждое обращение к пользовательской таблице ограничено household_id из scope. */
@@ -31,6 +38,7 @@ export type ViolationReason =
   | "INSERT_WITHOUT_HOUSEHOLD"
   | "INSERT_FOREIGN_HOUSEHOLD"
   | "INSERT_SELECT"
+  | "INSERT_NOT_STANDALONE"
   | "UPSERT_TARGET"
   | "SYSTEM_TOUCHES_USER_DATA"
   | "CROSS_TENANT_NOT_SELECT"
@@ -129,6 +137,8 @@ interface Parsed {
   /** Все упоминания пользовательских таблиц, включая цель INSERT. */
   readonly mentions: readonly string[];
   readonly insert: Insert | undefined;
+  /** Пользовательская таблица, в которую вставляет INSERT не в начале текста (WITH … INSERT, INSERT в CTE). */
+  readonly nestedInsert: string | undefined;
   /** Таблица, у которой SET меняет household_id. */
   readonly ownerChange: string | undefined;
 }
@@ -141,9 +151,9 @@ const NOT_ALIAS = new Set(
   ).split(" "),
 );
 
-const PREDICATE = /(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?(?<![\w"])"?household_id"?\s*=\s*\$(\d+)\b/g;
+const PREDICATE = /(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?(?<![\w"$])"?household_id"?\s*=\s*\$(\d+)\b/g;
 const PREDICATE_REVERSED =
-  /\$(\d+)\s*=\s*(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?"?household_id"?(?![\w"])/g;
+  /\$(\d+)\s*=\s*(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?"?household_id"?(?![\w"$])/g;
 
 /** Разбор зависит только от текста: Drizzle выдаёт один и тот же текст, на горячем пути — сравнение параметров. */
 const cache = new WeakMap<ReadonlySet<string>, Map<string, Parsed>>();
@@ -164,9 +174,14 @@ function parse(sqlText: string, owned: ReadonlySet<string>): Parsed {
 }
 
 function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
-  const scanned = scan(sqlText, "''");
-  const text = scanned.code.toLowerCase().replace(/(?<![\w."$])"?public"?\s*\.\s*/g, "");
+  const scanned = scan(sqlText, "''", true);
+  const text = scanned.code.replace(/(?<![\w."$])"?public"?\s*\.\s*/g, "");
   const insert = parseInsert(text, owned);
+  // VALUES разбирается только у INSERT в начале текста; иначе household_id строк не проверить.
+  const nestedInsert = [...text.matchAll(INSERT_TARGET)]
+    .filter((m) => text.slice(0, m.index).trim() !== "")
+    .map((m) => m[1] ?? m[2] ?? "")
+    .find((table) => owned.has(table));
   const mentions: string[] = [];
   const refs: Ref[] = [];
   let skipInsertTarget = insert !== undefined;
@@ -199,8 +214,21 @@ function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
   const command = /^[\s(]*([a-z_]+)/.exec(text)?.[1] ?? "";
   const multiple = text.replace(/;\s*$/, "").includes(";");
   const hidden = scanned.unicodeIdentifier ? 'U&"…"' : HIDDEN_SQL_CALL.exec(text)?.[1];
-  return { text, command, multiple, hidden, refs, predicates, mentions, insert, ownerChange };
+  return {
+    text,
+    command,
+    multiple,
+    hidden,
+    refs,
+    predicates,
+    mentions,
+    insert,
+    nestedInsert,
+    ownerChange,
+  };
 }
+
+const INSERT_TARGET = /(?<![\w"$])insert\s+into\s+(?:"(\w+)"|(\w+)\b)(?!\s*\.)/g;
 
 /** Колонки слева от `=` в элементе SET: `col`, `"col"`, `(a, b)`, `col[1]`, `col.field`. */
 function setTargets(item: string): string[] {
@@ -259,6 +287,12 @@ interface Scanned {
 }
 
 const WORD = /[A-Za-z_\u0080-\uffff][\w$\u0080-\uffff]*/y;
+const LINE_END = /[\n\r]/g;
+/**
+ * Склейка строк в scan.l: пробелы и «--»-комментарии с хотя бы одним \n или \r между литералами
+ * (whitespace_with_newline; \v — пробел с PostgreSQL 16). «/* *\/» склейку не даёт — синтаксическая ошибка.
+ */
+const CONTINUATION = /(?:[ \t\f\v]|--[^\n\r]*)*[\n\r](?:[ \t\n\r\f\v]+|--[^\n\r]*[\n\r])*'/y;
 const DOLLAR_TAG = /\$(?:[A-Za-z_\u0080-\uffff][\w\u0080-\uffff]*)?\$/y;
 
 /**
@@ -266,7 +300,7 @@ const DOLLAR_TAG = /\$(?:[A-Za-z_\u0080-\uffff][\w\u0080-\uffff]*)?\$/y;
  * (standard_conforming_strings = on). Незакрытая строка или комментарий тянутся до конца текста: такой
  * запрос база отвергнет синтаксической ошибкой.
  */
-function scan(sqlText: string, literal: string): Scanned {
+function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
   let code = "";
   let unicodeIdentifier = false;
   let i = 0;
@@ -274,8 +308,9 @@ function scan(sqlText: string, literal: string): Scanned {
     const ch = sqlText.charAt(i);
     const next = sqlText.charAt(i + 1);
     if (ch === "-" && next === "-") {
-      const end = sqlText.indexOf("\n", i);
-      i = end < 0 ? sqlText.length : end;
+      // Комментарий кончается на \n или \r (non_newline [^\n\r] в scan.l Postgres).
+      LINE_END.lastIndex = i;
+      i = LINE_END.exec(sqlText) === null ? sqlText.length : LINE_END.lastIndex - 1;
       code += " ";
     } else if (ch === "/" && next === "*") {
       i = blockCommentEnd(sqlText, i);
@@ -285,7 +320,8 @@ function scan(sqlText: string, literal: string): Scanned {
       code += literal;
     } else if (ch === '"') {
       const end = quotedEnd(sqlText, i, false);
-      code += sqlText.slice(i, end);
+      const name = sqlText.slice(i, end);
+      code += normalize ? quotedName(name) : name;
       i = end;
     } else if (ch === "$") {
       DOLLAR_TAG.lastIndex = i;
@@ -312,9 +348,16 @@ function scan(sqlText: string, literal: string): Scanned {
       if (sqlText.charAt(i + word.length) === "'" && ["e", "b", "x", "n"].includes(prefix)) {
         // E'…' — с экранированием обратной косой чертой; B'…', X'…', N'…' — как обычная строка.
         i = quotedEnd(sqlText, i + 1, prefix === "e");
+        // Продолжение E'…' за переводом строки ('a'\n'b') — та же E-строка, с тем же экранированием.
+        while (prefix === "e") {
+          CONTINUATION.lastIndex = i;
+          if (CONTINUATION.exec(sqlText) === null) break;
+          i = quotedEnd(sqlText, CONTINUATION.lastIndex - 1, true);
+        }
         code += literal;
       } else {
-        code += word;
+        // Postgres приводит к нижнему регистру только ASCII в именах без кавычек.
+        code += normalize ? word.replace(/[A-Z]+/g, (upper) => upper.toLowerCase()) : word;
         i += word.length;
       }
     }
@@ -336,6 +379,19 @@ function quotedEnd(text: string, open: number, backslash: boolean): number {
   return text.length;
 }
 
+/**
+ * Имя в кавычках для разбора. `"\w+"` остаётся как есть: Postgres сравнивает его с учётом регистра, а имена без
+ * кавычек приведены к нижнему регистру — поэтому "A" и a — разные алиасы, а "fx_receipts" — та же таблица. Прочие
+ * имена (пробел, «;», «=», `""`) — в "Q_<hex>": `" household_id = $1"` не выглядит предикатом, «;» не делит
+ * команды, разные имена не сливаются, а с именем без кавычек (нижний регистр) или `"\w+"` (не на Q_) не совпадут.
+ */
+function quotedName(name: string): string {
+  if (/^"\w+"$/.test(name) && !name.startsWith('"Q_')) return name;
+  let hex = "";
+  for (let i = 1; i < name.length; i += 1) hex += name.charCodeAt(i).toString(16).padStart(4, "0");
+  return `"Q_${hex}"`;
+}
+
 /** Позиция после комментария `/* … *\/`; в Postgres такие комментарии вкладываются. */
 function blockCommentEnd(text: string, open: number): number {
   let depth = 0;
@@ -355,7 +411,7 @@ function blockCommentEnd(text: string, open: number): number {
 
 /** Текст для сообщения: без комментариев, строки заменены на '…', не длиннее 300 символов. */
 function maskSql(sqlText: string): string {
-  const masked = scan(sqlText, "'…'").code.replace(/\s+/g, " ").trim();
+  const masked = scan(sqlText, "'…'", false).code.replace(/\s+/g, " ").trim();
   return masked.length > 300 ? `${masked.slice(0, 300)}…` : masked;
 }
 
@@ -490,7 +546,16 @@ function auditScoped(
   householdId: string,
   sqlText: string,
 ): void {
-  const { insert } = parsed;
+  const { insert, nestedInsert } = parsed;
+  if (nestedInsert !== undefined) {
+    throw new IsolationViolation(
+      "INSERT_NOT_STANDALONE",
+      nestedInsert,
+      `вставка в ${nestedInsert} внутри WITH или CTE: household_id её строк не проверить — вставка только ` +
+        `отдельной командой s.insert(${nestedInsert}).values(…)`,
+      sqlText,
+    );
+  }
   if (insert !== undefined) auditInsert(insert, params, householdId, sqlText);
   if (parsed.ownerChange !== undefined) {
     throw new IsolationViolation(

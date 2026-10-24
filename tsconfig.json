@@ -1,0 +1,5 @@
+{
+  "//": "Корень: конфиги и скрипты tooling/. У каждого пакета в apps/ и packages/ — свой tsconfig.json.",
+  "extends": "./tooling/tsconfig.base.json",
+  "include": ["*.ts", "tooling/**/*.ts", "tooling/**/*.d.mts"]
+}

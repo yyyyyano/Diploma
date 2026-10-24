@@ -88,7 +88,7 @@
 - Conventional Commits: `тип(область): описание` — заголовок 15–72 символа, описательный, тема по-русски,
   тип латиницей (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `perf`, `build`, `style`, `revert`).
   Область необязательна; если указана — id модуля из `docs/CAPABILITIES.md` или `web`, `server`,
-  `kernel`, `calc`, `contract`, `i18n`, `testing`, `e2e`, `tooling`, `docker`, `docs`, `deps`.
+  `kernel`, `calc`, `contract`, `i18n`, `testing`, `e2e`, `tooling`, `docker`, `docs`, `deps`, `plan`.
   Пример: `feat(receipts): перепроверять спорные строки чека моделью`.
 - Размер коммита проверяет хук: предупреждение от 400 строк, отказ от 800 (трейлер `Large-Commit: <причина>`),
   меньше 3 строк — только `docs/chore/style/fix/revert` или трейлер `Small-Commit: <причина>`.

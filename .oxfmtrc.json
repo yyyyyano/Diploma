@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "ignorePatterns": [
+    "*.md",
+    ".claude/",
+    "design/",
+    "research/",
+    "docs/",
+    "tasks/",
+    "samples/",
+    "data/",
+    "models/",
+    "secrets/",
+    "skills-lock.json",
+    "pnpm-lock.yaml",
+    "**/__cassettes__/"
+  ]
+}

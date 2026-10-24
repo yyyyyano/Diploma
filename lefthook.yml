@@ -1,0 +1,30 @@
+# Git-хуки «Кошта» (ADR-0001, CONSTRAINTS.md «Коммиты»). Ставятся командой `make init`.
+# Бинарники вызываются напрямую (без `pnpm exec`) и параллельно: бюджет pre-commit ≤ 3 с, commit-msg ≤ 1 с.
+glob_matcher: doublestar
+
+pre-commit:
+  parallel: true
+  skip:
+    - merge
+    - rebase
+  commands:
+    # Только проверка, без автоправки: при `git add -p` автоправка добавила бы в коммит весь файл.
+    fmt:
+      glob: "**/*.{ts,tsx,mts,cts,js,mjs,cjs,json,jsonc,yml,yaml}"
+      run: node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern {staged_files} || { echo "Формат не тот — выполните make fmt и добавьте файлы снова."; exit 1; }
+    lint:
+      glob: "**/*.{ts,tsx,mts,cts,js,mjs,cjs}"
+      run: node_modules/.bin/oxlint --deny-warnings {staged_files}
+
+commit-msg:
+  parallel: true
+  commands:
+    commitlint:
+      run: node_modules/.bin/commitlint --edit {1}
+    no-ai-attribution:
+      run: node tooling/git-hooks/check-no-ai-attribution.mjs {1}
+
+pre-push:
+  commands:
+    check-quick:
+      run: make check-quick

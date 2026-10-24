@@ -18,7 +18,9 @@
   построителем и `sql\`\``; **реляционный API `db.query.*` не используется**. Миграции — `drizzle-kit generate`,
   SQL читается глазами (HNSW, `CONCURRENTLY`, `ON DELETE SET NULL (колонка)` для составных FK — руками),
   применяются при старте под `pg_advisory_lock`; откатов нет (`make db-reset`). Таблицы pg-boss Drizzle не трогает
-  (`schemaFilter: ["public"]`). Проверить в бетоне `casing: "snake_case"` — иначе писать имена колонок явно.
+  (`schemaFilter: ["public"]`). Имена колонок — `snake_case` из имён свойств: в 1.0 RC правило задаёт сама таблица
+  (`pgTableCreator(…, "snake_case")` в `platform/db/tables.ts`), поэтому миграции и запросы берут имя из одного места
+  (проверено в T-004).
 - **Векторы**: `halfvec`, HNSW (`m = 16`, `ef_construction = 64`), косинус; в запросе `hnsw.ef_search = 100` и
   `iterative_scan = relaxed_order`; таблицы `embedding_model` и `fragment_embedding`, частичный индекс на модель;
   векторы только у текущих версий фрагментов. HNSW — только для публичных данных; по пользовательским строкам —
@@ -30,7 +32,9 @@
 - **Версии**: `fragment` + `fragment_version` (`is_current`, `first/last_snapshot`, `text_hash`), частичный GIN по
   текущим; сырой HTML снимков — `act_snapshot` (gzip в `bytea`, только при изменении хэша).
 - **Тестовая БД**: Postgres из Compose + шаблонная БД, своя база на каждый тестовый файл (`CREATE DATABASE … TEMPLATE`,
-  ~20 мс), защита по префиксу `test_`.
+  ~30 мс в замере T-004), защита по префиксу `test_`. Создаёт и удаляет базы `@kosht/testing/db` — единственное место
+  вне `platform/db` и `infrastructure/db`, где разрешён `pg` (правило `drizzle-and-pg-only-in-db`); миграции в шаблон
+  применяет globalSetup сервера, пакет тестов сервер не импортирует.
 
 ## Альтернативы
 

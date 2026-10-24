@@ -1,0 +1,379 @@
+// Канарейки аудитора SQL (ADR-0006, ARCHITECTURE §6.2 замок 3): заведомо дырявые запросы должны остановиться,
+// правильные формы — пройти. SQL для типичных форм строит сам Drizzle (drizzle.mock() + toSQL()), чтобы канарейки
+// краснели, если обновление Drizzle изменит текст запросов; нетипичные формы — сырым текстом.
+import { and, eq, inArray, sql, sum } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { alias, PgDialect } from "drizzle-orm/pg-core";
+import { describe, expect, it } from "vitest";
+import { fxRates, fxReceiptItems, fxReceipts, fxSettings } from "./__fixtures__/schema.ts";
+import { auditQuery, IsolationViolation, type AuditMode } from "./audit.ts";
+import { ownedTableNames } from "./tables.ts";
+
+const A = "00000000-0000-7000-8200-00000000000a";
+const B = "00000000-0000-7000-8200-00000000000b";
+const scopedA: AuditMode = { kind: "scoped", householdId: A };
+const system: AuditMode = { kind: "system" };
+const crossTenant: AuditMode = { kind: "cross-tenant" };
+
+const db = drizzle.mock();
+const dialect = new PgDialect();
+const own = (t: typeof fxReceipts | typeof fxReceiptItems, householdId = A) =>
+  eq(t.householdId, householdId);
+
+type Query = { toSQL(): { sql: string; params: unknown[] } };
+
+const mine = db.$with("mine").as(db.select().from(fxReceipts).where(own(fxReceipts)));
+
+function audit(query: Query | { sql: string; params: unknown[] }, mode: AuditMode = scopedA): void {
+  const { sql: text, params } = "toSQL" in query ? query.toSQL() : query;
+  auditQuery(text, params, mode, ownedTableNames());
+}
+
+function violation(run: () => void): IsolationViolation {
+  try {
+    run();
+  } catch (error) {
+    if (error instanceof IsolationViolation) return error;
+    throw error;
+  }
+  throw new Error("ожидалось ISOLATION_VIOLATION, а запрос прошёл аудит");
+}
+
+describe("ROLE-01, SEC-04: аудитор пропускает правильные формы", () => {
+  it.each<[string, Query]>([
+    [
+      "чтение по id со своим own",
+      db
+        .select()
+        .from(fxReceipts)
+        .where(and(own(fxReceipts), eq(fxReceipts.id, "x"))),
+    ],
+    [
+      "JOIN: у каждой таблицы свой own",
+      db
+        .select({ id: fxReceipts.id, name: fxReceiptItems.name })
+        .from(fxReceipts)
+        .leftJoin(
+          fxReceiptItems,
+          and(own(fxReceiptItems), eq(fxReceiptItems.receiptId, fxReceipts.id)),
+        )
+        .where(own(fxReceipts)),
+    ],
+    [
+      "агрегат с фильтром",
+      db
+        .select({ total: sum(fxReceipts.totalMinor) })
+        .from(fxReceipts)
+        .where(own(fxReceipts)),
+    ],
+    [
+      "подзапрос IN с двумя own",
+      db
+        .select()
+        .from(fxReceipts)
+        .where(
+          and(
+            own(fxReceipts),
+            inArray(
+              fxReceipts.id,
+              db
+                .select({ id: fxReceiptItems.receiptId })
+                .from(fxReceiptItems)
+                .where(own(fxReceiptItems)),
+            ),
+          ),
+        ),
+    ],
+    ["CTE с own внутри", db.with(mine).select().from(mine)],
+    [
+      "UPDATE с own",
+      db
+        .update(fxReceipts)
+        .set({ status: "ok" })
+        .where(and(own(fxReceipts), eq(fxReceipts.id, "x"))),
+    ],
+    ["DELETE с own", db.delete(fxReceipts).where(and(own(fxReceipts), eq(fxReceipts.id, "x")))],
+    [
+      "многострочный INSERT своего домохозяйства",
+      db.insert(fxReceipts).values([
+        { householdId: A, userId: "u", merchant: "m", totalMinor: 1 },
+        { householdId: A, userId: "u", merchant: "m2", totalMinor: 2, note: "n" },
+      ]),
+    ],
+    [
+      "UPSERT по (household_id, id)",
+      db
+        .insert(fxReceipts)
+        .values({ householdId: A, userId: "u", merchant: "m", totalMinor: 1 })
+        .onConflictDoUpdate({
+          target: [fxReceipts.householdId, fxReceipts.id],
+          set: { status: "x" },
+        }),
+    ],
+    ["общая таблица без фильтра", db.select().from(fxRates)],
+    ["системная таблица без фильтра", db.select().from(fxSettings)],
+    [
+      "сырой sql с фильтром параметром",
+      {
+        toSQL: () => dialect.sqlToQuery(sql`select id from ${fxReceipts} where ${own(fxReceipts)}`),
+      },
+    ],
+  ])("%s", (_name, query) => {
+    expect(() => audit(query)).not.toThrow();
+  });
+
+  it.each([
+    "begin",
+    "commit",
+    "rollback",
+    "savepoint sp1",
+    "release savepoint sp1",
+    "rollback to savepoint sp1",
+    "select 1",
+  ])("служебная команда «%s» проходит", (text) => {
+    expect(() => audit({ sql: text, params: [] })).not.toThrow();
+  });
+
+  it("имя таблицы только в строке или комментарии — не обращение", () => {
+    expect(() =>
+      audit({
+        sql: "select 'from fx_receipts' as t /* fx_receipts */ -- fx_receipts\n",
+        params: [],
+      }),
+    ).not.toThrow();
+  });
+
+  it("самосоединение: у обоих обращений свой own", () => {
+    const other = alias(fxReceiptItems, "other");
+    const query = db
+      .select({ name: other.name })
+      .from(fxReceiptItems)
+      .innerJoin(other, and(eq(other.householdId, A), eq(other.name, fxReceiptItems.name)))
+      .where(own(fxReceiptItems));
+    expect(() => audit(query)).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: аудитор останавливает дырявые запросы — ISOLATION_VIOLATION", () => {
+  it("забытый where: чтение по id без own называет таблицу и что добавить", () => {
+    const error = violation(() =>
+      audit(db.select().from(fxReceipts).where(eq(fxReceipts.id, "x"))),
+    );
+    expect(error.code).toBe("ISOLATION_VIOLATION");
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.table).toBe("fx_receipts");
+    expect(error.message).toMatch(/fx_receipts/);
+    expect(error.message).toMatch(/s\.own\(/);
+  });
+
+  it("второй where в $dynamic() затёр own", () => {
+    const query = db
+      .select()
+      .from(fxReceipts)
+      .where(own(fxReceipts))
+      .$dynamic()
+      .where(eq(fxReceipts.id, "x"));
+    expect(violation(() => audit(query)).reason).toBe("MISSING_HOUSEHOLD_FILTER");
+  });
+
+  it("JOIN без own у второй таблицы — называет её", () => {
+    const query = db
+      .select({ id: fxReceipts.id, name: fxReceiptItems.name })
+      .from(fxReceipts)
+      .leftJoin(fxReceiptItems, eq(fxReceiptItems.receiptId, fxReceipts.id))
+      .where(own(fxReceipts));
+    expect(violation(() => audit(query)).table).toBe("fx_receipt_items");
+  });
+
+  it("самосоединение: второй алиас без own («такие же позиции у других»)", () => {
+    const other = alias(fxReceiptItems, "other");
+    const query = db
+      .select({ name: other.name })
+      .from(fxReceiptItems)
+      .innerJoin(other, eq(other.name, fxReceiptItems.name))
+      .where(own(fxReceiptItems));
+    expect(violation(() => audit(query)).message).toMatch(/fx_receipt_items \(other\)/);
+  });
+
+  it("подзапрос без own внутри", () => {
+    const query = db
+      .select()
+      .from(fxReceipts)
+      .where(
+        and(
+          own(fxReceipts),
+          inArray(fxReceipts.id, db.select({ id: fxReceiptItems.receiptId }).from(fxReceiptItems)),
+        ),
+      );
+    expect(violation(() => audit(query)).table).toBe("fx_receipt_items");
+  });
+
+  it("CTE без own внутри", () => {
+    const all = db.$with("all_receipts").as(db.select().from(fxReceipts));
+    expect(violation(() => audit(db.with(all).select().from(all))).table).toBe("fx_receipts");
+  });
+
+  it("агрегат по всем домохозяйствам", () => {
+    expect(
+      violation(() => audit(db.select({ s: sum(fxReceipts.totalMinor) }).from(fxReceipts))).table,
+    ).toBe("fx_receipts");
+  });
+
+  it("сырой sql без фильтра", () => {
+    expect(violation(() => audit({ sql: "select * from fx_receipts", params: [] })).table).toBe(
+      "fx_receipts",
+    );
+  });
+
+  it("литерал вместо параметра не засчитывается", () => {
+    const text = `select * from fx_receipts where household_id = '${A}'`;
+    expect(violation(() => audit({ sql: text, params: [] })).reason).toBe(
+      "MISSING_HOUSEHOLD_FILTER",
+    );
+  });
+
+  it("фильтр со значением чужого домохозяйства: проверяется значение, а не наличие предиката", () => {
+    const query = db.select().from(fxReceipts).where(own(fxReceipts, B));
+    expect(violation(() => audit(query)).reason).toBe("MISSING_HOUSEHOLD_FILTER");
+  });
+
+  it("UPDATE по id без own", () => {
+    expect(
+      violation(() =>
+        audit(db.update(fxReceipts).set({ status: "x" }).where(eq(fxReceipts.id, "x"))),
+      ).table,
+    ).toBe("fx_receipts");
+  });
+
+  it("DELETE по id без own", () => {
+    expect(violation(() => audit(db.delete(fxReceipts).where(eq(fxReceipts.id, "x")))).table).toBe(
+      "fx_receipts",
+    );
+  });
+
+  it("UPDATE … FROM: вторая таблица без own", () => {
+    const text =
+      "update fx_receipts set status = $1 from fx_receipt_items where fx_receipts.household_id = $2 and fx_receipt_items.receipt_id = fx_receipts.id";
+    expect(violation(() => audit({ sql: text, params: ["x", A] })).table).toBe("fx_receipt_items");
+  });
+
+  it("UPDATE переносит строку в другое домохозяйство (SET household_id)", () => {
+    const text =
+      "update fx_receipts set household_id = $1 where fx_receipts.household_id = $2 and id = $3";
+    expect(violation(() => audit({ sql: text, params: [B, A, "x"] })).reason).toBe("OWNER_CHANGE");
+  });
+
+  it("INSERT с чужим household_id во второй строке", () => {
+    const query = db.insert(fxReceipts).values([
+      { householdId: A, userId: "u", merchant: "m", totalMinor: 1 },
+      { householdId: B, userId: "u", merchant: "m", totalMinor: 1 },
+    ]);
+    expect(violation(() => audit(query)).reason).toBe("INSERT_FOREIGN_HOUSEHOLD");
+  });
+
+  it("INSERT без колонки household_id", () => {
+    const text = "insert into fx_receipts (user_id, merchant, total_minor) values ($1, $2, $3)";
+    expect(violation(() => audit({ sql: text, params: ["u", "m", 1] })).reason).toBe(
+      "INSERT_WITHOUT_HOUSEHOLD",
+    );
+  });
+
+  it("INSERT … SELECT в пользовательскую таблицу", () => {
+    const text =
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) select household_id, user_id, merchant, total_minor from fx_receipts where household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("INSERT_SELECT");
+  });
+
+  it("UPSERT ON CONFLICT (id) — цель без household_id", () => {
+    const query = db
+      .insert(fxReceipts)
+      .values({ householdId: A, userId: "u", merchant: "m", totalMinor: 1 })
+      .onConflictDoUpdate({ target: fxReceipts.id, set: { status: "x" } });
+    expect(violation(() => audit(query)).reason).toBe("UPSERT_TARGET");
+  });
+
+  it.each([
+    ["public.fx_receipts", "select * from public.fx_receipts"],
+    ['"public"."fx_receipts"', 'select * from "public"."fx_receipts"'],
+    ["заглавными буквами", "SELECT * FROM FX_RECEIPTS"],
+    [
+      "через запятую",
+      "select * from fx_receipts, fx_receipt_items where fx_receipts.household_id = $1",
+    ],
+    [
+      "фильтр не на том алиасе",
+      "select * from fx_receipts r join fx_receipt_items i on i.receipt_id = r.id where i.household_id = $1 and i.household_id = $1",
+    ],
+    [
+      "одна проверка на два обращения",
+      "with c as (select * from fx_receipts) select * from fx_receipts where fx_receipts.household_id = $1",
+    ],
+  ])("имя таблицы в форме %s — обращение без фильтра", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe(
+      "MISSING_HOUSEHOLD_FILTER",
+    );
+  });
+
+  it("в тексте нарушения нет значений параметров и строковых литералов (OBS-04)", () => {
+    const text = "select * from fx_receipts where merchant = $1 and note = 'CANARY-LITERAL'";
+    const error = violation(() => audit({ sql: text, params: ["CANARY-PARAM"] }));
+    expect(error.message).not.toMatch(/CANARY-PARAM|CANARY-LITERAL/);
+    expect(error.message).toMatch(/fx_receipts/);
+  });
+
+  it("разбор кэшируется по тексту, а решение — нет: тот же текст с чужим значением остановлен", () => {
+    const text = 'select * from "fx_receipts" where "fx_receipts"."household_id" = $1';
+    expect(() => audit({ sql: text, params: [A] })).not.toThrow();
+    expect(violation(() => audit({ sql: text, params: [B] })).reason).toBe(
+      "MISSING_HOUSEHOLD_FILTER",
+    );
+  });
+});
+
+describe("PRIV-07: SystemDb не касается пользовательских таблиц", () => {
+  it.each([
+    ["чтение", "select id from fx_receipts where household_id = $1"],
+    ["вставка", "insert into fx_receipts (household_id) values ($1)"],
+    ["JOIN к системной", "select * from fx_settings join fx_receipt_items on true"],
+  ])("%s → SYSTEM_TOUCHES_USER_DATA", (_name, text) => {
+    const error = violation(() => audit({ sql: text, params: [A] }, system));
+    expect(error.reason).toBe("SYSTEM_TOUCHES_USER_DATA");
+    expect(error.message).toMatch(/fx_receipt/);
+  });
+
+  it("системная и общая таблицы проходят", () => {
+    expect(() => audit(db.select().from(fxSettings), system)).not.toThrow();
+    expect(() =>
+      audit(db.insert(fxRates).values({ code: "USD", rateMicros: 1 }), system),
+    ).not.toThrow();
+  });
+});
+
+describe("ARCHITECTURE §6.6: crossTenant только находит владельцев", () => {
+  it("SELECT id, household_id, user_id проходит", () => {
+    const query = db
+      .select({ id: fxReceipts.id, householdId: fxReceipts.householdId, userId: fxReceipts.userId })
+      .from(fxReceipts)
+      .where(eq(fxReceipts.status, "recognizing"));
+    expect(() => audit(query, crossTenant)).not.toThrow();
+  });
+
+  it.each([
+    ["все колонки", db.select().from(fxReceipts)],
+    ["сумма чека", db.select({ id: fxReceipts.id, total: fxReceipts.totalMinor }).from(fxReceipts)],
+  ])("колонки шире (id, household_id, user_id): %s → CROSS_TENANT_COLUMNS", (_name, query) => {
+    expect(violation(() => audit(query, crossTenant)).reason).toBe("CROSS_TENANT_COLUMNS");
+  });
+
+  it.each([
+    ["UPDATE", "update fx_receipts set status = $1"],
+    ["DELETE", "delete from fx_receipts"],
+    ["INSERT", "insert into fx_settings (key, value) values ($1, $1)"],
+    ["CTE с записью", "with x as (delete from fx_receipts returning id) select id from x"],
+    ["блокировка строк", "select id from fx_receipts for update"],
+  ])("%s → CROSS_TENANT_NOT_SELECT", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: ["x"] }, crossTenant)).reason).toBe(
+      "CROSS_TENANT_NOT_SELECT",
+    );
+  });
+});

@@ -257,7 +257,7 @@ function packageRules(): ForbiddenRule[] {
     rule(
       "i18n-allowed-deps",
       "@kosht/i18n — тексты и форматы: только i18next, @kosht/kernel и @kosht/contract, без приложений и " +
-        "серверного кода (ARCHITECTURE §2); @kosht/calc — только в тестах соответствия словарей.",
+        "серверного кода (ARCHITECTURE §2). Тесты правилом не проверяются (там и @kosht/calc — сверка словарей).",
       { path: "^packages/i18n/", pathNot: TEST_CODE },
       { pathNot: ["^packages/(i18n|kernel|contract)/", npmPattern(["i18next"])] },
     ),

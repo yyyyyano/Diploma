@@ -14,7 +14,7 @@ pre-commit:
       run: node_modules/.bin/oxfmt --check --no-error-on-unmatched-pattern {staged_files} || { echo "Формат не тот — выполните make fmt и добавьте файлы снова."; exit 1; }
     lint:
       glob: "**/*.{ts,tsx,mts,cts,js,mjs,cjs}"
-      run: node_modules/.bin/oxlint --deny-warnings {staged_files}
+      run: node_modules/.bin/oxlint --deny-warnings --no-error-on-unmatched-pattern {staged_files}
 
 commit-msg:
   parallel: true

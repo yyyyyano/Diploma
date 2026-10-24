@@ -347,8 +347,8 @@ async withItems(s: ScopedDb, id: ReceiptId) {                // JOIN: у каж�
 ### 6.5 Системный доступ и админка
 
 Платформа раздаёт возможности типами: `scoped(scope): ScopedDb` — модулям с пользовательскими данными;
-`system: SystemDb` — только модулям с флагом `systemTables` в `modules.ts` (аудитор запрещает ему любое
-упоминание пользовательской таблицы); `crossTenant` — только `defineSweep` в `platform/jobs`; `unsafeRaw` —
+`system: SystemDb` — только модулям с признаком `systemTables` (выводится из `tables` в `modules.ts`: есть
+`system` или `public`; аудитор запрещает ему любое упоминание пользовательской таблицы); `crossTenant` — только `defineSweep` в `platform/jobs`; `unsafeRaw` —
 только миграции и тесты. Модуль `admin` своих данных не имеет и пользовательские схемы импортировать не может;
 счётчиков «сколько у пользователя операций» в админке нет (решение пользователя).
 
@@ -680,10 +680,11 @@ apps/web/src/
    Oxlint (type-aware) + oxfmt (точная версия), lefthook + commitlint + проверка размера, Turborepo, Makefile —
    каждую цель добавляет задача, которая даёт её функцию (заглушек нет, см. `CONSTRAINTS.md`), `.gitignore`
    дополняется `secrets/`. *Готово:* `make check` зелёный на пустом проекте и красный на намеренной ошибке каждого вида.
-2. **Архитектура как код (T-002).** `tooling/architecture/modules.ts` (36 модулей, ярусы, `dependsOn`, `userData`,
-   `systemTables`) из `docs/CAPABILITIES.md`, генератор правил dependency-cruiser (+ `typescript@6` рядом),
-   `deps-guard` (порог числа файлов), фикстуры нарушений с тестом «каждое правило ловит своё», `isolation.mjs`,
-   `no-raw-colors.mjs`, `calc-no-clock.mjs`, `bundle-size.mjs`, проверка литералов в JSX, `make capabilities`.
+2. **Архитектура как код (T-002, T-056).** T-002: `tooling/architecture/modules.ts` (36 модулей, ярусы, `dependsOn`,
+   `tables`, из которых выводятся `userData` и `systemTables`) из `docs/CAPABILITIES.md`, генератор правил
+   dependency-cruiser (+ `typescript@6` рядом), `deps-guard` (порог числа файлов), фикстуры нарушений с тестом
+   «каждое правило ловит своё», `make capabilities`, области коммитов из карты. T-056: `isolation.mjs`,
+   `no-raw-colors.mjs`, `calc-no-clock.mjs`, `bundle-size.mjs`, проверка литералов в JSX.
 3. **Общие пакеты (T-003).** `kernel` (Money, LocalDate, Period, Scope с брендом, бренды id, TraceNode), `calc`
    (`Calc<T>`, помощники трассы, `freeBalance` с тестами-примерами), `contract` (каталог ошибок, общие схемы,
    `health`, `PageContext`, части сообщений чата, `events.stream`), `i18n` (ru, типизированные ключи, форматы),

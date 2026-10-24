@@ -18,7 +18,8 @@ SPEC описывает ~30 функциональных областей. Ко�
   Модуль = папка с фасадом `index.ts`; внутри `domain/` (чистое), `application/` (**сценарий = файл**, фабрика
   `make<Сценарий>(deps)`), `infrastructure/` (SQL и адаптеры), `api/`, `jobs/`, `subscriptions/`, `agent/`.
   **Порты — только на внешних границах.** Корень композиции `main/compose.ts` без DI-контейнера.
-- **Карта модулей — код**: `tooling/architecture/modules.ts` (`id`, `tier`, `dependsOn`, `userData`, `systemTables`).
+- **Карта модулей — код**: `tooling/architecture/modules.ts` (`id`, `tier`, `dependsOn`, `tables`; из `tables`
+  выводятся `userData` и `systemTables`).
   Из неё генерируются правила dependency-cruiser («X может зависеть только от …»), таблица `docs/CAPABILITIES.md`
   и проверка порядка сборки. Зависеть можно от своего или нижнего яруса, без циклов.
 - **Три процесса из одного кода**: `api`, `worker`, `bot` (`compose(config, role)`); общение — только через Postgres.

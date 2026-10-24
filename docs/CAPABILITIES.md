@@ -1,9 +1,10 @@
 # Карта модулей «Кошта»
 
-> **Источник правды — до бетонной фазы этот файл, после неё — `tooling/architecture/modules.ts`.**
-> В бетонной фазе карта переносится в код (`id`, `tier`, `dependsOn`, `userData`, `systemTables`), из неё
-> генерируются правила dependency-cruiser и таблица ниже (`make capabilities`); ручная правка таблиц
-> после этого запрещена — правится `modules.ts`, и в том же коммите перегенерируется этот файл.
+> **Источник правды о модулях — `tooling/architecture/modules.ts`; таблицы генерируются, не править.**
+> Таблицы ярусов (между метками `capabilities:tier-N`) собирает `make capabilities` из карты (`id`, `tier`,
+> `dependsOn`, `tables`, требования, ответственность, события; `userData` и `systemTables` выводятся из `tables`).
+> Меняется модуль — правится `modules.ts`, и в том же коммите перегенерируется этот файл; остальной текст
+> правится руками. Из той же карты генерируются правила dependency-cruiser и области коммитов commitlint.
 > Как модули устроены и общаются — `docs/ARCHITECTURE.md` §4–5; почему так — ADR-0003, ADR-0004.
 > Сверено со SPEC 2026-10-24: у каждого раздела §6 и сущности §5 есть модуль-владелец, у каждого модуля — требования.
 
@@ -18,11 +19,13 @@
   в списке, запрещено проверкой `make deps-check`.
 - **Таблицы** — вид таблиц модуля: `user` — `userOwnedTable` (данные домохозяйства, `ScopedDb`),
   `system` — `systemTable`, `public` — `publicTable` (законы, курсы, справочники). Модуль с `system`/`public`
-  получает `SystemDb` (флаг `systemTables`); модулю `admin` пользовательские таблицы недоступны (PRIV-07).
+  получает `SystemDb` (признак `systemTables`, выводится из `tables`); модулю `admin` пользовательские таблицы
+  недоступны (PRIV-07).
 - **Публикует** — ключевые события (полный список — `events.ts` модуля и его паспорт).
 
 ## Ярус 1 — основа
 
+<!-- capabilities:tier-1 -->
 | id | SPEC | Ответственность | Зависит от | Таблицы | Публикует |
 |---|---|---|---|---|---|
 | `files` | SEC-03, RCPT-11, STMT-10, PRIV-05/06 | приём файлов (тип по содержимому, лимиты), хранение `data/files/<householdId>/`, выдача владельцу, удаление | — | user | — |
@@ -34,9 +37,11 @@
 | `notifications` | NOTIF-01…05, BUD-03, CAL-07 (доставка) | уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram) | identity | user | — |
 | `llm` | LLM-01…10, NFR-04/05/25, PRIV-02/03/04/09, OBS-03, ADM-20/21/22/50 | реестр моделей, адаптеры, цепочки по задачам, лимитёр, маскирование, журнал расхода, Langfuse, эмбеддинги, речь, локальные модели | privacy, identity, notifications | system, user | `llm.local-models-ready` |
 | `system` | ADM-60, NFR-22/24, OBS-05/07 | обзор фоновых задач, доступ из сети, резервная копия, часовой пояс, статус Langfuse | — | system | — |
+<!-- /capabilities:tier-1 -->
 
 ## Ярус 2 — данные и знания
 
+<!-- capabilities:tier-2 -->
 | id | SPEC | Ответственность | Зависит от | Таблицы | Публикует |
 |---|---|---|---|---|---|
 | `profile` | PROF-01…07, AGT-06 (факты), AUTH-07 | факты (анкета, чат, выводы системы), статусы «подтверждён/предположение», «Что ассистент знает обо мне» | identity | user | `profile.facts-changed` |
@@ -51,9 +56,11 @@
 | `legal-base` | LAW-01…40, LEGAL-11, ADM-10 | каталог актов, загрузчик pravo.by, редакции и версии фрагментов, гибридный поиск, журнал спроса, публичная «База законов» | llm, notifications, identity | public, system | `legal-base.act-updated`, `legal-base.act-repealed` |
 | `norm-tables` | TAX-03, CAL-02 (сроки), AFF-05 (пределы ПДН), LAW-33, LEGAL-08, ADM-11 | таблицы «параметр → период → значение → источник» с подтверждением человеком | legal-base, notifications | public, system | `norm-tables.values-confirmed` |
 | `legal-consult` | LEGAL-01…12, CHAT-05/06, P3 | метки цитат `[[F…]]`, проверка дословности, «в моей базе нет», чек-листы документов и их состояние | legal-base | user | — |
+<!-- /capabilities:tier-2 -->
 
 ## Ярус 3 — расчёты и представления
 
+<!-- capabilities:tier-3 -->
 | id | SPEC | Ответственность | Зависит от | Таблицы | Публикует |
 |---|---|---|---|---|---|
 | `fin` | FIN-01/20/21/22 | свободный остаток, средний регулярный доход, прогноз остатка по дням | accounts, transactions, recurring, profile, explain | — | — |
@@ -64,9 +71,11 @@
 | `weekly` | WEEK-01…03 | итоги недели: числа — `calc`, текст — модель | transactions, budgets, calendar, recurring, tax, llm, notifications, explain | user | — |
 | `dashboard` | DASH-01…04 | сборка главного экрана (только чтение, пачками) | accounts, transactions, fin, budgets, recurring, calendar, tax, weekly | — | — |
 | `xls-export` | XLS-01…04 | Excel с живыми формулами (без диаграмм, R43) | transactions, categories, budgets, files | — | — |
+<!-- /capabilities:tier-3 -->
 
 ## Ярус 4 — входы и оркестрация
 
+<!-- capabilities:tier-4 -->
 | id | SPEC | Ответственность | Зависит от | Таблицы | Публикует |
 |---|---|---|---|---|---|
 | `voice` | VOICE-01…03 | речь → текст (облако по согласию, иначе whisper.cpp) | llm | — | — |
@@ -76,6 +85,7 @@
 | `demo` | DEMO-01…04 | демо-пользователь и связный набор данных от текущей даты (воспроизводимо) | identity, privacy, profile, files, accounts, transactions, receipts, categories, recurring, budgets, calendar, weekly | — | — |
 | `quality` | QA-10…16, ADM-40 | eval-прогоны с бюджетом токенов, результаты, сравнение с прошлыми | llm, receipts, statements, categories, legal-base, legal-consult, agent | system | — |
 | `admin` | ADM-01…60 (экраны) | раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет | identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo | — | — |
+<!-- /capabilities:tier-4 -->
 
 ## Кто слушает события
 

@@ -28,7 +28,7 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node
+	check-commits need-node capabilities
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -82,3 +82,8 @@ check-quick: typecheck ## Быстрые проверки для pre-push: ти�
 
 check-commits: need-node ## Проверить коммиты ветки относительно BASE (по умолчанию main)
 	node tooling/git-hooks/check-commits.mjs $(BASE)
+
+# ── Заготовки ──────────────────────────────────────────────────────────────────────────────────────
+
+capabilities: need-node ## Перегенерировать таблицы ярусов docs/CAPABILITIES.md из tooling/architecture/modules.ts
+	node tooling/architecture/capabilities.ts

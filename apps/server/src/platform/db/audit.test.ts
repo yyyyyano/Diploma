@@ -458,6 +458,37 @@ describe("ROLE-01, SEC-04: лексер читает текст так же, к�
     expect(violation(() => audit({ sql: text, params: [] })).table).toBe("fx_receipts");
   });
 
+  // Разбор стоит на каждом запросе: откат регулярки на корректном тексте — зависание запроса, а не ошибка.
+  const continuationTails: [string, string][] = [
+    ["перевод строки и 60 пробелов", `\n${" ".repeat(60)}`],
+    [
+      "пробелы и «--»-комментарии вперемешку",
+      ` -- a\n${"  -- c -- d\n   ".repeat(30)}${" ".repeat(40)}`,
+    ],
+    ["«--» без перевода строки до конца", ` ${"-- ".repeat(60)}\n${" ".repeat(60)}`],
+  ];
+
+  it.each(continuationTails)(
+    "E-строка, %s и код: разбор за миллисекунды, подзапрос после виден",
+    (_name, tail) => {
+      const text = `select E'x'${tail}, (select note from fx_receipts) as c from fx_rates`;
+      const started = performance.now();
+      const error = violation(() => audit({ sql: text, params: [] }));
+      expect(performance.now() - started).toBeLessThan(50);
+      expect(error.table).toBe("fx_receipts");
+    },
+  );
+
+  it.each(continuationTails)(
+    "E-строка, %s и код без пользовательских таблиц: проходит за миллисекунды",
+    (_name, tail) => {
+      const text = `select E'x'${tail}as c from fx_rates`;
+      const started = performance.now();
+      expect(() => audit({ sql: text, params: [] })).not.toThrow();
+      expect(performance.now() - started).toBeLessThan(50);
+    },
+  );
+
   it("имя в кавычках с заглавными — другой алиас: «A» и a не путаются", () => {
     const text =
       'select * from fx_receipts "A", fx_receipts a where a.household_id = $1 and a.household_id = $1';

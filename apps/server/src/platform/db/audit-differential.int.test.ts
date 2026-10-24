@@ -1,5 +1,5 @@
-// Дифференциальный тест аудитора SQL против настоящего Postgres (ADR-0006, ARCHITECTURE §15). Аудитор читает
-// текст регулярками поверх своего лексера; здесь проверяется, что он читает его так же, как база. Одни и те же
+// Дифференциальный тест аудитора SQL против настоящего Postgres (ADR-0006, ADR-0019, ARCHITECTURE §15). Аудитор
+// читает текст парсером PostgreSQL 18 (libpg-query); здесь проверяется, что он читает его так же, как база. Одни и те же
 // запросы записываются по-разному (пробел, таб, перевод строки, комментарии, ключевое слово вплотную к кавычке,
 // регистр, "имя", public. и <база>.public., ONLY, U&"…", E-строки со склейкой, $tag$…$tag$, «;» в конце, слова
 // from/in внутри выражений SET и WHERE, алиасы-ключевые слова и имена с $ и кириллицей), выбор — детерминированный
@@ -8,9 +8,10 @@
 //    MERGE, и вторую команду через «;», а отброшенное планом `where false` — нет); FK-триггеры выключены
 //    (session_replication_role = replica), чтобы проверка ссылки не считалась обращением;
 //  - утёк ли чужой: в ответе есть данные домохозяйства B или отпечаток строк B изменился (вставка, правка, удаление).
-// Утверждения: (1) таблицу, которую база тронула, аудитор видит — в режиме system (owned = {эта таблица}) запрос
-// остановлен; (2) запрос, через который утекли данные B, остановлен и в режиме scoped. Лишний отказ допустим —
-// ложные срабатывания считаются и выводятся в лог. Вариант, который Postgres не принял, отбрасывается.
+// Утверждения: (1) каждый текст, который база выполнила, принимает и парсер (нет UNPARSEABLE_SQL); (2) таблицу,
+// которую база тронула, аудитор видит — в режиме system (owned = {эта таблица}) запрос остановлен; (3) запрос,
+// через который утекли данные B, остановлен и в режиме scoped. Лишний отказ допустим — ложные срабатывания
+// считаются и выводятся в лог. Вариант, который Postgres не принял, отбрасывается.
 // Полный прогон: AUDIT_DIFF_RUNS=<вариантов на запрос> (по умолчанию 24), AUDIT_DIFF_SEED=<зерно>.
 import { testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -135,8 +136,6 @@ const BASES: readonly Base[] = [
   {
     name: "алиас колонки совпадает с именем таблицы",
     kind: "safe",
-    // Аудитор считает «as fx_receipts» вторым обращением без своего предиката.
-    falsePositive: true,
     template: "K:select note K:as fx_receipts K:from T:fx_receipts K:where C:household_id = $1",
     params: () => [A],
   },
@@ -555,6 +554,14 @@ function rejection(
   }
 }
 
+/**
+ * Известное расхождение libpg-query 18.2.0 с Postgres 18: склейку строки через «--»-комментарий
+ * ('x' --c\n'y' = 'xy') база читает, а парсер — нет. Отказ громкий (UNPARSEABLE_SQL), утечки нет: две строки
+ * подряд грамматика Postgres не принимает ни в каком другом прочтении. Такой вариант — ложное срабатывание
+ * (в лог), а не промах; канарейка в audit.test.ts покраснеет, когда парсер начнёт склеивать.
+ */
+const CONTINUATION_THROUGH_COMMENT = /'[ \t\f\v]*--[^\n\r]*[\n\r]\s*'/;
+
 const onlyTable = new Map<string, ReadonlySet<string>>(OWNED.map((t) => [t, new Set([t])]));
 const scopedA: AuditMode = { kind: "scoped", householdId: A };
 const system: AuditMode = { kind: "system" };
@@ -625,6 +632,12 @@ describe("ROLE-01, SEC-04: аудитор читает запрос не сла�
           const outcome = await run(text, params);
           if (!outcome.ran) continue;
           ran += 1;
+          if (
+            rejection(text, params, system, new Set()) === "UNPARSEABLE_SQL" &&
+            !CONTINUATION_THROUGH_COMMENT.test(text)
+          ) {
+            misses.push(`[парсер не принял текст базы] ${base.name}: ${JSON.stringify(text)}`);
+          }
           for (const t of outcome.touched) {
             if (rejection(text, params, system, onlyTable.get(t) ?? new Set()) === undefined) {
               misses.push(`[system не видит ${t}] ${base.name}: ${JSON.stringify(text)}`);

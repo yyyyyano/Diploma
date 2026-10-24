@@ -387,7 +387,8 @@ describe("ROLE-01, SEC-04: формы, которые прячут обраще�
     ["DDL", "create table fx_copy as select * from fx_receipts"],
     ["TRUNCATE", "truncate fx_receipts"],
     ["MERGE", "merge into fx_receipts using fx_rates on true when matched then delete"],
-    ["TABLE", "table fx_receipts"],
+    ["SELECT … INTO", "select note into fx_copy from fx_receipts where household_id = $1"],
+    ["COMMIT PREPARED", "commit prepared 'x'"],
   ])("команда вне белого списка (%s) → STATEMENT_NOT_ALLOWED", (_name, text) => {
     expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("STATEMENT_NOT_ALLOWED");
     expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
@@ -415,11 +416,39 @@ describe("ROLE-01, SEC-04: формы, которые прячут обраще�
     ["ts_stat", "select * from ts_stat('select to_tsvector(merchant) from fx_receipts')"],
     ["dblink", "select * from dblink('dbname=x', 'select 1') as t(a int)"],
     ["set_config", "select set_config('search_path', 'other', false)"],
-    ['U&"…" — имя таблицы с экранированием', 'select * from U&"fx\\005freceipts"'],
   ])("SQL, спрятанный в строку или имя (%s) → HIDDEN_SQL", (_name, text) => {
     expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("HIDDEN_SQL");
     expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe("HIDDEN_SQL");
   });
+
+  // Парсер читает имена так же, как база: U&"…" раскодирован, TABLE t — это SELECT * FROM t.
+  it.each([
+    ['U&"…" — имя таблицы с экранированием', 'select * from U&"fx\\005freceipts"'],
+    ["TABLE t", "table fx_receipts"],
+  ])("%s — обращение к fx_receipts: без own остановлено в scoped и system", (_name, text) => {
+    const scoped = violation(() => audit({ sql: text, params: [A] }));
+    expect(scoped.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(scoped.table).toBe("fx_receipts");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
+      "SYSTEM_TOUCHES_USER_DATA",
+    );
+  });
+
+  it.each([
+    ["другая схема", "select note from pg_temp.fx_receipts where household_id = $1"],
+    ["схема в кавычках", 'select note from "Public"."fx_receipts" where household_id = $1'],
+  ])(
+    "пользовательская таблица не в public (%s) → STATEMENT_NOT_ALLOWED во всех режимах",
+    (_name, text) => {
+      expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe(
+        "STATEMENT_NOT_ALLOWED",
+      );
+      expect(violation(() => audit({ sql: text, params: [A] }, system)).table).toBe("fx_receipts");
+      expect(violation(() => audit({ sql: text, params: [A] }, crossTenant)).reason).toBe(
+        "STATEMENT_NOT_ALLOWED",
+      );
+    },
+  );
 
   it.each([
     ["begin с уровнем изоляции", "begin isolation level serializable"],
@@ -928,6 +957,7 @@ describe("ARCHITECTURE §6.6: crossTenant — один SELECT без UNION", () 
   it.each([
     "select id, household_id, user_id from fx_receipts where note is distinct from 'x'",
     "select distinct id, household_id, user_id from fx_receipts where extract(year from created_at) > 2000",
+    "select id, household_id, user_id from fx_receipts where created_at < current_date and greatest(1, 2) > 0",
   ])("правильная форма проходит: %s", (text) => {
     expect(() => audit({ sql: text, params: [] }, crossTenant)).not.toThrow();
   });
@@ -968,5 +998,72 @@ describe("ROLE-01, SEC-04: ключевые слова внутри выраже
     ],
   ])("%s → ISOLATION_VIOLATION", (_name, text) => {
     expect(violation(() => audit({ sql: text, params: [A] }))).toBeInstanceOf(IsolationViolation);
+  });
+});
+
+describe("ROLE-01, SEC-04, OBS-04: текст, который парсер PostgreSQL не принял, — отказ UNPARSEABLE_SQL", () => {
+  it.each([
+    ["синтаксическая ошибка", "select note frm fx_receipts where household_id = $1"],
+    ["оборванный запрос", "select note from fx_receipts where"],
+    ["незакрытая строка", "select note from fx_receipts where note = 'x"],
+    ["пустой текст", ""],
+  ])("%s → UNPARSEABLE_SQL во всех режимах", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("UNPARSEABLE_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
+      "UNPARSEABLE_SQL",
+    );
+    expect(violation(() => audit({ sql: text, params: [A] }, crossTenant)).reason).toBe(
+      "UNPARSEABLE_SQL",
+    );
+  });
+
+  it("в сообщении нет ни текста ошибки парсера, ни литералов: только маскированный SQL", () => {
+    const text = "select 'CANARY-LITERAL' frm fx_receipts";
+    const error = violation(() => audit({ sql: text, params: ["CANARY-PARAM"] }));
+    expect(error.message).not.toMatch(/CANARY|syntax error|at or near/);
+    expect(error.message).toMatch(/SQL: select '…' frm fx_receipts/);
+  });
+
+  it("незакрытая строка не попадает в сообщение даже частично", () => {
+    const error = violation(() => audit({ sql: "select 'CANARY-LITERAL", params: [] }));
+    expect(error.message).not.toMatch(/CANARY/);
+  });
+});
+
+describe("ROLE-01, SEC-04: дерево запроса убирает ложные срабатывания разбора текстом", () => {
+  it.each<[string, string, unknown[]]>([
+    [
+      "алиас колонки совпадает с именем таблицы",
+      "select note as fx_receipts from fx_receipts where household_id = $1",
+      [A],
+    ],
+    [
+      "FOR UPDATE OF t — ссылка на то же обращение, а не новое",
+      "select r.id from fx_receipts r where r.household_id = $1 for update of r",
+      [A],
+    ],
+    [
+      "household_id в VALUES с приведением типа $1::uuid",
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1::uuid, $2, 'm', 1)",
+      [A, "u"],
+    ],
+  ])("правильная форма проходит: %s", (_name, text, params) => {
+    expect(() => audit({ sql: text, params })).not.toThrow();
+  });
+
+  it("$1::uuid в VALUES со значением чужого домохозяйства — INSERT_FOREIGN_HOUSEHOLD", () => {
+    const text =
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1::uuid, $2, 'm', 1)";
+    expect(violation(() => audit({ sql: text, params: [B, "u"] })).reason).toBe(
+      "INSERT_FOREIGN_HOUSEHOLD",
+    );
+  });
+});
+
+describe("ADR-0019: известное расхождение парсера с Postgres — громко, а не тихо", () => {
+  it("склейка строки через «--»-комментарий ('x' --c↵'y'): база читает 'xy', libpg-query — нет → UNPARSEABLE_SQL", () => {
+    // Канарейка: покраснеет, когда парсер начнёт склеивать, — тогда исключение в дифференциальном тесте снять.
+    const text = "select note, 'x' --c\n'y' from fx_receipts where household_id = $1";
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("UNPARSEABLE_SQL");
   });
 });

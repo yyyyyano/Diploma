@@ -1,36 +1,50 @@
 // Аудитор SQL — замок 3 изоляции (ROLE-01, SEC-04, PRIV-07, ADR-0006, ARCHITECTURE §6.2). Чистая функция над
 // итоговым текстом запроса: Drizzle вызывает её из Logger.logQuery ДО отправки (drizzle-orm 1.0.0-rc.5,
-// pg-core/async/session.js), исключение отменяет запрос. Поэтому неважно, как запрос написан — построителем,
-// JOIN, подзапросом, CTE или сырым sql: проверяется то, что ушло бы в базу.
+// pg-core/async/session.js), исключение отменяет запрос. Проверяется текст, который ушёл бы в базу, — построитель,
+// JOIN, подзапрос, CTE или сырой sql, — но читается он лексером и регулярками, а не грамматикой Postgres:
+// это проверка текста, а не доказательство. Окончательное решение — T-058 (разбор настоящим парсером).
 //
 // Что видит. Текст разбирается одним проходом лексера (scan) по правилам scan.l Postgres 18: строки ('…',
 // E'…' и её продолжение за переводом строки, $tag$…$tag$), комментарии («--» до \n или \r, вложенные
-// /* /* */ */), имена в кавычках (регистр сохраняется; имя с пробелом, «;», «=» — заглушка "Q_<hex>"), имена без
-// кавычек — в нижний регистр только ASCII; строка или имя в кавычках вплотную к слову (from"t", "a"from,
-// into"t"(…)) — отдельный токен, как в Postgres: в разобранном тексте между ними пробел. Поэтому кавычка, «/*» или
-// «--» внутри строки не прячет код, а код за «--…\r» и таблица за from" видны. Дальше: одна команда из белого списка (select, insert, update, delete, with, values, транзакции;
-// DO, COPY, CALL, SET, DDL и прочее — нарушение; MERGE — нигде в тексте: после WITH и в CTE он вставляет без
-// «insert into», WHEN NOT MATCHED THEN INSERT), без U&"…" и без функций, исполняющих SQL из строки
+// /* /* */ */), имена в кавычках (регистр сохраняется; имя не из \w — заглушка "Q_<hex>"), имена без кавычек — в
+// нижний регистр только ASCII, имя с $ или не-ASCII буквой (a$b, чек) — в ту же заглушку, что и в кавычках;
+// строка или имя в кавычках вплотную к слову (from"t", "a"from, into"t"(…)) — отдельный токен, как в Postgres.
+// public. снимается вместе с каталогом (<база>.public.t). Дальше: одна команда из белого списка (select, insert,
+// update, delete, with, values, транзакции; DO, COPY, CALL, SET, DDL и прочее — нарушение; MERGE — нигде в тексте:
+// после WITH и в CTE он вставляет без «insert into»), без U&"…" и без функций, исполняющих SQL из строки
 // (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config); у каждого обращения к
 // пользовательской таблице, в том числе UPDATE/DELETE … RETURNING внутри CTE, — свой «household_id = $n» со
-// значением домохозяйства scope; SET (в том числе кортежный) не меняет household_id; INSERT в пользовательскую
-// таблицу — только отдельной командой в начале текста и только VALUES со своим household_id (WITH … INSERT и
-// INSERT внутри CTE — нарушение: их строки не разобрать).
+// значением домохозяйства scope (алиас — слово после имени, кроме R- и T-слов Postgres и set после цели UPDATE);
+// SET (в том числе кортежный) не меняет household_id; INSERT в пользовательскую таблицу — только отдельной
+// командой в начале текста и только VALUES со своим household_id, за которыми лишь ON CONFLICT или RETURNING
+// (WITH … INSERT, INSERT внутри CTE и VALUES … UNION — нарушение: их строки не разобрать); crossTenant — один
+// SELECT без UNION/INTERSECT/EXCEPT.
 //
-// Чего не видит — это проверка текста, а не доказательство: предикат, который не сужает выборку
-// (`… OR true`, `NOT household_id = $1`, `household_id = $1` в списке select или в ветке CASE); к какой таблице
-// относится предикат без квалификатора (предикаты считаются штуками: два `household_id = $1` без алиаса
-// засчитываются двум обращениям); SQL внутри представлений и функций базы (их запрещает проверка схемы,
-// schema-check.ts), SELECT … INTO. Лексер полагается на standard_conforming_strings = on (умолчание Postgres; SET и
-// set_config аудитор не пропускает): при off обычная строка '…\'…' читалась бы иначе. Это закрывают построитель
-// ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в сторону
-// «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»), как и
-// U&"…" и алиас колонки, совпавший с именем таблицы (`note as fx_receipts`).
+// Границы предложений — по ключевым словам на той же глубине скобок; проверено, что слово не бывает внутри
+// выражения вне скобок: конец SET — только WHERE и RETURNING (FROM бывает в `IS [NOT] DISTINCT FROM`, а лишний
+// захват FROM-списка цель household_id не создаёт); конец списка select у crossTenant — FROM (обрыв на `IS
+// DISTINCT FROM` оставляет элемент, который не похож на колонку владельца, — громко); после VALUES — ON CONFLICT,
+// RETURNING или конец. extract/substring/trim/overlay/position, filter (where …), within group (order by …),
+// over (partition by …), any(…), array(select …), lateral — внутри скобок и границ не задевают (канарейки
+// audit.test.ts).
+//
+// Чего не видит: предикат, который не сужает выборку (`… OR true`, `NOT household_id = $1`,
+// `x IS DISTINCT FROM household_id = $1` — приоритет операторов, `household_id = $1` в списке select, в ветке
+// CASE или в filter (where …)); к какой таблице относится предикат без квалификатора (предикаты считаются
+// штуками: два `household_id = $1` без алиаса засчитываются двум обращениям); SQL внутри представлений и функций
+// базы (их запрещает проверка схемы, schema-check.ts), SELECT … INTO. Лексер полагается на
+// standard_conforming_strings = on (умолчание Postgres; SET и set_config аудитор не пропускает). Это закрывают
+// построитель ScopedDb (s.own, s.update, s.delete ставят фильтр сами) и ревью сырого SQL. Покрытие форм записи
+// даёт генератор дифференциального теста, а не разбор: форма, которой там нет, не проверена. Ошибается аудитор в
+// сторону «громко»: безвредный подзапрос без own тоже останавливается (правило «у каждой таблицы свой own»), как и
+// U&"…", алиас колонки, совпавший с именем таблицы (`note as fx_receipts`), и `FOR UPDATE OF t` (ещё одно
+// обращение к t).
 //
 // Сверка с Postgres — audit-differential.int.test.ts: одни и те же запросы в разных записях (зазоры, комментарии,
-// кавычки, public., ONLY, регистр, E-строки, $tag$) база выполняет в транзакции с откатом; таблица, которую она
-// тронула (pg_stat_xact_user_tables), должна быть видна аудитору, запрос, через который утекли данные другого
-// домохозяйства, — остановлен. Новая форма разбора — новый шаблон там же.
+// кавычки, public. и <база>.public., ONLY, регистр, E-строки, $tag$, from внутри выражений, алиасы-ключевые
+// слова) база выполняет в транзакции с откатом; таблица, которую она тронула (pg_stat_xact_user_tables), должна
+// быть видна аудитору, запрос, через который утекли данные другого домохозяйства, — остановлен. Новая форма
+// разбора — новый шаблон там же.
 
 export type AuditMode =
   /** ScopedDb: каждое обращение к пользовательской таблице ограничено household_id из scope. */
@@ -151,17 +165,39 @@ interface Parsed {
   readonly ownerChange: string | undefined;
 }
 
-/** Слова, которые после имени таблицы — не алиас. */
+/**
+ * Слова, которые после имени таблицы — не алиас: ровно те, что не могут быть ColId в грамматике Postgres 18 —
+ * зарезервированные (R) и type_func_name (T) из pg_get_keywords(). Ошибка в любую сторону — дыра: слово, принятое
+ * за алиас (tablesample), отдаёт предикаты чужого "tablesample" этой таблице; алиас, принятый за ключевое слово
+ * (values, overriding, set в FROM), отдаёт этой таблице предикаты по её имени, которые в Postgres относятся к
+ * другому обращению. Единственное контекстное слово — set после цели UPDATE (см. isUpdateTarget).
+ */
 const NOT_ALIAS = new Set(
+  // R
   (
-    "where inner left right full cross join on set using returning group order limit offset values select as " +
-    "union except intersect for window having natural lateral from default overriding do and or fetch only"
+    "all analyse analyze and any array as asc asymmetric both case cast check collate column constraint create " +
+    "current_catalog current_date current_role current_time current_timestamp current_user default deferrable " +
+    "desc distinct do else end except false fetch for foreign from grant group having in initially intersect " +
+    "into lateral leading limit localtime localtimestamp not null offset on only or order placing primary " +
+    "references returning select session_user some symmetric system_user table then to trailing true union " +
+    "unique user using variadic when where window with " +
+    // T
+    "authorization binary collation concurrently cross current_schema freeze full ilike inner is isnull join " +
+    "left like natural notnull outer overlaps right similar tablesample verbose"
   ).split(" "),
 );
 
-const PREDICATE = /(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?(?<![\w"$])"?household_id"?\s*=\s*\$(\d+)\b/g;
+/** Имя перед совпадением — цель UPDATE: здесь set — ключевое слово (relation_expr_opt_alias в gram.y). */
+function isUpdateTarget(before: string): boolean {
+  return /(?<![\w"$])update\s+(?:only\s+)?$/.test(before);
+}
+
+// Предикат `[квалификатор.]household_id = $n` и `$n = [квалификатор.]household_id`. Перед ним — не часть имени и
+// не точка: `(a).household_id` и `x.y.household_id` — поле записи, а не предикат без квалификатора.
+const PREDICATE =
+  /(?<![\w"$]|\.\s*)(?:(?:"(\w+)"|(\w+))\s*\.\s*)?"?household_id"?\s*=\s*\$(\d+)(?!\w)/g;
 const PREDICATE_REVERSED =
-  /\$(\d+)\s*=\s*(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?"?household_id"?(?![\w"$])/g;
+  /\$(\d+)\s*=\s*(?:(?:"(\w+)"|\b(\w+))\s*\.\s*)?"?household_id"?(?![\w"$.])/g;
 
 /** Разбор зависит только от текста: Drizzle выдаёт один и тот же текст, на горячем пути — сравнение параметров. */
 const cache = new WeakMap<ReadonlySet<string>, Map<string, Parsed>>();
@@ -183,7 +219,8 @@ function parse(sqlText: string, owned: ReadonlySet<string>): Parsed {
 
 function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
   const scanned = scan(sqlText, "''", true);
-  const text = scanned.code.replace(/(?<![\w."$])"?public"?\s*\.\s*/g, "");
+  // Схема public снимается вместе с необязательным каталогом: Postgres принимает <текущая_база>.public.t.
+  const text = scanned.code.replace(QUALIFIED_PUBLIC, "");
   const insert = parseInsert(text, owned);
   // VALUES разбирается только у INSERT в начале текста; иначе household_id строк не проверить.
   const nestedInsert = [...text.matchAll(INSERT_TARGET)]
@@ -202,7 +239,11 @@ function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
         continue;
       }
       const alias = match[3] ?? match[4];
-      refs.push({ table, alias: alias === undefined || NOT_ALIAS.has(alias) ? table : alias });
+      const keyword =
+        alias === undefined ||
+        (match[4] !== undefined && NOT_ALIAS.has(alias)) ||
+        (match[4] === "set" && isUpdateTarget(text.slice(0, match.index)));
+      refs.push({ table, alias: keyword ? table : alias });
     }
   }
   const predicates: Predicate[] = [];
@@ -235,6 +276,13 @@ function parseUncached(sqlText: string, owned: ReadonlySet<string>): Parsed {
     ownerChange,
   };
 }
+
+/**
+ * `public.` с необязательным каталогом перед ним (`kosht.public.`, `"kosht"."public".`): после scan любое имя —
+ * `\w+` или `"\w+"`. Другая схема с пользовательской таблицей не бывает (schema-check.ts), чужой каталог Postgres
+ * отвергает («cross-database references are not implemented»).
+ */
+const QUALIFIED_PUBLIC = /(?<![\w."$])(?:(?:"\w+"|\w+)\s*\.\s*)?(?:"public"|public)\s*\.\s*/g;
 
 const INSERT_TARGET = /(?<![\w"$])insert\s+into\s+(?:"(\w+)"|(\w+)\b)(?!\s*\.)/g;
 
@@ -369,9 +417,18 @@ function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
           i = quotedEnd(sqlText, CONTINUATION.lastIndex - 1, true);
         }
         code = joinToken(code, literal, sqlText.charAt(i));
+      } else if (normalize) {
+        // Postgres приводит к нижнему регистру только ASCII в именах без кавычек. Имя с $ или не-ASCII буквой
+        // (a$b, чек) — в ту же заглушку "Q_<hex>", что и такое же имя в кавычках: регулярки разбора видят имя
+        // целиком (\w не знает ни $, ни кириллицы), а "чек" и чек остаются одним именем, как в Postgres.
+        const lower = word.replace(/[A-Z]+/g, (upper) => upper.toLowerCase());
+        code =
+          /^\w+$/.test(lower) || !/[A-Za-z_\u0080-￿]/.test(ch)
+            ? code + lower
+            : joinToken(code, quotedName(`"${lower}"`), sqlText.charAt(i + word.length));
+        i += word.length;
       } else {
-        // Postgres приводит к нижнему регистру только ASCII в именах без кавычек.
-        code += normalize ? word.replace(/[A-Z]+/g, (upper) => upper.toLowerCase()) : word;
+        code += word;
         i += word.length;
       }
     }
@@ -460,13 +517,19 @@ function parseInsert(text: string, owned: ReadonlySet<string>): Insert | undefin
   if (values !== null) {
     rows = [];
     let i = at + values[0].length;
+    let after = i;
     while (text[i] === "(") {
       const end = closingParen(text, i);
       rows.push(splitTopLevel(text.slice(i + 1, end)).map((v) => v.trim()));
-      const next = /^\s*,\s*/.exec(text.slice(end + 1));
+      after = end + 1;
+      const next = /^\s*,\s*/.exec(text.slice(after));
       if (next === null) break;
-      i = end + 1 + next[0].length;
+      i = after + next[0].length;
     }
+    // За строками VALUES — только ON CONFLICT, RETURNING или конец: `VALUES (…) UNION ALL SELECT …` вставляет и
+    // строки SELECT, их household_id не проверить — как INSERT … SELECT.
+    if (!/^\s*(?:on\s+conflict(?![\w"$])|returning(?![\w"$])|;|$)/.test(text.slice(after)))
+      rows = null;
   }
   const conflict = /\bon\s+conflict\b\s*(on\s+constraint\b|\(([^)]*)\))?/.exec(rest);
   let conflictTarget: Insert["conflictTarget"];
@@ -476,12 +539,17 @@ function parseInsert(text: string, owned: ReadonlySet<string>): Insert | undefin
   return { table, householdColumn: columns.indexOf("household_id"), rows, conflictTarget };
 }
 
-/** Диапазоны списков присваиваний `SET …` (UPDATE и ON CONFLICT DO UPDATE). */
+/**
+ * Диапазоны списков присваиваний `SET …` (UPDATE и ON CONFLICT DO UPDATE): до WHERE или RETURNING на той же
+ * глубине скобок. FROM концом не считается: на верхнем уровне выражения он бывает (`a IS [NOT] DISTINCT FROM b`), а
+ * хвост из списка FROM целью присваивания household_id не выглядит — лишний захват безопасен, ранний обрыв прячет
+ * присваивание. WHERE и RETURNING — зарезервированные слова и внутри выражения вне скобок не встречаются.
+ */
 function setClauses(text: string): [number, number][] {
   const ranges: [number, number][] = [];
   for (const m of text.matchAll(/(?<!["\w])set(?!["\w])/g)) {
     const from = m.index + m[0].length;
-    ranges.push([from, scanToClauseEnd(text, from, /\s(?:from|where|returning)(?![\w"])/y)]);
+    ranges.push([from, scanToClauseEnd(text, from, /(?<![\w"$])(?:where|returning)(?![\w"$])/y)]);
   }
   return ranges;
 }
@@ -680,11 +748,18 @@ function auditInsert(
 
 const WRITE_OR_LOCK =
   /(?<![\w"])(?:insert|update|delete|merge|truncate|copy|alter|drop|create|grant|revoke|call|lock|share)(?![\w"])/;
+/** UNION, INTERSECT, EXCEPT: вторая ветка возвращает свои колонки — проверяется только список первой. */
+const SET_OPERATION = /(?<![\w"$])(?:union|intersect|except)(?![\w"$])/;
 const OWNER_COLUMN = /^(?:"?\w+"?\s*\.\s*)?"?(?:id|household_id|user_id)"?$/;
 
 function auditCrossTenant(code: string, sqlText: string): void {
   const text = code.trim();
-  if (!/^select(?![\w"])/.test(text) || WRITE_OR_LOCK.test(text) || text.includes(";")) {
+  if (
+    !/^select(?![\w"])/.test(text) ||
+    WRITE_OR_LOCK.test(text) ||
+    SET_OPERATION.test(text) ||
+    text.includes(";")
+  ) {
     throw new IsolationViolation(
       "CROSS_TENANT_NOT_SELECT",
       undefined,

@@ -238,6 +238,59 @@ const LEAKS: [string, Leak][] = [
         sql`with x as (select 1) merge into"fx_receipts" t using x on false when not matched then insert (household_id, user_id, merchant, total_minor) values (${scopeB.householdId}, ${scopeA.userId}, 'подброс', 1)`,
       ),
   ],
+  [
+    "<база>.public.fx_receipts — имя с каталогом текущей базы",
+    (s) => s.db.execute(sql.raw(`select note from ${db.name}.public.fx_receipts`)),
+  ],
+  [
+    '"<база>"."public"."fx_receipts" — INSERT с чужим household_id',
+    (s) =>
+      s.db.execute(
+        sql`insert into ${sql.raw(`"${db.name}"."public"."fx_receipts"`)} (household_id, user_id, merchant, total_minor) values (${scopeB.householdId}, ${scopeA.userId}, 'подброс', 1)`,
+      ),
+  ],
+  [
+    "is distinct from в SET прячет household_id = B",
+    (s) =>
+      s.db.execute(
+        sql`update ${fxReceipts} set note = 1 is distinct from 2, household_id = ${scopeB.householdId} where ${s.own(fxReceipts)}`,
+      ),
+  ],
+  [
+    "is not distinct from в ON CONFLICT DO UPDATE SET прячет household_id = B",
+    (s) =>
+      s.db.execute(
+        sql`insert into ${fxReceipts} (household_id, id, user_id, merchant, total_minor) values (${s.scope.householdId}, ${receiptA}, ${scopeA.userId}, 'm', 1) on conflict (household_id, id) do update set note = 1 is not distinct from 2, household_id = ${scopeB.householdId}`,
+      ),
+  ],
+  [
+    'tablesample — не алиас: предикаты "tablesample" фильтруют другую таблицу',
+    (s) =>
+      s.db.execute(
+        sql`select fx_receipts.note from ${fxReceipts} tablesample system (100), fx_receipt_items "tablesample" where "tablesample".household_id = ${s.scope.householdId} and "tablesample".household_id = ${s.scope.householdId}`,
+      ),
+  ],
+  [
+    "values — алиас: fx_receipts.household_id фильтрует только второе обращение",
+    (s) =>
+      s.db.execute(
+        sql`select values.note from fx_receipts values, fx_receipts where fx_receipts.household_id = ${s.scope.householdId} and fx_receipts.household_id = ${s.scope.householdId}`,
+      ),
+  ],
+  [
+    "алиас кириллицей: оба предиката у «чек», «где» без фильтра",
+    (s) =>
+      s.db.execute(
+        sql`select где.note from fx_receipts чек, fx_receipts где where чек.household_id = ${s.scope.householdId} and чек.household_id = ${s.scope.householdId}`,
+      ),
+  ],
+  [
+    "(a).household_id дважды — b без фильтра",
+    (s) =>
+      s.db.execute(
+        sql`select b.note from fx_receipts a, fx_receipts b where (a).household_id = ${s.scope.householdId} and (a).household_id = ${s.scope.householdId}`,
+      ),
+  ],
 ];
 
 describe("ROLE-01, SEC-04: дырявый запрос не доходит до базы, данные B не меняются", () => {

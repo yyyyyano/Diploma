@@ -709,3 +709,264 @@ describe("ARCHITECTURE §6.6: crossTenant только находит владе
     );
   });
 });
+
+// Имя базы — из DATABASE_URL, секрета в нём нет: Postgres принимает <текущая_база>.public.t (в чужой — ошибка
+// «cross-database references are not implemented»).
+const CATALOG_FORMS = [
+  (t: string) => `kosht.public.${t}`,
+  (t: string) => `"kosht"."public"."${t}"`,
+  (t: string) => `KOSHT . PUBLIC . "${t}"`,
+  (t: string) => `test_1/**/./**/"public"/**/./**/${t}`,
+];
+
+describe("ROLE-01, SEC-04: имя с каталогом базы (<база>.public.t) — то же обращение", () => {
+  const leaks: [string, (t: (name: string) => string) => string, unknown[]][] = [
+    ["select", (t) => `select note from ${t("fx_receipts")}`, []],
+    [
+      "JOIN",
+      (t) =>
+        `select 1 from fx_receipts r join ${t("fx_receipt_items")} i on true where r.household_id = $1`,
+      [A],
+    ],
+    [
+      "подзапрос",
+      (t) => `select (select string_agg(note, ',') from ${t("fx_receipts")}) as c from fx_rates`,
+      [],
+    ],
+    ["update", (t) => `update ${t("fx_receipts")} set note = $1`, ["x"]],
+    ["delete", (t) => `delete from ${t("fx_transactions")}`, []],
+    [
+      "insert с чужим household_id",
+      (t) =>
+        `insert into ${t("fx_receipts")} (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1)`,
+      [B, "u"],
+    ],
+    [
+      "WITH … insert",
+      (t) =>
+        `with x as (select 1) insert into ${t("fx_receipts")} (household_id, user_id, merchant, total_minor) ` +
+        "values ($1, $2, 'm', 1)",
+      [A, "u"],
+    ],
+  ];
+  for (const [index, form] of CATALOG_FORMS.entries()) {
+    it.each(leaks)(
+      `форма ${index + 1} (${form("t")}): %s → ISOLATION_VIOLATION в scoped и system`,
+      (_n, q, params) => {
+        const text = q(form);
+        expect(violation(() => audit({ sql: text, params }))).toBeInstanceOf(IsolationViolation);
+        expect(violation(() => audit({ sql: text, params }, system))).toBeInstanceOf(
+          IsolationViolation,
+        );
+      },
+    );
+
+    it(`форма ${index + 1}: чтение и вставка со своим own проходят`, () => {
+      const t = form("fx_receipts");
+      expect(() =>
+        audit({ sql: `select note from ${t} where household_id = $1`, params: [A] }),
+      ).not.toThrow();
+      expect(() =>
+        audit({
+          sql: `insert into ${t} (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1)`,
+          params: [A, "u"],
+        }),
+      ).not.toThrow();
+    });
+  }
+});
+
+describe("ROLE-01, SEC-04: слово from внутри выражения не обрывает список SET", () => {
+  it.each<[string, string, unknown[]]>([
+    [
+      "UPDATE: is distinct from перед household_id = $2",
+      "update fx_receipts set note = 1 is distinct from 2, household_id = $2 where household_id = $1",
+      [A, B],
+    ],
+    [
+      "UPDATE: is not distinct from перед household_id = $2",
+      "update fx_receipts set note = 1 is not distinct from 2, household_id = $2 where household_id = $1",
+      [A, B],
+    ],
+    [
+      "ON CONFLICT DO UPDATE: is distinct from перед household_id = $3",
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1) " +
+        "on conflict (household_id, id) do update set note = 1 is distinct from 2, household_id = $3",
+      [A, "u", B],
+    ],
+    [
+      "кортежный SET после is distinct from",
+      "update fx_receipts set note = 1 is distinct from 2, (household_id) = row($2) where household_id = $1",
+      [A, B],
+    ],
+  ])("%s → OWNER_CHANGE", (_name, text, params) => {
+    expect(violation(() => audit({ sql: text, params })).reason).toBe("OWNER_CHANGE");
+  });
+
+  it.each<[string, string, unknown[]]>([
+    [
+      "UPDATE … FROM с own у обеих таблиц",
+      "update fx_receipts set note = i.name from fx_receipt_items i " +
+        "where fx_receipts.household_id = $1 and i.household_id = $1",
+      [A],
+    ],
+    [
+      "extract, substring, trim, overlay, position и is distinct from в SET и WHERE",
+      "update fx_receipts set note = extract(year from now())::text, " +
+        "status = substring('abc' from 1 for 2) || trim(both from ' x ') || overlay('abc' placing 'z' from 2), " +
+        "total_minor = position('a' in 'abc'), merchant = (1 is distinct from 2)::text " +
+        "where household_id = $1 and note is not distinct from null returning id, household_id",
+      [A],
+    ],
+    [
+      "UPSERT: SET без household_id, WHERE с from внутри выражения",
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1) " +
+        "on conflict (household_id, id) do update set note = 1 is distinct from 2 " +
+        "where fx_receipts.household_id = $1 returning household_id",
+      [A, "u"],
+    ],
+  ])("правильная форма проходит: %s", (_name, text, params) => {
+    expect(() => audit({ sql: text, params })).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: ключевое слово после имени таблицы — алиас ровно тогда, когда так решает Postgres", () => {
+  it.each<[string, string]>([
+    [
+      'tablesample — не алиас: "tablesample" второй таблицы не фильтрует первую',
+      'select * from fx_receipts tablesample system (100), fx_receipt_items "tablesample" ' +
+        'where "tablesample".household_id = $1 and "tablesample".household_id = $1',
+    ],
+    [
+      "values — алиас: fx_receipts.household_id фильтрует только второе обращение",
+      "select * from fx_receipts values, fx_receipts " +
+        "where fx_receipts.household_id = $1 and fx_receipts.household_id = $1",
+    ],
+    [
+      "set в FROM — алиас",
+      "select * from fx_receipts set, fx_receipts " +
+        "where fx_receipts.household_id = $1 and fx_receipts.household_id = $1",
+    ],
+    [
+      "overriding — алиас",
+      "select * from fx_receipts as overriding, fx_receipts " +
+        "where fx_receipts.household_id = $1 and fx_receipts.household_id = $1",
+    ],
+  ])("%s → MISSING_HOUSEHOLD_FILTER", (_name, text) => {
+    const error = violation(() => audit({ sql: text, params: [A] }));
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.table).toBe("fx_receipts");
+  });
+
+  it("алиас values с own проходит, UPDATE … SET — не алиас", () => {
+    const read = "select values.note from fx_receipts values where values.household_id = $1";
+    expect(() => audit({ sql: read, params: [A] })).not.toThrow();
+    const update = "update fx_receipts set note = $1 where fx_receipts.household_id = $2";
+    expect(() => audit({ sql: update, params: ["x", A] })).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: имена с $ и не-ASCII буквами — целые имена, как в Postgres", () => {
+  it.each<[string, string]>([
+    [
+      "алиас кириллицей: два предиката «чек.» не фильтруют «где»",
+      "select * from fx_receipts чек, fx_receipts где where чек.household_id = $1 and чек.household_id = $1",
+    ],
+    [
+      "алиас a$b — не алиас a",
+      "select * from fx_receipts a$b, fx_receipts a where a.household_id = $1 and a.household_id = $1",
+    ],
+    [
+      "(a).household_id — поле записи, а не предикат без квалификатора",
+      "select * from fx_receipts a, fx_receipts b where (a).household_id = $1 and (a).household_id = $1",
+    ],
+  ])("%s → MISSING_HOUSEHOLD_FILTER", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe(
+      "MISSING_HOUSEHOLD_FILTER",
+    );
+  });
+
+  it.each<[string, string]>([
+    ["алиас кириллицей", "select чек.note from fx_receipts чек where чек.household_id = $1"],
+    [
+      "алиас в кавычках и без — одно имя",
+      'select "чек".note from fx_receipts чек where "чек".household_id = $1',
+    ],
+    ["алиас с $", "select a$b.note from fx_receipts a$b where a$b.household_id = $1"],
+  ])("правильная форма проходит: %s", (_name, text) => {
+    expect(() => audit({ sql: text, params: [A] })).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: за VALUES у INSERT — только ON CONFLICT и RETURNING", () => {
+  it.each<[string, string]>([
+    [
+      "VALUES … UNION ALL SELECT с чужим household_id",
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1) " +
+        "union all select $3::uuid, $2, 'm', 1",
+    ],
+    [
+      "VALUES … EXCEPT SELECT",
+      "insert into fx_receipts (household_id, user_id, merchant, total_minor) values ($1, $2, 'm', 1) " +
+        "except select $3::uuid, $2, 'm', 1",
+    ],
+  ])("%s → INSERT_SELECT", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A, "u", B] })).reason).toBe("INSERT_SELECT");
+  });
+});
+
+describe("ARCHITECTURE §6.6: crossTenant — один SELECT без UNION", () => {
+  it.each([
+    "select id, household_id, user_id from fx_receipts union all select household_id, user_id, md5(note)::uuid from fx_receipts",
+    "select id, household_id, user_id from fx_receipts intersect select id, household_id, user_id from fx_receipts",
+  ])("%s → CROSS_TENANT_NOT_SELECT", (text) => {
+    expect(violation(() => audit({ sql: text, params: [] }, crossTenant)).reason).toBe(
+      "CROSS_TENANT_NOT_SELECT",
+    );
+  });
+
+  it.each([
+    "select id, household_id, user_id from fx_receipts where note is distinct from 'x'",
+    "select distinct id, household_id, user_id from fx_receipts where extract(year from created_at) > 2000",
+  ])("правильная форма проходит: %s", (text) => {
+    expect(() => audit({ sql: text, params: [] }, crossTenant)).not.toThrow();
+  });
+});
+
+describe("ROLE-01, SEC-04: ключевые слова внутри выражений не ломают разбор", () => {
+  it.each<[string, string]>([
+    [
+      "filter (where …), within group (order by …), over (partition by …)",
+      "select count(*) filter (where status = 'x'), " +
+        "percentile_cont(0.5) within group (order by total_minor), " +
+        "sum(total_minor) over (partition by status) from fx_receipts where household_id = $1 group by status, total_minor",
+    ],
+    [
+      "at time zone, = any(…), array(select … с own), distinct on (…), fetch first",
+      "select distinct on (status) created_at at time zone 'UTC', " +
+        "array(select i.name from fx_receipt_items i where i.household_id = $1) from fx_receipts r " +
+        "where r.household_id = $1 and r.status = any($2) order by status fetch first 1 rows only",
+    ],
+    [
+      "lateral с own внутри",
+      "select r.note, l.name from fx_receipts r, lateral (select i.name from fx_receipt_items i " +
+        "where i.household_id = $1 and i.receipt_id = r.id) l where r.household_id = $1",
+    ],
+  ])("правильная форма проходит: %s", (_name, text) => {
+    expect(() => audit({ sql: text, params: [A, ["x"]] })).not.toThrow();
+  });
+
+  it.each<[string, string]>([
+    [
+      "array(select …) без own",
+      "select array(select i.name from fx_receipt_items i) from fx_receipts r where r.household_id = $1",
+    ],
+    [
+      "lateral без own внутри",
+      "select l.name from fx_receipts r, lateral (select i.name from fx_receipt_items i " +
+        "where i.receipt_id = r.id) l where r.household_id = $1",
+    ],
+  ])("%s → ISOLATION_VIOLATION", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] }))).toBeInstanceOf(IsolationViolation);
+  });
+});

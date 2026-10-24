@@ -235,7 +235,7 @@
 - Зависимости: T-003
 
 ### T-004 · База данных и изоляция: `ScopedDb`, аудитор SQL, виды таблиц и миграции
-- Статус: todo
+- Статус: done · 31961e8..192fd18
 - Модули: `platform/db`, `apps/server/drizzle`, `@kosht/testing`, `compose.yaml`
 - SPEC: ROLE-01, SEC-04, PRIV-07, NFR-01
 - Критерии приёмки:

@@ -19,7 +19,9 @@
   Mantine Form + Zod 4 (`schemaResolver` со схемой из контракта). Иконки — Lucide.
 - **TanStack Query 5** + клиент oRPC (`@orpc/tanstack-query`); инвалидация по SSE `events.stream`.
 - **i18next + react-i18next** (типизированные ключи, словари в `packages/i18n`, общие с ботом и письмами); форматы —
-  нативный `Intl` (`ru-RU`, `Europe/Minsk`).
+  `formatMoney`/`formatDate`/`formatRelativeDay` из `packages/i18n` (DES-17): целочисленная арифметика без `Intl` —
+  ICU ставит между разрядами то U+00A0, то U+202F, float теряет копейки; пояс `Europe/Minsk`
+  (NFR-23) учтён в `LocalDate.fromInstant`, «сегодня» — вход из `Clock.today()`.
 - **Чат**: `useChat` (AI SDK) с транспортом oRPC + свои компоненты на Mantine по макету (`Drawer`, `Popover`,
   `Collapse`, `Textarea` autosize); потоковый Markdown — `react-markdown` + `remend` + блоки в `memo`; автопрокрутка —
   `use-stick-to-bottom`; без веток диалога и покадрового «проявления слов».

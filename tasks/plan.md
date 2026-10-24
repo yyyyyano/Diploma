@@ -186,7 +186,7 @@
 - Зависимости: T-002
 
 ### T-057 · Контракт и тексты: contract, i18n
-- Статус: todo
+- Статус: done · a1ef23a..7b34021
 - Модули: `@kosht/contract`, `@kosht/i18n`, `pnpm-workspace.yaml`, `tooling/architecture/rules.ts`
   (+ фикстура правила)
 - SPEC: NFR-19, NFR-23, DES-17, P1

@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { migrateFixtures } from "./__fixtures__/fixture-db.ts";
 import "./__fixtures__/schema.ts";
 import { checkSchema, type SchemaProblemKind } from "./schema-check.ts";
-import { registeredTables, systemTable } from "./tables.ts";
+import { publicTable, registeredTables, systemTable, userOwnedTable } from "./tables.ts";
 
 let db: TestDb;
 beforeAll(async () => {
@@ -60,6 +60,22 @@ describe("проверка схемы: что аудитор SQL не видит
     systemTable("fx_mixed_owner", { id: uuid().primaryKey(), householdId: uuid() });
     await db.pool.query("create table fx_mixed_owner (id uuid primary key, household_id uuid)");
     expect(await problemsOf("nullable-household")).toEqual(["fx_mixed_owner"]);
+  });
+
+  it("пользовательская таблица с первичным ключом не (household_id, id) — нарушение", async () => {
+    userOwnedTable("fx_bad_pk", { note: uuid() });
+    await db.pool.query(
+      "create table fx_bad_pk (id uuid primary key, household_id uuid not null, user_id uuid not null)",
+    );
+    expect(await problemsOf("owned-table-shape")).toEqual(["fx_bad_pk"]);
+  });
+
+  it("общая таблица с household_id или user_id — нарушение", async () => {
+    publicTable("fx_public_owner", { id: uuid().primaryKey() });
+    await db.pool.query(
+      "create table fx_public_owner (id uuid primary key, user_id uuid not null)",
+    );
+    expect(await problemsOf("public-table-owner")).toEqual(["fx_public_owner"]);
   });
 
   it("таблица из схемы Drizzle без миграции — нарушение", async () => {

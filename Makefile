@@ -28,7 +28,7 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node capabilities deps-check
+	check-commits need-node capabilities deps-check static-checks
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -78,9 +78,16 @@ test: need-node ## Все тесты Vitest
 deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»
 	node tooling/checks/deps-guard.mjs
 
-check: fmt-check lint typecheck deps-check test ## Все проверки: формат, линт, типы, границы, тесты («готово» = зелёный)
+# Свои проверки tooling/checks/*.mjs (T-056): все запускаются, даже если первая нашла нарушение; код — худший
+# из кодов (2 «не смог проверить» важнее 1 «нарушение»).
+STATIC_CHECKS := isolation
 
-check-quick: typecheck deps-check ## Быстрые проверки для pre-push: типы, границы и тесты без БД
+static-checks: need-node ## Свои проверки: изоляция данных (tooling/checks)
+	@rc=0; for c in $(STATIC_CHECKS); do node tooling/checks/$$c.mjs || { s=$$?; if [ $$s -gt $$rc ]; then rc=$$s; fi; }; done; exit $$rc
+
+check: fmt-check lint typecheck deps-check static-checks test ## Все проверки: формат, линт, типы, границы, свои проверки, тесты («готово» = зелёный)
+
+check-quick: typecheck deps-check static-checks ## Быстрые проверки для pre-push: типы, границы, свои проверки и тесты без БД
 	$(BIN)/vitest run --project unit
 
 check-commits: need-node ## Проверить коммиты ветки относительно BASE (по умолчанию main)

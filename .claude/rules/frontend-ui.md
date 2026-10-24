@@ -1,0 +1,41 @@
+---
+paths:
+  - "apps/web/src/ui/**"
+  - "apps/web/**/*.css"
+---
+# Дизайн-система «Пуща и янтарь» (`apps/web/src/ui`)
+
+Источник вида — `design/DESIGN.md`, `design/tokens.css`, `design/kit.css`; SPEC §7 (DES-01…17); ADR-0014.
+
+- `ui/` — **только представление**: Mantine, `@kosht/i18n` (форматы), `@kosht/kernel` (типы). Без `lib/api`,
+  `lib/events`, `entities`, `features`, без запросов и бизнес-правил.
+- Цвета, шрифты, радиусы, тени — только токены: `ui/theme/tokens.css` — копия `design/tokens.css` один в один (правка —
+  сначала в `design/` и SPEC §7), тема Mantine ссылается на `var(--brand)` и т. д.; цвета категорий и графиков —
+  таблицы `ui/theme/category-colors.ts`, `chart-colors.ts`. «Сырые» цвета вне `ui/theme` ловит `no-raw-colors.mjs`.
+- Роли цветов не смешивать: хвоя — действия; **янтарь — только найденная выгода**; `--warn` — внимание (всегда с
+  треугольником); `--danger` — риск и ошибка (всегда с «!»); `--law` — право; доход — `--income` со знаком «+».
+- Шрифты: Onest — всё; Literata — **только** дословные тексты законов (`LawQuote`); табличные цифры в таблицах и
+  колонках, пропорциональные — в заголовках и тексте; моноширинного шрифта нет. Подключение — `@fontsource-variable`.
+- Компонент обязан сам обеспечивать доступность: `StatusBadge` требует иконку (без неё не компилируется),
+  `WhyButton` — `aria-label` с названием числа, кнопки-иконки — `aria-label`, фокус — обводка 2 px `--brand`,
+  контраст текста ≥ 4,5:1, графики ≥ 3:1, `prefers-reduced-motion` учитывается.
+- `Money` — формат DES-17 (`1 234,56 BYN`, неразрывный пробел, валюта мельче) через `formatMoney`; знак и цвет — по
+  `kind` (доход/расход/перевод). Даты — `formatDate` (`21.10.2026`).
+- Каждый компонент и каждое его состояние — в `/dev/gallery`; компонентный тест на состояния и роли.
+- Иконки — Lucide (24×24, контур 1,8); эмодзи в интерфейсе нет. На диаграмме до 6 рядов, остальное — «Остальное».
+
+Правильно:
+
+```tsx
+export function StatusBadge({ tone, icon: Icon, children }: { tone: StatusTone; icon: LucideIcon; children: ReactNode }) {
+  return (
+    <Badge variant="light" className={classes[tone]} leftSection={<Icon size={14} aria-hidden />}>
+      {children}
+    </Badge>
+  );
+}
+```
+
+Нельзя: `color="#11564D"` или `style={{ padding: 13 }}`; янтарь для предупреждения; статус только цветом; текст
+литералом внутри компонента (подписи — пропсами или `t()`); запрос данных из `ui/`; новый токен без правки
+`design/tokens.css` и SPEC §7.

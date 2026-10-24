@@ -1,0 +1,48 @@
+# ADR-0013: Фронтенд — Vite SPA, React 19, TanStack Router/Query, Mantine 9, свой чат на `useChat`
+
+- **Статус:** Принято
+- **Дата:** 2026-10-24
+- **Требования:** NFR-19, NFR-20, NFR-21, DES-00…17, CHAT-01…09, DASH-01…04, P1, P9
+
+## Контекст
+
+Сайт на localhost (SEO и SSR не нужны), React по желанию пользователя, максимум готовых компонентов при минимуме
+шаблонного кода: таблица с выбором строк, диапазон дат на русском, календарь событий, графики, формы, чат с
+карточками. Внешний вид — по макету `design/` («Пуща и янтарь», Onest + Literata).
+
+## Решение
+
+- **Vite 8 + React 19**, SPA без SSR; сервер отдаёт статику, в разработке — Vite на `127.0.0.1:5173` с прокси.
+- **TanStack Router** (файловые маршруты, типизированные параметры адреса = период, фильтры, контекст для агента).
+- **Mantine 9** — UI-кит: тема из `design/tokens.css` (`createTheme` + точные hex), **Mantine Charts** (Recharts),
+  **mantine-datatable** для таблицы операций (на телефоне — карточки), **@mantine/schedule** для календаря,
+  Mantine Form + Zod 4 (`schemaResolver` со схемой из контракта). Иконки — Lucide.
+- **TanStack Query 5** + клиент oRPC (`@orpc/tanstack-query`); инвалидация по SSE `events.stream`.
+- **i18next + react-i18next** (типизированные ключи, словари в `packages/i18n`, общие с ботом и письмами); форматы —
+  нативный `Intl` (`ru-RU`, `Europe/Minsk`).
+- **Чат**: `useChat` (AI SDK) с транспортом oRPC + свои компоненты на Mantine по макету (`Drawer`, `Popover`,
+  `Collapse`, `Textarea` autosize); потоковый Markdown — `react-markdown` + `remend` + блоки в `memo`; автопрокрутка —
+  `use-stick-to-bottom`; без веток диалога и покадрового «проявления слов».
+- **Шрифты** — `@fontsource-variable/onest` и `@fontsource-variable/literata` (локально, DES-09).
+- **Сайт денег не считает** (P1): `packages/calc` на сайте запрещён правилом границ; числа приходят с `traceId`.
+- Голос — `MediaRecorder` (формат по `isTypeSupported`), фото — `FileButton`/`Dropzone` (`accept="image/*"`).
+- Тесты — Vitest + Testing Library + MSW; Playwright + axe; вместо Storybook — маршрут `/dev/gallery`.
+
+## Альтернативы
+
+- **Next.js** — SSR и серверные компоненты не нужны на localhost, второй сервер.
+- **MUI** — диапазон дат платный; **shadcn/ui** — теряем таблицу, календарь, графики Mantine.
+- **AI Elements / prompt-kit / Streamdown** — Tailwind + shadcn, вторая система стилей; Streamdown мигает и без
+  Tailwind выглядит «сломанным». **assistant-ui** — кандидат, если понадобятся ветки диалога.
+- **Шрифты из исходного docx** (Playfair, Inter, JetBrains Mono) — заменены макетом (R42).
+
+## Последствия
+
+- Чат — около 340 строк своего кода на деталях Mantine; `@ai-sdk/react` импортируется только в `features/assistant`.
+- Ползунок «Крупной покупки» пересчитывается на сервере (~50–100 мс) — исключение только через ADR.
+- Без разбиения по маршрутам бандл ~352 КБ gzip — разбиение обязательно, бюджет — `CONSTRAINTS.md`.
+
+## Ссылки
+
+`research/architecture/07-frontend.md` (итог), `11-chat-ui.md` (итог), `13-code-architecture.md` §3,
+`10-consensus.md` («Фронтенд», «Чат-ассистент», «Дизайн»); SPEC DES-00, R42; ADR-0014.

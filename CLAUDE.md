@@ -74,6 +74,7 @@
 | ИИ | `ai-record SCENARIO=…` (перезапись кассет, тратит лимиты; имплементатор запускает сам, ключи из `.env` читает программа, не агент), `eval` (QA-10, тратит лимиты) |
 | Заготовки | `new-module id=…`, `new-feature id=…`, `new-table module=… name=…`, `capabilities` (таблица CAPABILITIES из `modules.ts`) |
 
+Каждую цель Makefile добавляет задача, которая даёт её функцию (заглушек нет, см. `CONSTRAINTS.md`).
 `check` и `test-int` сами поднимают Postgres (`db-up`), если он не запущен.
 «Готово» = `make check` зелёный (локально, хвост вывода — в итоге задачи); для экранов ещё `make e2e` (axe).
 `check-quick` — `pre-push` (типы, границы, быстрые тесты); `check-full` — `check` + `e2e` + `audit` + бюджет бандла.

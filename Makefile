@@ -28,7 +28,7 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node capabilities
+	check-commits need-node capabilities deps-check
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -75,9 +75,12 @@ typecheck: need-node ## Проверка типов TypeScript 7 во всех �
 test: need-node ## Все тесты Vitest
 	$(BIN)/vitest run
 
-check: fmt-check lint typecheck test ## Все проверки: формат, линт, типы, тесты («готово» = зелёный)
+deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»
+	node tooling/checks/deps-guard.mjs
 
-check-quick: typecheck ## Быстрые проверки для pre-push: типы и тесты без БД
+check: fmt-check lint typecheck deps-check test ## Все проверки: формат, линт, типы, границы, тесты («готово» = зелёный)
+
+check-quick: typecheck deps-check ## Быстрые проверки для pre-push: типы, границы и тесты без БД
 	$(BIN)/vitest run --project unit
 
 check-commits: need-node ## Проверить коммиты ветки относительно BASE (по умолчанию main)

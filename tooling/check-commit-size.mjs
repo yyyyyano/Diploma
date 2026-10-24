@@ -9,10 +9,11 @@ import { readFileSync } from "node:fs";
 
 export const LIMITS = { warnFiles: 20, maxFiles: 40, warnLines: 400, maxLines: 800, minLines: 3 };
 
-// Не считаются: lock-файл, снимки миграций drizzle-kit, кассеты моделей — это генерируемые данные.
+// Не считаются: lock-файл, снимки миграций drizzle-kit, кассеты моделей — это генерируемые данные. Снимки — в
+// обоих форматах drizzle-kit: meta/NNNN_snapshot.json (0.x) и <время>_<имя>/snapshot.json (1.0 RC).
 const EXEMPT = [
   /(^|\/)pnpm-lock\.yaml$/,
-  /(^|\/)drizzle\/meta\/[^/]*snapshot\.json$/,
+  /(^|\/)drizzle\/(?:meta\/[^/]*|[^/]+\/)snapshot\.json$/,
   /(^|\/)__cassettes__\//,
 ];
 

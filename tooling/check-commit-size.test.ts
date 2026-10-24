@@ -153,11 +153,28 @@ describe("checkCommitSize: пороги размера", () => {
       numstat: numstat(
         [3000, 2000, "pnpm-lock.yaml"],
         [1500, 0, "apps/server/drizzle/meta/0001_snapshot.json"],
+        [700, 0, "apps/server/drizzle/20261024184842_extensions/snapshot.json"],
+        [
+          750,
+          0,
+          "apps/server/src/platform/db/__fixtures__/drizzle/20261024184813_fx/snapshot.json",
+        ],
         [900, 0, "apps/server/src/modules/receipts/__cassettes__/recheck.json"],
         [4, 1, "package.json"],
       ),
     });
     expect(result).toEqual({ files: 1, lines: 5, errors: [], warnings: [] });
+  });
+
+  it("SQL миграции и чужие snapshot.json считаются: исключены только снимки drizzle-kit", () => {
+    const result = checkCommitSize({
+      message: "feat(server): миграция",
+      numstat: numstat(
+        [10, 0, "apps/server/drizzle/20261024184842_extensions/migration.sql"],
+        [20, 0, "apps/web/src/snapshot.json"],
+      ),
+    });
+    expect(result).toMatchObject({ files: 2, lines: 30 });
   });
 
   it("бинарные файлы считаются по числу файлов", () => {

@@ -72,8 +72,8 @@ lint-file: need-node ## Линт одного файла: make lint-file FILE=п
 typecheck: need-node ## Проверка типов TypeScript 7 во всех пакетах (Turborepo)
 	$(BIN)/turbo run typecheck --output-logs=errors-only
 
-test: need-node ## Все тесты Vitest
-	$(BIN)/vitest run
+test: need-node ## Все тесты Vitest с покрытием (пороги — vitest.config.ts, CONSTRAINTS.md)
+	$(BIN)/vitest run --coverage
 
 deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»
 	node tooling/checks/deps-guard.mjs

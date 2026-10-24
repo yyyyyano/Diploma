@@ -14,5 +14,16 @@ export default defineConfig({
         },
       },
     ],
+    // Покрытие (CONSTRAINTS.md «Пороги с проверкой»): считается в `make test` (`vitest run --coverage`), не в
+    // `check-quick`. Пороги — по glob, каждый на свой пакет; пороги других слоёв добавляют их задачи.
+    coverage: {
+      provider: "v8",
+      include: ["packages/{calc,kernel}/src/**"],
+      reporter: ["text-summary"],
+      thresholds: {
+        "packages/calc/src/**": { lines: 95, branches: 90 },
+        "packages/kernel/src/**": { lines: 90, branches: 85 },
+      },
+    },
   },
 });

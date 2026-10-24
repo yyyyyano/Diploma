@@ -21,6 +21,8 @@ commit-msg:
   commands:
     commitlint:
       run: node_modules/.bin/commitlint --edit {1}
+    size:
+      run: node tooling/check-commit-size.mjs {1}
     no-ai-attribution:
       run: node tooling/git-hooks/check-no-ai-attribution.mjs {1}
 

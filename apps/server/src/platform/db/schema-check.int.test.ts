@@ -1,0 +1,69 @@
+// Проверка схемы на тестовой схеме fx_*: чистая схема проходит, каждое подложенное нарушение — красное
+// (ARCHITECTURE §6.2, CONSTRAINTS «Архитектурные запреты»: VIEW, функции и триггеры, таблица вне реестров,
+// nullable household_id).
+import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { uuid } from "drizzle-orm/pg-core";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { migrateFixtures } from "./__fixtures__/fixture-db.ts";
+import "./__fixtures__/schema.ts";
+import { checkSchema, type SchemaProblemKind } from "./schema-check.ts";
+import { registeredTables, systemTable } from "./tables.ts";
+
+let db: TestDb;
+beforeAll(async () => {
+  db = await createTestDb();
+  await migrateFixtures(db.pool);
+});
+afterAll(async () => {
+  await db.drop();
+});
+
+async function problemsOf(kind: SchemaProblemKind): Promise<string[]> {
+  const problems = await checkSchema(db.pool, registeredTables());
+  return problems.filter((p) => p.kind === kind).map((p) => p.object);
+}
+
+describe("проверка схемы: что аудитор SQL не видит", () => {
+  it("чистая схема проходит: функции расширений vector и pg_trgm — не наши", async () => {
+    expect(await checkSchema(db.pool, registeredTables())).toEqual([]);
+  });
+
+  it("VIEW над пользовательской таблицей — нарушение", async () => {
+    await db.pool.query("create view fx_all_receipts as select * from fx_receipts");
+    expect(await problemsOf("view")).toEqual(["fx_all_receipts"]);
+  });
+
+  it("SQL-функция над пользовательской таблицей — нарушение", async () => {
+    await db.pool.query(
+      "create function fx_all() returns setof fx_receipts language sql as 'select * from fx_receipts'",
+    );
+    expect(await problemsOf("function")).toContain("fx_all");
+  });
+
+  it("триггер на пользовательской таблице — нарушение (и его функция тоже)", async () => {
+    await db.pool.query(
+      "create function fx_touch() returns trigger language plpgsql as $$ begin return new; end $$",
+    );
+    await db.pool.query(
+      "create trigger fx_touch before insert on fx_receipts for each row execute function fx_touch()",
+    );
+    expect(await problemsOf("trigger")).toEqual(["fx_touch ON fx_receipts"]);
+    expect(await problemsOf("function")).toContain("fx_touch");
+  });
+
+  it("таблица с household_id вне реестров — нарушение", async () => {
+    await db.pool.query("create table fx_stray (id uuid primary key, household_id uuid not null)");
+    expect(await problemsOf("unregistered-table")).toEqual(["fx_stray"]);
+  });
+
+  it("nullable household_id — нарушение («смешанная» таблица)", async () => {
+    systemTable("fx_mixed_owner", { id: uuid().primaryKey(), householdId: uuid() });
+    await db.pool.query("create table fx_mixed_owner (id uuid primary key, household_id uuid)");
+    expect(await problemsOf("nullable-household")).toEqual(["fx_mixed_owner"]);
+  });
+
+  it("таблица из схемы Drizzle без миграции — нарушение", async () => {
+    systemTable("fx_not_migrated", { id: uuid().primaryKey() });
+    expect(await problemsOf("missing-table")).toEqual(["fx_not_migrated"]);
+  });
+});

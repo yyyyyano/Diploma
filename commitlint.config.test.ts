@@ -49,6 +49,14 @@ describe("commitlint: формат сообщения коммита", () => {
     expect(await check("fix: ok")).toEqual({ valid: false, rules: ["header-min-length"] });
   });
 
+  it("id модуля из modules.ts — допустимая область", async () => {
+    expect((await check("feat(receipts): перепроверять спорные строки чека")).valid).toBe(true);
+  });
+
+  it("id модуля из двух слов тоже допустим", async () => {
+    expect((await check("fix(legal-base): не терять редакцию при повторе")).valid).toBe(true);
+  });
+
   it("неизвестная область отклоняется правилом scope-enum", async () => {
     expect(await check("feat(nowhere): добавить что-то полезное")).toEqual({
       valid: false,

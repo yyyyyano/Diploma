@@ -1,22 +1,9 @@
 // Правила сообщений коммитов (ADR-0001, CONSTRAINTS.md «Коммиты», корневой CLAUDE.md «Git»).
 import { RuleConfigSeverity, type UserConfig } from "@commitlint/types";
+import { commitScopes } from "./tooling/architecture/commit-scopes.ts";
 
-// Служебные области из корневого CLAUDE.md «Git»; id модулей добавит T-002 (генерация из modules.ts).
-export const SERVICE_SCOPES = [
-  "web",
-  "server",
-  "kernel",
-  "calc",
-  "contract",
-  "i18n",
-  "testing",
-  "e2e",
-  "tooling",
-  "docker",
-  "docs",
-  "deps",
-  "plan",
-];
+// Области: id модулей из tooling/architecture/modules.ts + служебные области корневого CLAUDE.md «Git».
+export const SCOPES = commitScopes();
 
 export const COMMIT_TYPES = [
   "feat",
@@ -42,7 +29,7 @@ const config: UserConfig = {
     // Темы по-русски: регистр для них не имеет смысла.
     "subject-case": [RuleConfigSeverity.Disabled],
     // Область необязательна; указанная — только из списка.
-    "scope-enum": [RuleConfigSeverity.Error, "always", SERVICE_SCOPES],
+    "scope-enum": [RuleConfigSeverity.Error, "always", SCOPES],
   },
 };
 

@@ -6,6 +6,7 @@ packages:
 
 # Единые версии для всех пакетов: в package.json пишется "<пакет>": "catalog:" (ADR-0001).
 catalog:
+  "@orpc/contract": 1.16.1
   "@types/node": 26.6.5
   "@vitest/coverage-v8": 5.0.5
   fast-check: 4.10.2

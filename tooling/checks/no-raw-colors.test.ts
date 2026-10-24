@@ -14,7 +14,7 @@ const ops = "apps/web/src/features/operations";
 
 function found(baseDir: string): string[] {
   return runNoRawColors({ baseDir }).findings.map(
-    (f) => `${f.file}:${f.line} ${f.rule} ${f.message.split("»")[0].split("«")[1]}`,
+    (f) => `${f.file}:${f.line} ${f.rule} ${/«([^»]+)»/.exec(f.message)?.[1]}`,
   );
 }
 

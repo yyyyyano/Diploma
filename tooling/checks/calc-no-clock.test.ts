@@ -13,7 +13,7 @@ const fixtures = fileURLToPath(
 );
 
 describe("calc-no-clock: время, случайность и среда в calc", () => {
-  it("new Date(), Date.now, Math.random, Intl, performance.now, crypto, new Date без скобок, Temporal.Now — по строке", () => {
+  it("new Date(), Date.now, Math.random, Intl, performance.now, crypto, new Date без скобок, Temporal.Now, импорт node:crypto и perf_hooks — по строке", () => {
     const result = runCalcNoClock({ baseDir: join(fixtures, "violation") });
     expect(result.code).toBe(1);
     expect(result.findings.map((f) => `${f.line} ${f.message.split("»")[0]}»`)).toEqual([
@@ -25,6 +25,9 @@ describe("calc-no-clock: время, случайность и среда в cal
       "8 найдено «crypto.randomUUID»",
       "9 найдено «new Date»",
       "10 найдено «Temporal.Now»",
+      '11 найдено «from "node:crypto"»',
+      '12 найдено «from "perf_hooks"»',
+      '13 найдено «import("node:crypto"»',
     ]);
   });
 

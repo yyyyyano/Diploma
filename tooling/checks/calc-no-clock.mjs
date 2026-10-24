@@ -7,7 +7,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { checkResult, findAll, listFiles, report, splitSource } from "./source-text.mjs";
+import {
+  checkResult,
+  findAll,
+  listFiles,
+  report,
+  splitSource,
+  withoutComments,
+} from "./source-text.mjs";
 
 export const ROOTS = ["packages/calc"];
 
@@ -16,6 +23,13 @@ const TEST_CODE = /\.(test|spec)\.tsx?$/;
 /** Часы, случайность и среда. `new Date(x)` с аргументом, `Date.parse`, `Date.UTC` — чистые и разрешены. */
 const CLOCK =
   /\bnew\s+Date\b(?:\s*\(\s*\)|(?!\s*\())|\bDate\s*\.\s*now\b|\bMath\s*\.\s*random\b|\bIntl\b|\bTemporal\s*\.\s*Now\b|\bperformance\s*\.\s*now\b|\bcrypto\s*\.\s*(?:randomUUID|getRandomValues|randomBytes|randomInt)\b/;
+
+/**
+ * Модули случайности и часов: после `import { randomUUID } from "node:crypto"` вызов уже без `crypto.`, поэтому
+ * запрещён сам импорт (статический, `export … from` и `import(…)`). Имя модуля — в строке, ищется вне комментариев.
+ */
+const CLOCK_MODULE =
+  /\bfrom\s*["'](?:node:)?(?:crypto|perf_hooks)["']|\bimport\s*\(\s*["'](?:node:)?(?:crypto|perf_hooks)["']/;
 
 /**
  * @param {{ baseDir: string }} options
@@ -28,8 +42,12 @@ export function runCalcNoClock({ baseDir }) {
   });
   const findings = [];
   for (const file of files) {
-    const { code } = splitSource(readFileSync(join(baseDir, file), "utf8"));
-    for (const { line, match } of findAll(code, CLOCK)) {
+    const parts = splitSource(readFileSync(join(baseDir, file), "utf8"));
+    const matches = [
+      ...findAll(parts.code, CLOCK),
+      ...findAll(withoutComments(parts), CLOCK_MODULE),
+    ];
+    for (const { line, match } of matches.toSorted((a, b) => a.line - b.line)) {
       findings.push({
         file,
         line,

@@ -154,7 +154,7 @@
 - Зависимости: T-002
 
 ### T-003 · Деньги, даты и трасса расчёта: kernel, calc, помощники тестов
-- Статус: todo
+- Статус: done · 9b55b2a..7cb531a
 - Модули: `@kosht/kernel`, `@kosht/calc`, `@kosht/testing`, `vitest.config.ts`, `Makefile`, `package.json`,
   `pnpm-workspace.yaml`
 - SPEC: P1, P2, EXPL-02, FIN-20, NFR-23

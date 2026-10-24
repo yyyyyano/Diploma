@@ -130,7 +130,7 @@
 - Зависимости: T-001
 
 ### T-056 · Свои проверки: изоляция, цвета, часы в `calc`, «Пол», литералы JSX, бюджет бандла
-- Статус: todo
+- Статус: done · a15b214..74fe278
 - Модули: `tooling/checks/`, `tooling/architecture/fixtures/`, `Makefile`
 - SPEC: ROLE-01, SEC-04, NFR-19, DES-01, P1
 - Критерии приёмки:

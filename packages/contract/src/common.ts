@@ -13,3 +13,12 @@ export const PageSize = z.int().min(1).max(100).default(50);
 
 /** Сколько всего строк в списке (`total`): для номеров страниц и «Показать ещё». */
 export const RowCount = z.int().min(0);
+
+/**
+ * Вид объекта для сайта и агента — машинное имя в kebab-case («receipt», «statement-import»): в событиях сайта, в
+ * выбранном объекте контекста страницы, в карточке чата. Пользователю не показывается.
+ */
+export const EntityKind = z.string().regex(/^[a-z][a-z0-9-]{0,47}$/);
+
+/** Id объекта на проводе (ARCHITECTURE §7: все id — uuidv7); бренд конкретного id — в схеме модуля. */
+export const EntityId = z.uuid();

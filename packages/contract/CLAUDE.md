@@ -15,7 +15,13 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   503 повторяемая); `ErrorCode`, `ERROR_CODES`, `isRetryable(code)`; `ErrorData = { requestId, params }`
   (параметры — строка, число или флаг для подстановки в текст); `pickErrors(...codes)` — карта для `.errors()`.
 - Общие схемы (`common.ts`): `Money`, `LocalDate` — те же объекты, что в `kernel`; `PageNumber` (целое ≥ 1),
-  `PageSize` (1..100, по умолчанию 50), `RowCount` (целое ≥ 0).
+  `PageSize` (1..100, по умолчанию 50), `RowCount` (целое ≥ 0); `EntityKind` (kebab-case), `EntityId` (uuid).
+- Процедуры — дерево `contract` (`router.ts`), ветка модуля — `<модуль>/<модуль>.contract.ts`:
+  `system.health` — без входа и ошибок, `{ status: "ok" }`; доступ `publicProc` ставит сервер (T-005), HTTP
+  `/healthz` она не заменяет. `events.stream` — поток `SiteEvent` (`progress` с `percent` 0..100 или без него,
+  `changed`; сущность и id, без данных), ошибка `UNAUTHORIZED`.
+- Чат: `PageContext { route, params ≤ 20, selected? }`; `ChatMessagePart` — `text`, `step` (только имя инструмента),
+  `card { kind, id }`; расширения — T-006, T-010, T-043.
 
 ## Можно зависеть от
 `zod`, `@orpc/contract` (версия — `catalog:` в `pnpm-workspace.yaml`), `@kosht/kernel` — правило
@@ -27,7 +33,8 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
 - `userId` / `householdId` / `ownerId` в схемах — нет (проверяет `isolation.mjs`): владелец — из сессии.
 
 ## Как тестировать
-- `pnpm vitest run packages/contract`; «не компилируется» (код вне каталога) — тест с `@ts-expect-error`.
+- `pnpm vitest run packages/contract`; «не компилируется» (код вне каталога) — тест с `@ts-expect-error`;
+  `router.test.ts` обходит дерево: коды каждой процедуры — из каталога, со статусом каталога и `ErrorData`.
 
 ## Подводные камни
 - `pickErrors` в обход типов (`as`) с чужим кодом — `RangeError`: карта ошибок без статуса молча сломала бы ответ.

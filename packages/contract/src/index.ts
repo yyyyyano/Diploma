@@ -1,5 +1,15 @@
 // Публичный API @kosht/contract — форма данных «на проводе» (паспорт — packages/contract/CLAUDE.md).
-export { LocalDate, Money, PageNumber, PageSize, RowCount } from "./common.ts";
+export { CardPart, ChatMessagePart, StepPart, TextPart } from "./chat/message-parts.ts";
+export { PageContext } from "./chat/page-context.ts";
+export {
+  EntityId,
+  EntityKind,
+  LocalDate,
+  Money,
+  PageNumber,
+  PageSize,
+  RowCount,
+} from "./common.ts";
 export {
   ERROR_CODES,
   ERRORS,
@@ -9,3 +19,5 @@ export {
   pickErrors,
   type ErrorCode,
 } from "./errors.ts";
+export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract.ts";
+export { contract } from "./router.ts";

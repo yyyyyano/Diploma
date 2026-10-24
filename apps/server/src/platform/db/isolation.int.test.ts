@@ -227,6 +227,17 @@ const LEAKS: [string, Leak][] = [
         sql`with x as (select 1) merge into ${fxReceipts} t using x on t.household_id = ${s.scope.householdId} and t.id is null when not matched then insert (household_id, user_id, merchant, total_minor) values (${scopeB.householdId}, ${scopeA.userId}, 'подброс', 1)`,
       ),
   ],
+  [
+    'from"fx_receipts" — ключевое слово вплотную к кавычке',
+    (s) => s.db.execute(sql.raw('select note from"fx_receipts"')),
+  ],
+  [
+    'WITH … merge into"fx_receipts" с чужим household_id',
+    (s) =>
+      s.db.execute(
+        sql`with x as (select 1) merge into"fx_receipts" t using x on false when not matched then insert (household_id, user_id, merchant, total_minor) values (${scopeB.householdId}, ${scopeA.userId}, 'подброс', 1)`,
+      ),
+  ],
 ];
 
 describe("ROLE-01, SEC-04: дырявый запрос не доходит до базы, данные B не меняются", () => {

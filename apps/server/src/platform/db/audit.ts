@@ -262,7 +262,7 @@ const ALLOWED_COMMANDS = new Set(
 );
 
 /** MERGE в любом месте текста: имя в кавычках ("merge") — не ключевое слово, колонка merge без into — не команда. */
-const MERGE_ANYWHERE = /(?<![\w"$.])merge\s+into(?![\w"$])/;
+const MERGE_ANYWHERE = /(?<![\w"$.])merge\s+into(?![\w$])/;
 
 const patterns = new WeakMap<ReadonlySet<string>, RegExp>();
 
@@ -324,11 +324,11 @@ function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
       code += " ";
     } else if (ch === "'") {
       i = quotedEnd(sqlText, i, false);
-      code += literal;
+      code = joinToken(code, literal, sqlText.charAt(i));
     } else if (ch === '"') {
       const end = quotedEnd(sqlText, i, false);
       const name = sqlText.slice(i, end);
-      code += normalize ? quotedName(name) : name;
+      code = joinToken(code, normalize ? quotedName(name) : name, sqlText.charAt(end));
       i = end;
     } else if (ch === "$") {
       DOLLAR_TAG.lastIndex = i;
@@ -339,14 +339,14 @@ function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
       } else {
         const close = sqlText.indexOf(tag, i + tag.length);
         i = close < 0 ? sqlText.length : close + tag.length;
-        code += literal;
+        code = joinToken(code, literal, sqlText.charAt(i));
       }
     } else if ((ch === "u" || ch === "U") && next === "&" && /["']/.test(sqlText.charAt(i + 2))) {
       const end = quotedEnd(sqlText, i + 2, false);
       if (sqlText.charAt(i + 2) === '"') {
         unicodeIdentifier = true;
-        code += sqlText.slice(i + 2, end);
-      } else code += literal;
+        code = joinToken(code, sqlText.slice(i + 2, end), sqlText.charAt(end));
+      } else code = joinToken(code, literal, sqlText.charAt(end));
       i = end;
     } else {
       WORD.lastIndex = i;
@@ -361,7 +361,7 @@ function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
           if (CONTINUATION.exec(sqlText) === null) break;
           i = quotedEnd(sqlText, CONTINUATION.lastIndex - 1, true);
         }
-        code += literal;
+        code = joinToken(code, literal, sqlText.charAt(i));
       } else {
         // Postgres приводит к нижнему регистру только ASCII в именах без кавычек.
         code += normalize ? word.replace(/[A-Z]+/g, (upper) => upper.toLowerCase()) : word;
@@ -370,6 +370,19 @@ function scan(sqlText: string, literal: string, normalize: boolean): Scanned {
     }
   }
   return { code, unicodeIdentifier };
+}
+
+const WORD_CHAR = /[\w$\u0080-\uffff]/;
+
+/**
+ * Дописать строку или имя в кавычках к коду. Postgres читает from"t" и "a"from как два токена: слово кончается
+ * там, где начинается кавычка. В разобранном тексте между ними ставится пробел, иначе регулярки разбора
+ * (границы слов \b, (?<!\w)) не видят ни ключевого слова, ни таблицы.
+ */
+function joinToken(code: string, token: string, nextChar: string): string {
+  const before = WORD_CHAR.test(code.charAt(code.length - 1)) ? " " : "";
+  const after = WORD_CHAR.test(nextChar) ? " " : "";
+  return code + before + token + after;
 }
 
 /** Позиция после закрывающей кавычки (удвоенная кавычка — экранирование; в E'…' ещё и `\\`). */

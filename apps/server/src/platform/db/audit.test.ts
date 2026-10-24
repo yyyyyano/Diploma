@@ -560,6 +560,44 @@ describe("ROLE-01, SEC-04: лексер читает текст так же, к�
     );
   });
 
+  // Postgres читает from"t" как from + "t": ключевое слово кончается там, где начинается кавычка.
+  it.each<[string, string, unknown[]]>([
+    ['from"t" без фильтра', 'select note from"fx_receipts"', []],
+    [
+      'join"t" без own',
+      'select 1 from fx_receipts r join"fx_receipt_items" on true where r.household_id = $1',
+      [A],
+    ],
+    ['update"t" без own', 'update"fx_receipts" set note = $1', ["x"]],
+    ['delete from"t" без own', 'delete from"fx_receipts"', []],
+    [
+      'insert into"t"(…) с чужим household_id',
+      'insert into"fx_receipts"(household_id, user_id, merchant, total_minor) values ($1, $2, $3, 1)',
+      [B, "u", "m"],
+    ],
+    [
+      'with … merge into"t" с чужим household_id',
+      'with x as (select 1) merge into"fx_receipts" t using x on false ' +
+        "when not matched then insert (household_id, id) values ($1, $2)",
+      [B, "x"],
+    ],
+    ['with … update"t" без own', 'with x as (select 1) update"fx_receipts" set note = $1', ["x"]],
+    ['таблица вплотную после имени в кавычках: "r"from"t"', 'select 1 as"r"from"fx_receipts"', []],
+  ])(
+    "ключевое слово вплотную к кавычке (%s) → ISOLATION_VIOLATION в scoped и system",
+    (_name, text, params) => {
+      expect(violation(() => audit({ sql: text, params }))).toBeInstanceOf(IsolationViolation);
+      expect(violation(() => audit({ sql: text, params }, system))).toBeInstanceOf(
+        IsolationViolation,
+      );
+    },
+  );
+
+  it('select 1 as"from" — имя в кавычках, а не ключевое слово: проходит', () => {
+    expect(() => audit({ sql: 'select 1 as"from"', params: [] })).not.toThrow();
+    expect(() => audit({ sql: 'select 1 as"from"', params: [] }, system)).not.toThrow();
+  });
+
   it("слово merge как имя колонки, а не команда, — проходит", () => {
     const text = "select merge from fx_receipts where household_id = $1";
     expect(() => audit({ sql: text, params: [A] })).not.toThrow();

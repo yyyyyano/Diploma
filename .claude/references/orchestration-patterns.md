@@ -110,7 +110,7 @@ main agent → research sub-agent (reads 50 files) → digest → main agent con
 
 **Cost:** one isolated sub-agent context. Worth it any time the alternative is loading hundreds of files into the main context.
 
-**On Claude Code, use the built-in `Explore` subagent** rather than defining a custom research persona. `Explore` runs on Haiku, is denied write/edit tools, and is purpose-built for this pattern. Define a custom research subagent only when `Explore` doesn't fit (e.g. you need a domain-specific system prompt the model wouldn't infer).
+**On Claude Code, use the built-in `Explore` subagent** rather than defining a custom research persona. `Explore` runs on the main conversation's model (not Haiku — to make it cheaper, define your own `Explore` in `.claude/agents/` with `model: haiku`), is denied write/edit tools, and is purpose-built for this pattern. <!-- Кошт, 2026-10-24: исправлено по документации Claude Code 2.1.308 (sub-agents → Built-in subagents), см. research/architecture/09-agent-dev-process.md. --> Define a custom research subagent only when `Explore` doesn't fit (e.g. you need a domain-specific system prompt the model wouldn't infer).
 
 ---
 
@@ -140,12 +140,19 @@ One subtlety: the `skills` and `mcpServers` frontmatter fields in a persona are 
 
 ### Platform-enforced rules
 
-Two rules in this catalog aren't just convention — Claude Code enforces them:
+> **Поправка «Кошта» (2026-10-24).** Утверждение ниже о запрете вложенных сабагентов устарело: с Claude Code v2.1.219
+> сабагент **может** порождать сабагентов — по умолчанию до трёх уровней ниже главной сессии (переменная
+> `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, значение `1` выключает вложенность). Проверено запуском, см.
+> `research/architecture/09-agent-dev-process.md`. Анти-паттерны B и D платформа **не** блокирует — в «Коште» глубина 1
+> задана решением: `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH=1` в `.claude/settings.json` и `disallowedTools: Agent` у ролей
+> конвейера (`/task-cycle` → роли).
 
-- **"Subagents cannot spawn other subagents"** (verbatim from the docs). Anti-pattern B (persona-calls-persona) and Anti-pattern D (deep persona trees) cannot exist on Claude Code by construction.
+~~Two rules in this catalog aren't just convention — Claude Code enforces them:~~
+
+- ~~**"Subagents cannot spawn other subagents"** (verbatim from the docs). Anti-pattern B (persona-calls-persona) and Anti-pattern D (deep persona trees) cannot exist on Claude Code by construction.~~ Outdated, see the note above: nesting is allowed by the platform and has to be limited by configuration.
 - **"No nested teams"** — teammates cannot spawn their own teams. Same anti-patterns blocked at the team level.
 
-This means you can adopt the patterns in this catalog without worrying about contributors accidentally building the anti-patterns. They'll just fail to load.
+~~This means you can adopt the patterns in this catalog without worrying about contributors accidentally building the anti-patterns. They'll just fail to load.~~ For subagents this no longer holds: keep the depth limit in settings and `disallowedTools: Agent` on personas.
 
 ### Built-in subagents to know about
 

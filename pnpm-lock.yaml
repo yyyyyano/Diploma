@@ -672,6 +672,9 @@ importers:
 
   packages/testing:
     dependencies:
+      '@ai-sdk/provider':
+        specifier: 'catalog:'
+        version: 4.0.34
       '@kosht/kernel':
         specifier: workspace:*
         version: link:../kernel

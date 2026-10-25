@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 export { MockLanguageModelV4 } from "ai/test";
+/** Типы спецификации модели для скриптов MockLanguageModelV4 (провайдеры @ai-sdk/* — только в llm). */
+export type { LanguageModelV4CallOptions, LanguageModelV4StreamPart } from "@ai-sdk/provider";
 
 /** Сценарий кассеты: `<модуль>/<имя>` латиницей (`chat/accounts`). */
 const SCENARIO = /^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/;

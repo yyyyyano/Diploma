@@ -1,6 +1,12 @@
 // Публичный API @kosht/testing — помощники тестов (паспорт — packages/testing/CLAUDE.md).
 export { byn, day, testHouseholdId, testScope, testTraceId, testUserId } from "./factories.ts";
-export { cassetteFile, cassetteMode, MockLanguageModelV4 } from "./cassettes.ts";
+export {
+  cassetteFile,
+  cassetteMode,
+  MockLanguageModelV4,
+  type LanguageModelV4CallOptions,
+  type LanguageModelV4StreamPart,
+} from "./cassettes.ts";
 export { FakeClock } from "./fake-clock.ts";
 export {
   contractProcedurePaths,

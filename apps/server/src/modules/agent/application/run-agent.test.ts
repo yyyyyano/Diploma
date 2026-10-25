@@ -1,8 +1,12 @@
 // AGT-01, AGT-13, ARCHITECTURE §8.2: цикл агента на MockLanguageModelV4 — инструмент из реестра с ctx.s из scope
 // запуска, ошибка инструмента — { ok: false, code }, не больше MAX_STEPS шагов и на последнем — toolChoice "none".
-import type { LanguageModelV4CallOptions, LanguageModelV4StreamPart } from "@ai-sdk/provider";
 import type { Scope } from "@kosht/kernel";
-import { MockLanguageModelV4, testScope } from "@kosht/testing";
+import {
+  MockLanguageModelV4,
+  testScope,
+  type LanguageModelV4CallOptions,
+  type LanguageModelV4StreamPart,
+} from "@kosht/testing";
 import { simulateReadableStream, type UIMessage, type UIMessageChunk } from "ai";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";

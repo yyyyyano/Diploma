@@ -81,6 +81,12 @@ describe("ADR-0008: events.publish", () => {
       "дважды",
     );
   });
+
+  it("модуль подписки — не id модуля — ошибка при определении", () => {
+    expect(() =>
+      defineSubscription({ event: changed, module: "Budgets.x", handle: async () => {} }),
+    ).toThrow(RangeError);
+  });
 });
 
 describe("ADR-0008: ключ схлопывания подписки", () => {

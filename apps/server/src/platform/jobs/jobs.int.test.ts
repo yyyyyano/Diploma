@@ -214,6 +214,120 @@ describe("SEC-04, OBS-01: задача выполняется от имени в
   });
 });
 
+/** Сколько строк лога с ключом msg. */
+function logged(logs: ReturnType<typeof memoryLogger>, msg: string): number {
+  return logs.lines().filter((line) => line["msg"] === msg).length;
+}
+
+describe("SEC-04, ADR-0008: enqueue отвергает задачу, которую нельзя ставить", () => {
+  it("ключ не через jobKey, задача не из реестра процесса, нагрузка не по схеме — ошибка, задачи нет", async () => {
+    const bareKey = defineJob({
+      name: "test.bare-key",
+      payload: receiptPayload,
+      // Ключ без домохозяйства подавил бы задачу другого домохозяйства (очередь short).
+      options: { singletonKey: () => "budgets.recheck" },
+      handle: async () => {},
+    });
+    const stranger = defineJob({
+      name: "test.stranger",
+      payload: receiptPayload,
+      handle: async () => {},
+    });
+    const { runtime } = await startJobs("api", { jobs: [bareKey] }, async () => true);
+    const s = createScopedDb(db.pool, scopeA);
+    const enqueue = (run: Parameters<typeof s.transaction>[0]) => s.transaction(run);
+    const receiptId = scopeA.userId;
+
+    await expect(enqueue((tx) => runtime.enqueue(tx, bareKey, { receiptId }))).rejects.toThrow(
+      "только jobKey",
+    );
+    await expect(enqueue((tx) => runtime.enqueue(tx, stranger, { receiptId }))).rejects.toThrow(
+      "не зарегистрирована",
+    );
+    await expect(
+      enqueue((tx) => runtime.enqueue(tx, bareKey, { receiptId: "не uuid" })),
+    ).rejects.toThrow("не по схеме");
+    expect(
+      await count("from pgboss.job where name = any($1)", [["test.bare-key", "test.stranger"]]),
+    ).toBe(0);
+  });
+
+  it("два определения с одним именем очереди или повторный start — ошибка при старте", async () => {
+    const twin = () =>
+      defineJob({ name: "test.twin", payload: receiptPayload, handle: async () => {} });
+    await expect(startJobs("api", { jobs: [twin(), twin()] }, async () => true)).rejects.toThrow(
+      "дважды",
+    );
+    const { runtime } = await startJobs("api", { jobs: [] }, async () => true);
+    await expect(runtime.start({ jobs: [] })).rejects.toThrow("уже запущена");
+  });
+});
+
+describe("SEC-04, OBS-07: конверт или нагрузка не по схеме — задача отброшена без вызова обработчика", () => {
+  /** worker с задачей name; сторож — корректная задача, поставленная последней (задачи идут по порядку). */
+  async function startGuarded(name: string) {
+    const handled: unknown[] = [];
+    const sentinel = signal<void>();
+    const job = defineJob({
+      name,
+      payload: receiptPayload,
+      handle: async (_ctx, payload) => {
+        handled.push(payload);
+        if (payload.receiptId === scopeA.userId) sentinel.resolve();
+      },
+    });
+    const { runtime, logs } = await startJobs("worker", { jobs: [job] }, async () => true);
+    // Сырая постановка мимо enqueue — так в очередь попадает конверт, который enqueue не собрал бы.
+    const raw = async (envelopes: readonly object[]) => {
+      const boss = createBoss(bossDb(db.pool), "api");
+      await boss.start();
+      try {
+        for (const envelope of envelopes) await boss.send(name, envelope);
+      } finally {
+        await stopBoss(boss);
+      }
+    };
+    const finish = async () => {
+      await createScopedDb(db.pool, scopeA).transaction((tx) =>
+        runtime.enqueue(tx, job, { receiptId: scopeA.userId }),
+      );
+      await sentinel.promise;
+    };
+    const dropped = () =>
+      count(
+        "from background_job_run where kind = $1 and status = 'dropped' and error_code = 'VALIDATION'",
+        [name],
+      );
+    return { handled, logs, raw, finish, dropped };
+  }
+
+  const scope = { userId: scopeA.userId, householdId: scopeA.householdId };
+  const payload = { receiptId: scopeA.userId };
+
+  it("лишнее поле или владелец не uuid — dropped/VALIDATION, jobs.envelope-invalid, обработчик не вызван", async () => {
+    const run = await startGuarded("test.bad-envelope");
+    await run.raw([
+      { scope, requestId: "req-extra-0001", payload, admin: true },
+      { scope: { ...scope, userId: "не uuid" }, requestId: "req-baduid-01", payload },
+    ]);
+    await run.finish();
+
+    expect(run.handled).toEqual([payload]);
+    expect(await run.dropped()).toBe(2);
+    expect(logged(run.logs, "jobs.envelope-invalid")).toBe(2);
+  });
+
+  it("конверт верный, нагрузка не по схеме — dropped/VALIDATION, jobs.payload-invalid, обработчик не вызван", async () => {
+    const run = await startGuarded("test.bad-payload");
+    await run.raw([{ scope, requestId: "req-payload-01", payload: {} }]);
+    await run.finish();
+
+    expect(run.handled).toEqual([payload]);
+    expect(await run.dropped()).toBe(1);
+    expect(logged(run.logs, "jobs.payload-invalid")).toBe(1);
+  });
+});
+
 describe("ADR-0008: повтор — только для retryable-ошибок каталога", () => {
   it("UNAVAILABLE повторяется и проходит, CONFLICT не повторяется", async () => {
     const attempts = new Map<number, number>();
@@ -241,6 +355,12 @@ describe("ADR-0008: повтор — только для retryable-ошибок 
       ["test.retry"],
     );
     expect(rows).toEqual([{ state: "failed", retry_count: 0 }]);
+    // OBS-07: упавший запуск — строка failed с кодом каталога.
+    const failed = await db.owner.query<{ error_code: string }>(
+      "select error_code from background_job_run where kind = $1 and status = 'failed' order by error_code",
+      ["test.retry"],
+    );
+    expect(failed.rows).toEqual([{ error_code: "CONFLICT" }, { error_code: "UNAVAILABLE" }]);
   });
 });
 
@@ -301,5 +421,7 @@ describe("NFR-22, NFR-23: расписания и обходы ведёт worker
         .map((scope, i) => ({ scope, receiptId: ids[i] ?? "" }))
         .toSorted((a, b) => a.receiptId.localeCompare(b.receiptId)),
     );
+    // OBS-07: строка журнала на обход (её пишут до постановки задач — гонки с обработчиком нет).
+    expect(await count("from background_job_run where kind = $1", ["test.stuck-receipts"])).toBe(1);
   });
 });

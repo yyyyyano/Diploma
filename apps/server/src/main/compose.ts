@@ -37,6 +37,7 @@ import type {
   SystemPlatform,
 } from "../platform/module/define-module.ts";
 import { createRateLimiter } from "../platform/rate-limit/rate-limit.ts";
+import { createConsentRegistry } from "../platform/module/consent-source.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
 import {
   createRealtime,
@@ -46,6 +47,7 @@ import {
 import { createSecrets } from "../platform/secrets/secrets.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
+import { createTelemetry } from "../platform/telemetry/telemetry.ts";
 import { createModules, type ModulePorts } from "./create-modules.ts";
 import { migrateDatabase } from "./migrate-database.ts";
 import { buildRegistries, type Registries } from "./registries.ts";
@@ -137,6 +139,7 @@ export async function compose(
   const clock = createClock(() => settings.peek(TIME_ZONE));
   const sessions = createSessionRegistry();
   const scopes = createScopeVerifierRegistry();
+  const consent = createConsentRegistry();
   // pg-boss — на том же пуле роли приложения (своего пула нет); пояс расписаний — настройка system.time-zone.
   const jobs = createJobs({
     pool,
@@ -150,6 +153,8 @@ export async function compose(
   // Подписки известны только после сборки модулей, а модулям events нужен сразу: публикация до конца сборки
   // (в фабрике модуля) — ошибка программы.
   let events: Events | undefined;
+  // Инструменты агента — из реестра модулей, а он собирается после фабрик: до конца сборки — ошибка программы.
+  let registered: Registries | undefined;
   const platform: Platform = {
     clock,
     log,
@@ -173,6 +178,15 @@ export async function compose(
       },
     },
     realtime,
+    // Трассы ИИ выключены, пока не подключён Langfuse (T-011).
+    telemetry: createTelemetry(false),
+    consent,
+    tools: () => {
+      if (registered === undefined) {
+        throw new Error("Инструменты агента запрошены до конца сборки модулей.");
+      }
+      return [...registered.tools.values()];
+    },
     scoped: (scope) => createScopedDb(pool, scope),
   };
   const systemPlatform: SystemPlatform = {
@@ -200,6 +214,8 @@ export async function compose(
     // Вход в систему (сессии сайта и владельцы задач) даёт модуль identity; без него не входит никто.
     if (registries.sessionSource !== undefined) sessions.register(registries.sessionSource);
     if (registries.scopeVerifier !== undefined) scopes.register(registries.scopeVerifier);
+    if (registries.consentSource !== undefined) consent.register(registries.consentSource);
+    registered = registries;
     events = createEvents({ jobs, subscriptions: registries.subscriptions });
     // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.
     router = createRouter({
@@ -236,6 +252,8 @@ export async function compose(
     ready: () => pingDb(pool),
     allowLan: () => settings.get(ALLOW_LAN),
     close: async () => {
+      // Сначала работа модулей в памяти (запуски агента) — пока очередь и пул ещё открыты.
+      for (const stop of registries.stops) await stop();
       await live?.stop();
       await jobs.stop();
       await pool.end();

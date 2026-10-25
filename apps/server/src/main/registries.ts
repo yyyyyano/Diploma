@@ -9,6 +9,7 @@ import type { ModuleRouter } from "../platform/http/procedures.ts";
 import type { SessionResolver } from "../platform/http/session.ts";
 import type { JobDef } from "../platform/jobs/define-job.ts";
 import type { ScopeVerifier } from "../platform/jobs/scope-verifier.ts";
+import type { ConsentSource } from "../platform/module/consent-source.ts";
 import type { ScheduleDef } from "../platform/jobs/schedule.ts";
 import type { SweepDef } from "../platform/jobs/sweep.ts";
 import {
@@ -45,6 +46,10 @@ export interface Registries {
   readonly sessionSource: SessionResolver | undefined;
   /** Перепроверка владельца задач (модуль входа); нет — задачи отбрасываются. */
   readonly scopeVerifier: ScopeVerifier | undefined;
+  /** Источник облачного согласия (модуль согласий); нет — облако запрещено. */
+  readonly consentSource: ConsentSource | undefined;
+  /** Остановки модулей в порядке, обратном созданию: верхние модули останавливаются раньше нижних. */
+  readonly stops: readonly (() => Promise<void>)[];
 }
 
 /** Повторное имя в реестре: в тексте — вид реестра, имя и оба модуля. */
@@ -103,6 +108,8 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
   // Один на процесс: второй модуль с ними — ошибка старта, а не подмена входа.
   const sessionSource = new Registry<SessionResolver>("источник сессий");
   const scopeVerifier = new Registry<ScopeVerifier>("проверка scope задач");
+  const consentSource = new Registry<ConsentSource>("источник облачного согласия");
+  const stops: (() => Promise<void>)[] = [];
   const sameObject = (a: unknown, b: unknown) => a === b;
 
   for (const m of modules) {
@@ -140,6 +147,8 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
     for (const rule of m.rateRules) rateRules.add(rule.name, rule, m.id);
     if (m.sessionSource !== undefined) sessionSource.add("session", m.sessionSource, m.id);
     if (m.scopeVerifier !== undefined) scopeVerifier.add("scope", m.scopeVerifier, m.id);
+    if (m.consentSource !== undefined) consentSource.add("consent", m.consentSource, m.id);
+    if (m.stop !== undefined) stops.unshift(m.stop);
   }
 
   return {
@@ -160,5 +169,7 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
     rateRules: rateRules.map(),
     sessionSource: sessionSource.values()[0],
     scopeVerifier: scopeVerifier.values()[0],
+    consentSource: consentSource.values()[0],
+    stops,
   };
 }

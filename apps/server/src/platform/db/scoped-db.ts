@@ -7,6 +7,7 @@ import { and, eq, type InferInsertModel, type SQL } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { auditedDrizzle, closeClient, type DbClient, type QueryDb } from "./audited.ts";
 import type { OwnedTable, OwnerKey } from "./tables.ts";
+import { withTransactionFlag } from "./transaction-flag.ts";
 
 declare const queryDb: QueryDb;
 
@@ -84,9 +85,12 @@ function wrap(db: QueryDb & Transactional, scope: Scope): ScopedDb {
           .where(and(own(table), where)),
     }),
     delete: (table, where) => db.delete(table).where(and(own(table), where)),
+    // Флаг транзакции — для шлюза llm: модель внутри транзакции — ошибка (LLM_IN_TRANSACTION).
     transaction: (fn) =>
       db.transaction((tx) =>
-        fn(wrap(closeClient(tx) as unknown as QueryDb & Transactional, scope)),
+        withTransactionFlag(() =>
+          fn(wrap(closeClient(tx) as unknown as QueryDb & Transactional, scope)),
+        ),
       ),
   };
 }

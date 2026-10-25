@@ -183,10 +183,12 @@
 - `module/define-module.ts` — `defineModule({ id, facade?, router?, events?, jobs?, subscriptions?, schedules?, sweeps?,
   tools?, deliveryChannels?, undo?, confirm?, userData?, settings?, secrets?, rateRules?, sessionSource?, scopeVerifier? })`
   → `ModuleDescriptor<F>` (источник сессий сайта и проверка владельца задач — по одному на процесс, их даёт `identity`;
-  второй — `RegistryError`)
+  `consentSource` — облачное согласие (PRIV-02), один на процесс; второй — `RegistryError`; `stop` — остановка работы
+  модуля в памяти при `close()`, первой и в порядке, обратном созданию)
   (все списки есть, пустые — тоже). id — kebab-case; имена событий, задач, расписаний, обходов, `undo`/`confirm` —
   `<id>.<…>`; подписка — только своего модуля (`module === id`); иначе `RangeError` при создании. `Platform` (`clock`,
-  `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `scoped(scope)`), `SystemPlatform`
+  `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `telemetry`, `consent.cloudAllowed(scope)`
+  (нет источника — false), `tools()` — инструменты агента из реестра (до конца сборки — ошибка), `scoped(scope)`), `SystemPlatform`
   (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа; только
   модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
   (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.
@@ -198,6 +200,15 @@
 - `db/user-data.ts` — `defineUserData({ tables })` → `UserDataDef { tables, tableNames }`: только `userOwnedTable`,
   непусто, без повторов; порядок — порядок удаления (дети раньше родителей).
 - `http/procedures.ts` — `ModuleRouter`: ветка модуля в дереве процедур.
+
+## Публичный API — `telemetry/`, `module/consent-source.ts`, `db/transaction-flag.ts` (T-010: OBS-03, PRIV-02, ADR-0009)
+- `telemetry/telemetry.ts` — `createTelemetry(enabled)` → `Telemetry.options({ functionId, userId?, sessionId? })` →
+  опции AI SDK `telemetry` (`isEnabled`, `functionId`, `includeRuntimeContext`) и `runtimeContext` с внутренними
+  `userId`/`sessionId`; AI SDK платформа не импортирует. Корень композиции — выключено, Langfuse — T-011.
+- `module/consent-source.ts` — `ConsentSource(scope)` и `createConsentRegistry()` (`register` — один источник;
+  `cloudAllowed` — без источника false).
+- `db/transaction-flag.ts` — `inTransaction()` / `withTransactionFlag(fn)`: `s.transaction` поднимает флаг в
+  `AsyncLocalStorage` (только булево) — по нему шлюз llm бросает `LLM_IN_TRANSACTION`.
 
 ## Публичный API — `events/` (T-006: ADR-0004, ADR-0008, ARCHITECTURE §5)
 - `define-event.ts` — `defineEvent({ name: "<модуль>.<прошедшее>", payload: z.object({ ids, … }) })` → `EventDef`:

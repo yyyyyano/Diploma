@@ -25,7 +25,9 @@ import type { RateLimiter, RateRule } from "../rate-limit/rate-limit.ts";
 import type { Realtime } from "../realtime/realtime.ts";
 import type { SecretDef, Secrets } from "../secrets/secrets.ts";
 import type { SettingDef, Settings } from "../settings/settings.ts";
+import type { Telemetry } from "../telemetry/telemetry.ts";
 import type { ToolDef } from "../tools/define-tool.ts";
+import type { ConsentRegistry, ConsentSource } from "./consent-source.ts";
 
 /** Порты платформы, которые получает каждый модуль. */
 export interface Platform {
@@ -38,6 +40,15 @@ export interface Platform {
   readonly jobs: Jobs;
   readonly events: Events;
   readonly realtime: Realtime;
+  /** Опции трасс ИИ (OBS-03): по умолчанию выключены, Langfuse — T-011. */
+  readonly telemetry: Telemetry;
+  /** Облачное согласие пользователя (PRIV-02): источник даёт модуль согласий; нет его — облако запрещено. */
+  readonly consent: Pick<ConsentRegistry, "cloudAllowed">;
+  /**
+   * Инструменты агента всех модулей (реестр корня композиции, ADR-0009): агент не импортирует предметные модули.
+   * Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
+   */
+  tools(): readonly ToolDef[];
   /** ScopedDb для scope, рождённого на входе модуля (Telegram, ARCHITECTURE §6.4). */
   scoped(scope: Scope): ScopedDb;
 }
@@ -90,6 +101,13 @@ export interface ModuleParts {
   readonly sessionSource?: SessionResolver;
   /** Перепроверка владельца задачи — одна на процесс, её даёт модуль входа (identity). */
   readonly scopeVerifier?: ScopeVerifier;
+  /** Источник облачного согласия (PRIV-02) — один на процесс, его даёт модуль согласий. */
+  readonly consentSource?: ConsentSource;
+  /**
+   * Остановка процесса (SIGTERM): довести или прервать свою работу в памяти (запуски агента) до закрытия очереди и
+   * пула. Корень композиции зовёт её первой при close().
+   */
+  readonly stop?: () => Promise<void>;
 }
 
 /** Модуль после defineModule: все списки есть (пустые — тоже), реестры читают их без проверок. */
@@ -113,6 +131,8 @@ export interface ModuleDescriptor<F = unknown> {
   readonly rateRules: readonly RateRule[];
   readonly sessionSource: SessionResolver | undefined;
   readonly scopeVerifier: ScopeVerifier | undefined;
+  readonly consentSource: ConsentSource | undefined;
+  readonly stop: (() => Promise<void>) | undefined;
 }
 
 /** id модуля — как в tooling/architecture/modules.ts. */
@@ -154,6 +174,8 @@ export function defineModule(
     rateRules: spec.rateRules ?? [],
     sessionSource: spec.sessionSource,
     scopeVerifier: spec.scopeVerifier,
+    consentSource: spec.consentSource,
+    stop: spec.stop,
   };
   // id — префикс событий, задач и действий (docs/CAPABILITIES.md «Как читать»): по префиксу видно владельца.
   const owned = [

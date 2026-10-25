@@ -182,3 +182,28 @@ describe("ARCHITECTURE §6.4: источник сессий и проверка 
     ).toThrow(/identity и demo/);
   });
 });
+
+describe("PRIV-02, ADR-0009: облачное согласие и остановка модулей", () => {
+  it("источник согласия — один на процесс; второй — ошибка с обоими модулями", () => {
+    const consent = async () => false;
+    expect(
+      buildRegistries([defineModule({ id: "privacy", consentSource: consent })]).consentSource,
+    ).toBe(consent);
+    expect(() =>
+      buildRegistries([
+        defineModule({ id: "privacy", consentSource: consent }),
+        defineModule({ id: "profile", consentSource: consent }),
+      ]),
+    ).toThrow(/privacy и profile/);
+  });
+
+  it("остановки модулей — в порядке, обратном созданию", () => {
+    const first = async () => {};
+    const second = async () => {};
+    const { stops } = buildRegistries([
+      defineModule({ id: "agent", stop: first }),
+      defineModule({ id: "chat", stop: second }),
+    ]);
+    expect(stops).toEqual([second, first]);
+  });
+});

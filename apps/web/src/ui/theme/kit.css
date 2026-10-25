@@ -1,0 +1,69 @@
+/* Значения design/kit.css (и каркаса телефона ph- из design/screens/MobileHome.dc.html), которых нет в tokens.css (ADR-0014, frontend-ui.md): оттенки каркаса на тёмном меню,
+   подложки, тени и шкала отступов и радиусов набора. Компоненты ui/ и каркас берут их отсюда переменными —
+   «сырые» цвета и числа отступов вне ui/theme запрещены (no-raw-colors.mjs). Новых цветов здесь нет: всё — из kit.css. */
+:root {
+  /* Шрифты: пакеты @fontsource-variable регистрируют начертания под именами «… Variable»; запасные — из tokens.css. */
+  --font-ui-local: "Onest Variable", var(--font-ui);
+  --font-law-local: "Literata Variable", var(--font-law);
+
+  /* Боковое меню на --brand-ink (.k-side, .k-nav, .k-user). */
+  --kit-side-text: #d3e3de;
+  --kit-nav-text: #c9dbd5;
+  --kit-nav-label: #8fb0a7;
+  --kit-nav-hover: rgba(255, 255, 255, 0.08);
+  --kit-on-dark-line: rgba(255, 255, 255, 0.1);
+  --kit-user-email: #9dbdb4;
+  --kit-ava: #2a5a52;
+  --kit-on-dark: #ffffff;
+  /* Тёмные надписи на янтаре (.k-pill, .btn-amber). */
+  --kit-amber-on: #2b1d00;
+
+  /* Подложки и состояния. */
+  --kit-neutral-soft: #ecf0ee;
+  --kit-track: #e6ebe8;
+  --kit-shimmer: #f1f4f2;
+  --kit-hover: rgba(20, 33, 31, 0.06);
+  --kit-hover-soft: rgba(20, 33, 31, 0.04);
+  --kit-secondary-hover: #9aa6a1;
+  --kit-danger-hover: #951e17;
+  --kit-toast: #14211f;
+  --kit-toast-hover: rgba(255, 255, 255, 0.1);
+  --kit-scrim: rgba(13, 30, 27, 0.32);
+
+  /* Тени (.card, .pop, .sheet, .modal, .toast, .fab, .ph-fab). */
+  --kit-shadow-card: 0 1px 2px rgba(20, 33, 31, 0.04);
+  --kit-shadow-pop: 0 16px 40px rgba(13, 30, 27, 0.16);
+  --kit-shadow-sheet: -16px 0 48px rgba(13, 30, 27, 0.18);
+  --kit-shadow-sheet-up: 0 -12px 40px rgba(13, 30, 27, 0.2);
+  --kit-shadow-modal: 0 24px 64px rgba(13, 30, 27, 0.24);
+  --kit-shadow-toast: 0 12px 32px rgba(0, 0, 0, 0.25);
+  --kit-shadow-fab: 0 6px 16px rgba(13, 56, 51, 0.32);
+
+  /* Шкала отступов набора: имя — число пикселей. */
+  --s-2: 2px;
+  --s-3: 3px;
+  --s-4: 4px;
+  --s-5: 5px;
+  --s-6: 6px;
+  --s-7: 7px;
+  --s-8: 8px;
+  --s-9: 9px;
+  --s-10: 10px;
+  --s-12: 12px;
+  --s-14: 14px;
+  --s-16: 16px;
+  --s-18: 18px;
+  --s-20: 20px;
+  --s-24: 24px;
+  --s-28: 28px;
+  --s-32: 32px;
+  --s-40: 40px;
+  --s-120: 120px;
+
+  /* Радиусы набора сверх --r (карточка) и --r-sm (кнопка, поле). */
+  --r-xs: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-sheet: 22px;
+  --r-pill: 99px;
+}

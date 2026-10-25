@@ -1,0 +1,42 @@
+/* Кошт — дизайн-токены из макета (design/screens/*.dc.html, блок KIT).
+   Шрифты: Onest (интерфейс, вес 400–700) и Literata (тексты законов). Оба — Google Fonts, лицензия OFL;
+   по ТЗ (DES-09) в продукте подключаются локально, например пакетами @fontsource-variable/onest и @fontsource-variable/literata. */
+:root {
+  --bg: #f3f5f3;
+  --surface: #ffffff;
+  --surface-2: #f8faf9;
+  --line: #e1e6e3;
+  --line-2: #cdd5d1;
+  --ink: #14211f;
+  --ink-2: #4e5b57;
+  --ink-3: #63706b;
+  --brand: #11564d;
+  --brand-hover: #0b4740;
+  --brand-ink: #0d3833;
+  --brand-soft: #e3efea;
+  --brand-soft-2: #cbe2d9;
+  --amber: #f2b53a;
+  --amber-hover: #e4a52a;
+  --amber-soft: #fdf2d8;
+  --amber-ink: #7a5200;
+  --income: #146c43;
+  --income-soft: #e2f2e9;
+  --warn: #9a4d00;
+  --warn-soft: #fcebd8;
+  --danger: #b3261e;
+  --danger-soft: #fce8e6;
+  --law: #2d4f8a;
+  --law-soft: #e8eef8;
+  --r: 14px;
+  --r-sm: 10px;
+
+  /* Шрифты */
+  --font-ui: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-law: "Literata", Georgia, "Times New Roman", serif;
+}
+
+/* Токены SPEC §7.1, которых нет в макете (правка — в SPEC §7.1 и здесь же). */
+:root {
+  /* Только графика: полоса лимита 80–99 % (контраст 3,7:1 к карточке); текст и бейджи внимания — --warn. */
+  --warn-bar: #c2700e;
+}

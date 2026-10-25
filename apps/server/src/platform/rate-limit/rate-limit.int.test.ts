@@ -8,6 +8,7 @@ import { MasterKey } from "../config/master-key.ts";
 import { createPool } from "../db/connection.ts";
 import { createSystemDb } from "../db/system-db.ts";
 import { memoryLogger } from "../logging/__fixtures__/memory-logger.ts";
+import { PURGE_BATCH } from "./rate-limit.repo.ts";
 import { createRateLimiter, defineRateRule } from "./rate-limit.ts";
 
 const LOGIN = defineRateRule({ name: "auth.login", limit: 5, windowMs: 15 * 60_000 });
@@ -94,6 +95,44 @@ describe("SEC-02: ограничение частоты", () => {
       code: "RATE_LIMITED",
       params: { retryAfterSeconds: 3600 },
     });
+  });
+});
+
+describe("SEC-02: просроченные строки чужих ключей удаляются при записи", () => {
+  /** n строк правила rule с началом окна windowStart; ключи — синтетические 32 байта. */
+  async function seed(rule: string, windowStart: string, n: number, from = 1): Promise<void> {
+    await db.pool.query(
+      `insert into rate_limits (rule, key_hash, window_start, count)
+       select $1, decode(lpad(to_hex(g), 64, '0'), 'hex'), $2, 3 from generate_series($3::int, $4::int) g`,
+      [rule, windowStart, from, from + n - 1],
+    );
+  }
+  async function countRows(rule: string, windowStart: string): Promise<number> {
+    const rows = await db.pool.query<{ n: string }>(
+      "select count(*) as n from rate_limits where rule = $1 and window_start = $2",
+      [rule, windowStart],
+    );
+    return Number(rows.rows[0]?.n);
+  }
+
+  it("строки прошлых окон того же правила удалены; текущее окно и другие правила — целы", async () => {
+    const { limiter } = limiterOn(db.pool);
+    await seed(LOGIN.name, "2026-10-21T08:45:00Z", 3);
+    await seed(LOGIN.name, "2026-10-21T09:00:00Z", 2, 100);
+    await seed(RESET.name, "2026-10-21T08:00:00Z", 2, 200);
+    await limiter.hit(LOGIN, EMAIL);
+    expect(await countRows(LOGIN.name, "2026-10-21T08:45:00Z")).toBe(0);
+    expect(await countRows(LOGIN.name, "2026-10-21T09:00:00Z")).toBe(3);
+    expect(await countRows(RESET.name, "2026-10-21T08:00:00Z")).toBe(2);
+  });
+
+  it(`за одну попытку удаляется не больше ${String(PURGE_BATCH)} строк — запись не ждёт большой очистки`, async () => {
+    const { limiter } = limiterOn(db.pool);
+    await seed(LOGIN.name, "2026-10-21T08:30:00Z", PURGE_BATCH + 50);
+    await limiter.hit(LOGIN, EMAIL);
+    expect(await countRows(LOGIN.name, "2026-10-21T08:30:00Z")).toBe(50);
+    await limiter.hit(LOGIN, EMAIL);
+    expect(await countRows(LOGIN.name, "2026-10-21T08:30:00Z")).toBe(0);
   });
 });
 

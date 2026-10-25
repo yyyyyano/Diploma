@@ -1,10 +1,15 @@
 // Счётчик окна (SEC-02): один атомарный upsert на попытку — параллельные попытки сериализуются блокировкой строки,
 // поэтому из N одновременных пропускается ровно limit. Окно сменилось — строка того же ключа перезаписывается
-// (count = 1): так просроченная строка удаляется при записи в тот же ключ; прочие просроченные убирает задача
-// очистки (T-006). Запрос — через SystemDb, проходит аудитор.
+// (count = 1). Строки других ключей того же правила из прошлых окон удаляются перед upsert, не больше PURGE_BATCH
+// за попытку: ключ — HMAC email, и перебор разных адресов иначе копил бы строки без конца. Строки правила, по
+// которому попыток больше нет, остаются (их число ограничено числом правил × ключей последнего окна).
+// Запросы — через SystemDb, проходят аудитор.
 import { sql } from "drizzle-orm";
 import type { SystemDb } from "../db/system-db.ts";
 import { rateLimits } from "./schema.ts";
+
+/** Сколько просроченных строк удаляется за одну попытку. */
+export const PURGE_BATCH = 100;
 
 /** Засчитать попытку и вернуть число попыток в текущем окне (включая эту). */
 export async function bump(
@@ -13,6 +18,7 @@ export async function bump(
   keyHash: Buffer,
   windowStart: Date,
 ): Promise<number> {
+  await purgeExpired(db, rule, keyHash, windowStart);
   const rows = await db
     .insert(rateLimits)
     .values({ rule, keyHash, windowStart, count: 1 })
@@ -29,4 +35,24 @@ export async function bump(
   const row = rows[0];
   if (row === undefined) throw new Error("rate_limits: upsert не вернул строку.");
   return row.count;
+}
+
+/**
+ * Удалить до PURGE_BATCH строк правила из прошлых окон (окна правила выровнены: всё, что начато раньше текущего,
+ * истекло). Свой ключ не трогается — его перезапишет upsert; занятые другой попыткой строки пропускаются
+ * (SKIP LOCKED), чтобы параллельные попытки не ждали друг друга.
+ */
+async function purgeExpired(
+  db: SystemDb,
+  rule: string,
+  keyHash: Buffer,
+  windowStart: Date,
+): Promise<void> {
+  await db.delete(rateLimits).where(
+    sql`ctid = any(array(
+      select ctid from ${rateLimits}
+      where ${rateLimits.rule} = ${rule} and ${rateLimits.windowStart} < ${windowStart}
+        and ${rateLimits.keyHash} <> ${keyHash}
+      limit ${PURGE_BATCH} for update skip locked))`,
+  );
 }

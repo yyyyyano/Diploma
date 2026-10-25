@@ -55,6 +55,13 @@
   покрытия в `vitest.config.ts` и Makefile, резолв `@kosht/*`, `Clock` и `FakeClock`, бренды на `z.$brand`), контракт
   и тексты вынесены в новую **T-057** (по файлу — после T-003, до T-004; `Риск: high`); зависимости T-005 и T-008
   дополнены T-057. Задач в плане теперь 57.
+- Критик T-005 (REVISE) счёл её слишком крупной (8 папок `platform`, HTTP, три процесса, первая боевая схема, около
+  7 новых пакетов) и нашёл недостижимые проверки (канарейка логов через `redact`, CSRF и `Host`); принято (обратимо):
+  T-005 сужена до платформы без сокетов, HTTP и три процесса вынесены в новую **T-059** (после T-005), а роль
+  приложения без суперпользователя БД (находка ревью T-058: `kosht` — суперпользователь, читает файлы сервера) — в
+  новую **T-060** (до T-006, чтобы pg-boss знал роли с самого начала); зависимости T-006 и T-009 дополнены. Задач в
+  плане теперь 60. Пакеты `hono`, `@hono/node-server`, `@orpc/server`, `@orpc/openapi`, `pino`, `pino-roll`,
+  `pino-pretty` названы в ADR-0005 и ADR-0010 и поэтому одобрены планом; версии — точные, через `catalog:`.
 - Критик T-057 (REVISE) заменил расплывчатые критерии проверяемыми; принято (обратимо): точный формат `formatMoney`
   и дат, форма контракта (`pickErrors`, `events.stream`, `PageContext`), правило `i18n-allowed-deps`; проверка
   «каждый ключ трассы `calc` имеет подпись в `formulas`» в T-057 сужена до `fin.freeBalance`, общий реестр ключей
@@ -302,36 +309,92 @@
 - Риск: high — главный замок изоляции данных
 - Зависимости: T-004
 
-### T-005 · Платформа сервера: конфигурация, логи, ошибки, настройки и секреты, HTTP и три процесса
+### T-005 · Платформа сервера, часть 1: конфигурация, логи, ошибки, часы, файлы, настройки, секреты, лимиты частоты
 - Статус: todo
-- Модули: `platform/config`, `platform/logging`, `platform/errors`, `platform/clock`, `platform/settings`,
-  `platform/secrets`, `platform/blob-store`, `platform/http`, `platform/rate-limit`,
-  `apps/server/src/entrypoints`, `apps/server/src/main`, `@kosht/testing`
-- SPEC: NFR-15, NFR-16, NFR-23, NFR-24, OBS-01, OBS-02, OBS-04, OBS-06, SEC-01, SEC-02, SEC-03
+- Модули: `platform/{config,logging,errors,clock,blob-store,settings,secrets,rate-limit}`,
+  `apps/server/{drizzle,drizzle.config.ts,package.json}`, `pnpm-workspace.yaml`, `Makefile`, `.env.example`,
+  `apps/server/src/platform/CLAUDE.md`, `@kosht/testing`
+- SPEC: NFR-15, NFR-16, NFR-23, OBS-01, OBS-02, OBS-04, OBS-06, SEC-02
 - Критерии приёмки:
-  - [ ] `config`: окружение через Zod; неверная переменная → процесс падает при старте с сообщением, какая
-    переменная и что ожидается.
-  - [ ] Логи pino + `AsyncLocalStorage` (`requestId`, `uid`, `source`): сообщение — ключ события, данные — поля
-    белого списка, `redact` + `scrub()`; тест-канарейка: email, номер карты, сумма с привязкой к пользователю и текст
-    документа не попадают в вывод; ротация ежедневно, 14 файлов в `./data/logs`; цели `logs`, `log-find id=…`.
-  - [ ] `AppError(code, params)` → ответ oRPC `{ code, status, data: { requestId, params } }`; неизвестное исключение
-    → `INTERNAL` без текста наружу, стек — в лог.
-  - [ ] `defineSetting` с приоритетом «админка > env > умолчание» (int-тест); секреты AES-256-GCM (AAD = имя),
-    мастер-ключ `secrets/master.key` (0600) создаёт `make init`; наружу — только «задан / не задан»; значение
-    секрета не встречается в логах и ответах (канарейка).
-  - [ ] `blob-store`: `local-fs` (путь `data/files/<householdId>/<fileId>` строит сервер) + `MemoryBlobStore`
-    в `@kosht/testing`; `Clock` по Минску.
-  - [ ] HTTP: Hono + oRPC, `x-request-id`, заголовки безопасности и явный CSP без HSTS и `upgrade-insecure-requests`;
-    изменяющий запрос с чужим `Origin` или `Sec-Fetch-Site: cross-site` → 403; чужой `Host` → отказ; без CORS
-    и `trustProxy`; слушатели `local` `127.0.0.1:8140` и `lan` `:8141` (выключен по умолчанию, включается
-    настройкой без перезапуска); `localOnly` определяется слушателем — на `lan` такой процедуры нет (тест);
-    виды процедур `publicProc` / `authed` (сессию подставит `identity` через реестр) / `localOnly` / `admin`;
-    ограничение частоты в Postgres по ключу email/`user_id`; `/healthz`, `/readyz` (БД доступна).
-  - [ ] Точки входа `api`, `worker`, `bot` вызывают `compose(config, role)`; по `SIGTERM` запрос в полёте
-    дообслуживается, пул закрывается (int-тест с дочерним процессом).
-- Проверка: make check; pnpm vitest run apps/server/src/platform; вручную: curl -i http://127.0.0.1:8140/healthz
-- Риск: high — секреты, CSRF и «только localhost» для первого запуска и почтового ящика (R40)
+  - [ ] `config`: Zod; `process.env` читают только `config` и точки входа; `loadDbConfig` (его берут `migrate-cli`,
+    `globalSetup` тестов и `loadConfig`), `dbConfigFromEnv` из `connection.ts` удалён; неверная или отсутствующая
+    переменная, нет или не 32 байта `secrets/master.key` → падение с именем переменной и ожиданием (тест на каждый
+    случай); параметры: порты и хосты слушателей, `TRUSTED_ORIGINS`, `DATA_DIR`.
+  - [ ] `logging`: pino + `AsyncLocalStorage` (`requestId`, `uid`, `source`); поля — белый список (типом и в
+    runtime, чужие отбрасываются); сообщение обязано быть ключом `^[a-z]+(\.[a-z0-9-]+)+$`; `scrub()` вычищает
+    email, номер карты (Луна), IBAN BY; для ошибок pg пишутся `code`, стек и `scrub(message)`; канарейки: email,
+    номер карты, сумма, текст документа, `new Error` со значением строки; файл на роль
+    `data/logs/<role>.<yyyy-MM-dd>.<n>.log`; `pino-roll` как поток в процессе (не `pino.transport`: сборка в один
+    `.mjs`, T-011), `frequency: daily`, `limit.count: 13` (14 файлов на роль, проверка — тест параметров); цели
+    `logs`, `log-find id=…` (тест на фикстурных логах).
+  - [ ] `errors`: `AppError(code ∈ ERRORS, params ∈ ErrorParams)` и чистая `toErrorBody(err, requestId)` →
+    `{ code, status, data: { requestId, params } }`; `ISOLATION_VIOLATION` и всё неизвестное → `INTERNAL` без
+    текста, стек — в лог.
+  - [ ] `clock` по настройке пояса (по умолчанию Минск; неверный пояс отвергается): `2026-10-21T21:30Z` →
+    `today()` = `2026-10-22`; `blob-store`: `local-fs`, путь из двух uuid-брендов (`FileId` объявлен здесь), `../`
+    отвергается, запись через tmp+rename, режим 0600; `MemoryBlobStore` в `@kosht/testing`.
+  - [ ] `settings` (`systemTable`, без домохозяйства) и `secrets`: `defineSetting` с приоритетом «админка > env >
+    умолчание» (int-тест); кэш ≤ 5 с; секрет — AES-256-GCM, AAD = имя, свежий IV; наружу «задан / не задан»; чужой
+    ключ или повреждение → статус «не читается», процесс не падает; значение не встречается в логах и ответах
+    (канарейка); `make init` создаёт `secrets/master.key` (32 случайных байта, `umask 077`, существующий не
+    трогает).
+  - [ ] `rate-limit` (`systemTable`): ключ хранится хешем, окно по `Clock`; атомарный upsert, 50 параллельных
+    попыток → ровно `limit` пропущено; правила изолированы друг от друга; БД недоступна → `UNAVAILABLE`, не
+    «пропустить»; первая боевая миграция (`platform/*/schema.ts` добавлен в glob `drizzle.config.ts`),
+    `make db-generate` и `production-schema.int.test.ts` зелёные.
+- Проверка: make check; make test-int
+- Риск: high — секреты и логи без ПД (NFR-16, OBS-04)
 - Зависимости: T-004, T-057
+
+### T-059 · Платформа сервера, часть 2: HTTP, процедуры и три процесса
+- Статус: todo
+- Модули: `platform/http`, `apps/server/src/entrypoints`, `apps/server/src/main` (`compose.ts`, `router.ts`),
+  `tooling/architecture/rules.ts` (+ фикстура: `@orpc/openapi` — к правилу `orpc-server-only-in-api`),
+  `packages/contract` (комментарий в `errors.ts`)
+- SPEC: NFR-24, SEC-01, SEC-03, OBS-01, OBS-02
+- Критерии приёмки:
+  - [ ] `createApp({ listener })` на каждый слушатель: `localOnly` читает замкнутое значение, а не запрос;
+    `X-Forwarded-*` и `Host` на него не влияют (тест); на `lan` `localOnly`-процедуры отвечают `NOT_FOUND`; порты
+    в тестах — `0`, 8140/8141 не занимаются; `lan` открывается и закрывается по настройке без перезапуска, не
+    позднее 5 с (int); занятый порт → понятное сообщение.
+  - [ ] `Host`: `local` — `localhost`, `127.0.0.1`, `[::1]`; `lan` — те же и IP-адреса, имена отвергаются
+    (DNS-rebinding). Изменяющий запрос: `Sec-Fetch-Site` ∈ {`cross-site`, `same-site`} → 403; `Origin` обязан
+    совпасть с `Host` или `TRUSTED_ORIGINS`; оба заголовка пусты — допускается (не браузер). Без CORS и
+    `trustProxy`; `x-request-id` клиента принимается только по шаблону `[A-Za-z0-9-]{8,64}`, иначе выдаётся новый,
+    возвращается в ответе.
+  - [ ] Заголовки проверяются точными строками: CSP `default-src 'self'; script-src 'self'; style-src 'self'
+    'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none';
+    base-uri 'none'; frame-ancestors 'none'; form-action 'self'`, `nosniff`, `Referrer-Policy: no-referrer`,
+    `Permissions-Policy` (camera/microphone — self); HSTS и `upgrade-insecure-requests` нет.
+  - [ ] oRPC: `OpenAPIHandler` под `/api`; interceptor переводит `BAD_REQUEST` схемы входа в `VALIDATION`, ошибки
+    схемы выхода и неизвестные — в `INTERNAL`; в теле нет `message` исключения, стека и issues со значениями;
+    `publicProc` / `authed` / `localOnly` / `admin`; пустой реестр сессий → `UNAUTHORIZED`; `/healthz`, `/readyz`
+    (БД, после миграций; без деталей); статика `apps/web/dist` с SPA-fallback (не для `/api`; тест обхода пути);
+    `@orpc/*` — ровно 1.16.1, как `@orpc/contract`; комментарий в `packages/contract` (`errors.ts`) приведён в
+    соответствие: «только с этого компьютера» на `lan` — `NOT_FOUND`.
+  - [ ] Минимальный реальный `main/compose.ts` (`compose(config, role)`: пул, миграции, платформа, реестр сессий,
+    `system.health`; модули добавит T-007) и `entrypoints/{api,worker,bot}`; `worker` и `bot` пока только живут
+    (старт, миграции, лог, остановка); `SIGTERM`: int с дочерним процессом (медленный маршрут в `__fixtures__`) —
+    запрос в полёте доведён, новые отвергаются, соединений процесса в `pg_stat_activity` нет, код 0, последняя
+    строка лога `process.stopped` на диске; зависание дольше 10 с → код 1.
+- Проверка: make check; pnpm vitest run apps/server; вручную: curl -i http://127.0.0.1:8140/healthz
+- Риск: high — CSRF и «только localhost» для первого запуска и почтового ящика (R40)
+- Зависимости: T-005
+
+### T-060 · Роль приложения без суперпользователя
+- Статус: todo
+- Модули: `platform/db`, `platform/config`, `compose.yaml`, `Makefile` (`init`), `@kosht/testing`, `docs/adr/`
+  (ADR-0006, ADR-0019), `apps/server/src/platform/CLAUDE.md`
+- SPEC: ROLE-01, SEC-04, PRIV-07, NFR-16
+- Критерии приёмки:
+  - [ ] `DATABASE_URL` — роль `kosht_app` (`NOSUPERUSER`, без `pg_read_server_files`, `CREATEDB`, `CREATEROLE`),
+    пароль в `secrets/db_app_password`; `MIGRATION_DATABASE_URL` — владелец; роль и права (`GRANT`,
+    `DEFAULT PRIVILEGES`) создаёт мигратор идемпотентно; int-тест: `pg_read_binary_file`, `COPY … TO PROGRAM`, DDL
+    под ролью приложения → отказ, DML и `ScopedDb` работают; `pg_stats` / `pg_statistic`: `HIDDEN_SQL` в аудиторе
+    плюс `REVOKE`.
+- Проверка: make check; make test-int
+- Риск: high — главный замок изоляции данных держится на правах роли
+- Зависимости: T-005
 
 ### T-006 · Платформа: фоновые задачи, события и живые сигналы
 - Статус: todo
@@ -355,7 +418,7 @@
     `events.stream` (SSE) в `api`; int-тест: клиент домохозяйства A не получает сигналы B.
 - Проверка: make check; make test-int
 - Риск: medium — дубли и штормы задач заметны не сразу, но механизм целиком под тестами
-- Зависимости: T-005, T-004
+- Зависимости: T-005, T-004, T-059, T-060
 
 ### T-007 · Все 36 модулей пустыми, но живыми: паспорта, корень композиции и реестры
 - Статус: todo
@@ -428,7 +491,7 @@
     «Наличные · 0,00 BYN»; axe 0 на этих маршрутах при 1440 и 390.
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/main
 - Риск: high — вход, сессия и первый тест изоляции; на них опираются все следующие задачи
-- Зависимости: T-008, T-004, T-005, T-007
+- Зависимости: T-008, T-004, T-005, T-007, T-059
 
 ### T-010 · ИИ-шлюз и чат-заглушка: поток ответа агента через oRPC
 - Статус: todo

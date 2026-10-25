@@ -29,9 +29,8 @@ export const TEXT_ATTRIBUTES = [
   "error",
 ];
 
-/** Тесты, настройка тестов сайта и витрина компонентов /dev/gallery (ARCHITECTURE §10.1; T-008 уточнит путь). */
-const SKIP =
-  /\.(test|spec)\.tsx$|^apps\/web\/src\/test\/|^apps\/web\/src\/routes\/(?:.*\/)?dev\.gallery\.tsx$/;
+/** Тесты, настройка тестов сайта и витрина компонентов /dev/gallery — страница features/dev-gallery (T-008). */
+const SKIP = /\.(test|spec)\.tsx$|^apps\/web\/src\/test\/|^apps\/web\/src\/features\/dev-gallery\//;
 
 const RULE_CODE = "react(jsx-no-literals)";
 const OXLINT_CONFIG = {

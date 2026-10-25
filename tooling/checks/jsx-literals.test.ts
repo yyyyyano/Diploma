@@ -1,6 +1,6 @@
 // NFR-19, i18n.md: весь текст сайта — через t(). jsx-literals.mjs: правило Oxlint react/jsx-no-literals (настоящий
 // разбор JSX) + строка в фигурных скобках у текстовых атрибутов, которую Oxlint пропускает. Литерал — текст
-// хотя бы с одной буквой: знаки, числа, «—» и &nbsp; разрешены. Тесты и /dev/gallery не проверяются.
+// хотя бы с одной буквой: знаки, числа, «—» и &nbsp; разрешены. Тесты и витрина features/dev-gallery не проверяются.
 // Тексты бота, писем и уведомлений эта проверка не видит — они остаются ревью.
 import { chmodSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -34,15 +34,17 @@ describe("jsx-literals: текст литералом в JSX", () => {
     );
   });
 
-  it("исключение — только dev.gallery: другие маршруты в routes проверяются", () => {
+  it("исключение — только страница витрины features/dev-gallery: маршруты, и dev.gallery.tsx тоже, проверяются", () => {
     expect(result.messages.filter((m) => m.startsWith("apps/web/src/routes/"))).toEqual([
+      "apps/web/src/routes/dev.gallery.tsx:1 — текст «Витрина» литералом в JSX (NFR-19): " +
+        'выведите его через t("ns:экран.ключ") из словаря @kosht/i18n.',
       "apps/web/src/routes/operations.tsx:1 — текст «Операции» литералом в JSX (NFR-19): " +
         'выведите его через t("ns:экран.ключ") из словаря @kosht/i18n.',
     ]);
   });
 
-  it("ничего лишнего: ровно 9 нарушений, код 1, сообщение называет ключ i18n", () => {
-    expect({ code: result.code, count: found.length }).toEqual({ code: 1, count: 9 });
+  it("ничего лишнего: ровно 10 нарушений, код 1, сообщение называет ключ i18n", () => {
+    expect({ code: result.code, count: found.length }).toEqual({ code: 1, count: 10 });
     expect(result.messages).toContain(
       `${page}:4 — текст «Операции» литералом в JSX (NFR-19): выведите его через t("ns:экран.ключ") ` +
         "из словаря @kosht/i18n.",
@@ -51,7 +53,7 @@ describe("jsx-literals: текст литералом в JSX", () => {
 });
 
 describe("jsx-literals: законный код не ловится", () => {
-  it('t(), знаки, числа, «—», &nbsp;, alt="", служебные атрибуты; тесты и /dev/gallery пропущены', () => {
+  it('t(), знаки, числа, «—», &nbsp;, alt="", служебные атрибуты; тесты и витрина пропущены', () => {
     const clean = runJsxLiterals({ baseDir: join(fixtures, "clean") });
     expect({ code: clean.code, files: clean.files, findings: clean.findings }).toEqual({
       code: 0,

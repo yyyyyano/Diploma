@@ -9,8 +9,9 @@
 // а пропустить непрочитанное аудитор не может. Текст ошибки парсера в сообщение не попадает (OBS-04).
 //
 // Что проверяет. Одна команда из белого списка по тегу узла: SelectStmt (с WITH, VALUES, TABLE, UNION),
-// InsertStmt, UpdateStmt, DeleteStmt, TransactionStmt и SET TRANSACTION; DO, COPY, CALL, SET, DDL, SELECT … INTO
-// и прочее — нарушение; MERGE — нигде в дереве (WITH … MERGE и MERGE в CTE вставляют без INSERT); нет функций,
+// InsertStmt, UpdateStmt, DeleteStmt, TransactionStmt и SET TRANSACTION; DO, COPY, CALL, SET, DDL и прочее —
+// нарушение; SELECT … INTO — нигде в дереве (Postgres берёт INTO у левой ветки UNION: это CREATE TABLE AS);
+// MERGE — нигде в дереве (WITH … MERGE и MERGE в CTE вставляют без INSERT); нет функций,
 // исполняющих SQL из строки (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config);
 // пользовательская таблица — только в схеме public. Каждое обращение к пользовательской таблице (RangeVar в
 // FROM, JOIN, подзапросе, CTE, цели UPDATE/DELETE) сужено условием своей области (см. narrowLevel): конъюнктом
@@ -491,6 +492,15 @@ const ALLOWED_TRANSACTION = new Set(
 const HIDDEN_SQL_FUNCTION =
   /^(?:(?:query|table|cursor|schema|database)_to_xml(?:schema|_and_xmlschema)?|ts_stat|ts_rewrite|dblink\w*|set_config)$/;
 
+function notAllowed(command: string): Fault {
+  return {
+    reason: "STATEMENT_NOT_ALLOWED",
+    hint:
+      `команда «${command}» недоступна через ScopedDb, SystemDb и crossTenant: только select, insert, update, ` +
+      "delete, with, values и транзакции; DDL и обслуживание — миграции (platform/db/migrate.ts)",
+  };
+}
+
 function statementFault(
   statements: readonly Tree[],
   owned: ReadonlySet<string>,
@@ -502,19 +512,14 @@ function statementFault(
     (tag === "VariableSetStmt" &&
       body["kind"] === "VAR_SET_MULTI" &&
       body["name"] === "TRANSACTION");
-  if (!allowed || body["intoClause"] !== undefined) {
-    return {
-      reason: "STATEMENT_NOT_ALLOWED",
-      hint:
-        `команда «${body["intoClause"] === undefined ? tag || "пусто" : "SELECT … INTO"}» недоступна через ` +
-        "ScopedDb, SystemDb и crossTenant: только select, insert, update, delete, with, values и транзакции; " +
-        "DDL и обслуживание — миграции (platform/db/migrate.ts)",
-    };
-  }
+  if (!allowed) return notAllowed(tag || "пусто");
   let fault: Fault | undefined;
-  walk(statements, (field) => {
+  walk(statements, (field, node) => {
     if (fault !== undefined) return true;
-    if (field === "MergeStmt") {
+    // SELECT … INTO — это CREATE TABLE AS. Postgres (transformOptionalSelectInto) берёт INTO у самого левого
+    // SELECT набора UNION/INTERSECT/EXCEPT, а не у верхнего узла: искать по всему дереву.
+    if (node["intoClause"] !== undefined) fault = notAllowed("SELECT … INTO");
+    else if (field === "MergeStmt") {
       // MERGE пишет без INSERT (WHEN NOT MATCHED THEN INSERT) и разрешён в WITH и в CTE — его строки не разобрать.
       fault = {
         reason: "STATEMENT_NOT_ALLOWED",

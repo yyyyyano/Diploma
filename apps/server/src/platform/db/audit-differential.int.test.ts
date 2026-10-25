@@ -360,6 +360,16 @@ const BASES: readonly Base[] = [
     params: () => [B, scopeA.userId],
   },
   {
+    // INTO у левой ветки UNION — CREATE TABLE AS (Postgres берёт INTO у самого левого SELECT): данные A уходят в
+    // таблицу вне реестра, которую потом прочтёт кто угодно без own. Оракул считает созданное отношение утечкой.
+    name: "SELECT … INTO в левой ветке UNION создаёт таблицу",
+    kind: "leak",
+    template:
+      "K:select note K:into fx_copy K:from T:fx_receipts K:where C:household_id = $1 K:union " +
+      "K:select note K:from T:fx_receipts K:where C:household_id = $1",
+    params: () => [A],
+  },
+  {
     name: "вторая команда через «;»",
     kind: "leak",
     template: "K:select 1 ; K:update T:fx_receipts K:set note = 'взлом'",
@@ -551,7 +561,7 @@ interface Outcome {
   readonly ran: boolean;
   /** Пользовательские таблицы, которые запрос тронул (чтение, вставка, правка, удаление). */
   readonly touched: readonly string[];
-  /** В ответе данные B или строки B изменились. */
+  /** В ответе данные B, строки B изменились или запрос создал отношение (DDL мимо миграций, SELECT … INTO). */
   readonly leaked: boolean;
 }
 
@@ -576,10 +586,16 @@ async function hashOfB(): Promise<string> {
 
 let hashB = "";
 
+async function relationCount(): Promise<number> {
+  const { rows } = await client.query<{ n: string }>("select count(*) as n from pg_class");
+  return Number(rows[0]?.n ?? 0);
+}
+
 async function run(text: string, params: unknown[]): Promise<Outcome> {
   await client.query("begin; set local session_replication_role = replica");
   try {
     const before = await touchCounts();
+    const relationsBefore = await relationCount();
     let result: unknown;
     try {
       // Как Drizzle (node-postgres): без параметров — простой протокол, «;» выполняет обе команды.
@@ -595,7 +611,8 @@ async function run(text: string, params: unknown[]): Promise<Outcome> {
       answer.includes(MARK_B) ||
       answer.includes(B) ||
       answer.includes(receiptB) ||
-      (await hashOfB()) !== hashB;
+      (await hashOfB()) !== hashB ||
+      (await relationCount()) !== relationsBefore;
     return { ran: true, touched, leaked };
   } finally {
     await client.query("rollback");

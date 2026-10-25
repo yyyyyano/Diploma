@@ -1222,3 +1222,78 @@ describe("ROLE-01, SEC-04: сужение, которое не доказать 
     );
   });
 });
+
+describe("ROLE-01, SEC-04: SELECT … INTO создаёт таблицу, где бы INTO ни стоял в дереве", () => {
+  // Postgres (transformOptionalSelectInto) берёт INTO у самого левого SELECT набора UNION/INTERSECT/EXCEPT: это
+  // CREATE TABLE AS — DDL мимо миграций; временная таблица с именем пользовательской перекрыла бы настоящую
+  // для следующих запросов на том же соединении пула. Формы ниже база выполняет (проверено на PostgreSQL 18).
+  it.each([
+    [
+      "левая ветка UNION",
+      "select note into fx_copy from fx_receipts where household_id = $1 union " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+    [
+      "временная таблица с именем пользовательской",
+      "select note into temp fx_receipts from fx_receipts where household_id = $1 union " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+    [
+      "UNION в скобках",
+      "(select note into fx_copy from fx_receipts where household_id = $1) union " +
+        "(select note from fx_receipts where household_id = $1)",
+    ],
+    [
+      "после WITH",
+      "with m as (select 1) select note into fx_copy from fx_receipts where household_id = $1 union " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+    [
+      "INTERSECT",
+      "select note into fx_copy from fx_receipts where household_id = $1 intersect " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+    [
+      "EXCEPT",
+      "select note into fx_copy from fx_receipts where household_id = $1 except " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+    [
+      "вложенный набор: INTO в самой левой ветке",
+      "((select note into fx_copy from fx_receipts where household_id = $1) union " +
+        "select note from fx_receipts where household_id = $1) union " +
+        "select note from fx_receipts where household_id = $1",
+    ],
+  ])("%s → STATEMENT_NOT_ALLOWED во всех режимах", (_name, text) => {
+    const scoped = violation(() => audit({ sql: text, params: [A] }));
+    expect(scoped.reason).toBe("STATEMENT_NOT_ALLOWED");
+    expect(scoped.message).toContain("SELECT … INTO");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe(
+      "STATEMENT_NOT_ALLOWED",
+    );
+    expect(violation(() => audit({ sql: text, params: [A] }, crossTenant)).reason).toBe(
+      "STATEMENT_NOT_ALLOWED",
+    );
+  });
+
+  // База такие тексты отвергает («SELECT ... INTO is not allowed here»), аудитор — тоже: защита в глубину.
+  it.each([
+    [
+      "INTO в правой ветке",
+      "select note from fx_receipts where household_id = $1 except " +
+        "select note into fx_copy from fx_receipts where household_id = $1",
+    ],
+    [
+      "INTO в подзапросе FROM",
+      "select * from (select note into fx_copy from fx_receipts where household_id = $1) s",
+    ],
+    [
+      "INTO в CTE",
+      "with m as (select note into fx_copy from fx_receipts where household_id = $1) select * from m",
+    ],
+  ])("%s → отказ", (_name, text) => {
+    expect(["STATEMENT_NOT_ALLOWED", "UNPARSEABLE_SQL"]).toContain(
+      violation(() => audit({ sql: text, params: [A] })).reason,
+    );
+  });
+});

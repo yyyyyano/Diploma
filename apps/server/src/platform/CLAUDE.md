@@ -105,6 +105,20 @@
   `api`/`bot` — `supervise: false`, `schedule: false` (только ставят задачи); `worker` — обслуживание и расписания,
   `SUPERVISE_INTERVAL_SECONDS` и `MONITOR_INTERVAL_SECONDS` = 60, `INSTANCE_HEARTBEAT_SECONDS` = 30, `reindex: false`;
   `stopBoss` — `stop({ graceful: true, timeout: BOSS_STOP_TIMEOUT_MS = 8000, close: false })`.
+- `define-job.ts` — `defineJob({ name: "<модуль>.<глагол>", payload: z.object(...), options, handle(ctx, p) })` →
+  `JobDef` (определение без реестра: реестры — T-007); `options`: `priority`, `retryLimit` (2), `retryDelaySeconds`,
+  `startAfterSeconds`, `expireInSeconds`, `singletonKey(p, scope)` — только `jobKey`; с ключом очередь `short`
+  (одна ожидающая на ключ), без — `standard` (`queuePolicy`). `ctx`: `s` (ScopedDb владельца), `requestId`, `log`,
+  `signal`, `progress(0…100)`. `JobEnvelope` — `{ scope: { userId, householdId }, requestId, payload }`.
+- `job-key.ts` — `jobKey(scope, ...parts)` → `<householdId>:<части>`; ключ без домохозяйства `enqueue` отвергает.
+- `scope-verifier.ts` — порт `ScopeVerifier(candidate) → boolean` и `createScopeVerifierRegistry()` (`register` — один
+  источник на процесс, его даёт identity, T-009; пусто — не проходит никто).
+- `jobs.ts` — порт `Jobs` (`enqueue(tx, job, payload)`) и `createJobs({ pool, role, log, clock, scopes,
+  pollingIntervalSeconds? })` → `JobsRuntime`: `start({ jobs })` — очереди (`createQueue`, все роли) и в `worker` —
+  `work` (`perJobResults`); `enqueue` — `send` через `fromDrizzle` на соединении tx (аудитор), `requestId` — из
+  контекста лога; `stop()`. Выполнение: конверт → `scopes.verify` → `makeScope` (единственное место для задач) →
+  `ctx.s` → обработчик → `background_job_run`. Не прошёл конверт, владелец или нагрузка — `dropped` (`VALIDATION`,
+  `FORBIDDEN`), `jobs.scope-rejected` в логе, без повтора; ошибка — `failed` с кодом, повтор только для `retryable`.
 
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,

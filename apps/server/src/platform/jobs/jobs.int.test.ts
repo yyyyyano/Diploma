@@ -1,18 +1,67 @@
 // Очередь задач на настоящем Postgres под ролью приложения kosht_app (ADR-0008, ADR-0020). Ожидание обработки —
 // промис, который разрешает сам обработчик (без sleep).
+import type { Scope } from "@kosht/kernel";
+import { FakeClock, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { z } from "zod";
+import { migrateFixtures } from "../db/__fixtures__/fixture-db.ts";
+import { fxReceipts } from "../db/__fixtures__/schema.ts";
 import { bossDb } from "../db/boss-db.ts";
-import { createBoss, stopBoss } from "./boss.ts";
+import { createScopedDb } from "../db/scoped-db.ts";
+import { AppError } from "../errors/app-error.ts";
+import { memoryLogger } from "../logging/__fixtures__/memory-logger.ts";
+import { withLogContext } from "../logging/context.ts";
+import { createBoss, stopBoss, type BossRole } from "./boss.ts";
+import { defineJob, type JobDef } from "./define-job.ts";
 import { installJobsSchema } from "./install.ts";
+import { createJobs, type JobsRuntime } from "./jobs.ts";
+import { createScopeVerifierRegistry, type ScopeVerifier } from "./scope-verifier.ts";
+
+const scopeA = testScope({ user: 1, household: 1 });
 
 let db: TestDb;
+const running: JobsRuntime[] = [];
 beforeAll(async () => {
   db = await createTestDb();
+  await migrateFixtures(db.owner);
 });
 afterAll(async () => {
+  for (const jobs of running) await jobs.stop();
   await db.drop();
 });
+
+/** Очередь процесса роли role на пуле роли приложения; проверка scope — своя у каждого теста. */
+async function startJobs(role: BossRole, jobs: readonly JobDef[], verify: ScopeVerifier) {
+  const scopes = createScopeVerifierRegistry();
+  scopes.register(verify);
+  const logs = memoryLogger();
+  const runtime = createJobs({
+    pool: db.pool,
+    role,
+    log: logs.log,
+    clock: new FakeClock("2026-10-21T09:00:00Z"),
+    scopes,
+    pollingIntervalSeconds: 0.5,
+  });
+  await runtime.start({ jobs });
+  running.push(runtime);
+  return { runtime, logs };
+}
+
+/** Промис, который разрешает обработчик задачи. */
+function signal<T>() {
+  let resolve: (value: T) => void = () => {};
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+async function count(sql: string, params: unknown[]): Promise<number> {
+  const { rows } = await db.owner.query<{ n: number }>(`select count(*)::int as n ${sql}`, params);
+  return rows[0]?.n ?? -1;
+}
 
 /** Код ошибки Postgres (42501 — нет прав) или undefined. */
 async function pgCode(run: () => Promise<unknown>): Promise<string | undefined> {
@@ -73,5 +122,115 @@ describe("ADR-0020: pg-boss работает ролью приложения —
       "select name from pgboss.queue where name = 'test.rights'",
     );
     expect(rows).toHaveLength(1);
+  });
+});
+
+const receiptPayload = z.object({ receiptId: z.uuid() });
+
+describe("ADR-0008: постановка в транзакции данных (ScopedDb)", () => {
+  it("коммит — и запись, и задача; откат — ни записи, ни задачи", async () => {
+    const job = defineJob({ name: "test.in-tx", payload: receiptPayload, handle: async () => {} });
+    const { runtime } = await startJobs("api", [job], async () => true);
+    const s = createScopedDb(db.pool, scopeA);
+    const write = (fail: boolean) =>
+      s.transaction(async (tx) => {
+        const [row] = await tx
+          .insert(fxReceipts)
+          .values({ merchant: "Магазин", totalMinor: 100 })
+          .returning({ id: fxReceipts.id });
+        await runtime.enqueue(tx, job, { receiptId: row?.id ?? "" });
+        if (fail) throw new Error("откат");
+      });
+
+    await expect(write(true)).rejects.toThrow("откат");
+    expect(await count("from fx_receipts", [])).toBe(0);
+    expect(await count("from pgboss.job where name = $1", ["test.in-tx"])).toBe(0);
+
+    await write(false);
+    expect(await count("from fx_receipts", [])).toBe(1);
+    expect(await count("from pgboss.job where name = $1", ["test.in-tx"])).toBe(1);
+  });
+});
+
+describe("SEC-04, OBS-01: задача выполняется от имени владельца из конверта", () => {
+  it("обработчик получает ctx.s владельца и requestId запроса, поставившего задачу", async () => {
+    const seen = signal<{ scope: Scope; requestId: string }>();
+    const job = defineJob({
+      name: "test.owner",
+      payload: receiptPayload,
+      handle: async (ctx) => seen.resolve({ scope: ctx.s.scope, requestId: ctx.requestId }),
+    });
+    const { runtime } = await startJobs("worker", [job], async () => true);
+    const s = createScopedDb(db.pool, scopeA);
+    await withLogContext({ requestId: "req-owner-0001" }, () =>
+      s.transaction((tx) => runtime.enqueue(tx, job, { receiptId: scopeA.userId })),
+    );
+    expect(await seen.promise).toEqual({ scope: scopeA, requestId: "req-owner-0001" });
+  });
+
+  it("пользователя нет или домохозяйство другое — задача отброшена: обработчик не вызван, в журнале dropped", async () => {
+    const handled: Scope[] = [];
+    const sentinel = signal<void>();
+    const job = defineJob({
+      name: "test.verify",
+      payload: receiptPayload,
+      handle: async (ctx) => {
+        handled.push(ctx.s.scope);
+        if (ctx.s.scope.userId === scopeA.userId) sentinel.resolve();
+      },
+    });
+    // Есть только пользователь 1 в домохозяйстве 1.
+    const { runtime, logs } = await startJobs(
+      "worker",
+      [job],
+      async (c) => c.userId === scopeA.userId && c.householdId === scopeA.householdId,
+    );
+    const enqueue = (scope: Scope) =>
+      createScopedDb(db.pool, scope).transaction((tx) =>
+        runtime.enqueue(tx, job, { receiptId: scope.userId }),
+      );
+    await enqueue(testScope({ user: 3, household: 1 })); // пользователя нет
+    await enqueue(testScope({ user: 1, household: 2 })); // домохозяйство другое
+    await enqueue(scopeA); // задачи выполняются по порядку постановки: эта — последней
+    await sentinel.promise;
+
+    expect(handled).toEqual([scopeA]);
+    expect(
+      await count(
+        "from background_job_run where kind = $1 and status = 'dropped' and error_code = 'FORBIDDEN'",
+        ["test.verify"],
+      ),
+    ).toBe(2);
+    expect(logs.lines().filter((line) => line["msg"] === "jobs.scope-rejected")).toHaveLength(2);
+  });
+});
+
+describe("ADR-0008: повтор — только для retryable-ошибок каталога", () => {
+  it("UNAVAILABLE повторяется и проходит, CONFLICT не повторяется", async () => {
+    const attempts = new Map<number, number>();
+    const finished = signal<void>();
+    const job = defineJob({
+      name: "test.retry",
+      payload: z.object({ n: z.number().int() }),
+      options: { retryLimit: 2 },
+      handle: async (_ctx, { n }) => {
+        const attempt = (attempts.get(n) ?? 0) + 1;
+        attempts.set(n, attempt);
+        if (n === 1) throw new AppError("CONFLICT");
+        if (n === 2 && attempt === 1) throw new AppError("UNAVAILABLE");
+        if (n === 3 && attempts.get(2) === 2) finished.resolve();
+      },
+    });
+    const { runtime } = await startJobs("worker", [job], async () => true);
+    const s = createScopedDb(db.pool, scopeA);
+    for (const n of [1, 2, 3]) await s.transaction((tx) => runtime.enqueue(tx, job, { n }));
+    await finished.promise;
+
+    expect(Object.fromEntries(attempts)).toEqual({ 1: 1, 2: 2, 3: 1 });
+    const { rows } = await db.owner.query<{ state: string; retry_count: number }>(
+      "select state, retry_count from pgboss.job where name = $1 and data->'payload'->>'n' = '1'",
+      ["test.retry"],
+    );
+    expect(rows).toEqual([{ state: "failed", retry_count: 0 }]);
   });
 });

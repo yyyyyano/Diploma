@@ -66,9 +66,11 @@ yana/                         (корень репозитория)
 │     ├─ drizzle/             миграции (SQL читается глазами и коммитится)
 │     └─ src/
 │        ├─ entrypoints/      api.ts · worker.ts · bot.ts
-│        ├─ main/             compose.ts (сборка модулей), router.ts (дерево oRPC), реестры, *.contract.test.ts
+│        ├─ main/             compose.ts, create-modules.ts (сборка модулей, make new-module), router.ts (дерево
+│        │                    oRPC), registries.ts (реестры), *.contract.test.ts
 │        ├─ platform/         ярус 0: config, logging, context, db, jobs, events, realtime, errors, clock,
-│        │                    blob-store, secrets, settings, http, rate-limit, telemetry, tools
+│        │                    blob-store, secrets, settings, http, rate-limit, telemetry, tools, module
+│        │                    (defineModule, порты Platform)
 │        └─ modules/<id>/     36 модулей (docs/CAPABILITIES.md), у каждого CLAUDE.md-паспорт
 ├─ packages/
 │  ├─ kernel/                 Money, LocalDate, Period, Clock, Scope, бренды id, TraceNode — общие примитивы

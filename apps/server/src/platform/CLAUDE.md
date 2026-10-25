@@ -14,7 +14,7 @@
   (`MIGRATION_DATABASE_URL` = `kosht`, `MIGRATION_DB_PASSWORD_FILE` = `secrets/db_password`); хост, порт и база
   должны совпадать, роли — различаться, иначе `ConfigError` (ADR-0020); `DbConfig`, `ConfigError` (имя переменной и
   ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
-- `config/master-key.ts` — `MasterKey` (32 байта из `secrets/master.key`; `derive("secrets/v1" | "rate-limit/v1")` —
+- `config/master-key.ts` — `MasterKey` (32 байта из `secrets/master.key`; `derive("secrets/v1" | "rate-limit/v1" | "auth/v1")` —
   HKDF-SHA-256; в JSON и `inspect` — `[MasterKey]`).
 - `logging/logger.ts` — `createLogger({ role, level, destination })` → `Logger` (`fatal…trace(fields, key)`);
   `openLogFile(dir, role)` / `closeLogFile` — pino-roll в процессе: `<dir>/<роль>.<гггг-ММ-дд>.<n>.log`, ежедневно,
@@ -91,7 +91,7 @@
   `<DATA_DIR>/files`, `scoped(scope)`; `events` — с поздним связыванием: публикация из фабрики модуля — ошибка) и
   `SystemPlatform` (+ `system`) → модули (`main/create-modules.ts`, сгенерирован `make new-module`: топологический
   порядок `modules.ts`, фасады — ровно `dependsOn`) → `buildRegistries` (`main/registries.ts`; повтор имени —
-  `RegistryError`) → `createEvents` с подписками модулей → `createRouter({ streams, modules: registries.routers })`
+  `RegistryError`) → `sessions.register` / `scopes.register` частями модуля входа → `createEvents` с подписками модулей → `createRouter({ streams, modules: registries.routers })`
   (у `worker`/`bot` — пустой хаб) → в `api` — `createRealtimeStreams` с LISTEN `kosht-api-listen` (неудача —
   `RealtimeStartError`); любая ошибка этой части закрывает пул. `startJobs()` — `jobs.start` с задачами, подписками,
   расписаниями и обходами модулей **во всех ролях** (ставят задачи и `api`, и `bot`); `platform`, `modules`,
@@ -179,11 +179,14 @@
 
 ## Публичный API — `module/`, `tools/`, `db/user-data.ts` (T-007: NFR-10, AGT-03, PRIV-06, ADR-0003, ADR-0009)
 - `module/define-module.ts` — `defineModule({ id, facade?, router?, events?, jobs?, subscriptions?, schedules?, sweeps?,
-  tools?, deliveryChannels?, undo?, confirm?, userData?, settings?, secrets?, rateRules? })` → `ModuleDescriptor<F>`
+  tools?, deliveryChannels?, undo?, confirm?, userData?, settings?, secrets?, rateRules?, sessionSource?, scopeVerifier? })`
+  → `ModuleDescriptor<F>` (источник сессий сайта и проверка владельца задач — по одному на процесс, их даёт `identity`;
+  второй — `RegistryError`)
   (все списки есть, пустые — тоже). id — kebab-case; имена событий, задач, расписаний, обходов, `undo`/`confirm` —
   `<id>.<…>`; подписка — только своего модуля (`module === id`); иначе `RangeError` при создании. `Platform` (`clock`,
   `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `scoped(scope)`), `SystemPlatform`
-  (+ `system: SystemDb` — только модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
+  (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа; только
+  модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
   (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.
 - `tools/define-tool.ts` — `defineTool` (ARCHITECTURE §8.2): `ImmediateTool` (`read | write`, `execute(ctx, input)`,
   `output`) или `DestructiveTool` (`propose(ctx, input)` → `PendingActionDraft { action, payload }`, без `execute` по

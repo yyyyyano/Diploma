@@ -150,3 +150,35 @@ describe("повторное имя — ошибка при старте", () =>
     expect([...registries.confirm.keys()]).toEqual(["budgets.delete-goal", "accounts.delete"]);
   });
 });
+
+describe("ARCHITECTURE §6.4: источник сессий и проверка scope задач — от модуля входа", () => {
+  const sessions = async () => undefined;
+  const scopes = async () => true;
+
+  it("модуль входа отдаёт источник сессий и проверку scope; без них — пусто", () => {
+    expect(buildRegistries([defineModule({ id: "files" })])).toMatchObject({
+      sessionSource: undefined,
+      scopeVerifier: undefined,
+    });
+    const registries = buildRegistries([
+      defineModule({ id: "identity", sessionSource: sessions, scopeVerifier: scopes }),
+    ]);
+    expect(registries.sessionSource).toBe(sessions);
+    expect(registries.scopeVerifier).toBe(scopes);
+  });
+
+  it("второй источник сессий или вторая проверка scope — ошибка с обоими модулями", () => {
+    expect(() =>
+      buildRegistries([
+        defineModule({ id: "identity", sessionSource: sessions }),
+        defineModule({ id: "telegram", sessionSource: sessions }),
+      ]),
+    ).toThrow(/identity и telegram/);
+    expect(() =>
+      buildRegistries([
+        defineModule({ id: "identity", scopeVerifier: scopes }),
+        defineModule({ id: "demo", scopeVerifier: scopes }),
+      ]),
+    ).toThrow(/identity и demo/);
+  });
+});

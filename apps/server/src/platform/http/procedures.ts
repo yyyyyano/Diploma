@@ -28,6 +28,8 @@ export interface HttpContext {
    * Нет при вызове мимо HTTP (createRouterClient в тестах).
    */
   readonly resHeaders?: Headers;
+  /** Заголовки запроса (RequestHeadersPlugin): cookie сессии для входа и выхода. Нет — вызов мимо HTTP. */
+  readonly reqHeaders?: Headers;
 }
 
 const base = os.$context<HttpContext>();

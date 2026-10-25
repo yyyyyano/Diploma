@@ -6,6 +6,7 @@
 // платформы (defineJob, defineEvent, defineTool…); здесь — только форма модуля и проверка имён.
 import type { Clock, Scope } from "@kosht/kernel";
 import type { BlobStore } from "../blob-store/blob-store.ts";
+import type { ModuleKeyPurpose } from "../config/master-key.ts";
 import type { ScopedDb } from "../db/scoped-db.ts";
 import type { SystemDb } from "../db/system-db.ts";
 import type { UserDataDef } from "../db/user-data.ts";
@@ -13,8 +14,10 @@ import type { EventDef } from "../events/define-event.ts";
 import type { Events } from "../events/events.ts";
 import type { SubscriptionDef } from "../events/define-subscription.ts";
 import type { ModuleRouter } from "../http/procedures.ts";
+import type { SessionResolver } from "../http/session.ts";
 import type { JobDef } from "../jobs/define-job.ts";
 import type { Jobs } from "../jobs/jobs.ts";
+import type { ScopeVerifier } from "../jobs/scope-verifier.ts";
 import type { ScheduleDef } from "../jobs/schedule.ts";
 import type { SweepDef } from "../jobs/sweep.ts";
 import type { Logger } from "../logging/logger.ts";
@@ -42,6 +45,10 @@ export interface Platform {
 /** Платформа модуля с таблицами system или public (признак systemTables в modules.ts, ARCHITECTURE §6.5). */
 export interface SystemPlatform extends Platform {
   readonly system: SystemDb;
+  /** Ключ назначения модуля из мастер-ключа (HKDF): подпись cookie сессии identity (ADR-0016). */
+  deriveKey(purpose: ModuleKeyPurpose): Buffer;
+  /** Адрес локального входа (`http://127.0.0.1:8140`): ссылки в письмах и Better Auth (NFR-24). */
+  readonly localOrigin: string;
 }
 
 /** Фасады соседей модуля без зависимостей. */
@@ -79,6 +86,10 @@ export interface ModuleParts {
   readonly settings?: readonly SettingDef<unknown>[];
   readonly secrets?: readonly SecretDef[];
   readonly rateRules?: readonly RateRule[];
+  /** Источник сессий сайта — один на процесс, его даёт модуль входа (identity, ARCHITECTURE §6.4). */
+  readonly sessionSource?: SessionResolver;
+  /** Перепроверка владельца задачи — одна на процесс, её даёт модуль входа (identity). */
+  readonly scopeVerifier?: ScopeVerifier;
 }
 
 /** Модуль после defineModule: все списки есть (пустые — тоже), реестры читают их без проверок. */
@@ -100,6 +111,8 @@ export interface ModuleDescriptor<F = unknown> {
   readonly settings: readonly SettingDef<unknown>[];
   readonly secrets: readonly SecretDef[];
   readonly rateRules: readonly RateRule[];
+  readonly sessionSource: SessionResolver | undefined;
+  readonly scopeVerifier: ScopeVerifier | undefined;
 }
 
 /** id модуля — как в tooling/architecture/modules.ts. */
@@ -139,6 +152,8 @@ export function defineModule(
     settings: spec.settings ?? [],
     secrets: spec.secrets ?? [],
     rateRules: spec.rateRules ?? [],
+    sessionSource: spec.sessionSource,
+    scopeVerifier: spec.scopeVerifier,
   };
   // id — префикс событий, задач и действий (docs/CAPABILITIES.md «Как читать»): по префиксу видно владельца.
   const owned = [

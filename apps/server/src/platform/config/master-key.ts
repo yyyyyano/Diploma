@@ -10,7 +10,10 @@ import { inspect } from "node:util";
 export const MASTER_KEY_BYTES = 32;
 
 /** Назначения выведенных ключей; новое назначение — новая строка (старые не переименовываются: ключ сменится). */
-export type KeyPurpose = "secrets/v1" | "rate-limit/v1";
+export type KeyPurpose = "secrets/v1" | "rate-limit/v1" | "auth/v1";
+
+/** Назначения, которые платформа выдаёт модулям (SystemPlatform.deriveKey): подпись cookie сессии identity. */
+export type ModuleKeyPurpose = Extract<KeyPurpose, "auth/v1">;
 
 export class MasterKey {
   readonly #bytes: Buffer;

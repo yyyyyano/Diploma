@@ -11,7 +11,7 @@ import { ERRORS, ErrorData, type ErrorCode } from "@kosht/contract";
 import type { AnyContractRouter } from "@orpc/contract";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { ORPCError, ValidationError, type Router } from "@orpc/server";
-import { ResponseHeadersPlugin } from "@orpc/server/plugins";
+import { RequestHeadersPlugin, ResponseHeadersPlugin } from "@orpc/server/plugins";
 import { AppError } from "../errors/app-error.ts";
 import type { Logger } from "../logging/logger.ts";
 import { httpErrorBody } from "./error-response.ts";
@@ -71,8 +71,9 @@ export function createApiHandler(
   // Запросы, дошедшие до вызова процедуры: ошибка «до» — разбор запроса (клиент), «после» — кодирование (сервер).
   const called = new WeakSet<HttpContext>();
   const handler = new OpenAPIHandler<HttpContext>(router, {
-    // context.resHeaders: процедура входа отдаёт Set-Cookie сессии (T-009, ADR-0016).
-    plugins: [new ResponseHeadersPlugin()],
+    // context.reqHeaders и context.resHeaders: вход и выход читают cookie запроса и отдают Set-Cookie сессии
+    // (T-009, ADR-0016).
+    plugins: [new RequestHeadersPlugin(), new ResponseHeadersPlugin()],
     clientInterceptors: [
       async (options) => {
         const { context } = options;

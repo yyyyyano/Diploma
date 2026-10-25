@@ -175,7 +175,12 @@ export async function compose(
     realtime,
     scoped: (scope) => createScopedDb(pool, scope),
   };
-  const systemPlatform: SystemPlatform = { ...platform, system };
+  const systemPlatform: SystemPlatform = {
+    ...platform,
+    system,
+    deriveKey: (purpose) => config.masterKey.derive(purpose),
+    localOrigin: `http://${config.listeners.local.host}:${String(config.listeners.local.port)}`,
+  };
   // Слушает канал только api (ADR-0008): одно соединение на процесс. Без него сайт не узнаёт об изменениях —
   // неудача первого подключения есть ошибка старта (RealtimeStartError).
   const live =
@@ -192,6 +197,9 @@ export async function compose(
     registries = buildRegistries(
       (deps.createModules ?? createModules)({ platform, systemPlatform }),
     );
+    // Вход в систему (сессии сайта и владельцы задач) даёт модуль identity; без него не входит никто.
+    if (registries.sessionSource !== undefined) sessions.register(registries.sessionSource);
+    if (registries.scopeVerifier !== undefined) scopes.register(registries.scopeVerifier);
     events = createEvents({ jobs, subscriptions: registries.subscriptions });
     // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.
     router = createRouter({

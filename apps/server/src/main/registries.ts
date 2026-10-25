@@ -6,7 +6,9 @@ import type { UserDataDef } from "../platform/db/user-data.ts";
 import type { EventDef } from "../platform/events/define-event.ts";
 import type { SubscriptionDef } from "../platform/events/define-subscription.ts";
 import type { ModuleRouter } from "../platform/http/procedures.ts";
+import type { SessionResolver } from "../platform/http/session.ts";
 import type { JobDef } from "../platform/jobs/define-job.ts";
+import type { ScopeVerifier } from "../platform/jobs/scope-verifier.ts";
 import type { ScheduleDef } from "../platform/jobs/schedule.ts";
 import type { SweepDef } from "../platform/jobs/sweep.ts";
 import {
@@ -39,6 +41,10 @@ export interface Registries {
   readonly settings: ReadonlyMap<string, SettingDef<unknown>>;
   readonly secrets: ReadonlyMap<string, SecretDef>;
   readonly rateRules: ReadonlyMap<string, RateRule>;
+  /** Источник сессий сайта (модуль входа); нет — сессии нет ни у кого. */
+  readonly sessionSource: SessionResolver | undefined;
+  /** Перепроверка владельца задач (модуль входа); нет — задачи отбрасываются. */
+  readonly scopeVerifier: ScopeVerifier | undefined;
 }
 
 /** Повторное имя в реестре: в тексте — вид реестра, имя и оба модуля. */
@@ -94,6 +100,9 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
   const settings = new Registry<SettingDef<unknown>>("настройки");
   const secrets = new Registry<SecretDef>("секреты");
   const rateRules = new Registry<RateRule>("правила частоты");
+  // Один на процесс: второй модуль с ними — ошибка старта, а не подмена входа.
+  const sessionSource = new Registry<SessionResolver>("источник сессий");
+  const scopeVerifier = new Registry<ScopeVerifier>("проверка scope задач");
   const sameObject = (a: unknown, b: unknown) => a === b;
 
   for (const m of modules) {
@@ -129,6 +138,8 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
     for (const setting of m.settings) settings.add(setting.key, setting, m.id);
     for (const secret of m.secrets) secrets.add(secret.name, secret, m.id);
     for (const rule of m.rateRules) rateRules.add(rule.name, rule, m.id);
+    if (m.sessionSource !== undefined) sessionSource.add("session", m.sessionSource, m.id);
+    if (m.scopeVerifier !== undefined) scopeVerifier.add("scope", m.scopeVerifier, m.id);
   }
 
   return {
@@ -147,5 +158,7 @@ export function buildRegistries(modules: readonly ModuleDescriptor[]): Registrie
     settings: settings.map(),
     secrets: secrets.map(),
     rateRules: rateRules.map(),
+    sessionSource: sessionSource.values()[0],
+    scopeVerifier: scopeVerifier.values()[0],
   };
 }

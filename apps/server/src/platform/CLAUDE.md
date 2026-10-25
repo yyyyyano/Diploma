@@ -7,11 +7,13 @@
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
-- `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db`, `listeners.local/lan`, `trustedOrigins`,
+- `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db: { app, migration }`, `listeners.local/lan`, `trustedOrigins`,
   `webDistDir` (`WEB_DIST_DIR`, по умолчанию `apps/web/dist`) и `dataDir` абсолютные, `logLevel`, `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
-  `loadDbConfig(env?)` — только `DATABASE_URL`/`DB_PASSWORD_FILE`, без мастер-ключа (`make migrate`, globalSetup
-  тестов); `DbConfig`, `ConfigError` (имя переменной и ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с
-  `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
+  `loadDbConfig(env?)` → `DbConfigs` — только БД, без мастер-ключа (`make migrate`, globalSetup тестов): `app` —
+  роль приложения `kosht_app` (`DATABASE_URL`, `DB_PASSWORD_FILE` = `secrets/db_app_password`), `migration` — владелец
+  (`MIGRATION_DATABASE_URL` = `kosht`, `MIGRATION_DB_PASSWORD_FILE` = `secrets/db_password`); хост, порт и база
+  должны совпадать, роли — различаться, иначе `ConfigError` (ADR-0020); `DbConfig`, `ConfigError` (имя переменной и
+  ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
 - `config/master-key.ts` — `MasterKey` (32 байта из `secrets/master.key`; `derive("secrets/v1" | "rate-limit/v1")` —
   HKDF-SHA-256; в JSON и `inspect` — `[MasterKey]`).
 - `logging/logger.ts` — `createLogger({ role, level, destination })` → `Logger` (`fatal…trace(fields, key)`);
@@ -79,17 +81,19 @@
 
 ## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
 Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
-- `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул `kosht-<роль>` → миграции (`db.migrated`)
-  → часы, настройки, реестр сессий → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
+- `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул владельца (`max: 1`, имя
+  `kosht-<роль>-migrate`) → миграции и `ensureAppRole` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
+  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
   `allowLan()`, `close()` (пул, затем `db.closed`). Модули добавит T-007.
 - `entrypoints/run.ts` — `runProcess(role, { routes?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
-  `ConfigError` в stderr, код 1) → лог `<DATA_DIR>/logs` → `compose` → роль (`api` — слушатели и приложения на
+  `ConfigError` в stderr, код 1; так же — текст `AppRoleError` на старте) → лог `<DATA_DIR>/logs` → `compose` → роль (`api` — слушатели и приложения на
   каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` пока только живут — держит
   `setInterval`, пул процесс не держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` →
   сигнал остановки потокам, слушатели (`stop(80 % срока)`) → пул → `process.stopped` → лог на диск → код 0; дольше
   `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
 - `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
-- `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`.
+- `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов
+  два: владельца — только на старте (`kosht-<роль>-migrate`), роли приложения — на всю жизнь процесса (`kosht-<роль>`).
 
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
@@ -111,7 +115,17 @@
   `reason: ViolationReason` — в том числе `UNPARSEABLE_SQL`, `table`); вызывается из `Logger` Drizzle (`audited.ts`)
   до отправки запроса.
 - `connection.ts` (`createPool(config: DbConfig, { applicationName? })`: адрес без пароля, пароль из файла
-  `DB_PASSWORD_FILE`; `DbConfig` и чтение окружения — в `config/`; `pingDb`), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
+  `DB_PASSWORD_FILE`/`MIGRATION_DB_PASSWORD_FILE` (`readPasswordFile`); `DbConfig` и чтение окружения — в `config/`;
+  `pingDb`), `migrate.ts` (`runMigrations` и `withMigrationLock` под `pg_advisory_lock`), `schema-check.ts`.
+- `roles.ts` (ADR-0020) — `ensureAppRole(ownerPool, { appRole, passwordFile, schemas })`: на пуле владельца, после
+  миграций, под той же блокировкой; создаёт роль (`LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION
+  NOBYPASSRLS`) или возвращает ей атрибуты, пароль — готовым SCRAM-verifier и только если не совпал; `appRoleGrants` —
+  `USAGE` на схемы, `SELECT, INSERT, UPDATE, DELETE ON ALL TABLES`, `USAGE ON ALL SEQUENCES`, `ALTER DEFAULT
+  PRIVILEGES FOR ROLE <владелец>`, отзыв `TRUNCATE, REFERENCES, TRIGGER, MAINTAIN`, `CREATE` на `public` у `PUBLIC`,
+  `SELECT` на `pg_stats`, `pg_stats_ext`, `pg_stats_ext_exprs` у `PUBLIC`; роль = владелец — `AppRoleError`.
+  `assertAppRole(pool)` / `appRoleProblems(pool)` (для `make doctor`, T-011) — отказ роли с `rolsuper`, `rolcreatedb`,
+  `rolcreaterole`, `rolreplication`, `rolbypassrls`, членством в любой роли или `CREATE` на `public`.
+  `appRoleOptions(dbConfig)`, `APP_SCHEMAS` (`public`; T-006 добавит `pgboss`), `scramVerifier`, `scramMatches`.
 
 ## Можно зависеть от
 `@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
@@ -137,12 +151,26 @@
   `logging/__fixtures__/memory-logger.ts`.
 - Лимиты: 50 параллельных попыток → ровно `limit` (`rate-limit.int.test.ts`); кэш настроек — `FakeClock`.
 - Канарейки аудитора — `audit.test.ts`, `scoped-db.test.ts` (без БД), `isolation.int.test.ts` (две семьи, хеш B).
+- Права роли приложения — `roles.int.test.ts` (сырой `pg.Client` под `kosht_app` мимо аудитора: 42501 на файлы
+  сервера, `COPY … PROGRAM`, DDL, роли, статистику, журнал миграций; гонка трёх баз; пароль вне лога контейнера
+  `db` — тест читает `docker compose logs db`). Оракул `audit-differential.int.test.ts` — владелец: он проверяет
+  аудитор, а не права.
 - Сверка аудитора с Postgres — `audit-differential.int.test.ts`: варианты записи запросов (детерминированный ГПСЧ),
   оракул — сама база в транзакции с откатом (тронутые таблицы — `pg_stat_xact_user_tables`, утечка — данные или
   отпечаток B, а также созданное запросом отношение — `pg_class`). По умолчанию 24 варианта на запрос (~5 с); полный прогон — `AUDIT_DIFF_RUNS=800` (~35 тыс.
   вариантов, ~140 с), зерно — `AUDIT_DIFF_SEED`. Каждый текст, принятый базой, принимает и парсер (кроме
   известного расхождения со склейкой строки); ложные срабатывания — в лог по причине и шаблону, промах — красный тест.
 - Тестовая схема `fx_*` и её миграции — `db/__fixtures__/` (`make db-generate DRIZZLE_CONFIG=…/__fixtures__/drizzle.config.ts`).
+
+## Роли БД (ADR-0020)
+- Приложение работает ролью `kosht_app` (только DML на таблицах `APP_SCHEMAS`); владелец `kosht` (суперпользователь
+  из `compose.yaml`) — миграции, выдача прав, `make migrate`, сборка тестового шаблона. Новую схему с таблицами
+  приложения (T-006: `pgboss`) создаёт и мигрирует владелец, а роль получает права через список схем.
+- Роль общая для кластера, блокировка миграций — на базу: правка роли идёт только при расхождении, транзакция
+  повторяется на 23505/42710/XX000. Тест, который портит роль, работает со своей ролью `test_*` (`testRoleName`).
+- Права и права по умолчанию живут в каталогах базы и копируются с ней (клон шаблона).
+- Пароль роли в лог Postgres не попадает: SCRAM-verifier вместо пароля и `SET LOCAL log_statement = 'none'`,
+  `log_min_error_statement = 'panic'`, `log_min_duration_* = -1` в транзакции выдачи.
 
 ## Подводные камни
 - oRPC: ошибка внутри потока (итератор событий) после его начала идёт мимо `clientInterceptors` — поток T-006 сам
@@ -167,8 +195,10 @@
   WHERE или ON (внешнего соединения — только для nullable-стороны), OR — если сужает каждая ветка; `NOT`, `CASE`,
   `filter (where …)`, список select, подзапрос и HAVING — не сужают; предикат без квалификатора — только при одной
   пользовательской таблице в области. Функции, читающие файлы сервера (`pg_read_file`, `pg_read_binary_file`,
-  `pg_ls_*`, `pg_stat_file`, `lo_import`, `lo_export`), — `HIDDEN_SQL`: роль приложения — суперпользователь, и
-  страницы таблицы читаются мимо `RangeVar`. Не видит: функции с побочным эффектом без доступа к чужим строкам
+  `pg_ls_*`, `pg_stat_file`, `lo_import`, `lo_export`), и обращения к статистике планировщика (`pg_stats`,
+  `pg_stats_ext`, `pg_stats_ext_exprs`, `pg_statistic`, `pg_statistic_ext_data` в любой схеме) — `HIDDEN_SQL`: роли
+  приложения они закрыты правами (ADR-0020), но аудитор — независимый замок (у суперпользователя страницы таблицы
+  читаются мимо `RangeVar`, статистика показывает значения строк всех домохозяйств). Не видит: функции с побочным эффектом без доступа к чужим строкам
   (`pg_advisory_lock`, `pg_sleep`, `pg_notify`, `nextval`, `pg_terminate_backend`) — их ловит ревью; VIEW и
   функции базы; побочные каналы (ошибка в выражении рядом с фильтром на чужой строке).
   INSERT в пользовательскую таблицу — только отдельной командой без WITH и только VALUES; MERGE — нигде;

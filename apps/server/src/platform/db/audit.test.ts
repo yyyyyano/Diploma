@@ -1299,8 +1299,9 @@ describe("ROLE-01, SEC-04: SELECT … INTO создаёт таблицу, где
 });
 
 describe("ROLE-01, SEC-04: файлы сервера по пути из строки — HIDDEN_SQL", () => {
-  // Роль приложения в Compose — суперпользователь: pg_read_binary_file(pg_relation_filepath('t')) отдаёт страницы
-  // таблицы со строками всех домохозяйств, а RangeVar в дереве нет (проверено на PostgreSQL 18).
+  // Роль приложения kosht_app таких прав не имеет (ADR-0020, roles.int.test.ts), но аудитор — независимый замок: у
+  // суперпользователя pg_read_binary_file(pg_relation_filepath('t')) отдаёт страницы таблицы со строками всех
+  // домохозяйств, а RangeVar в дереве нет (проверено на PostgreSQL 18).
   it.each([
     [
       "pg_read_binary_file страниц таблицы",
@@ -1312,6 +1313,28 @@ describe("ROLE-01, SEC-04: файлы сервера по пути из стро
     ["pg_stat_file", "select (pg_stat_file('base/1/2')).size"],
     ["lo_import", "select lo_import('/var/lib/postgresql/data/base/1/2')"],
     ["lo_export", "select lo_export(1, '/tmp/x')"],
+  ])("%s → HIDDEN_SQL во всех режимах", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("HIDDEN_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe("HIDDEN_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, crossTenant)).reason).toBe(
+      "HIDDEN_SQL",
+    );
+  });
+});
+
+describe("ROLE-01, SEC-04: статистика планировщика — HIDDEN_SQL", () => {
+  // pg_stats и родня показывают частые значения колонок пользовательских таблиц — строки всех домохозяйств мимо
+  // фильтра. Роли приложения они закрыты (ADR-0020); аудитор останавливает обращение и сам, в любой схеме.
+  it.each([
+    ["pg_stats", "select most_common_vals from pg_stats where tablename = 'fx_receipts'"],
+    ["pg_catalog.pg_stats", "select * from pg_catalog.pg_stats"],
+    ["pg_stats_ext", "select * from pg_stats_ext"],
+    ["pg_stats_ext_exprs", "select * from pg_catalog.pg_stats_ext_exprs"],
+    ["pg_statistic", "select stavalues1 from pg_statistic"],
+    ["pg_statistic_ext_data", "select * from pg_catalog.pg_statistic_ext_data"],
+    ["другая схема", "select * from other.pg_stats"],
+    ["в подзапросе", "select (select count(*) from pg_stats) as n"],
+    ["в CTE", "with s as (select * from pg_statistic) select count(*) from s"],
   ])("%s → HIDDEN_SQL во всех режимах", (_name, text) => {
     expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("HIDDEN_SQL");
     expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe("HIDDEN_SQL");

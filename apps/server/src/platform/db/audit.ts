@@ -13,7 +13,7 @@
 // нарушение; SELECT … INTO — нигде в дереве (Postgres берёт INTO у левой ветки UNION: это CREATE TABLE AS);
 // MERGE — нигде в дереве (WITH … MERGE и MERGE в CTE вставляют без INSERT); нет функций,
 // исполняющих SQL из строки (query_to_xml, ts_stat, dblink…), читающих файлы сервера (pg_read_file, lo_import…)
-// или меняющих настройки соединения (set_config);
+// или меняющих настройки соединения (set_config); нет статистики планировщика (pg_stats, pg_statistic…);
 // пользовательская таблица — только в схеме public. Каждое обращение к пользовательской таблице (RangeVar в
 // FROM, JOIN, подзапросе, CTE, цели UPDATE/DELETE) сужено условием своей области (см. narrowLevel): конъюнктом
 // WHERE или ON соединения (ON внешнего соединения — только для nullable-стороны), OR — если сужает каждая ветка;
@@ -491,12 +491,25 @@ const ALLOWED_TRANSACTION = new Set(
 
 /**
  * Функции, исполняющие SQL или читающие таблицу по имени из строки (аудитор строки не разбирает); файлы сервера по
- * пути из строки — роль приложения суперпользователь, и pg_read_binary_file(pg_relation_filepath('t')) отдаёт
- * страницы таблицы со строками всех домохозяйств; set_config — настройка (search_path), которая осталась бы на
- * соединении пула для следующих запросов.
+ * пути из строки — у суперпользователя pg_read_binary_file(pg_relation_filepath('t')) отдаёт страницы таблицы со
+ * строками всех домохозяйств (роли приложения эти функции закрыты — ADR-0020; аудитор держит запрет независимо от
+ * прав роли); set_config — настройка (search_path), которая осталась бы на соединении пула для следующих запросов.
  */
 const HIDDEN_SQL_FUNCTION =
   /^(?:(?:query|table|cursor|schema|database)_to_xml(?:schema|_and_xmlschema)?|ts_stat|ts_rewrite|dblink\w*|set_config|pg_read_(?:binary_)?file|pg_ls_\w+|pg_stat_file|lo_import|lo_export)$/;
+
+/**
+ * Статистика планировщика: частые значения и гистограммы колонок пользовательских таблиц — строки всех домохозяйств
+ * мимо фильтра. Роли приложения закрыта (ADR-0020); аудитор останавливает обращение в любой схеме — имя одноимённой
+ * таблицы или CTE тоже (громко, а не тихо).
+ */
+const PLANNER_STATISTICS = new Set([
+  "pg_stats",
+  "pg_stats_ext",
+  "pg_stats_ext_exprs",
+  "pg_statistic",
+  "pg_statistic_ext_data",
+]);
 
 function notAllowed(command: string): Fault {
   return {
@@ -555,6 +568,14 @@ function statementFault(
             "или sql`…` с ${s.own(таблица)}",
         };
       }
+    }
+    if (isRangeVar(node) && PLANNER_STATISTICS.has(relname(node))) {
+      fault = {
+        reason: "HIDDEN_SQL",
+        hint:
+          `${relname(node)}: статистика планировщика показывает значения строк всех домохозяйств — ` +
+          "данные читайте из своих таблиц через s.own(таблица)",
+      };
     }
     // Пользовательские таблицы живут только в public (schema-check.ts); одноимённая таблица другой схемы —
     // не та таблица, которую проверяет аудитор.

@@ -28,7 +28,9 @@ describe("витрина /dev/gallery", () => {
     const menu = screen.getByRole("navigation", { name: "Разделы" });
     expect(within(menu).getAllByRole("link")).toHaveLength(14);
     const bottom = screen.getByRole("navigation", { name: "Нижнее меню" });
-    expect(within(bottom).getByRole("link", { name: "Сканировать чек" })).toBeInTheDocument();
+    expect(
+      [...bottom.querySelectorAll(":scope > a, :scope > button")].map((el) => el.textContent),
+    ).toEqual(["Главная", "Операции", "Чек", "Ассистент", "Ещё"]);
   });
 
   it("панель, подтверждение и уведомление открываются кнопками", async () => {

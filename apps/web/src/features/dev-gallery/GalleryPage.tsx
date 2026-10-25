@@ -98,6 +98,7 @@ const DEMO_NAV: ShellNavGroup[] = [
 ];
 
 const DEMO_ITEMS = DEMO_NAV.flatMap((group) => group.items);
+/** Нижняя панель телефона по DES-15: Главная · Операции · (Чек) · Ассистент. */
 const PHONE_TABS = ["dashboard", "operations", "assistant"];
 
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -339,7 +340,7 @@ export function GalleryPage() {
           <div className={classes.phoneDemo}>
             <BottomNav
               embedded
-              tabs={DEMO_ITEMS.filter((nav) => PHONE_TABS.includes(nav.key))}
+              tabs={PHONE_TABS.flatMap((key) => DEMO_ITEMS.filter((nav) => nav.key === key))}
               more={DEMO_ITEMS.filter((nav) => !PHONE_TABS.includes(nav.key))}
               center={
                 <a className={classes.scan} href="#documents" aria-label="Сканировать чек">

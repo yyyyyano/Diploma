@@ -4,20 +4,24 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  type StaticDataRouteOption,
 } from "@tanstack/react-router";
-import { ArrowLeftRight, LayoutGrid, Scale, Shield, Wallet } from "lucide-react";
+import { ArrowLeftRight, LayoutGrid, MessageCircle, Scale, Shield, Wallet } from "lucide-react";
 import { describe, expect, it } from "vitest";
-import { buildNav, isNavActive } from "./nav.ts";
+import { buildNav, isNavActive, splitPhoneNav } from "./nav.ts";
 
 function testRoutes() {
   const root = createRootRoute();
-  const route = (path: string, staticData?: object) =>
+  const route = (path: string, staticData?: StaticDataRouteOption) =>
     createRoute({ getParentRoute: () => root, path, ...(staticData ? { staticData } : {}) });
   const tree = root.addChildren([
     route("/laws", { nav: { group: "law", order: 30, section: "laws", icon: Scale } }),
     route("/accounts", { nav: { group: "money", order: 30, section: "accounts", icon: Wallet } }),
     route("/", {
-      nav: { group: "main", order: 10, section: "dashboard", icon: LayoutGrid, phoneTab: true },
+      nav: { group: "main", order: 10, section: "dashboard", icon: LayoutGrid, phoneOrder: 1 },
+    }),
+    route("/assistant", {
+      nav: { group: "main", order: 20, section: "assistant", icon: MessageCircle, phoneOrder: 3 },
     }),
     route("/operations", {
       nav: {
@@ -25,7 +29,7 @@ function testRoutes() {
         order: 10,
         section: "operations",
         icon: ArrowLeftRight,
-        phoneTab: true,
+        phoneOrder: 2,
       },
     }),
     route("/admin", {
@@ -42,7 +46,7 @@ describe("DES-15: меню из реестра маршрутов", () => {
   it("группы в порядке DES-15, пункты по order; маршрут без nav в меню не попадает", () => {
     const nav = buildNav(testRoutes(), "user");
     expect(nav.map((g) => [g.group, g.items.map((i) => i.href)])).toEqual([
-      ["main", ["/"]],
+      ["main", ["/", "/assistant"]],
       ["money", ["/operations", "/accounts"]],
       ["law", ["/laws"]],
     ]);
@@ -51,8 +55,8 @@ describe("DES-15: меню из реестра маршрутов", () => {
   it("пункты ещё не готовых фич скрыты: нет маршрута — нет пункта и пустой группы", () => {
     const nav = buildNav(testRoutes(), "user");
     const sections = nav.flatMap((g) => g.items.map((i) => i.section));
-    expect(sections).not.toContain("assistant");
     expect(sections).not.toContain("calendar");
+    expect(sections).not.toContain("budget");
     expect(nav.map((g) => g.group)).not.toContain("profile");
   });
 
@@ -61,9 +65,10 @@ describe("DES-15: меню из реестра маршрутов", () => {
     expect(nav.at(-1)).toMatchObject({ group: "profile", items: [{ href: "/admin" }] });
   });
 
-  it("пункты нижней панели телефона помечены phoneTab", () => {
-    const tabs = buildNav(testRoutes(), "user").flatMap((g) => g.items.filter((i) => i.phoneTab));
-    expect(tabs.map((i) => i.section)).toEqual(["dashboard", "operations"]);
+  it("нижняя панель телефона: Главная · Операции · Ассистент по phoneOrder, остальное — в «Ещё»", () => {
+    const { tabs, more } = splitPhoneNav(buildNav(testRoutes(), "user"));
+    expect(tabs.map((i) => i.section)).toEqual(["dashboard", "operations", "assistant"]);
+    expect(more.map((i) => i.section)).toEqual(["accounts", "laws"]);
   });
 
   it("без маршрутов с nav меню пустое", () => {

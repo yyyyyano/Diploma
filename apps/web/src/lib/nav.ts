@@ -17,8 +17,11 @@ export interface NavEntry {
   readonly order: number;
   readonly section: NavSection;
   readonly icon: LucideIcon;
-  /** Пункт нижней панели телефона (Главная, Операции, Ассистент); остальные — в «Ещё». */
-  readonly phoneTab?: boolean;
+  /**
+   * Место на нижней панели телефона (DES-15: 1 — Главная, 2 — Операции, 3 — Ассистент; «Чек» встаёт посередине);
+   * без него пункт — в шторке «Ещё».
+   */
+  readonly phoneOrder?: number;
   /** Пункт только для роли (Администрирование — admin). */
   readonly role?: Role;
 }
@@ -36,7 +39,7 @@ export interface NavItem {
   readonly section: NavSection;
   readonly href: string;
   readonly icon: LucideIcon;
-  readonly phoneTab: boolean;
+  readonly phoneOrder?: number;
 }
 
 export interface NavGroupView {
@@ -66,9 +69,23 @@ export function buildNav(routes: readonly NavRoute[], role: Role | undefined): N
         section: nav.section,
         href,
         icon: nav.icon,
-        phoneTab: nav.phoneTab === true,
+        ...(nav.phoneOrder === undefined ? {} : { phoneOrder: nav.phoneOrder }),
       })),
   })).filter((view) => view.items.length > 0);
+}
+
+/** Нижняя панель телефона: пункты по phoneOrder, остальные — в «Ещё» в порядке меню. */
+export function splitPhoneNav(groups: readonly NavGroupView[]): {
+  tabs: NavItem[];
+  more: NavItem[];
+} {
+  const items = groups.flatMap((group) => group.items);
+  return {
+    tabs: items
+      .filter((item) => item.phoneOrder !== undefined)
+      .toSorted((a, b) => (a.phoneOrder ?? 0) - (b.phoneOrder ?? 0)),
+    more: items.filter((item) => item.phoneOrder === undefined),
+  };
 }
 
 /** Пункт подсвечен на своей странице и её вложенных («/operations/123»); «/» — только на главной. */

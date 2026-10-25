@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEventStream } from "../../lib/events.ts";
-import { buildNav, isNavActive, type NavItem } from "../../lib/nav.ts";
+import { buildNav, isNavActive, splitPhoneNav, type NavItem } from "../../lib/nav.ts";
 import { signOut, type SessionSource } from "../../lib/session.ts";
 import {
   AppFrame,
@@ -43,7 +43,7 @@ export function AppShell() {
     icon: item.icon,
     active: isNavActive(item.href, pathname),
   });
-  const items = groups.flatMap((group) => group.items);
+  const phone = splitPhoneNav(groups);
   const onNavigate: NavigateHandler = (href, event) => {
     event.preventDefault();
     router.history.push(href);
@@ -69,10 +69,10 @@ export function AppShell() {
         />
       }
       bottom={
-        items.length > 0 && (
+        phone.tabs.length + phone.more.length > 0 && (
           <BottomNav
-            tabs={items.filter((item) => item.phoneTab).map(view)}
-            more={items.filter((item) => !item.phoneTab).map(view)}
+            tabs={phone.tabs.map(view)}
+            more={phone.more.map(view)}
             onNavigate={onNavigate}
           />
         )

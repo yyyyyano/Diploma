@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find new-module
+	test-int logs log-find new-module new-table
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -167,3 +167,7 @@ new-module: need-node ## Модуль сервера из modules.ts: make new-m
 	@node tooling/gen/new-module.ts "$${id}"
 	@$(BIN)/oxfmt "apps/server/src/modules/$${id}" apps/server/src/main/create-modules.ts >/dev/null
 
+new-table: need-node ## Таблица модуля: make new-table module=<id> name=<таблица> [kind=user|system|public] (+ defineUserData)
+	@test -n "$${module:-}" -a -n "$${name:-}" || { echo "Укажите: make new-table module=<id> name=<таблица> [kind=user]" >&2; exit 2; }
+	@node tooling/gen/new-table.ts "$${module}" "$${name}" "$${kind:-user}"
+	@$(BIN)/oxfmt "apps/server/src/modules/$${module}" >/dev/null

@@ -2,7 +2,7 @@
 
 ## Назначение
 Всё, что делает тесты офлайн и детерминированными (`.claude/rules/testing.md`, ARCHITECTURE §12). Остальное
-(`MemoryBlobStore`, кассеты моделей, генератор тестов изоляции) добавляют задачи, которым оно нужно.
+(кассеты моделей, генератор тестов изоляции) добавляют задачи, которым оно нужно.
 
 ## Кто использует
 Только тесты (`*.test.ts`, `*.int.test.ts`, `e2e/`) во всех пакетах и приложениях; боевому коду — запрещено.
@@ -13,6 +13,9 @@
   `today()` — `LocalDate.fromInstant` по поясу (по умолчанию `Europe/Minsk`, NFR-23), `set(instant)`, `advance(ms)`.
 - Фабрики примитивов: `byn(minor)` — деньги BYN в копейках, `day("2026-10-21")`, `testUserId(n)`,
   `testHouseholdId(n)`, `testTraceId(n)` — валидные uuidv7 по номеру, `testScope({ user, household })`.
+- `MemoryBlobStore` — хранилище файлов в памяти с поведением `platform/blob-store` сервера (`put`, `get`, `delete`,
+  `deleteHousehold`; id — uuid-бренды, иначе `RangeError`; копии массивов), `size`. Форму сверяет
+  `apps/server/src/platform/blob-store/blob-store.test.ts`: один набор проверок для обоих хранилищ.
 - Вход `@kosht/testing/db` (`src/db.ts`, отдельно — чтобы unit-тесты не грузили `pg`): `createTestDb()` — своя база
   `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`), `prepareTemplate`, `dropOrphans`,
   `fingerprintDir`, `dropDatabase` — для globalSetup проекта `int` (он в `apps/server/src/platform/db/__fixtures__/`).

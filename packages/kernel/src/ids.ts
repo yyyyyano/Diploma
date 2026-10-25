@@ -12,3 +12,11 @@ export type HouseholdId = z.infer<typeof HouseholdId>;
 /** Сохранённая трасса расчёта (EXPL-02): по ней «Откуда эта цифра?» показывает тот самый расчёт. */
 export const TraceId = z.uuid().brand<"TraceId">();
 export type TraceId = z.infer<typeof TraceId>;
+
+/**
+ * Файл пользователя (SEC-03): имя на диске — data/files/<HouseholdId>/<FileId>. Схема пропускает только uuid, поэтому
+ * id из запроса не превратится в путь вроде «../». Здесь, а не в contract: id файла нужен и схемам БД (T-016), а
+ * серверный код контракт как источник типов не использует.
+ */
+export const FileId = z.uuid().brand<"FileId">();
+export type FileId = z.infer<typeof FileId>;

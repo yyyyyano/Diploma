@@ -17,7 +17,8 @@
 - `Period { from, to }` — **обе границы включительно**: `of` (начало позже конца — `RangeError`), `contains`, `schema`.
 - `Clock { now(), today() }` — только интерфейс: реализация по поясу из настройки — `platform/clock` (T-005),
   в тестах — `FakeClock` из `@kosht/testing`.
-- Бренды id на `z.$brand` (схема = разбор): `UserId`, `HouseholdId`, `TraceId`.
+- Бренды id на `z.$brand` (схема = разбор): `UserId`, `HouseholdId`, `TraceId`, `FileId` (имя файла пользователя на
+  диске — `data/files/<HouseholdId>/<FileId>`: только uuid, «../» не пройдёт).
 - `Scope { userId, householdId }` с брендом, неизменяем; создаётся только `makeScope` (литерал не компилируется).
 - `TraceNode { key, op, value, inputs, refs, note? }`, `TraceOp`, `TraceValue`, `TraceRef` — только типы.
 

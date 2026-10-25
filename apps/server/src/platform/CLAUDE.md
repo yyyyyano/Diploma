@@ -77,6 +77,20 @@
 - `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 
+## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
+Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
+- `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул `kosht-<роль>` → миграции (`db.migrated`)
+  → часы, настройки, реестр сессий → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
+  `allowLan()`, `close()` (пул, затем `db.closed`). Модули добавит T-007.
+- `entrypoints/run.ts` — `runProcess(role, { routes?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
+  `ConfigError` в stderr, код 1) → лог `<DATA_DIR>/logs` → `compose` → роль (`api` — слушатели и приложения на
+  каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` пока только живут — держит
+  `setInterval`, пул процесс не держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` →
+  сигнал остановки потокам, слушатели (`stop(80 % срока)`) → пул → `process.stopped` → лог на диск → код 0; дольше
+  `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
+- `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
+- `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`.
+
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило
@@ -96,8 +110,8 @@
 - `audit.ts` — `auditQuery(sql, params, mode, owned)` и `IsolationViolation` (`code: "ISOLATION_VIOLATION"`,
   `reason: ViolationReason` — в том числе `UNPARSEABLE_SQL`, `table`); вызывается из `Logger` Drizzle (`audited.ts`)
   до отправки запроса.
-- `connection.ts` (`createPool(config: DbConfig)`: адрес без пароля, пароль из файла `DB_PASSWORD_FILE`; `DbConfig`
-  и чтение окружения — в `config/`), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
+- `connection.ts` (`createPool(config: DbConfig, { applicationName? })`: адрес без пароля, пароль из файла
+  `DB_PASSWORD_FILE`; `DbConfig` и чтение окружения — в `config/`; `pingDb`), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
 
 ## Можно зависеть от
 `@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в

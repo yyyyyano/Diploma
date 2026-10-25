@@ -47,10 +47,22 @@ function readPassword(file: string): string {
   return password;
 }
 
-/** Пул соединений; закрывает его тот, кто создал (pool.end()). */
+/**
+ * Пул соединений; закрывает его тот, кто создал (pool.end()). applicationName — имя в pg_stat_activity
+ * (`kosht-api`, `kosht-worker`, `kosht-bot`): по нему видно, чьи соединения открыты и закрылись ли они при остановке.
+ */
 export function createPool(
   config: DbConfig,
-  options: { database?: string; max?: number } = {},
+  options: { database?: string; max?: number; applicationName?: string } = {},
 ): pg.Pool {
-  return new pg.Pool({ ...connectionOptions(config, options.database), max: options.max ?? 10 });
+  return new pg.Pool({
+    ...connectionOptions(config, options.database),
+    max: options.max ?? 10,
+    ...(options.applicationName === undefined ? {} : { application_name: options.applicationName }),
+  });
+}
+
+/** БД отвечает (/readyz): select 1; закрытый пул или недоступная база — исключение. */
+export async function pingDb(pool: pg.Pool): Promise<void> {
+  await pool.query("select 1");
 }

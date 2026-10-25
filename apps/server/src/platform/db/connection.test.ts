@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { connectionOptions } from "./connection.ts";
+import { connectionOptions, createPool } from "./connection.ts";
 
 const dir = mkdtempSync(join(tmpdir(), "kosht-db-connection-"));
 const passwordFile = join(dir, "db_password");
@@ -53,5 +53,14 @@ describe("NFR-16: подключение к БД — адрес из окруж�
     expect(() => connectionOptions({ url: "mysql://kosht@127.0.0.1/kosht", passwordFile })).toThrow(
       /ожидается адрес postgres/,
     );
+  });
+
+  it("пул подписывает соединения именем процесса — для pg_stat_activity", async () => {
+    const pool = createPool(
+      { url: "postgres://kosht@127.0.0.1:5441/kosht", passwordFile },
+      { applicationName: "kosht-worker" },
+    );
+    expect(pool.options.application_name).toBe("kosht-worker");
+    await pool.end();
   });
 });

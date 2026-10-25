@@ -8,6 +8,10 @@ packages:
 catalog:
   # HTTP (ADR-0005): Hono — оболочка и два слушателя; oRPC — все пакеты строго одной версии с @orpc/contract.
   "@axe-core/playwright": 4.14.0
+  # ИИ (ADR-0009): Vercel AI SDK 7 — точные версии одной линейки (ai и @ai-sdk/* выходят вместе); обновление —
+  # отдельной задачей со сверкой документации node_modules/ai/docs.
+  "@ai-sdk/provider": 4.0.34
+  "@ai-sdk/react": 4.0.157
   # Шрифты макета локально (DES-09): переменные начертания Onest и Literata.
   "@fontsource-variable/literata": 5.3.0
   "@fontsource-variable/onest": 5.3.1
@@ -38,6 +42,7 @@ catalog:
   "@types/react-dom": 19.3.0
   "@vitejs/plugin-react": 6.1.2
   "@vitest/coverage-v8": 5.0.5
+  ai: 7.0.153
   # Вход (ADR-0016): Better Auth — только ядро (email + пароль, сессии), без плагинов; точная версия.
   better-auth: 1.7.12
   # Drizzle 1.0 RC — строго одна точная версия для orm и kit: аудитор SQL опирается на порядок вызова
@@ -45,6 +50,8 @@ catalog:
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   fast-check: 4.10.2
+  # Подсчёт токенов o200k_base в тесте размера префикса агента (T-010) — только dev.
+  gpt-tokenizer: 4.1.0
   hono: 4.13.13
   i18next: 26.5.7
   jsdom: 30.1.3

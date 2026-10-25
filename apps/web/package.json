@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ai-sdk/react": "catalog:",
     "@fontsource-variable/literata": "catalog:",
     "@fontsource-variable/onest": "catalog:",
     "@kosht/contract": "workspace:*",
@@ -25,6 +26,7 @@
     "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "catalog:",
+    "ai": "catalog:",
     "i18next": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",

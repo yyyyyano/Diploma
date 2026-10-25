@@ -6,12 +6,14 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@ai-sdk/provider": "catalog:",
     "@hono/node-server": "catalog:",
     "@kosht/contract": "workspace:*",
     "@kosht/kernel": "workspace:*",
     "@orpc/contract": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
+    "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "hono": "catalog:",
@@ -27,6 +29,8 @@
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "drizzle-kit": "catalog:",
+    "fast-check": "catalog:",
+    "gpt-tokenizer": "catalog:",
     "pino-pretty": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

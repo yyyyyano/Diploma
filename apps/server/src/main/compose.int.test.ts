@@ -3,6 +3,8 @@
 // процедур совпадает с контрактом, а очередь каждой роли знает задачи подписок — событие из api или bot доходит до
 // подписчика в worker. Повторное имя в реестре — ошибка старта без брошенных соединений.
 import { contract } from "@kosht/contract";
+import type { ContractRouterClient } from "@orpc/contract";
+import { createRouterClient } from "@orpc/server";
 import { FileId, type Scope } from "@kosht/kernel";
 import { testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -134,8 +136,21 @@ describe("ARCHITECTURE §3: 36 модулей в корне композиции
 
   it("SystemDb — только в платформе модулей с таблицами system/public", () => {
     expect(ports?.platform).not.toHaveProperty("system");
+    expect(ports?.platform).not.toHaveProperty("deriveKey");
     const systemPlatform: SystemPlatform | undefined = ports?.systemPlatform;
     expect(systemPlatform?.system).toBeDefined();
+  });
+
+  it("identity (первый модуль с таблицами system) получает SystemPlatform: процедура читает system_state", async () => {
+    const client = createRouterClient(api.router, {
+      context: {
+        requestId: "compose-test",
+        listener: "local",
+        session: async () => undefined,
+        shutdownSignal: new AbortController().signal,
+      },
+    }) as unknown as ContractRouterClient<typeof contract>;
+    expect(await client.identity.status()).toEqual({ initialized: false, setupAvailable: true });
   });
 });
 

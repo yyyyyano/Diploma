@@ -41,6 +41,7 @@ AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04 (вход). Сде�
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/identity` — пароль (unit), Better Auth на SystemDb (`auth.int.test.ts`),
   первый запуск (`setup.int.test.ts`: транзакция, повтор и гонка — `CONFLICT`, откат при сбое события).
+- Сквозь процессы и реестры — `main/first-run.int.test.ts`, `main/isolation.registry.int.test.ts`; e2e — `e2e/specs/first-run.spec.ts`.
 
 ## Подводные камни
 - Пользователь первого запуска пишется через `tx.db` ScopedDb нового пользователя: аудитор в режиме scoped проверяет

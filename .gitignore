@@ -21,5 +21,7 @@ coverage/
 # Системное
 .DS_Store
 
-# Секреты (мастер-ключ, пароль БД) — никогда в git (NFR-16)
+# Секреты (мастер-ключ, пароль БД) — никогда в git (NFR-16). Исключение — код модуля шифрования секретов
+# сервера (apps/server/src/platform/secrets): в нём нет ни одного секрета.
 secrets/
+!/apps/server/src/platform/secrets/

@@ -30,4 +30,10 @@ describe(".gitignore", () => {
   it(".env.example остаётся в git", () => {
     expect(isIgnored(".env.example")).toBe(false);
   });
+
+  it("код platform/secrets остаётся в git, а папки secrets/ в других местах — нет", () => {
+    expect(isIgnored("apps/server/src/platform/secrets/secrets.ts")).toBe(false);
+    expect(isIgnored("apps/server/secrets/key")).toBe(true);
+    expect(isIgnored("docker/secrets/db_password")).toBe(true);
+  });
 });

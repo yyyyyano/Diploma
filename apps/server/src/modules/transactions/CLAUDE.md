@@ -15,7 +15,12 @@ TXN-01…11, FIN-01, STMT-07/08 (запись), CAT-05 (применить к п
 - Фабрика: `createTransactionsModule({ platform, facades })` → `defineModule({ id: "transactions" })`; платформа —
   `Platform` (без `SystemDb`); фасады — `facades.accounts`, `facades.categories`, `facades.merchants`,
   `facades.fxRates`, `facades.actions`, `facades.explain`, `facades.notifications`.
-- Фасад `TransactionsFacade` — пока нет (`undefined`); появится с первым сценарием, нужным соседям.
+- Фасад `TransactionsFacade` — пока нет (`undefined`). Его форма зафиксирована до первой задачи модуля (ARCHITECTURE
+  §4.3, §15 «бог-модули» и N+1 на дашборде): агрегаты — **только пачками**, одним вызовом на всю выборку:
+  `aggregate(s, { period, groupBy })` → строки `{ key, total: Money, count }` по ключу группировки (`category`,
+  `merchant`, `month`, `account`); соседи (`fin`, `budgets`, `recurring`, `dashboard`, `tax`, `weekly`) не зовут фасад
+  «по категории в цикле». Запись чужими модулями — только фасадом с `tx` (`recordFromReceipt(tx, …)`, импорт
+  выписки); пересчёт остатка — вызов фасада `accounts` (STMT-02).
 - События (`events.ts`): `transactions.changed`, `transactions.merged`; контракт, задачи, инструменты агента, отмена,
   владелец данных, настройки — добавляет задача модуля.
 
@@ -23,6 +28,7 @@ TXN-01…11, FIN-01, STMT-07/08 (запись), CAT-05 (применить к п
 Можно: accounts, categories, merchants, fx-rates, actions, explain, notifications (`tooling/architecture/modules.ts`). Слушает: —.
 
 ## Запреты
+- Фасад без агрегатов пачками (метод «сумма по одной категории», который зовут в цикле) — нет: только `aggregate`.
 - В чужой модуль — только через его `index.ts` и только из «Можно»; сообщить наверх — событием, подставить реализацию
   — реестром корня композиции (ADR-0004).
 - Данные домохозяйства — только через `s: ScopedDb` с `s.own(таблица)` на каждую таблицу запроса; новая таблица —

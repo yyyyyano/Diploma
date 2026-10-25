@@ -31,8 +31,8 @@
 - `blob-store/blob-store.ts` — `BlobStore` (`put`, `get` → `undefined` если нет, `delete`, `deleteHousehold`),
   `createLocalFsBlobStore(<DATA_DIR>/files)`: путь `<householdId>/<fileId>` (`FileId` — в `@kosht/kernel`), id
   проверяются схемой (не uuid — `RangeError`), tmp+rename, папки 0700, файлы 0600. В тестах — `MemoryBlobStore`.
-- `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; `defineModule({ settings })` кладёт их в реестр корня композиции
-  только регистрирует здесь), `registeredSettings()`, `createSettings({ db, clock, env, log })` → `get` (кэш ≤ 5 с),
+- `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; `defineModule({ settings })` кладёт их ещё и в реестр
+  корня композиции), `registeredSettings()`, `createSettings({ db, clock, env, log })` → `get` (кэш ≤ 5 с),
   `peek` (синхронно, для часов), `source`, `set` (не по схеме — `VALIDATION`), `reset`. `settings/time-zone.ts` —
   `TIME_ZONE` (`system.time-zone`, env `TIME_ZONE`, по умолчанию `Europe/Minsk`); в корне композиции:
   `createClock(() => settings.peek(TIME_ZONE))`.

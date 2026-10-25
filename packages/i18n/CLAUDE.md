@@ -16,7 +16,8 @@
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
   (`fin.freeBalance`), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная).
 - Форматы (DES-17): `formatMoney(money)` — «1 234,56 BYN», «−840,00 BYN» (между разрядами и перед кодом U+00A0,
-  минус U+2212); `formatDate(date)` — «21.10.2026»; `formatRelativeDay(date, today)` — сегодня, вчера, завтра,
+  минус U+2212); `formatMoneyParts(money)` — те же части отдельно `{ negative, amount, currency }` (сайт: валюта
+  мельче, знак «+»/«−» по смыслу операции); `formatDate(date)` — «21.10.2026»; `formatRelativeDay(date, today)` — сегодня, вчера, завтра,
   послезавтра, «через N дн.» / «N дн. назад» до ±7 дней, дальше — `formatDate`.
 - Множественные числа: `_one` (1, 21, 101), `_few` (2–4, 22), `_many` (0, 5–20, 25, 111) **и `_other`** (дроби);
   число в тексте — `{{count, number}}` («1,5 операции»): это `Intl`, разделитель разрядов от 1000 ставит ICU.

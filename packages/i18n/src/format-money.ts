@@ -21,8 +21,18 @@ function groupThousands(digits: string): string {
   return groups.join(NBSP);
 }
 
-/** «1 234,56 BYN», «−840,00 BYN». Не целые копейки или неверный код валюты — `RangeError`, а не неверная строка. */
-export function formatMoney(money: Money): string {
+/** Сумма по частям — для вёрстки, где код валюты мельче, а знак ставится по смыслу (доход «+», расход «−»). */
+export interface MoneyParts {
+  /** Сумма меньше нуля (−0 — не меньше). */
+  readonly negative: boolean;
+  /** Модуль суммы: «1 234,56» — U+00A0 между разрядами, запятая перед копейками. */
+  readonly amount: string;
+  /** Код ISO: «BYN». */
+  readonly currency: string;
+}
+
+/** Части «1 234,56 BYN». Не целые копейки или неверный код валюты — `RangeError`, а не неверная строка. */
+export function formatMoneyParts(money: Money): MoneyParts {
   if (!Number.isSafeInteger(money.minor)) {
     throw new RangeError(`Деньги — целые копейки в безопасном диапазоне, получено ${money.minor}.`);
   }
@@ -35,5 +45,11 @@ export function formatMoney(money: Money): string {
   const abs = minor < 0n ? -minor : minor;
   const units = groupThousands((abs / 100n).toString());
   const cents = (abs % 100n).toString().padStart(2, "0");
-  return `${minor < 0n ? MINUS : ""}${units},${cents}${NBSP}${money.currency}`;
+  return { negative: minor < 0n, amount: `${units},${cents}`, currency: money.currency };
+}
+
+/** «1 234,56 BYN», «−840,00 BYN». Не целые копейки или неверный код валюты — `RangeError`, а не неверная строка. */
+export function formatMoney(money: Money): string {
+  const { negative, amount, currency } = formatMoneyParts(money);
+  return `${negative ? MINUS : ""}${amount}${NBSP}${currency}`;
 }

@@ -2,7 +2,7 @@
 // минус — U+2212. Каждый символ проверяется кодом: обычный пробел или дефис глазом не отличить.
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
-import { formatMoney } from "./format-money.ts";
+import { formatMoney, formatMoneyParts } from "./format-money.ts";
 
 // Через коды, а не литералами: форматтер заменяет экранированные символы невидимыми, их не видно в тексте.
 const NBSP = String.fromCharCode(0x00a0);
@@ -78,5 +78,40 @@ describe("DES-17: formatMoney", () => {
 
   it("неверный код валюты — RangeError", () => {
     expect(() => formatMoney({ minor: 100, currency: "руб" })).toThrow(RangeError);
+  });
+});
+
+describe("DES-17: formatMoneyParts — сумма по частям для вёрстки (валюта мельче, знак — по смыслу)", () => {
+  it("1 234,56 BYN → знака нет, сумма с U+00A0 между разрядами, код отдельно", () => {
+    expect(formatMoneyParts(byn(123_456))).toEqual({
+      negative: false,
+      amount: `1${NBSP}234,56`,
+      currency: "BYN",
+    });
+  });
+
+  it("−840,00 BYN → признак минуса отдельно, сумма без знака", () => {
+    expect(formatMoneyParts(byn(-84_000))).toEqual({
+      negative: true,
+      amount: "840,00",
+      currency: "BYN",
+    });
+  });
+
+  it("−0 — не отрицательная", () => {
+    expect(formatMoneyParts({ minor: -0, currency: "BYN" }).negative).toBe(false);
+  });
+
+  it("части собираются в ту же строку, что formatMoney", () => {
+    for (const minor of [0, 5, -5, 123_456, -Number.MAX_SAFE_INTEGER]) {
+      const parts = formatMoneyParts(byn(minor));
+      expect(`${parts.negative ? MINUS : ""}${parts.amount}${NBSP}${parts.currency}`).toBe(
+        formatMoney(byn(minor)),
+      );
+    }
+  });
+
+  it("дробные копейки — RangeError, как у formatMoney", () => {
+    expect(() => formatMoneyParts({ minor: 1.5, currency: "BYN" })).toThrow(RangeError);
   });
 });

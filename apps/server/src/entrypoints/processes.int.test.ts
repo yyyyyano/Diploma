@@ -2,7 +2,7 @@
 // (Node 26 стирает типы сам, workspace-пакеты — по realpath, ADR-0002), на своей тестовой базе, с временными
 // DATA_DIR и мастер-ключом и портами 0. Порт api читается из строки http.listening лога. Обе роли базы (ADR-0020) —
 // явно: приложение kosht_app (DATABASE_URL) и владелец для миграций и выдачи прав (MIGRATION_*).
-import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { createTestDb, dropTestRole, testRoleName, type TestDb } from "@kosht/testing/db";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, inject, it, vi } from "vitest";
+import { APP_SCHEMAS, ensureAppRole } from "../platform/db/roles.ts";
 
 type Role = "api" | "worker" | "bot";
 
@@ -30,6 +31,8 @@ let dir: string;
 let passwordFile: string;
 let ownerPasswordFile: string;
 let masterKeyFile: string;
+/** Роли test_*, которые портят тесты этого файла. */
+const roles: string[] = [];
 
 beforeAll(async () => {
   db = await createTestDb();
@@ -44,6 +47,8 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db.drop();
+  // Права ролей test_* живут в базе файла: роли удаляются после неё.
+  for (const role of roles) await dropTestRole(inject("testDb").admin, role);
   await rm(dir, { recursive: true, force: true });
 });
 
@@ -200,6 +205,53 @@ describe("ADR-0015: api останавливается по SIGTERM коррек
       } finally {
         await new Promise((done) => blocker.close(done));
       }
+    },
+    TEST_MS,
+  );
+});
+
+describe("ADR-0020: api с лишними правами роли БД не стартует", () => {
+  it.each([
+    ["членство в pg_read_server_files", "grant pg_read_server_files to", "членство в другой роли"],
+    ["CREATE на схеме public", "grant create on schema public to", "CREATE на схеме public"],
+  ])(
+    "%s — понятный отказ без паролей, код не 0, соединений с БД нет",
+    async (_name, grant, problem) => {
+      // Своя роль test_*: kosht_app общая для кластера, на ней идут остальные файлы. ensureAppRole не снимает
+      // членство и явную выдачу CREATE — их ловит только assertAppRole в compose().
+      const role = testRoleName();
+      roles.push(role);
+      const password = randomBytes(16).toString("hex");
+      const rolePasswordFile = join(dir, role);
+      await writeFile(rolePasswordFile, password, { mode: 0o600 });
+      await ensureAppRole(db.owner, {
+        appRole: role,
+        passwordFile: rolePasswordFile,
+        schemas: APP_SCHEMAS,
+      });
+      await db.owner.query(`${grant} "${role}"`);
+      const { app } = inject("testDb");
+
+      const api = await start("api", {
+        DATABASE_URL: `postgres://${role}@${app.host}:${String(app.port)}/${db.name}`,
+        DB_PASSWORD_FILE: rolePasswordFile,
+      });
+      expect(await api.exited).not.toBe(0);
+      expect(api.stderr()).toContain(problem);
+      expect(api.stderr()).toContain("revoke");
+      const lines = await logLines(api.dataDir, "api");
+      expect(lines.map((line) => line["msg"])).toContain("process.start-failed");
+      const text = api.stderr() + JSON.stringify(lines);
+      for (const secret of [password, inject("testDb").admin.password]) {
+        expect(text).not.toContain(secret);
+      }
+      await vi.waitFor(
+        async () => {
+          expect(await connections("kosht-api")).toBe(0);
+          expect(await connections("kosht-api-migrate")).toBe(0);
+        },
+        { interval: 50 },
+      );
     },
     TEST_MS,
   );

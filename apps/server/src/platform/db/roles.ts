@@ -117,7 +117,12 @@ export async function ensureAppRole(owner: pg.Pool, options: AppRoleOptions): Pr
         await client.query("commit");
         return;
       } catch (error) {
-        await client.query("rollback");
+        try {
+          await client.query("rollback");
+        } catch {
+          // Оборванное соединение: rollback бросает своё — наружу уходит исходная причина, без повтора.
+          throw error;
+        }
         const code = (error as { code?: unknown }).code;
         if (attempt >= ATTEMPTS || typeof code !== "string" || !RACE_CODES.has(code)) throw error;
       }
@@ -252,13 +257,37 @@ export async function appRoleProblems(pool: pg.Pool): Promise<AppRoleProblem[]> 
   return (Object.keys(PROBLEM_TEXT) as AppRoleProblem[]).filter((problem) => row[problem]);
 }
 
+/** Признаки, которые ensureAppRole не снимает: их выдали вручную, make init не поможет. */
+const GRANTED_BY_HAND: readonly AppRoleProblem[] = ["member-of-role", "create-on-public"];
+
+/** Что делать: атрибуты владельца — старый .env; членство и CREATE — ручная выдача, снимается revoke. */
+function appRoleHint(problems: readonly AppRoleProblem[]): string {
+  const hints: string[] = [];
+  if (problems.some((problem) => !GRANTED_BY_HAND.includes(problem))) {
+    hints.push(
+      "Похоже, DATABASE_URL указывает на владельца базы (старый .env): выполните make init — он заменит " +
+        "старые DATABASE_URL и DB_PASSWORD_FILE в .env — и перезапустите.",
+    );
+  }
+  const revokes: string[] = [];
+  if (problems.includes("member-of-role")) revokes.push("revoke <роль> from <роль приложения>");
+  if (problems.includes("create-on-public")) {
+    revokes.push("revoke create on schema public from <роль приложения>");
+  }
+  if (revokes.length > 0) {
+    hints.push(
+      `Эти права выданы вручную: снимите их владельцем в make db-shell (${revokes.join("; ")}) и перезапустите.`,
+    );
+  }
+  return hints.join(" ");
+}
+
 /** Старт отказывает, если приложение подключено ролью с лишними правами (например, старый .env с владельцем). */
 export async function assertAppRole(pool: pg.Pool): Promise<void> {
   const problems = await appRoleProblems(pool);
   if (problems.length === 0) return;
   throw new AppRoleError(
     `Роль приложения (DATABASE_URL) не должна иметь: ${problems.map((p) => PROBLEM_TEXT[p]).join(", ")}. ` +
-      "Приложение работает под ролью без административных прав (ADR-0020): выполните make init — он заменит " +
-      "старые DATABASE_URL и DB_PASSWORD_FILE в .env — и перезапустите.",
+      `Приложение работает под ролью без административных прав (ADR-0020). ${appRoleHint(problems)}`,
   );
 }

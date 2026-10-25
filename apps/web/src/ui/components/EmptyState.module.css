@@ -1,0 +1,45 @@
+/* .empty из design/kit.css. */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s-10);
+  padding: var(--s-40) var(--s-20);
+  color: var(--ink-2);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--r-lg);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.error .icon {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.description {
+  margin: 0;
+  max-width: 440px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-8);
+  margin-top: var(--s-6);
+}

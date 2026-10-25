@@ -1,0 +1,59 @@
+/* .sk из design/kit.css: мерцающая полоса; при prefers-reduced-motion анимацию гасит global.css. */
+.sk {
+  display: block;
+  border-radius: var(--r-xs);
+  background: linear-gradient(
+    90deg,
+    var(--kit-track) 25%,
+    var(--kit-shimmer) 50%,
+    var(--kit-track) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  padding: var(--s-18) var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  padding: var(--s-10) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  flex: 1;
+  min-width: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}

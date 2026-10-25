@@ -1,0 +1,43 @@
+/* .k-top, .k-top-title, .k-top-actions из design/kit.css; ≤ 860 px — поля 16. */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-12) var(--s-16);
+  padding: var(--s-18) var(--s-32);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.titleBlock {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-10);
+}
+
+@media (max-width: 860px) {
+  .top {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}

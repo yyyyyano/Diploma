@@ -152,12 +152,13 @@ check: fmt-check lint typecheck deps-check static-checks test ## Все пров
 check-quick: typecheck deps-check static-checks ## Быстрые проверки для pre-push: типы, границы, свои проверки и тесты без БД
 	$(BIN)/vitest run --project unit
 
-# e2e (T-008, CONSTRAINTS «Доступность»): Playwright сам собирает сайт (vite build --mode e2e — с витриной
-# /dev/gallery) и поднимает его на 127.0.0.1:8150; axe на каждом маршруте при 1440 и 390 px. Chromium — своей сборки
-# Playwright: нет его в кэше — подсказка make e2e-install, а не скачивание из цели проверки.
+# e2e (T-008, T-009, CONSTRAINTS «Доступность»): Playwright сам собирает сайт (vite build --mode e2e — с витриной
+# /dev/gallery) и поднимает стенд: api и worker на своей свежей базе и 127.0.0.1:8150 (рабочие 8140 и дев-база не
+# трогаются); axe на каждом маршруте при 1440 и 390 px. Chromium — своей сборки Playwright: нет его в кэше —
+# подсказка make e2e-install, а не скачивание из цели проверки.
 PLAYWRIGHT := node_modules/.bin/playwright
 
-e2e: need-node ## e2e сайта: Playwright + axe (WCAG 2.2 AA) при 1440 и 390 px; Chromium — make e2e-install
+e2e: need-node db-up secrets/db_app_password ## e2e сайта на своём стенде (api, worker, своя база): Playwright + axe (WCAG 2.2 AA) при 1440 и 390 px; Chromium — make e2e-install
 	@dir=$$(cd e2e && $(PLAYWRIGHT) install --dry-run chromium 2>/dev/null | awk '/Install location/ { print $$3; exit }'); \
 	test -n "$$dir" && test -d "$$dir" || { echo "Нет Chromium для Playwright — установите: make e2e-install" >&2; exit 2; }
 	cd e2e && $(PLAYWRIGHT) test

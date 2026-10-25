@@ -8,11 +8,15 @@
 `make e2e` (и `check-full`); браузер — `make e2e-install` (Chromium версии `@playwright/test` из `catalog:`).
 
 ## Публичный API
-- `playwright.config.ts`: сборка `vite build --mode e2e` и `vite preview` на `127.0.0.1:8150` (`E2E_PORT`), локаль
-  ru-RU, пояс Europe/Minsk, Chromium.
-- `specs/*.spec.ts`: сейчас `gallery.spec.ts` — витрина `/dev/gallery`: axe (`wcag2a`, `wcag2aa`, `wcag21aa`,
+- `playwright.config.ts`: сборка `vite build --mode e2e --outDir dist-e2e` и стенд
+  `apps/server/src/entrypoints/__fixtures__/e2e-stack.ts` на `127.0.0.1:8150` (`E2E_PORT`): api и worker на своей
+  свежей базе (клон шаблона тестов), сайт отдаёт api; остановка — SIGTERM (`gracefulShutdown`), стенд удаляет базу.
+  Локаль ru-RU, пояс Europe/Minsk, Chromium.
+- `specs/*.spec.ts`: `gallery.spec.ts` — витрина `/dev/gallery`: axe (`wcag2a`, `wcag2aa`, `wcag21aa`,
   `wcag22aa`) с закрытыми и открытыми панелью, подтверждением, уведомлением, шторкой «Ещё»; нет горизонтальной
-  прокрутки; шрифты — со своего адреса, чужих запросов 0 (DES-09).
+  прокрутки; шрифты — со своего адреса, чужих запросов 0 (DES-09). `first-run.spec.ts` — чистая база: «/» → первый
+  запуск → администратор → вход → «Наличные · 0,00 BYN» → выход; axe и прокрутка на `/setup`, `/login`, `/accounts`
+  при 1440 и 390.
 
 ## Можно зависеть от
 `@playwright/test`, `@axe-core/playwright`. Нельзя: импорт кода `apps/*` (сценарии видят сайт как пользователь).
@@ -25,5 +29,7 @@
 - `make e2e`; отчёты и трассы падений — `e2e/test-results/` (вне git).
 
 ## Подводные камни
-- Сервер приложения поднимает T-009 (своя база из шаблона и свой порт); сейчас сценарии не ходят в `/api`.
+- База стенда — одна на прогон: первый запуск проходит один раз, поэтому сценарий со входом — один и
+  последовательный; новые сценарии со своими данными заводят своих пользователей (регистрация — T-012).
+- Пароль — `getByLabel("Пароль", { exact: true })`: у кнопки «Показать пароль» в имени тоже есть «пароль».
 - Новая версия `@playwright/test` требует свою сборку Chromium — после обновления `make e2e-install`.

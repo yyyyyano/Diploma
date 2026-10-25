@@ -9,6 +9,8 @@ samples/
 # Зависимости, сборка, кэши
 node_modules/
 dist/
+# Сборка сайта для стенда e2e (make e2e).
+dist-e2e/
 build/
 coverage/
 .turbo/

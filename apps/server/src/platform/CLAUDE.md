@@ -114,6 +114,8 @@
   `process.stopped` → лог на диск → код 0; дольше
   `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
 - `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
+- `entrypoints/__fixtures__/e2e-stack.ts` — стенд `make e2e`: шаблон тестов (`db/__fixtures__/test-template.ts`, общий с
+  globalSetup проекта int) → своя база → api и worker со своим окружением и портом; SIGTERM — остановка и удаление базы.
 - `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов
   два: владельца — только на старте (`kosht-<роль>-migrate`), роли приложения — на всю жизнь процесса (`kosht-<роль>`).
 

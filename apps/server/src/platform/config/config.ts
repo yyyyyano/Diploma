@@ -36,6 +36,8 @@ export interface AppConfig {
   readonly listeners: { readonly local: Listen; readonly lan: Listen };
   /** Origin, которым доверяют изменяющие запросы сверх своего Host (T-059). */
   readonly trustedOrigins: readonly string[];
+  /** Собранный сайт (Vite), который отдаёт api, — абсолютный путь. */
+  readonly webDistDir: string;
   /** Корень данных запуска: data/logs, data/files… — абсолютный путь. */
   readonly dataDir: string;
   readonly logLevel: LogLevel;
@@ -110,6 +112,7 @@ const AppEnv = DbEnv.extend({
       .default([]),
   ),
   DATA_DIR: path("data", "папке данных"),
+  WEB_DIST_DIR: path("apps/web/dist", "папке собранного сайта"),
   MASTER_KEY_FILE: path("secrets/master.key", "файлу мастер-ключа"),
   LOG_LEVEL: optional(
     z.enum(LOG_LEVELS, { error: `ожидается одно из: ${LOG_LEVELS.join(", ")}` }).default("info"),
@@ -160,6 +163,7 @@ export function loadConfig(env: Env = process.env): AppConfig {
       lan: { host: parsed.LISTEN_LAN_HOST, port: parsed.LISTEN_LAN_PORT },
     },
     trustedOrigins: parsed.TRUSTED_ORIGINS,
+    webDistDir: resolve(parsed.WEB_DIST_DIR),
     dataDir: resolve(parsed.DATA_DIR),
     logLevel: parsed.LOG_LEVEL,
     masterKey: readMasterKey(parsed.MASTER_KEY_FILE),

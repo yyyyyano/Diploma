@@ -35,6 +35,7 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
         lan: { host: "0.0.0.0", port: 8141 },
       },
       trustedOrigins: [],
+      webDistDir: resolve("apps/web/dist"),
       dataDir: resolve("data"),
       logLevel: "info",
     });
@@ -55,6 +56,7 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
         LISTEN_LAN_PORT: "9141",
         TRUSTED_ORIGINS: "http://192.168.1.5:8141, https://kosht.local",
         DATA_DIR: "/srv/kosht",
+        WEB_DIST_DIR: "/srv/kosht-web",
         LOG_LEVEL: "debug",
       }),
     );
@@ -64,6 +66,7 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
     });
     expect(config.trustedOrigins).toEqual(["http://192.168.1.5:8141", "https://kosht.local"]);
     expect(config.dataDir).toBe("/srv/kosht");
+    expect(config.webDistDir).toBe("/srv/kosht-web");
     expect(config.logLevel).toBe("debug");
   });
 

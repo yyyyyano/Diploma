@@ -7,8 +7,8 @@
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
-- `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db`, `listeners.local/lan`, `trustedOrigins`, `dataDir`
-  абсолютный, `logLevel`, `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
+- `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db`, `listeners.local/lan`, `trustedOrigins`,
+  `webDistDir` (`WEB_DIST_DIR`, по умолчанию `apps/web/dist`) и `dataDir` абсолютные, `logLevel`, `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
   `loadDbConfig(env?)` — только `DATABASE_URL`/`DB_PASSWORD_FILE`, без мастер-ключа (`make migrate`, globalSetup
   тестов); `DbConfig`, `ConfigError` (имя переменной и ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с
   `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
@@ -43,7 +43,7 @@
   очистки нет.
 
 ## Публичный API — `http/` (T-059: SEC-01, NFR-24, R40, OBS-01/02, ADR-0005, ADR-0016)
-- `app.ts` — `createApp({ listener, trustedOrigins, log, ready, api?, routes? })` → `HttpApp` (Hono) на один слушатель:
+- `app.ts` — `createApp({ listener, trustedOrigins, log, ready, api?, webDistDir?, routes? })` → `HttpApp` (Hono) на один слушатель:
   request-id и контекст лога → Host и CSRF → маршрут → заголовки безопасности и строка `http.request` (`method`,
   `httpStatus`, `ms`, `listener`) на каждом ответе; `/healthz` (без БД), `/readyz` (`ready()` ≤ 2 с, иначе 503
   `UNAVAILABLE` без деталей); неизвестный маршрут — 404 `NOT_FOUND`; исключение — 500 `INTERNAL` + `http.error` со
@@ -64,6 +64,9 @@
   `openSession(registry, pool, headers)` — **единственное** место `makeScope` для сайта (ARCHITECTURE §6.4).
 - `api.ts` — `createApiHandler(router, log)`: `OpenAPIHandler` под `/api`; перевод ошибок: вход не по схеме и битое
   тело → `VALIDATION` (без issues), `AppError` → свой код, выход не по схеме и прочее → `INTERNAL` + `http.error`.
+- `static-site.ts` — `siteResponse(root, pathname)`: файл сборки (`assets/` — вечный кэш, прочее — `no-cache`) или
+  `index.html` для маршрута сайта; отсутствующий файл с расширением, `/api`, dotfiles, «..», `\`, NUL, `%`, `//` и
+  ссылки за пределы корня (realpath) — `undefined` (404). В `createApp` — опция `webDistDir`, только GET/HEAD.
 - `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 

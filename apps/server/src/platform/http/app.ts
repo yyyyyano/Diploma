@@ -17,6 +17,7 @@ import {
   type ListenerName,
 } from "./guard.ts";
 import type { Session } from "./session.ts";
+import { siteResponse } from "./static-site.ts";
 
 /** Переменные запроса Hono. */
 export interface HttpEnv {
@@ -45,6 +46,8 @@ export interface AppOptions {
   readonly ready: () => Promise<void>;
   /** Процедуры oRPC под /api; без них /api отвечает NOT_FOUND. */
   readonly api?: ApiOptions;
+  /** Корень собранного сайта (WEB_DIST_DIR); без него статики нет. */
+  readonly webDistDir?: string;
   /** Дополнительные маршруты процесса — до статики сайта. */
   readonly routes?: (app: HttpApp) => void;
 }
@@ -122,6 +125,15 @@ export function createApp(options: AppOptions): HttpApp {
   app.all(`${API_PREFIX}/*`, api);
 
   options.routes?.(app);
+
+  // Статика и SPA-fallback — только GET и HEAD (Hono отвечает на HEAD обработчиком GET без тела).
+  const site = options.webDistDir;
+  if (site !== undefined) {
+    app.get("*", async (c) => {
+      const response = await siteResponse(site, new URL(c.req.url).pathname);
+      return response ?? errorResponse(new AppError("NOT_FOUND"), c.get("requestId"));
+    });
+  }
 
   app.notFound((c) => errorResponse(new AppError("NOT_FOUND"), c.get("requestId")));
 

@@ -448,7 +448,7 @@
 - Зависимости: T-005
 
 ### T-006 · Платформа: фоновые задачи и события
-- Статус: todo
+- Статус: done · 13c1e57..85cf0ca
 - Модули: `platform/{jobs,events,db}`, `apps/server/src/main/compose.ts`, `apps/server/src/entrypoints/run.ts`,
   `tooling/architecture/rules.ts`, `apps/server/drizzle.config.ts`, `Makefile`, `@kosht/testing`, `pnpm-workspace.yaml`,
   `apps/server/package.json`, `apps/server/src/platform/CLAUDE.md`

@@ -14,7 +14,7 @@ import {
 } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { createRouterClient, isProcedure, type AnyProcedure } from "@orpc/server";
-import { randomBytes } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -32,6 +32,9 @@ interface Household {
   readonly scope: Scope;
   readonly email: string;
   readonly accountId: string;
+  readonly conversationId: string;
+  /** Запуск агента B: «Стоп» от A по его id не находит запуск (ключ — домохозяйство). */
+  readonly runId: string;
 }
 
 /**
@@ -54,6 +57,11 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
   "tool:list_accounts": { input: () => ({}) },
+  "chat.history": { input: () => undefined },
+  "chat.send": {
+    input: (b) => ({ conversationId: b.conversationId, text: "Какие у меня счета?" }),
+  },
+  "chat.stop": { input: (b) => ({ runId: b.runId }) },
 };
 
 let db: TestDb;
@@ -78,10 +86,22 @@ async function seedHousehold(email: string): Promise<Household> {
     "insert into accounts (household_id, user_id, kind) values ($1, $2, 'cash') returning id",
     [ids.household_id, ids.user_id],
   );
+  const conversation = await db.owner.query<{ id: string }>(
+    "insert into chat_conversations (household_id, user_id) values ($1, $2) returning id",
+    [ids.household_id, ids.user_id],
+  );
+  const conversationId = conversation.rows[0]?.id ?? "";
+  await db.owner.query(
+    `insert into chat_messages (household_id, user_id, conversation_id, role, parts)
+     values ($1, $2, $3, 'user', jsonb_build_array(jsonb_build_object('type', 'text', 'text', $4::text)))`,
+    [ids.household_id, ids.user_id, conversationId, `переписка ${email}`],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
     accountId: account.rows[0]?.id ?? "",
+    conversationId,
+    runId: randomUUID(),
   };
 }
 
@@ -166,8 +186,15 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
 
   it("каждый случай: ответ — NOT_FOUND или в нём нет ни id, ни email домохозяйства B", async () => {
     const { cases } = plan();
-    expect(cases.map((c) => c.name)).toEqual(["accounts.list", "identity.me", "list_accounts"]);
-    const foreign = [b.scope.userId, b.scope.householdId, b.accountId, b.email];
+    expect(cases.map((c) => c.name)).toEqual([
+      "accounts.list",
+      "chat.history",
+      "chat.send",
+      "chat.stop",
+      "identity.me",
+      "list_accounts",
+    ]);
+    const foreign = [b.scope.userId, b.scope.householdId, b.accountId, b.email, b.conversationId];
     const violations: string[] = [];
     for (const c of cases) {
       try {

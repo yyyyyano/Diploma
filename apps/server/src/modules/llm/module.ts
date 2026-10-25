@@ -11,7 +11,7 @@ import type { NotificationsFacade } from "../notifications/index.ts";
 import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
 import { createProviderRegistry } from "./infrastructure/providers/providers.ts";
 import { createTestProvider } from "./infrastructure/providers/test-provider.ts";
-import { LLM_CASSETTE, LLM_MODE } from "./settings.ts";
+import { LLM_CASSETTE, LLM_CASSETTE_DELAYS, LLM_MODE } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface LlmFacades {
@@ -35,6 +35,7 @@ export function createLlmModule({ platform }: ModuleDeps<LlmFacades, SystemPlatf
       const file = await platform.settings.get(LLM_CASSETTE);
       return {
         mode: await platform.settings.get(LLM_MODE),
+        delays: await platform.settings.get(LLM_CASSETTE_DELAYS),
         ...(file === "" ? {} : { cassette: { file, scenario: scenarioOf(file) } }),
       };
     },
@@ -42,13 +43,13 @@ export function createLlmModule({ platform }: ModuleDeps<LlmFacades, SystemPlatf
   return defineModule({
     id: "llm",
     facade: gateway,
-    settings: [LLM_MODE, LLM_CASSETTE],
+    settings: [LLM_MODE, LLM_CASSETTE, LLM_CASSETTE_DELAYS],
   });
 }
 
-/** Сценарий кассеты по пути: `…/chat/__cassettes__/accounts.json` → `chat/accounts`. */
+/** Сценарий кассеты по пути: `…/modules/chat/application/__cassettes__/accounts.json` → `chat/accounts`. */
 export function scenarioOf(file: string): string {
-  const match = /([^/]+)\/__cassettes__\/([^/]+)\.json$/.exec(file);
+  const match = /modules\/([^/]+)\/(?:.*\/)?__cassettes__\/([^/]+)\.json$/.exec(file);
   return match === null ? file : `${match[1] ?? ""}/${match[2] ?? ""}`;
 }
 

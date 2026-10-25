@@ -40,6 +40,8 @@ export interface AgentRun {
   readonly requestId: string;
   /** Id диалога — для трасс (sessionId). */
   readonly sessionId: string;
+  /** Id ответа ассистента (строка сообщения в chat): AI SDK ставит его в кусок start. */
+  readonly messageId: string;
   /** Метаданные первого куска ответа (start): runId и id диалога для сайта. */
   readonly metadata: Record<string, string>;
   /** Итог ответа: сообщение целиком и признак обрыва. */
@@ -89,6 +91,7 @@ export function makeRunAgent(d: RunAgentDeps) {
       agent,
       uiMessages: [...run.messages],
       abortSignal: run.abortSignal,
+      generateMessageId: () => run.messageId,
       messageMetadata: ({ part }) => (part.type === "start" ? run.metadata : undefined),
       onFinish: ({ responseMessage, isAborted }) => run.onFinish(responseMessage, isAborted),
     });

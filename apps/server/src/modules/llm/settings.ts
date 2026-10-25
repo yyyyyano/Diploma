@@ -19,3 +19,12 @@ export const LLM_CASSETTE = defineSetting({
   default: "",
   env: "LLM_CASSETTE",
 });
+
+/** Повторять паузы записи кассеты (e2e — да: виден поток); тесты сценариев выключают — быстрее. */
+export const LLM_CASSETTE_DELAYS = defineSetting({
+  key: "llm.cassette-delays",
+  schema: z.boolean(),
+  default: true,
+  env: "LLM_CASSETTE_DELAYS",
+  fromEnv: (raw) => raw === "1" || raw === "true",
+});

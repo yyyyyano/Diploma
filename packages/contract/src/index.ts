@@ -5,6 +5,17 @@ export {
   AccountListItem,
   accountsContract,
 } from "./accounts/accounts.contract.ts";
+export {
+  ChatMessage,
+  chatContract,
+  ConversationId,
+  MessageStatus,
+  RunId,
+  RunMetadata,
+  SendInput,
+  UiMessageChunk,
+  UiMessagePart,
+} from "./chat/chat.contract.ts";
 export { CardPart, ChatMessagePart, StepPart, TextPart } from "./chat/message-parts.ts";
 export { PageContext } from "./chat/page-context.ts";
 export {

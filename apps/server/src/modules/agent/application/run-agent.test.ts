@@ -117,6 +117,7 @@ async function run(toolName: string, toolTurns: number, maxSteps = 8) {
     abortSignal: new AbortController().signal,
     requestId: "req-1",
     sessionId: "dialog-1",
+    messageId: "m-1",
     metadata: { runId: "run-1" },
     onFinish: async (message, aborted) => {
       finished = { message, aborted };
@@ -130,7 +131,11 @@ async function run(toolName: string, toolTurns: number, maxSteps = 8) {
 describe("AGT-01: цикл агента", () => {
   it("инструмент из реестра видит домохозяйство запуска; ответ — поток с метаданными runId", async () => {
     const { chunks, finished } = await run("household_of_run", 1);
-    expect(chunks[0]).toMatchObject({ type: "start", messageMetadata: { runId: "run-1" } });
+    expect(chunks[0]).toMatchObject({
+      type: "start",
+      messageId: "m-1",
+      messageMetadata: { runId: "run-1" },
+    });
     expect(chunks).toContainEqual(
       expect.objectContaining({
         type: "tool-output-available",

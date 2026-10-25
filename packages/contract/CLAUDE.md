@@ -21,7 +21,12 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   `/healthz` она не заменяет. `events.stream` — поток `SiteEvent` (`progress` с `percent` 0..100 или без него,
   `changed`; сущность и id, без данных), ошибка `UNAUTHORIZED`.
 - Чат: `PageContext { route, params ≤ 20, selected? }`; `ChatMessagePart` — `text`, `step` (только имя инструмента),
-  `card { kind, id }`; расширения — T-006, T-010, T-043.
+  `card { kind, id }` (упрощённый вид для бота и уведомлений; расширения — T-043).
+- `chat` (`chat/chat.contract.ts`, T-010): `history`, `send` (поток `eventIterator(UiMessageChunk)`, первый кусок
+  `start` — `RunMetadata { runId, conversationId }`), `stop({ runId })`; `ChatMessage { id, role, parts, status }`.
+  **Решение:** контракт не импортирует `ai` — `UiMessageChunk` и `UiMessagePart` слабые («объект с `type`»): форму
+  кусков и частей строит AI SDK на сервере и проверяет AI SDK на сайте (`useChat`).
+- `identity`, `accounts` (T-009): вход, первый запуск, `accounts.list`.
 
 ## Можно зависеть от
 `zod`, `@orpc/contract` (версия — `catalog:` в `pnpm-workspace.yaml`), `@kosht/kernel` — правило

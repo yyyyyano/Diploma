@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "scenario": "chat/accounts",
+  "steps": [
+    {
+      "kind": "stream",
+      "fingerprint": "9cacc013b9db78d0",
+      "parts": [
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "stream-start",
+            "warnings": []
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "tool-input-start",
+            "id": "call-1",
+            "toolName": "list_accounts"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "tool-input-delta",
+            "id": "call-1",
+            "delta": "{}"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "tool-input-end",
+            "id": "call-1"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "tool-call",
+            "toolCallId": "call-1",
+            "toolName": "list_accounts",
+            "input": "{}"
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "finish",
+            "finishReason": {
+              "unified": "tool-calls"
+            },
+            "usage": {
+              "inputTokens": {
+                "total": 153,
+                "noCache": 153
+              },
+              "outputTokens": {
+                "total": 1,
+                "text": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stream",
+      "fingerprint": "16d3818ab49a79d7",
+      "parts": [
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "stream-start",
+            "warnings": []
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "text-start",
+            "id": "text-1"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "Вот "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "ваши "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "счета: "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "остаток "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "каждого "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "— "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "на "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "карточке "
+          }
+        },
+        {
+          "delayMs": 301,
+          "part": {
+            "type": "text-delta",
+            "id": "text-1",
+            "delta": "ниже."
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-end",
+            "id": "text-1"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "finish",
+            "finishReason": {
+              "unified": "stop"
+            },
+            "usage": {
+              "inputTokens": {
+                "total": 245,
+                "noCache": 245
+              },
+              "outputTokens": {
+                "total": 13,
+                "text": 13
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

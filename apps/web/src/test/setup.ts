@@ -39,6 +39,16 @@ function installDomGaps(): void {
   window.ResizeObserver = NoopResizeObserver;
   // Mantine прокручивает к активному элементу и ждёт scrollIntoView, которого в jsdom нет.
   Element.prototype.scrollIntoView = function scrollIntoView() {};
+  // Textarea autosize Mantine пересчитывает высоту по загрузке шрифтов (document.fonts) — в jsdom их нет.
+  if (!("fonts" in document)) {
+    Object.defineProperty(document, "fonts", {
+      value: {
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+        ready: Promise.resolve(),
+      },
+    });
+  }
   // Роутер восстанавливает прокрутку при переходах (scrollRestoration); jsdom её не умеет и пишет в консоль.
   window.scrollTo = () => {};
 }

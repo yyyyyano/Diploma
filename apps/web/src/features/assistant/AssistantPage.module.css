@@ -1,0 +1,151 @@
+/* .as-chat, .as-body, .as-col, .as-msg, .as-u, .as-composer из design/screens/Assistant.dc.html: колонка ленты
+   ≤ 780 px по центру, вопрос — тёмный пузырь справа, ответ — со значком ассистента слева. */
+.body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: var(--s-24) var(--s-24) var(--s-40);
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-18);
+  min-height: 240px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bubble {
+  margin: 0;
+  max-width: 80%;
+  padding: var(--s-10) var(--s-14);
+  border-radius: var(--r-md);
+  background: var(--brand-ink);
+  color: var(--kit-on-dark);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.answer {
+  display: flex;
+  gap: var(--s-10);
+  align-items: flex-start;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: var(--brand);
+  color: var(--kit-on-dark);
+}
+
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  flex: 1;
+  min-width: 0;
+}
+
+.text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.step,
+.muted {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--s-12);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-12) var(--s-14);
+  border-radius: var(--r-md);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.error > svg {
+  flex: none;
+}
+
+.composer {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-10);
+  padding: var(--s-8);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+}
+
+.note {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding: var(--s-16) var(--s-16) var(--s-24);
+  }
+}

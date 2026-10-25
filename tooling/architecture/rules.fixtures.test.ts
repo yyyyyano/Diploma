@@ -146,6 +146,10 @@ const EXPECTED: Record<string, string[]> = {
   ],
   "ai-sdk-only-in-llm": [`${M}/agent/application/run.ts → @ai-sdk/openai-compatible`],
   "ai-only-in-llm-agent-chat": [`${M}/receipts/application/recognize.ts → ai`],
+  "ai-only-in-web-assistant": [
+    `${W}/features/accounts/AccountsPage.tsx → @ai-sdk/react`,
+    `${W}/features/accounts/AccountsPage.tsx → ai`,
+  ],
   "pg-boss-only-in-platform-jobs": [`${M}/receipts/jobs/recognize.job.ts → pg-boss`],
   "libpg-query-only-in-platform-db": [
     `${M}/receipts/infrastructure/db/receipts.repo.ts → libpg-query`,

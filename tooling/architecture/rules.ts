@@ -434,6 +434,13 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["ai"]) },
     ),
     rule(
+      "ai-only-in-web-assistant",
+      "AI SDK на сайте (ai, @ai-sdk/react) — только в features/assistant: чат с потоком ответа; остальные экраны " +
+        "получают готовые данные процедурами (ADR-0009, ADR-0013).",
+      { path: `^${WEB}/`, pathNot: [`^${WEB}/features/assistant/`, ...TEST_CODE] },
+      { path: npmPattern(["ai", "@ai-sdk/*"]) },
+    ),
+    rule(
       "pg-boss-only-in-platform-jobs",
       "pg-boss — только в platform/jobs: задачи — defineJob, события — events.publish (ADR-0008).",
       { pathNot: `^${PLATFORM}/jobs/` },

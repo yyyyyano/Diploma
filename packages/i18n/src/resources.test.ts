@@ -34,6 +34,7 @@ describe("словари ru", () => {
       "auth",
       "setup",
       "accounts",
+      "assistant",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
@@ -59,6 +60,12 @@ describe("accounts — множественные числа счётчика с
     [21, "21 счёт"],
   ])("%i → «%s»", (count, text) => {
     expect(t("accounts:count", { count })).toBe(text);
+  });
+});
+
+describe("tools — подпись шага у каждого инструмента агента", () => {
+  it("list_accounts — «Смотрю ваши счета…»", () => {
+    expect(t("tools:list_accounts")).toBe("Смотрю ваши счета…");
   });
 });
 

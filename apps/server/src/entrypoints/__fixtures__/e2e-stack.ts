@@ -1,7 +1,7 @@
 // Стенд e2e (make e2e, ARCHITECTURE §12): api и worker — настоящие точки входа на своей свежей базе (клон шаблона
 // @kosht/testing/db из боевых миграций) и своём порту; сайт — сборка Vite из api (WEB_DIST_DIR). Рабочие 8140,
 // make dev и дев-база kosht не трогаются. Окружение процессов — только своё (.env и переменные разработчика стенд не
-// видит). Остановка по SIGTERM/SIGINT (Playwright, gracefulShutdown): процессы — SIGTERM, затем база и временная
+// видит), модели — кассета chat/accounts в режиме replay. Остановка по SIGTERM/SIGINT (Playwright, gracefulShutdown): процессы — SIGTERM, затем база и временная
 // папка удаляются; упавший стенд оставит базу test_<pid>_…, её уберёт dropOrphans следующего прогона.
 //   node apps/server/src/entrypoints/__fixtures__/e2e-stack.ts <порт> <папка сайта>
 import { createTestDb } from "@kosht/testing/db";
@@ -42,6 +42,10 @@ const env: NodeJS.ProcessEnv = {
   LISTEN_LAN_HOST: "127.0.0.1",
   LISTEN_LAN_PORT: "0",
   LOG_LEVEL: "info",
+  // Модели — кассета чата с паузами записи (виден поток), без сети и ключей (NFR-11).
+  LLM_MODE: "replay",
+  LLM_CASSETTE: resolve("apps/server/src/modules/chat/api/__cassettes__/accounts.json"),
+  LLM_CASSETTE_DELAYS: "1",
 };
 
 function start(role: "api" | "worker"): ChildProcess {

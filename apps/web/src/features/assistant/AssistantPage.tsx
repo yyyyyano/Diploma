@@ -8,7 +8,14 @@ import { useChat } from "@ai-sdk/react";
 import { ActionIcon, Button, Textarea, VisuallyHidden } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
-import { Loader2, SendHorizontal, Sparkles, Square, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  Loader2,
+  SendHorizontal,
+  Sparkles,
+  Square,
+  TriangleAlert,
+} from "lucide-react";
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { AccountCard } from "../../entities/account/index.ts";
@@ -194,33 +201,40 @@ function Message({ message }: { readonly message: UIMessage }) {
   );
 }
 
-/** Часть ответа: текст модели, шаг инструмента (подпись из словаря) или карточки результата. */
+/**
+ * Часть ответа: текст модели или шаг инструмента. Шаг остаётся в ленте подписью из словаря tools по имени
+ * инструмента (CHAT-02: видно, что агент делал) — с вращающимся значком, пока идёт, и галочкой после; результат
+ * list_accounts — карточки счетов, ошибка шага — «Шаг не удался».
+ */
 function Part({ part }: { readonly part: UIMessage["parts"][number] }) {
   const { t } = useTranslation(["assistant", "tools"]);
   if (part.type === "text") return <p className={classes.text}>{part.text}</p>;
   if (!part.type.startsWith("tool-") || !("state" in part)) return null;
   const toolName = part.type.slice("tool-".length);
-  if (part.state === "output-available") {
-    const items = accountsOf(part.output);
-    if (items !== undefined) {
-      return (
+  const label = toolName === "list_accounts" ? t("tools:list_accounts") : t("tools:fallback");
+  const done = part.state === "output-available" || part.state === "output-error";
+  const items = part.state === "output-available" ? accountsOf(part.output) : undefined;
+  const failed =
+    part.state === "output-error" || (part.state === "output-available" && isFailure(part.output));
+  return (
+    <>
+      <p className={classes.step}>
+        {done ? (
+          <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden />
+        ) : (
+          <Loader2 className={classes.spin} size={16} strokeWidth={1.8} aria-hidden />
+        )}
+        {label}
+      </p>
+      {items !== undefined && (
         <div className={classes.cards}>
           {items.map((account) => (
             <AccountCard key={account.id} account={account} />
           ))}
         </div>
-      );
-    }
-    if (isFailure(part.output)) return <p className={classes.muted}>{t("toolFailed")}</p>;
-    return null;
-  }
-  if (part.state === "output-error") return <p className={classes.muted}>{t("toolFailed")}</p>;
-  const label = toolName === "list_accounts" ? t("tools:list_accounts") : t("tools:fallback");
-  return (
-    <p className={classes.step}>
-      <Loader2 className={classes.spin} size={16} strokeWidth={1.8} aria-hidden />
-      {label}
-    </p>
+      )}
+      {failed && <p className={classes.muted}>{t("toolFailed")}</p>}
+    </>
   );
 }
 

@@ -315,7 +315,7 @@
 - Зависимости: T-004
 
 ### T-005 · Платформа сервера, часть 1: конфигурация, логи, ошибки, часы, файлы, настройки, секреты, лимиты частоты
-- Статус: todo
+- Статус: done · 53c6843..5477fee
 - Модули: `platform/{config,logging,errors,clock,blob-store,settings,secrets,rate-limit}`,
   `apps/server/{drizzle,drizzle.config.ts,package.json}`, `pnpm-workspace.yaml`, `Makefile`, `.env.example`,
   `apps/server/src/platform/CLAUDE.md`, `@kosht/testing`

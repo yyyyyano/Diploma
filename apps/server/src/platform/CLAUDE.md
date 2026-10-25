@@ -1,8 +1,50 @@
 # `apps/server/src/platform` — ярус 0 сервера: техника без бизнеса
 
 ## Назначение
-Общая техника всех модулей (ARCHITECTURE §2, §6): сейчас — `db` (T-004); config, logging, errors, http и др.
-добавляют T-005…T-007. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+Общая техника всех модулей (ARCHITECTURE §2, §6, §9): `db` (T-004); `config`, `logging`, `errors`, `clock`,
+`blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` и точки входа — T-059; `jobs`, `events`,
+`realtime` — T-006. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+Общего `index.ts` ни у одной папки нет: возможность = файл.
+
+## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
+- `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db`, `listeners.local/lan`, `trustedOrigins`, `dataDir`
+  абсолютный, `logLevel`, `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
+  `loadDbConfig(env?)` — только `DATABASE_URL`/`DB_PASSWORD_FILE`, без мастер-ключа (`make migrate`, globalSetup
+  тестов); `DbConfig`, `ConfigError` (имя переменной и ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с
+  `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
+- `config/master-key.ts` — `MasterKey` (32 байта из `secrets/master.key`; `derive("secrets/v1" | "rate-limit/v1")` —
+  HKDF-SHA-256; в JSON и `inspect` — `[MasterKey]`).
+- `logging/logger.ts` — `createLogger({ role, level, destination })` → `Logger` (`fatal…trace(fields, key)`);
+  `openLogFile(dir, role)` / `closeLogFile` — pino-roll в процессе: `<dir>/<роль>.<гггг-ММ-дд>.<n>.log`, ежедневно,
+  `limit.count: 13` (14 файлов), 0600; `rollOptions`, `EVENT_KEY`, `BAD_KEY`. `logging/context.ts` —
+  `withLogContext({ requestId, uid, source }, fn)`. `logging/fields.ts` — белый список `LogFields`.
+  `logging/scrub.ts` — `scrub(text)`: email, карта (Луна), IBAN BY. `logging/serialize-error.ts` — ошибка → лог.
+  `logging/log-find.ts` (+ `log-find-cli.ts`) — `make log-find id=…`; `make logs` — хвост через pino-pretty.
+- `errors/app-error.ts` — `AppError(code ∈ ERRORS, params)` (сообщение = код) и чистая `toErrorBody(err, requestId)`
+  → `{ code, status, data: { requestId, params } }`; не `AppError`, `ISOLATION_VIOLATION`, параметры не по
+  `ErrorParams` → `INTERNAL` без текста.
+- `clock/clock.ts` — `createClock(timeZone?: () => TimeZone): Clock` (по умолчанию Минск), `isTimeZone`,
+  `TimeZoneSchema`.
+- `blob-store/blob-store.ts` — `BlobStore` (`put`, `get` → `undefined` если нет, `delete`, `deleteHousehold`),
+  `createLocalFsBlobStore(<DATA_DIR>/files)`: путь `<householdId>/<fileId>` (`FileId` — в `@kosht/kernel`), id
+  проверяются схемой (не uuid — `RangeError`), tmp+rename, папки 0700, файлы 0600. В тестах — `MemoryBlobStore`.
+- `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; помощник модуля T-007
+  только регистрирует здесь), `registeredSettings()`, `createSettings({ db, clock, env, log })` → `get` (кэш ≤ 5 с),
+  `peek` (синхронно, для часов), `source`, `set` (не по схеме — `VALIDATION`), `reset`. `settings/time-zone.ts` —
+  `TIME_ZONE` (`system.time-zone`, env `TIME_ZONE`, по умолчанию `Europe/Minsk`); в корне композиции:
+  `createClock(() => settings.peek(TIME_ZONE))`.
+- `secrets/secrets.ts` — `defineSecret({ name, env? })`, `registeredSecrets()`, `createSecrets({ db, masterKey, env,
+  clock, log })` → `status` (`set | unset | unreadable`), `reveal` (только коду), `set`, `clear`.
+- `rate-limit/rate-limit.ts` — `defineRateRule({ name, limit, windowMs })`, `createRateLimiter({ db, clock, masterKey,
+  log, timeoutMs? })` → `hit` (`{ allowed, remaining, retryAfterMs }`), `enforce` (`RATE_LIMITED` с
+  `retryAfterSeconds`); БД недоступна или молчит дольше 2 с — `UNAVAILABLE`.
+
+## Таблицы платформы
+`settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
+запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило
+`system-db-only-for-flagged-modules` смотрит только на `modules/*`. Схему видят только своя папка,
+`drizzle.config.ts` и тесты (правило `schema-only-in-infrastructure`); `drizzle-orm` вне `platform/db` — только в
+этих `schema.ts` и `*.repo.ts` (исключение `drizzle-and-pg-only-in-db`, решение по T-005).
 
 ## Публичный API — `db/` (ROLE-01, SEC-04, PRIV-07, ADR-0006). Общего `index.ts` нет: возможность = файл
 - `tables.ts` — виды таблиц: `userOwnedTable` (id `uuidv7()`, `household_id`/`user_id` NOT NULL, `created_at`,
@@ -16,22 +58,31 @@
 - `audit.ts` — `auditQuery(sql, params, mode, owned)` и `IsolationViolation` (`code: "ISOLATION_VIOLATION"`,
   `reason: ViolationReason` — в том числе `UNPARSEABLE_SQL`, `table`); вызывается из `Logger` Drizzle (`audited.ts`)
   до отправки запроса.
-- `connection.ts` (`DATABASE_URL` без пароля + файл `DB_PASSWORD_FILE`, по умолчанию `secrets/db_password`; T-005
-  перенесёт чтение окружения в config), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
+- `connection.ts` (`createPool(config: DbConfig)`: адрес без пароля, пароль из файла `DB_PASSWORD_FILE`; `DbConfig`
+  и чтение окружения — в `config/`), `migrate.ts` (`runMigrations` под `pg_advisory_lock`), `schema-check.ts`.
 
 ## Можно зависеть от
-`@kosht/kernel`, `drizzle-orm`, `pg` (только `db/`), `libpg-query` (только `db/`, аудитор SQL — ADR-0019). Модули —
-нет.
+`@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
+`schema.ts`/`*.repo.ts` settings, secrets, rate-limit); `libpg-query` — только `db/` (ADR-0019); `pino`, `pino-roll` —
+`logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev). Модули — нет.
 
 ## Запреты
 - `drizzle()`, `pg`, `$client`, `unsafeRaw` вне `platform/db` и тестов; `ISOLATION_VIOLATION` не ловить и не глушить.
+- `process.env` вне `config/` и `entrypoints/`; значения переменных и секретов — в тексте ошибок и в логах.
+- Лог: данные в строке сообщения (только ключ `^[a-z]+(\.[a-z0-9-]+)+$`), поля вне белого списка (`fields.ts`),
+  `message`/`detail`/`where` ошибок pg, параметры `DrizzleQueryError` (OBS-04).
+- `clock/` не импортирует `settings/` (цикл): пояс подаётся функцией.
 - `audit.ts`, `audited.ts` вне `platform/db` и тестов; `connection.ts`, `migrate.ts` — ещё и в `main/`
   (правило `db-internals-only-in-platform-db`, пути — `PLATFORM_DB_INTERNALS` в `tooling/architecture/rules.ts`).
-- `ISOLATION_VIOLATION` не входит в каталог ошибок `@kosht/contract`: наружу (T-005) — как `INTERNAL`.
+- `ISOLATION_VIOLATION` не входит в каталог ошибок `@kosht/contract`: наружу — как `INTERNAL` (`toErrorBody`).
 - `VIEW`, функции и триггеры в `public`; `household_id` nullable; таблица вне реестров (`schema-check.ts`).
 
 ## Как тестировать
-- `pnpm vitest run apps/server/src/platform/db` (unit и int); `make test-int` — только Postgres.
+- `pnpm vitest run apps/server/src/platform` (unit и int); `make test-int` — только Postgres.
+- Канарейки логов — `logging/log-file.test.ts` (по тексту файла pino-roll: email, карта, сумма, текст документа,
+  значение строки в ошибке pg), секретов — `secrets/secrets.int.test.ts`; логгер в память для тестов —
+  `logging/__fixtures__/memory-logger.ts`.
+- Лимиты: 50 параллельных попыток → ровно `limit` (`rate-limit.int.test.ts`); кэш настроек — `FakeClock`.
 - Канарейки аудитора — `audit.test.ts`, `scoped-db.test.ts` (без БД), `isolation.int.test.ts` (две семьи, хеш B).
 - Сверка аудитора с Postgres — `audit-differential.int.test.ts`: варианты записи запросов (детерминированный ГПСЧ),
   оракул — сама база в транзакции с откатом (тронутые таблицы — `pg_stat_xact_user_tables`, утечка — данные или
@@ -41,6 +92,14 @@
 - Тестовая схема `fx_*` и её миграции — `db/__fixtures__/` (`make db-generate DRIZZLE_CONFIG=…/__fixtures__/drizzle.config.ts`).
 
 ## Подводные камни
+- Ключ события: голова — только строчные буквы (`ratelimit.exceeded`, не `rate-limit.exceeded`): тип `EventKey` и
+  проверка при записи совпадают; неверный ключ при записи заменяется на `log.bad-key` без текста.
+- `redact` pino (ADR-0010: «страховка») не подключён: поля вне белого списка отбрасываются до pino, страховать нечего.
+- Ротация pino-roll — по местному времени процесса (в контейнере — UTC), а не по настройке пояса.
+- `scrub` узнаёт только данные с формой; поэтому сообщения ошибок pg не пишутся вовсе, а `.gitignore`/`.oxfmtrc.json`
+  исключают только корневую `/secrets/` — папка `platform/secrets` с кодом в git и в проверках.
+- `peek` настроек отдаёт последнее известное значение и обновляет устаревшее в фоне: сразу после смены пояса другим
+  процессом часы могут отстать на один вызов после 5 с.
 - Аудитор читает запрос парсером PostgreSQL 18 (`libpg-query`, WASM, ADR-0019): таблицы, предикаты, цели `SET`,
   `INSERT … VALUES`, `MERGE`, `SELECT … INTO` (в любом узле: Postgres берёт `INTO` у левой ветки `UNION`), CTE и
   подзапросы — из дерева. Текст, который парсер не принял, — `UNPARSEABLE_SQL`

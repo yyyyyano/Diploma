@@ -500,13 +500,16 @@ type ToolDef<I, O> =
   `retryable`). Всё прочее — `INTERNAL` без текста исключения наружу, стек — в лог. Текст для человека — на сайте
   и в боте: `t("errors:RECEIPT_DUPLICATE", params)`.
 - **Конфигурация в два слоя**: `platform/config` — окружение через Zod-схему, падение при старте с понятным
-  сообщением (адрес БД, порты); `platform/settings` — реестр `defineSetting` в БД с приоритетом «админка > env >
+  сообщением (адрес БД, порты; `process.env` читают только `config` и точки входа); `platform/settings` — реестр `defineSetting` в БД с приоритетом «админка > env >
   умолчание» (SMTP, ключи, часовой пояс, пороги алгоритмов, ночное окно). Секреты (NFR-16) — поля только для
   записи, AES-256-GCM, мастер-ключ в файле `secrets/master.key` (0600, вне резервной копии), в логи не попадают.
+  Таблицы `settings`, `secrets`, `rate_limits` — `systemTable` самой платформы: их `schema.ts` и `*.repo.ts` — единственное
+  место `drizzle-orm` вне `platform/db` и `infrastructure/db` модулей (решение по T-005).
 - **Логи** (OBS-01/02/04/06): pino + `AsyncLocalStorage` (`requestId`, `uid`, `source` подмешиваются сами);
-  сообщение — стабильный английский ключ события, данные — полями из белого списка:
-  `log.info({ receiptId, ms }, "receipt.recognized")`. Никогда не вставлять данные в строку сообщения (`redact`
-  её не видит). Ротация — ежедневно, 14 файлов (`pino-roll`); `make logs`, `make log-find id=…`.
+  сообщение — стабильный английский ключ события (`^[a-z]+(\.[a-z0-9-]+)+$`, проверяется типом и при записи), данные —
+  полями из белого списка (чужие отбрасываются): `log.info({ receiptId, ms }, "receipt.recognized")`. Ошибки — без
+  текста значений: у ошибок pg — код, ограничение, таблица и стек, у прочих — `scrub(message)` и стек. Ротация —
+  ежедневно, 14 файлов (`pino-roll` в процессе); `make logs`, `make log-find id=…`.
 - **Наблюдаемость задач** (OBS-07): таблица `background_job_run` (вид, статус, прогресс, «водяной знак»
   последнего обработанного периода, ошибка) — экран «Система» в админке; расписания с догоном пропущенного
   (`missed: "once"` + водяной знак, NFR-22).
@@ -698,8 +701,10 @@ apps/web/src/
 4. **База данных и платформа сервера (T-004…T-006).** T-004: сервис `db` в `compose.yaml`, db (пул, `ScopedDb`,
    аудитор, `userOwnedTable`/`systemTable`/`publicTable`/`ownedFk`, `SystemDb`, первая ручная миграция с `vector`
    и `pg_trgm`, миграции при старте, проверка `casing` drizzle-kit), канарейки аудитора, шаблонная БД на тестовый файл.
-   T-005: config, логи, errors, settings + secrets, blob-store (+ `MemoryBlobStore`), http (Hono + oRPC, request-id,
-   заголовки, CSRF, `Host`, лимиты, два слушателя), `/healthz`, `/readyz`, три точки входа, `SIGTERM`.
+   T-005: config, логи, errors, clock, settings + secrets, rate-limit, blob-store (+ `MemoryBlobStore`), первая
+   боевая миграция (`settings`, `secrets`, `rate_limits`). T-059: http (Hono + oRPC, request-id, заголовки, CSRF,
+   `Host`, два слушателя), `/healthz`, `/readyz`, три точки входа, `SIGTERM`. T-060: роль приложения без
+   суперпользователя БД.
    T-006: jobs (pg-boss, `background_job_run`, `missed: "once"`, конверт со scope, `defineSweep`, `jobKey`), events
    (публикация в транзакции, подписки), realtime (`NOTIFY` → SSE с фильтром по домохозяйству).
 5. **Все модули пустыми, но живыми (T-007).** 36 папок по шаблону с паспортами, `index.ts`, фабрикой; корень

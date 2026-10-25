@@ -203,9 +203,18 @@
   (правило `db-internals-only-in-platform-db`, пути — `PLATFORM_DB_INTERNALS` в `tooling/architecture/rules.ts`).
 - `ISOLATION_VIOLATION` не входит в каталог ошибок `@kosht/contract`: наружу — как `INTERNAL` (`toErrorBody`).
 - `VIEW`, функции и триггеры в `public`; `household_id` nullable; таблица вне реестров (`schema-check.ts`).
+- `pg-boss` вне `jobs/` (правило `pg-boss-only-in-platform-jobs`); `boss-db.ts` вне `jobs/`, `main/` и тестов
+  (`boss-db-only-in-jobs`); `makeScope` из конверта задачи — только `jobs/`; `singletonKey` не через `jobKey`
+  (`enqueue` бросает); `userId`/`householdId` в нагрузке задачи или события (`isolation.mjs`); событие на каждую
+  строку в цикле вместо пачки `ids`; `setTimeout`/`setInterval` вместо `defineSchedule`.
 
 ## Как тестировать
 - `pnpm vitest run apps/server/src/platform` (unit и int); `make test-int` — только Postgres.
+- Очередь на настоящем pg-boss под `kosht_app` — два файла: `jobs/jobs.int.test.ts` (права, транзакция, владелец из
+  конверта, повтор, расписание с поясом, обход) и `events/events.int.test.ts` (публикация в транзакции, 300 событий
+  → ≤ 5 задач, два домохозяйства); ожидание — промис из обработчика, опрос 0,5 с. Догон расписаний — на `FakeClock`
+  без pg-boss (`jobs/schedule.int.test.ts`), журнал — `jobs/jobs.repo.int.test.ts`. Тест процессов: у очереди нет
+  своих соединений, SIGTERM `worker`/`bot` — меньше 10 с.
 - Канарейки логов — `logging/log-file.test.ts` (по тексту файла pino-roll: email, карта, сумма, текст документа,
   значение строки в ошибке pg), секретов — `secrets/secrets.int.test.ts`; логгер в память для тестов —
   `logging/__fixtures__/memory-logger.ts`.
@@ -233,8 +242,8 @@
   `log_min_error_statement = 'panic'`, `log_min_duration_* = -1` в транзакции выдачи.
 
 ## Подводные камни
-- oRPC: ошибка внутри потока (итератор событий) после его начала идёт мимо `clientInterceptors` — поток T-006 сам
-  отдаёт только ошибки каталога. `implement(contract).router` не собирается без всех процедур контракта.
+- oRPC: ошибка внутри потока (итератор событий) после его начала идёт мимо `clientInterceptors` — поток
+  `events.stream` (T-061) сам отдаёт только ошибки каталога. `implement(contract).router` не собирается без всех процедур контракта.
 - Прокси Vite — без `changeOrigin`: проверка CSRF сверяет `Origin` с `Host` (`127.0.0.1:5173`), иначе 403.
 - Ключ события: голова — только строчные буквы (`ratelimit.exceeded`, не `rate-limit.exceeded`): тип `EventKey` и
   проверка при записи совпадают; неверный ключ при записи заменяется на `log.bad-key` без текста.
@@ -266,6 +275,15 @@
   `production-schema.int.test.ts` импортируют все схемы модулей.
 - Drizzle закреплён точно (`1.0.0-rc.5`): после обновления красные канарейки = стоп (запасной путь — наследник `Pool`).
 - `ON DELETE SET NULL` на составном FK drizzle-kit пишет неверно — правьте миграцию на `SET NULL (col)`.
+- Водяной знак: ADR-0008 кладёт его «в доменную таблицу», ARCHITECTURE §9 — в `background_job_run`. Решено так:
+  расписания платформы (`defineSchedule`, без scope) держат его в `background_job_run` по ключу расписания, а
+  расписания «для каждого пользователя» (`defineSweep` + задача) — в таблицах своих модулей.
+- Очередь создаётся `createQueue` при старте каждого процесса и уже существующую не меняет: смена политики
+  (`singletonKey` ⇒ `short`) или `retryLimit` готовой задачи — только новым именем очереди или правкой владельцем.
+- Подписка без своего ключа получает `jobKey(scope, sha256(нагрузки))`: очередь `short` без ключа держала бы одну
+  ожидающую задачу на все домохозяйства.
+- Итог задачи для pg-boss — `perJobResults`: `deadletter` без очереди мёртвых писем = `failed` без повторов
+  (так отбрасываются задачи с чужим владельцем и не-retryable ошибки).
 - pg-boss 12.38 при `reindex: false` всё равно ищет раздутые индексы через `pg_stats`, а он роли приложения закрыт
   (ADR-0020) — 42501 в конце прохода обслуживания. Поиск выключен флагом pg-boss `__test__noReindex` (вне типов,
   `boss.ts`); пропадёт флаг при обновлении pg-boss — краснеет `jobs.int.test.ts` (проход `supervise` под ролью

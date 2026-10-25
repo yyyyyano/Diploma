@@ -229,7 +229,7 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
 | SMTP / локальный ящик | `MailTransport` | `mail/infrastructure/{smtp,local-mailbox}.ts` | память / запрос в БД |
 | Файлы | `BlobStore` | `platform/blob-store/local-fs.ts` | `MemoryBlobStore` |
 | Время | `Clock` (Минск, NFR-23) | `platform/clock` | `FakeClock` |
-| Очередь | `Jobs` | `platform/jobs/pg-boss.ts` | `InlineJobs` (выполняет сразу) |
+| Очередь | `Jobs` | `platform/jobs/jobs.ts` (pg-boss) | `InlineJobs` (выполняет сразу) |
 
 ---
 
@@ -709,7 +709,8 @@ apps/web/src/
    `Host`, два слушателя), `/healthz`, `/readyz`, три точки входа, `SIGTERM`. T-060: роль приложения без
    суперпользователя БД.
    T-006: jobs (pg-boss, `background_job_run`, `missed: "once"`, конверт со scope, `defineSweep`, `jobKey`), events
-   (публикация в транзакции, подписки), realtime (`NOTIFY` → SSE с фильтром по домохозяйству).
+   (публикация в транзакции, подписки). T-061: realtime (`NOTIFY` → SSE с фильтром по домохозяйству) и
+   `events.stream`.
 5. **Все модули пустыми, но живыми (T-007).** 36 папок по шаблону с паспортами, `index.ts`, фабрикой; корень
    композиции собирает их в порядке `modules.ts`; реестры работают на пустых списках; цели `new-module`, `new-table`.
    *Готово:* граф содержит все модули, тест порядка зелёный.

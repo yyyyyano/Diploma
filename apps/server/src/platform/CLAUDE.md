@@ -126,6 +126,8 @@
   Реестр `start({ jobs, schedules?, sweeps? })`: в `worker` расписания и обходы — очереди `short` с
   `schedule(имя, cron, null, { tz: deps.timeZone(), missed: "once" })`; пояс — настройка `system.time-zone`,
   читается при старте (смена — после перезапуска `worker`).
+- В тестах сценариев вместо `createJobs` — `InlineJobs` из `@kosht/testing` (выполняет сразу; форму сверяет
+  `inline-jobs.test.ts`).
 - `periods.ts` — `pendingPeriods(watermark, today, stepDays)`: закончившиеся периоды после водяного знака (текущий —
   нет); без водяного знака — только последний закончившийся.
 - `schedule.ts` — `defineSchedule({ name, cron, stepDays, handle(ctx, periods) })` (расписание платформы, без scope)

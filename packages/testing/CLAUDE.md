@@ -16,6 +16,9 @@
 - `MemoryBlobStore` — хранилище файлов в памяти с поведением `platform/blob-store` сервера (`put`, `get`, `delete`,
   `deleteHousehold`; id — uuid-бренды, иначе `RangeError`; копии массивов), `size`. Форму сверяет
   `apps/server/src/platform/blob-store/blob-store.test.ts`: один набор проверок для обоих хранилищ.
+- `InlineJobs<Tx>(find)` — очередь задач без pg-boss для тестов сценариев: `enqueue(tx, job, payload)` находит
+  обработчик функцией `find(name)` и выполняет его сразу в той же транзакции; нет обработчика — ошибка; `enqueued` —
+  поставленные по порядку. Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
 - Вход `@kosht/testing/db` (`src/db.ts`, отдельно — чтобы unit-тесты не грузили `pg`): `createTestDb()` — своя база
   `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`) с двумя пулами: `pool` — роль
   приложения `kosht_app` (только DML, как приложение), `owner` — владелец (DDL, фикстуры, служебные запросы; ADR-0020).

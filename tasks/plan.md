@@ -683,7 +683,7 @@
 - Зависимости: T-008, T-004, T-005, T-007, T-059
 
 ### T-010 · ИИ-шлюз и чат-заглушка: поток ответа агента через oRPC
-- Статус: todo
+- Статус: blocked — остановлено по просьбе пользователя после имплементатора: реализация готова (ветка `task/T-010-llm-chat-stub`, коммиты e57a321..286582a, `make check`, `make test-int` и `make e2e` зелёные), ревью ещё не проводилось
 - Модули: `llm`, `agent`, `chat`, `accounts`, `platform/telemetry`, `platform/tools`, `platform/db` (флаг транзакции в `AsyncLocalStorage`;
   `LLM_IN_TRANSACTION` — класс ошибки вне каталога, наружу `INTERNAL`), `features/assistant`,
   `@kosht/testing`, `e2e`

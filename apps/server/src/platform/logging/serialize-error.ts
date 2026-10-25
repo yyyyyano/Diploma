@@ -25,6 +25,13 @@ const PG_CODE = /^[0-9A-Z]{5}$/;
 /** Имена и коды — машинные токены; иное (текст, значение) не пишется. */
 const TOKEN = /^[A-Za-z_][A-Za-z0-9_.:-]{0,79}$/;
 const MAX_MESSAGE = 500;
+/**
+ * Сколько текста видит scrub: его regexp email на длинной строке без «@» работает за квадратичное время (200 тыс.
+ * символов — ~20 с). Обрезок на границе (часть email или карты) в лог не попадёт: замены сокращают текст не больше
+ * чем в 9 раз (IBAN BY с пробелом между каждым знаком, 52 → 6 символов), и граница 8000 после scrub остаётся
+ * дальше MAX_MESSAGE, — поэтому и сообщение, и кадр стека режутся до MAX_MESSAGE после scrub.
+ */
+const MAX_SCRUB_INPUT = 8_000;
 const MAX_FRAMES = 30;
 const MAX_DEPTH = 3;
 
@@ -57,7 +64,7 @@ export function serializeError(thrown: unknown, depth = 0): SerializedError {
     type,
     ...(safeCode === undefined ? {} : { code: safeCode }),
     ...tokens(record, ["reason", "table"]),
-    message: scrub(thrown.message).slice(0, MAX_MESSAGE),
+    message: scrub(thrown.message.slice(0, MAX_SCRUB_INPUT)).slice(0, MAX_MESSAGE),
     stack,
     ...cause,
   };
@@ -69,7 +76,7 @@ function frames(stack: string | undefined): string[] {
     .split("\n")
     .filter((line) => /^\s+at\s/.test(line))
     .slice(0, MAX_FRAMES)
-    .map((line) => scrub(line.trim()));
+    .map((line) => scrub(line.trim().slice(0, MAX_SCRUB_INPUT)).slice(0, MAX_MESSAGE));
 }
 
 function token(value: unknown): string | undefined {

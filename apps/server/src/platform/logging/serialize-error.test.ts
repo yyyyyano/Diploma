@@ -60,6 +60,15 @@ describe("OBS-02: ошибка в логе — стек и контекст бе
     expect(serialized.stack.some((frame) => frame.includes("нет пользователя"))).toBe(false);
   });
 
+  it("сообщение в 200 тыс. символов без «@» — scrub не дольше 250 мс, в лог — 500 символов", () => {
+    const error = new Error(`ivan@mail.by ${"a".repeat(200_000)}`);
+    const started = performance.now();
+    const serialized = serializeError(error);
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(serialized.message).toHaveLength(500);
+    expect(serialized.message?.startsWith("[email] aaa")).toBe(true);
+  });
+
   it("код и имя не токены (текст, значения) — не пишутся", () => {
     const error = Object.assign(new Error("x"), { code: "Молоко 2,49", name: "Ошибка с данными" });
     const serialized = serializeError(error);

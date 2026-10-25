@@ -49,22 +49,24 @@
   request-id и контекст лога → Host и CSRF → маршрут → заголовки безопасности и строка `http.request` (`method`,
   `httpStatus`, `ms`, `listener`) на каждом ответе; `/healthz` (без БД), `/readyz` (`ready()` ≤ 2 с, иначе 503
   `UNAVAILABLE` без деталей); неизвестный маршрут — 404 `NOT_FOUND`; исключение — 500 `INTERNAL` + `http.error` со
-  стеком; `api` — `{ handler, session, shutdownSignal }` (процедуры под `/api`; неизвестная — 404 `NOT_FOUND`);
-  `routes` — маршруты процесса до статики.
+  стеком; `api` — `{ handler, session, shutdownSignal, bodyLimit }` (процедуры под `/api`; неизвестная — 404
+  `NOT_FOUND`; тело больше `bodyLimit()` байт — 400 `VALIDATION` до разбора, `hono/body-limit`); `routes` — маршруты
+  процесса до статики. `body-limit.ts` — `BODY_LIMIT` (`http.body-limit-bytes`, 1 КиБ…16 МиБ, по умолчанию 1 МиБ, без
+  env): процедуры принимают JSON, файлы идут своим путём (T-016).
 - `guard.ts` — `ListenerName` (`local | lan`), `SECURITY_HEADERS` (CSP, `nosniff`, `Referrer-Policy: no-referrer`,
   `Permissions-Policy: camera=(self), microphone=(self)`; без HSTS), `isAllowedHost(host, listener)` (local — `localhost`,
   `127.0.0.1`, `[::1]`; lan — они же и IP; имена — нет), `isSameSiteRequest` (кроме GET/HEAD/OPTIONS: `Sec-Fetch-Site`
   `cross-site`/`same-site` — отказ; `Origin` = `http://<Host>` или из `TRUSTED_ORIGINS`; оба пусты — не браузер),
   `requestIdFrom` (`[A-Za-z0-9-]{8,64}`, иначе новый uuid).
 - `procedures.ts` — `HttpContext` (`requestId`, `listener` из замыкания `createApp`, `session()` лениво,
-  `shutdownSignal`) и четыре вида процедур над контрактом: `publicProc` (гость), `authed` (сессия → `context.s`,
+  `shutdownSignal`, `resHeaders?` — заголовки ответа: вход и выход кладут сюда `Set-Cookie`) и четыре вида процедур над контрактом: `publicProc` (гость), `authed` (сессия → `context.s`,
   `context.role`, `uid` в лог; нет — `UNAUTHORIZED`), `localOnly` (только слушатель `local`; на `lan` — `NOT_FOUND`;
   сессии не требует), `admin` (сессия с ролью `admin`, иначе `FORBIDDEN`); middleware `requireSession`,
   `requireLocal`, `requireAdmin` — для своих деревьев (тестовый мини-контракт `http/__fixtures__/mini-router.ts`).
 - `session.ts` — `createSessionRegistry()` (`register(resolver)` — один источник на процесс, его даёт модуль входа,
   T-009; пусто — сессии нет ни у кого), `SessionResolver(headers) → { userId, householdId, role } | undefined`,
   `openSession(registry, pool, headers)` — **единственное** место `makeScope` для сайта (ARCHITECTURE §6.4).
-- `api.ts` — `createApiHandler(router, log)`: `OpenAPIHandler` под `/api`; перевод ошибок: вход не по схеме и битое
+- `api.ts` — `createApiHandler(router, log)`: `OpenAPIHandler` под `/api` с `ResponseHeadersPlugin` (`context.resHeaders`); перевод ошибок: вход не по схеме и битое
   тело → `VALIDATION` (без issues), `AppError` → свой код, выход не по схеме и прочее → `INTERNAL` + `http.error`.
 - `static-site.ts` — `siteResponse(root, pathname)`: файл сборки (`assets/` — вечный кэш, прочее — `no-cache`) или
   `index.html` для маршрута сайта; отсутствующий файл с расширением, `/api`, dotfiles, «..», `\`, NUL, `%`, `//` и

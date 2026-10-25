@@ -9,6 +9,7 @@ import { createApp } from "../platform/http/app.ts";
 import type { HttpContext } from "../platform/http/procedures.ts";
 import type { Session } from "../platform/http/session.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
+import { BODY_LIMIT } from "../platform/http/body-limit.ts";
 import { publicProc } from "../platform/http/procedures.ts";
 import { contractPaths, routerPaths } from "./__fixtures__/router-paths.ts";
 import { createRouter } from "./router.ts";
@@ -53,6 +54,7 @@ describe("ADR-0005: дерево процедур реализует контр�
         handler: createApiHandler(router, log),
         session: async () => undefined,
         shutdownSignal: new AbortController().signal,
+        bodyLimit: async () => BODY_LIMIT.default,
       },
     });
     const response = await app.fetch(

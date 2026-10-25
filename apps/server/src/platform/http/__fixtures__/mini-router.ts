@@ -27,6 +27,9 @@ export const miniContract = {
   crash: oc
     .route({ method: "GET", path: "/fx/crash" })
     .output(z.strictObject({ ok: z.literal(true) })),
+  setCookies: oc
+    .route({ method: "POST", path: "/fx/set-cookies" })
+    .output(z.strictObject({ ok: z.literal(true) })),
   conflict: oc
     .route({ method: "GET", path: "/fx/conflict" })
     .output(z.strictObject({ ok: z.literal(true) }))
@@ -54,6 +57,12 @@ export const miniRouter = base.router({
   ),
   crash: base.crash.handler(() => {
     throw new Error(CRASH_TEXT);
+  }),
+  // Две cookie разом: Set-Cookie не склеиваются в один заголовок (вход Better Auth ставит несколько).
+  setCookies: base.setCookies.handler(({ context }) => {
+    context.resHeaders?.append("set-cookie", "fx_a=1; Path=/; HttpOnly");
+    context.resHeaders?.append("set-cookie", "fx_b=2; Path=/; HttpOnly");
+    return { ok: true as const };
   }),
   conflict: base.conflict.handler(() => {
     throw new AppError("CONFLICT", { receiptId: "r-1" });

@@ -8,6 +8,7 @@ import { memoryLogger } from "../logging/__fixtures__/memory-logger.ts";
 import { closeLogFile, createLogger, openLogFile, type Logger } from "../logging/logger.ts";
 import { createApiHandler } from "./api.ts";
 import { createApp } from "./app.ts";
+import { BODY_LIMIT } from "./body-limit.ts";
 import type { ListenerName } from "./guard.ts";
 import { CRASH_TEXT, miniRouter } from "./__fixtures__/mini-router.ts";
 import { createSessionRegistry, openSession, type SessionRegistry } from "./session.ts";
@@ -36,7 +37,12 @@ function headerSessions(): SessionRegistry {
 }
 
 function server(
-  options: { listener?: ListenerName; sessions?: SessionRegistry; log?: Logger } = {},
+  options: {
+    listener?: ListenerName;
+    sessions?: SessionRegistry;
+    log?: Logger;
+    bodyLimit?: number;
+  } = {},
 ) {
   const log = options.log ?? memoryLogger().log;
   const registry = options.sessions ?? headerSessions();
@@ -50,6 +56,7 @@ function server(
       handler: createApiHandler(miniRouter, log),
       session: (headers) => openSession(registry, db.pool, headers),
       shutdownSignal: new AbortController().signal,
+      bodyLimit: async () => options.bodyLimit ?? BODY_LIMIT.default,
     },
   });
   const host = listener === "local" ? "127.0.0.1:8140" : "192.168.1.5:8141";
@@ -166,6 +173,53 @@ describe("ADR-0005, OBS-02: ошибки процедур — код катал�
       expect(response.headers.get("content-type")).toContain("application/json");
       expect(await response.json()).toMatchObject({ code: "NOT_FOUND", message: "NOT_FOUND" });
     }
+  });
+});
+
+describe("T-009: процедура отдаёт заголовки ответа (Set-Cookie входа)", () => {
+  it("две cookie из context.resHeaders приходят двумя заголовками Set-Cookie", async () => {
+    const response = await server()("/api/fx/set-cookies", { method: "POST" });
+    expect(response.status).toBe(200);
+    expect(response.headers.getSetCookie()).toEqual([
+      "fx_a=1; Path=/; HttpOnly",
+      "fx_b=2; Path=/; HttpOnly",
+    ]);
+  });
+});
+
+describe("T-009: размер тела запроса /api ограничен настройкой", () => {
+  it("тело больше предела → 400 VALIDATION, процедура не вызвана; в пределе — 200", async () => {
+    const call = server({ bodyLimit: 64 });
+    // Вход по схеме (имя короткое), но тело раздуто пробелами: отказ — из-за размера, а не схемы.
+    const padded = `${JSON.stringify({ name: "Ира" })}${" ".repeat(200)}`;
+    const big = await call("/api/fx/echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: padded,
+    });
+    expect(big.status).toBe(400);
+    expect(await big.json()).toMatchObject({ code: "VALIDATION", message: "VALIDATION" });
+    const small = await call("/api/fx/echo", json({ name: "Ира" }));
+    expect(small.status).toBe(200);
+  });
+
+  it("предел проверяется и без Content-Length (потоковое тело)", async () => {
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(
+          new TextEncoder().encode(`${JSON.stringify({ name: "Ира" })}${" ".repeat(200)}`),
+        );
+        controller.close();
+      },
+    });
+    const response = await server({ bodyLimit: 64 })("/api/fx/echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+      duplex: "half",
+    } as RequestInit);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: "VALIDATION" });
   });
 });
 

@@ -23,6 +23,11 @@ export interface HttpContext {
   readonly session: () => Promise<Session | undefined>;
   /** Процесс останавливается (SIGTERM): долгие потоки (SSE) завершаются, чтобы не держать остановку. */
   readonly shutdownSignal: AbortSignal;
+  /**
+   * Заголовки ответа процедуры (ResponseHeadersPlugin в api.ts): вход и выход кладут сюда Set-Cookie сессии.
+   * Нет при вызове мимо HTTP (createRouterClient в тестах).
+   */
+  readonly resHeaders?: Headers;
 }
 
 const base = os.$context<HttpContext>();

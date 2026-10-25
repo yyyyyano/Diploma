@@ -20,6 +20,7 @@ import {
   type Realtime,
   type RealtimeStreams,
 } from "../platform/realtime/realtime.ts";
+import { BODY_LIMIT } from "../platform/http/body-limit.ts";
 import { createRouter } from "./router.ts";
 
 const LISTEN_NAME = "kosht-test-api-listen";
@@ -61,7 +62,12 @@ beforeAll(async () => {
         trustedOrigins: [],
         log,
         ready: async () => {},
-        api: { handler, session, shutdownSignal: shutdown.signal },
+        api: {
+          handler,
+          session,
+          shutdownSignal: shutdown.signal,
+          bodyLimit: async () => BODY_LIMIT.default,
+        },
       }).fetch,
   });
   await listeners.start();

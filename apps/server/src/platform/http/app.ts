@@ -4,6 +4,7 @@
 // Порядок для каждого запроса: request-id и контекст лога → Host и CSRF (guard.ts) → маршрут → заголовки
 // безопасности и строка http.request — на любом ответе, включая отказы и ошибки.
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { AppError } from "../errors/app-error.ts";
 import { withLogContext } from "../logging/context.ts";
 import type { Logger } from "../logging/logger.ts";
@@ -35,6 +36,8 @@ export interface ApiOptions {
   readonly session: (headers: Headers) => Promise<Session | undefined>;
   /** Сигнал остановки процесса — в контекст процедур (долгие потоки завершаются). */
   readonly shutdownSignal: AbortSignal;
+  /** Предел тела запроса процедур, байт (настройка BODY_LIMIT, body-limit.ts). */
+  readonly bodyLimit: () => Promise<number>;
 }
 
 export interface AppOptions {
@@ -121,6 +124,19 @@ export function createApp(options: AppOptions): HttpApp {
     });
     return response ?? notFound();
   };
+  // Предел тела — до разбора процедурой: больше предела — VALIDATION через app.onError (тело не читается целиком).
+  const limitBody = async (c: Context<HttpEnv>, next: () => Promise<void>) => {
+    if (options.api === undefined) return next();
+    const maxSize = await options.api.bodyLimit();
+    return bodyLimit({
+      maxSize,
+      onError: () => {
+        throw new AppError("VALIDATION");
+      },
+    })(c, next);
+  };
+  app.use(API_PREFIX, limitBody);
+  app.use(`${API_PREFIX}/*`, limitBody);
   app.all(API_PREFIX, api);
   app.all(`${API_PREFIX}/*`, api);
 

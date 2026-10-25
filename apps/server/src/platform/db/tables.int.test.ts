@@ -15,7 +15,7 @@ const scopeB = testScope({ user: 2, household: 2 });
 let db: TestDb;
 beforeAll(async () => {
   db = await createTestDb();
-  await migrateFixtures(db.pool);
+  await migrateFixtures(db.owner);
 });
 afterAll(async () => {
   await db.drop();

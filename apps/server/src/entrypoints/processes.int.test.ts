@@ -1,6 +1,7 @@
 // Три процесса по-настоящему (ARCHITECTURE §3, ADR-0015): дочерний node запускает точку входа так же, как make dev
 // (Node 26 стирает типы сам, workspace-пакеты — по realpath, ADR-0002), на своей тестовой базе, с временными
-// DATA_DIR и мастер-ключом и портами 0. Порт api читается из строки http.listening лога.
+// DATA_DIR и мастер-ключом и портами 0. Порт api читается из строки http.listening лога. Обе роли базы (ADR-0020) —
+// явно: приложение kosht_app (DATABASE_URL) и владелец для миграций и выдачи прав (MIGRATION_*).
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -27,14 +28,17 @@ const TEST_MS = 40_000;
 let db: TestDb;
 let dir: string;
 let passwordFile: string;
+let ownerPasswordFile: string;
 let masterKeyFile: string;
 
 beforeAll(async () => {
   db = await createTestDb();
   dir = await mkdtemp(join(tmpdir(), "kosht-processes-"));
-  passwordFile = join(dir, "db_password");
+  passwordFile = join(dir, "db_app_password");
+  ownerPasswordFile = join(dir, "db_password");
   masterKeyFile = join(dir, "master.key");
-  await writeFile(passwordFile, inject("testDb").connection.password, { mode: 0o600 });
+  await writeFile(passwordFile, inject("testDb").app.password, { mode: 0o600 });
+  await writeFile(ownerPasswordFile, inject("testDb").admin.password, { mode: 0o600 });
   await writeFile(masterKeyFile, randomBytes(32), { mode: 0o600 });
 });
 
@@ -56,13 +60,15 @@ let runs = 0;
 async function start(role: Role, env: Record<string, string> = {}): Promise<Started> {
   runs += 1;
   const dataDir = join(dir, `${role}-${runs}`);
-  const { host, port, user } = inject("testDb").connection;
+  const { app, admin } = inject("testDb");
   const child = spawn(process.execPath, [ENTRY[role]], {
     // Окружение — только своё: .env и переменные разработчика тест не видит.
     env: {
       PATH: process.env["PATH"] ?? "",
-      DATABASE_URL: `postgres://${user}@${host}:${String(port)}/${db.name}`,
+      DATABASE_URL: `postgres://${app.user}@${app.host}:${String(app.port)}/${db.name}`,
       DB_PASSWORD_FILE: passwordFile,
+      MIGRATION_DATABASE_URL: `postgres://${admin.user}@${admin.host}:${String(admin.port)}/${db.name}`,
+      MIGRATION_DB_PASSWORD_FILE: ownerPasswordFile,
       MASTER_KEY_FILE: masterKeyFile,
       DATA_DIR: dataDir,
       WEB_DIST_DIR: join(dir, "no-site"),
@@ -111,11 +117,14 @@ async function waitForLog(started: Started, role: Role, msg: string) {
   );
 }
 
-/** Соединения процесса с тестовой базой (по имени процесса в пуле: kosht-<роль>). */
-async function connections(role: Role): Promise<number> {
-  const result = await db.pool.query<{ n: number }>(
+/**
+ * Соединения процесса с тестовой базой по имени пула: kosht-<роль> — роль приложения, kosht-<роль>-migrate —
+ * владелец на старте. Смотрит владелец: чужие сессии роли приложению не видны.
+ */
+async function connections(name: string): Promise<number> {
+  const result = await db.owner.query<{ n: number }>(
     "select count(*)::int as n from pg_stat_activity where application_name = $1 and datname = $2",
-    [`kosht-${role}`, db.name],
+    [name, db.name],
   );
   return result.rows[0]?.n ?? -1;
 }
@@ -132,7 +141,16 @@ describe("ADR-0015: api останавливается по SIGTERM коррек
 
       expect((await fetch(`${base}/readyz`)).status).toBe(200);
       expect(await (await fetch(`${base}/api/system/health`)).json()).toEqual({ status: "ok" });
-      expect(await connections("api")).toBeGreaterThan(0);
+      expect(await connections("kosht-api")).toBeGreaterThan(0);
+      // ADR-0020: работает роль приложения, соединения владельца закрыты ещё в compose().
+      const users = await db.owner.query<{ usename: string }>(
+        "select distinct usename from pg_stat_activity where application_name = 'kosht-api' and datname = $1",
+        [db.name],
+      );
+      expect(users.rows).toEqual([{ usename: inject("testDb").app.user }]);
+      await vi.waitFor(async () => expect(await connections("kosht-api-migrate")).toBe(0), {
+        interval: 20,
+      });
 
       const inFlight = fetch(`${base}/slow`);
       await vi.waitFor(() => expect(api.stdout()).toContain("slow-started"), { interval: 20 });
@@ -153,8 +171,14 @@ describe("ADR-0015: api останавливается по SIGTERM коррек
       expect(await api.exited).toBe(0);
       const apiLines = (await logLines(api.dataDir, "api")).map((line) => line["msg"]);
       expect(apiLines.slice(-2)).toEqual(["db.closed", "process.stopped"]);
+      // Пароли ролей БД в лог приложения не попадают (NFR-16, OBS-04).
+      const logText = JSON.stringify(await logLines(api.dataDir, "api"));
+      expect(logText).not.toContain(inject("testDb").app.password);
+      expect(logText).not.toContain(inject("testDb").admin.password);
       // Сервер закрывает соединение чуть позже клиента: ждём, пока backend исчезнет из pg_stat_activity.
-      await vi.waitFor(async () => expect(await connections("api")).toBe(0), { interval: 50 });
+      await vi.waitFor(async () => expect(await connections("kosht-api")).toBe(0), {
+        interval: 50,
+      });
     },
     TEST_MS,
   );
@@ -172,7 +196,7 @@ describe("ADR-0015: api останавливается по SIGTERM коррек
         expect(code).not.toBe(0);
         expect(api.stderr()).toContain(`127.0.0.1:${String(port)}`);
         expect(api.stderr()).toContain("LISTEN_LOCAL_PORT");
-        expect(await connections("api")).toBe(0);
+        expect(await connections("kosht-api")).toBe(0);
       } finally {
         await new Promise((done) => blocker.close(done));
       }
@@ -191,13 +215,15 @@ describe.each<Role>(["worker", "bot"])(
         await waitForLog(proc, role, "db.migrated");
         await waitForLog(proc, role, "process.started");
         expect(proc.child.exitCode).toBeNull();
-        expect(await connections(role)).toBeGreaterThan(0);
+        expect(await connections(`kosht-${role}`)).toBeGreaterThan(0);
 
         proc.child.kill("SIGTERM");
         expect(await proc.exited).toBe(0);
         const lines = (await logLines(proc.dataDir, role)).map((line) => line["msg"]);
         expect(lines.slice(-2)).toEqual(["db.closed", "process.stopped"]);
-        await vi.waitFor(async () => expect(await connections(role)).toBe(0), { interval: 50 });
+        await vi.waitFor(async () => expect(await connections(`kosht-${role}`)).toBe(0), {
+          interval: 50,
+        });
       },
       TEST_MS,
     );

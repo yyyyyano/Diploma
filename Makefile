@@ -51,14 +51,23 @@ need-node:
 install: need-node ## Установить зависимости по pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
-init: install secrets/db_password secrets/master.key ## Первый запуск: зависимости, .env из .env.example, пароль БД и мастер-ключ в secrets/, git-хуки
-	@if [ -f .env ]; then echo ".env уже есть — не трогаю."; else cp .env.example .env && echo "Создан .env из .env.example."; fi
+# Существующий .env правит программа (ADR-0020: старые умолчания владельца → роль приложения, дописать MIGRATION_*),
+# печатая только имена переменных; make и агент его не читают.
+init: install secrets/db_password secrets/db_app_password secrets/master.key ## Первый запуск: зависимости, .env из .env.example (существующий — обновить), пароли БД и мастер-ключ в secrets/, git-хуки
+	@if [ -f .env ]; then node tooling/upgrade-env.ts .env; else cp .env.example .env && echo "Создан .env из .env.example."; fi
 	$(BIN)/lefthook install
 
-# Пароль БД (NFR-16): создаётся один раз, существующий не меняется; читают его Compose (secrets:) и приложение.
+# Пароль владельца БД (NFR-16): создаётся один раз, существующий не меняется; читают его Compose (secrets:),
+# миграции и выдача прав роли приложения.
 secrets/db_password:
 	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))' > $@
 	@echo "Создан $@ — пароль БД (вне git)."
+
+# Пароль роли приложения kosht_app (NFR-16, ADR-0020): роль создаёт и приводит в порядок приложение при старте и
+# make migrate; существующий не меняется.
+secrets/db_app_password:
+	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))' > $@
+	@echo "Создан $@ — пароль роли приложения БД (вне git)."
 
 # Мастер-ключ секретов (NFR-16, ADR-0016): 32 случайных байта, права 0600; существующий не меняется — с новым ключом
 # сохранённые в админке секреты станут «не читается». В резервную копию не входит.
@@ -74,7 +83,7 @@ db-up: secrets/db_password ## Поднять только Postgres (сервис
 db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
 
-migrate: need-node db-up ## Применить миграции apps/server/drizzle (приложение делает то же при старте)
+migrate: need-node db-up secrets/db_app_password ## Применить миграции apps/server/drizzle и выдать права роли приложения — под владельцем БД (приложение делает то же при старте)
 	$(NODE_APP) apps/server/src/platform/db/migrate-cli.ts
 
 # Тестовая схема механизма изоляции: make db-generate DRIZZLE_CONFIG=apps/server/src/platform/db/__fixtures__/drizzle.config.ts
@@ -122,10 +131,10 @@ lint-file: need-node ## Линт одного файла: make lint-file FILE=п
 typecheck: need-node ## Проверка типов TypeScript 7 во всех пакетах (Turborepo)
 	$(BIN)/turbo run typecheck --output-logs=errors-only
 
-test: need-node db-up ## Все тесты Vitest (unit и int на Postgres) с покрытием (пороги — vitest.config.ts)
+test: need-node db-up secrets/db_app_password ## Все тесты Vitest (unit и int на Postgres) с покрытием (пороги — vitest.config.ts)
 	$(BIN)/vitest run --coverage
 
-test-int: need-node db-up ## Интеграционные тесты на настоящем Postgres: своя база на тестовый файл
+test-int: need-node db-up secrets/db_app_password ## Интеграционные тесты на настоящем Postgres: своя база на тестовый файл
 	$(BIN)/vitest run --project int
 
 deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»

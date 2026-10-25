@@ -29,7 +29,16 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
   it("без переменных — умолчания make dev и .env.example", () => {
     const config = loadConfig(env());
     expect(config).toMatchObject({
-      db: { url: "postgres://kosht@127.0.0.1:5440/kosht", passwordFile: "secrets/db_password" },
+      db: {
+        app: {
+          url: "postgres://kosht_app@127.0.0.1:5440/kosht",
+          passwordFile: "secrets/db_app_password",
+        },
+        migration: {
+          url: "postgres://kosht@127.0.0.1:5440/kosht",
+          passwordFile: "secrets/db_password",
+        },
+      },
       listeners: {
         local: { host: "127.0.0.1", port: 8140 },
         lan: { host: "0.0.0.0", port: 8141 },
@@ -79,6 +88,7 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
     ["TRUSTED_ORIGINS", "ftp://a.local", "ожидаются origin через запятую"],
     ["LOG_LEVEL", "verbose", "ожидается одно из: fatal, error"],
     ["DATABASE_URL", "mysql://kosht@127.0.0.1/kosht", "ожидается адрес postgres://"],
+    ["MIGRATION_DATABASE_URL", "mysql://kosht@127.0.0.1/kosht", "ожидается адрес postgres://"],
   ])("%s=%s → падение с именем переменной и ожиданием", (name, value, expected) => {
     const message = failure(() => loadConfig(env({ [name]: value })));
     expect(message).toContain(`${name}: ${expected}`);
@@ -129,24 +139,62 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
   });
 });
 
-describe("loadDbConfig: только подключение к БД", () => {
+describe("loadDbConfig: только подключение к БД (ADR-0020: две роли одной базы)", () => {
   it("не требует мастер-ключа — make migrate и тесты работают без secrets/master.key", () => {
     expect(loadDbConfig({ MASTER_KEY_FILE: join(dir, "нет.key") })).toEqual({
-      url: "postgres://kosht@127.0.0.1:5440/kosht",
-      passwordFile: "secrets/db_password",
+      app: {
+        url: "postgres://kosht_app@127.0.0.1:5440/kosht",
+        passwordFile: "secrets/db_app_password",
+      },
+      migration: {
+        url: "postgres://kosht@127.0.0.1:5440/kosht",
+        passwordFile: "secrets/db_password",
+      },
     });
   });
 
-  it("берёт DATABASE_URL и DB_PASSWORD_FILE", () => {
+  it("берёт DATABASE_URL, DB_PASSWORD_FILE и MIGRATION_*", () => {
     expect(
-      loadDbConfig({ DATABASE_URL: "postgres://kosht@db:5432/kosht", DB_PASSWORD_FILE: "/run/p" }),
-    ).toEqual({ url: "postgres://kosht@db:5432/kosht", passwordFile: "/run/p" });
+      loadDbConfig({
+        DATABASE_URL: "postgres://kosht_app@db:5432/kosht",
+        DB_PASSWORD_FILE: "/run/a",
+        MIGRATION_DATABASE_URL: "postgres://kosht@db/kosht",
+        MIGRATION_DB_PASSWORD_FILE: "/run/p",
+      }),
+    ).toEqual({
+      app: { url: "postgres://kosht_app@db:5432/kosht", passwordFile: "/run/a" },
+      migration: { url: "postgres://kosht@db/kosht", passwordFile: "/run/p" },
+    });
   });
 
   it("неверный DATABASE_URL → падение с именем переменной", () => {
     expect(failure(() => loadDbConfig({ DATABASE_URL: "не адрес" }))).toContain(
       "DATABASE_URL: ожидается адрес postgres://",
     );
+  });
+
+  it.each([
+    ["хост", "postgres://kosht_app@10.0.0.9:5440/kosht"],
+    ["порт", "postgres://kosht_app@127.0.0.1:5441/kosht"],
+    ["база", "postgres://kosht_app@127.0.0.1:5440/other"],
+  ])(
+    "другой %s у DATABASE_URL и MIGRATION_DATABASE_URL → ConfigError без значений",
+    (_what, url) => {
+      const message = failure(() => loadDbConfig({ DATABASE_URL: url }));
+      expect(message).toContain("хост, порт и база должны совпадать");
+      expect(message).not.toMatch(/10\.0\.0\.9|5441|other|kosht_app/);
+    },
+  );
+
+  it("старый .env: обе переменные — владелец kosht → ConfigError с подсказкой make init", () => {
+    const message = failure(() =>
+      loadDbConfig({
+        DATABASE_URL: "postgres://kosht@127.0.0.1:5440/kosht",
+        DB_PASSWORD_FILE: "secrets/db_password",
+      }),
+    );
+    expect(message).toContain("роли должны различаться");
+    expect(message).toContain("make init");
   });
 });
 

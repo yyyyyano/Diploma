@@ -18,6 +18,6 @@ afterAll(async () => {
 
 describe("ROLE-01: боевая схема без обходов аудитора", () => {
   it("каждая таблица public — в реестре, без VIEW, функций и триггеров, household_id не NULL", async () => {
-    expect(await checkSchema(db.pool, registeredTables())).toEqual([]);
+    expect(await checkSchema(db.owner, registeredTables())).toEqual([]);
   });
 });

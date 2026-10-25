@@ -7,6 +7,7 @@
 import { join } from "node:path";
 import { compose, type Composition, type ProcessRole } from "../main/compose.ts";
 import { ConfigError, loadConfig, type AppConfig } from "../platform/config/config.ts";
+import { AppRoleError } from "../platform/db/roles.ts";
 import { createApiHandler } from "../platform/http/api.ts";
 import { createApp, type HttpApp } from "../platform/http/app.ts";
 import { createListeners, ListenError } from "../platform/http/listeners.ts";
@@ -127,7 +128,11 @@ async function startRole(
 
 /** Сообщение для человека в консоль: только о понятных сбоях запуска (тексты без значений переменных). */
 function startupMessage(error: unknown): string | undefined {
-  return error instanceof ConfigError || error instanceof ListenError ? error.message : undefined;
+  return error instanceof ConfigError ||
+    error instanceof ListenError ||
+    error instanceof AppRoleError
+    ? error.message
+    : undefined;
 }
 
 export async function runProcess(role: ProcessRole, options: RunOptions = {}): Promise<void> {

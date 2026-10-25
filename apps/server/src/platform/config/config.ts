@@ -12,8 +12,17 @@ import { MasterKey } from "./master-key.ts";
 export interface DbConfig {
   /** Адрес вида postgres://пользователь@хост:порт/база — без пароля. */
   readonly url: string;
-  /** Файл с паролем: в режиме «код на хосте» — secrets/db_password, в контейнере — /run/secrets/db_password. */
+  /** Файл с паролем: в режиме «код на хосте» — secrets/…, в контейнере — /run/secrets/…. */
   readonly passwordFile: string;
+}
+
+/**
+ * Две роли одной базы (ADR-0020): app — роль приложения kosht_app (только DML), migration — владелец базы и таблиц
+ * (kosht из compose.yaml): миграции и выдача прав роли приложения при старте, make migrate, сборка тестового шаблона.
+ */
+export interface DbConfigs {
+  readonly app: DbConfig;
+  readonly migration: DbConfig;
 }
 
 export interface Listen {
@@ -31,7 +40,7 @@ export type EnvName = string;
 export type EnvLookup = (name: EnvName) => string | undefined;
 
 export interface AppConfig {
-  readonly db: DbConfig;
+  readonly db: DbConfigs;
   /** Два слушателя (NFR-24, R40): local — этот компьютер, lan — сеть (открывается настройкой, T-059). */
   readonly listeners: { readonly local: Listen; readonly lan: Listen };
   /** Origin, которым доверяют изменяющие запросы сверх своего Host (T-059). */
@@ -77,19 +86,26 @@ const ip = (fallback: string) =>
 const path = (fallback: string, what: string) =>
   optional(z.string({ error: `ожидается путь к ${what}` }).default(fallback));
 
-const POSTGRES_URL =
-  "ожидается адрес postgres://пользователь@хост:порт/база без пароля (пароль — в файле DB_PASSWORD_FILE)";
+const postgresUrl = (passwordVar: string, fallback: string) => {
+  const error = `ожидается адрес postgres://пользователь@хост:порт/база без пароля (пароль — в файле ${passwordVar})`;
+  return optional(
+    z
+      .url({ protocol: /^postgres(ql)?$/, error })
+      .refine((url) => !URL.canParse(url) || new URL(url).password === "", { error })
+      .default(fallback),
+  );
+};
 
 const DbEnv = z.object({
-  DATABASE_URL: optional(
-    z
-      .url({ protocol: /^postgres(ql)?$/, error: POSTGRES_URL })
-      .refine((url) => !URL.canParse(url) || new URL(url).password === "", {
-        error: POSTGRES_URL,
-      })
-      .default("postgres://kosht@127.0.0.1:5440/kosht"),
+  // Роль приложения (ADR-0020): только DML; её создаёт и чинит владелец при старте.
+  DATABASE_URL: postgresUrl("DB_PASSWORD_FILE", "postgres://kosht_app@127.0.0.1:5440/kosht"),
+  DB_PASSWORD_FILE: path("secrets/db_app_password", "файлу пароля роли приложения"),
+  // Владелец базы и таблиц (POSTGRES_USER из compose.yaml): миграции и выдача прав.
+  MIGRATION_DATABASE_URL: postgresUrl(
+    "MIGRATION_DB_PASSWORD_FILE",
+    "postgres://kosht@127.0.0.1:5440/kosht",
   ),
-  DB_PASSWORD_FILE: path("secrets/db_password", "файлу пароля БД"),
+  MIGRATION_DB_PASSWORD_FILE: path("secrets/db_password", "файлу пароля владельца БД"),
 });
 
 const ORIGIN = "ожидаются origin через запятую: http(s)://хост[:порт] без пути";
@@ -140,13 +156,37 @@ function parse<T extends z.ZodType>(schema: T, env: Env): z.output<T> {
   );
 }
 
+/** Хост, порт и база адреса — без пользователя. */
+function target(url: string): string {
+  const parsed = new URL(url);
+  return `${parsed.hostname}:${parsed.port === "" ? "5432" : parsed.port}${parsed.pathname}`;
+}
+
 /**
  * Только подключение к БД — для make migrate и globalSetup тестов: мастер-ключ им не нужен, и без secrets/master.key
- * миграции и тесты работают.
+ * миграции и тесты работают. Оба адреса ведут в одну базу, но разными ролями (ADR-0020); иначе — ConfigError.
  */
-export function loadDbConfig(env: Env = process.env): DbConfig {
+export function loadDbConfig(env: Env = process.env): DbConfigs {
   const parsed = parse(DbEnv, env);
-  return { url: parsed.DATABASE_URL, passwordFile: parsed.DB_PASSWORD_FILE };
+  if (target(parsed.DATABASE_URL) !== target(parsed.MIGRATION_DATABASE_URL)) {
+    throw new ConfigError(
+      "DATABASE_URL и MIGRATION_DATABASE_URL: хост, порт и база должны совпадать — это одна база, разные роли " +
+        "(образец — .env.example).",
+    );
+  }
+  if (new URL(parsed.DATABASE_URL).username === new URL(parsed.MIGRATION_DATABASE_URL).username) {
+    throw new ConfigError(
+      "DATABASE_URL и MIGRATION_DATABASE_URL: роли должны различаться — приложение работает ролью без прав " +
+        "владельца (ADR-0020); старый .env обновит make init.",
+    );
+  }
+  return {
+    app: { url: parsed.DATABASE_URL, passwordFile: parsed.DB_PASSWORD_FILE },
+    migration: {
+      url: parsed.MIGRATION_DATABASE_URL,
+      passwordFile: parsed.MIGRATION_DB_PASSWORD_FILE,
+    },
+  };
 }
 
 /** Вся конфигурация процесса; нет или не 32 байта мастер-ключа — ConfigError с подсказкой make init. */

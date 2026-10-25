@@ -1,12 +1,14 @@
 // Корень композиции (ARCHITECTURE §3): все три процесса — api, worker, bot — собираются одной функцией. Порядок:
-// пул (подписан именем процесса для pg_stat_activity) → миграции под pg_advisory_lock (до слушателей: /readyz
-// = «БД отвечает») → платформа (часы, настройки, реестр сессий) → дерево процедур. Модули добавит T-007 — в порядке
+// пул владельца (одно соединение kosht-<роль>-migrate) → миграции и выдача прав роли приложения под
+// pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
+// (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий) → дерево процедур. Модули добавит T-007 — в порядке
 // топологической сортировки tooling/architecture/modules.ts. Логики сверх «соединить» здесь нет.
 import type { Clock } from "@kosht/kernel";
 import { createClock } from "../platform/clock/clock.ts";
 import type { AppConfig } from "../platform/config/config.ts";
 import { createPool, pingDb } from "../platform/db/connection.ts";
 import { runMigrations } from "../platform/db/migrate.ts";
+import { appRoleOptions, assertAppRole, ensureAppRole } from "../platform/db/roles.ts";
 import { createSystemDb } from "../platform/db/system-db.ts";
 import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
 import {
@@ -54,10 +56,21 @@ export async function compose(
   deps: ComposeDeps,
 ): Promise<Composition> {
   const { log } = deps;
-  const pool = createPool(config.db, { applicationName: `kosht-${role}` });
+  // Владелец нужен только на старте: после выдачи прав его соединения в процессе не остаётся.
+  const owner = createPool(config.db.migration, {
+    max: 1,
+    applicationName: `kosht-${role}-migrate`,
+  });
   try {
-    await runMigrations(pool);
-    log.info({ role }, "db.migrated");
+    await runMigrations(owner);
+    await ensureAppRole(owner, appRoleOptions(config.db.app));
+  } finally {
+    await owner.end();
+  }
+  log.info({ role }, "db.migrated");
+  const pool = createPool(config.db.app, { applicationName: `kosht-${role}` });
+  try {
+    await assertAppRole(pool);
   } catch (error) {
     await pool.end();
     throw error;

@@ -48,7 +48,7 @@ async function hashOfB(): Promise<string> {
 
 beforeAll(async () => {
   db = await createTestDb();
-  await migrateFixtures(db.pool);
+  await migrateFixtures(db.owner);
   for (const [scope, label] of [
     [scopeA, "A"],
     [scopeB, "CANARY-B"],

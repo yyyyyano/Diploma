@@ -23,14 +23,14 @@ async function databaseExists(name: string): Promise<boolean> {
 
 describe("createTestDb — своя база на файл из шаблона", () => {
   it("клон уже содержит боевые миграции шаблона", async () => {
-    const { rows } = await first.pool.query(
+    const { rows } = await first.owner.query(
       "select count(*)::int as n from drizzle.__drizzle_migrations",
     );
     expect(rows[0]?.n).toBeGreaterThan(0);
   });
 
   it("клоны независимы: таблица одного не видна в другом", async () => {
-    await first.pool.query("create table fx_only_first (n int)");
+    await first.owner.query("create table fx_only_first (n int)");
     const { rows } = await second.pool.query("select to_regclass('fx_only_first') as t");
     expect(rows[0]?.t).toBeNull();
   });
@@ -42,16 +42,17 @@ describe("createTestDb — своя база на файл из шаблона",
 
 describe("защита по префиксу test_", () => {
   it("рабочую базу удалить нельзя — ошибка до запроса, база на месте", async () => {
-    await expect(dropDatabase(context.connection, context.connection.database)).rejects.toThrow(
+    await expect(dropDatabase(context.admin, context.admin.database)).rejects.toThrow(
       /только test_/,
     );
-    expect(await databaseExists(context.connection.database)).toBe(true);
+    expect(await databaseExists(context.admin.database)).toBe(true);
   });
 
   it("базы прогона, процесса которого нет, удаляются; базы живого прогона — нет", async () => {
     const orphan = await createTestDb({ ...context, runId: "999999999" });
     await orphan.pool.end();
-    const dropped = await dropOrphans(context.connection);
+    await orphan.owner.end();
+    const dropped = await dropOrphans(context.admin);
     expect(dropped).toContain(orphan.name);
     expect(dropped).not.toContain(first.name);
     expect(await databaseExists(orphan.name)).toBe(false);

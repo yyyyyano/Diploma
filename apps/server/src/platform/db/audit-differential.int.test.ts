@@ -651,7 +651,7 @@ const system: AuditMode = { kind: "system" };
 
 beforeAll(async () => {
   db = await createTestDb();
-  await migrateFixtures(db.pool);
+  await migrateFixtures(db.owner);
   for (const [scope, label] of [
     [scopeA, "A"],
     [scopeB, MARK_B],
@@ -669,7 +669,8 @@ beforeAll(async () => {
     if (scope === scopeB) receiptB = id;
     else receiptA = id;
   }
-  client = await db.pool.connect();
+  // Оракул — владелец (ADR-0020): он проверяет аудитор, а не права роли; роль приложения отказала бы раньше.
+  client = await db.owner.connect();
   catalog = db.name;
   hashB = await hashOfB();
 });

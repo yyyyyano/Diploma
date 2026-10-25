@@ -12,7 +12,7 @@ paths:
   `calc-only-kernel`, `web-only-shared-packages` — и `calc-no-clock.mjs`).
 - Каждая функция: `вход → Calc<T> = { value, trace }`. «Сегодня», ставки (`norm-tables`), пороги (настройки), курсы —
   **во входе**. Трасса `TraceNode { key, op, value, inputs[], refs[], note? }` — из помощников
-  `node/sum/sub/mul/avg/round`; `key` — ключ подписи из словаря `formulas` (`fin.freeBalance`), `refs` — операции,
+  `node/sum/sub/mul/mulRate/avg/round`; `key` — ключ подписи из словаря `formulas` (`fin.freeBalance`), `refs` — операции,
   версии фрагментов норм (`fragmentVersionId`), курсы. Новый показатель = функция + ключ в `formulas` + тест-пример.
 - Деньги — `Money { minor, currency }` в целых копейках; операции над деньгами разных валют без явного пересчёта —
   ошибка; проценты и ставки — базисные пункты (`1300` = 13 %) или десятичные строки; округление явное, с правилом
@@ -22,13 +22,13 @@ paths:
   BUD-05, RCPT-05, КП REC/BUD/AFF); где есть свойства (сумма частей = целое, идемпотентность нормализации) —
   fast-check. Планка покрытия `calc` — самая высокая (`CONSTRAINTS.md`).
 - `kernel` меняется редко: `Scope` (бренд, создаётся только `makeScope` на входах), `Money`, `LocalDate`, `Period`,
-  бренды id, `TraceNode`. Новый общий тип — только если он нужен минимум двум пакетам/приложениям.
+  `Clock` (интерфейс; реализация — `platform/clock`, в тестах `FakeClock`), бренды id, `TraceNode`. Новый общий тип — только если он нужен минимум двум пакетам/приложениям.
 
 Правильно:
 
 ```ts
 /** TAX-07, пример 1: обучение 2 000 BYN → экономия 260 BYN при ставке 13 %. */
-export function socialDeductionSaving(input: { paid: Money; taxableIncome: Money; rateBp: number }): Calc<Money> {
+export function socialDeductionSaving(input: { paid: Money; taxableIncome: Money; rateBp: Calc<number> }): Calc<Money> {
   const base = minMoney("tax.deductionBase", input.paid, input.taxableIncome);
   return mulRate("tax.saving", base, input.rateBp, { rounding: "half-up-kopeck" });
 }

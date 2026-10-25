@@ -12,7 +12,8 @@ paths:
 
 ## Изоляция (ROLE-01, SEC-04, PRIV-07) — самое важное
 - Вид таблицы — в паспорте: `userOwnedTable` (данные домохозяйства), `systemTable`, `publicTable`. Таблица с
-  `household_id`/`user_id` вне `userOwnedTable` — ошибка CI. «Общее + своё» в одной таблице нельзя.
+  `household_id`/`user_id` вне реестров видов — ошибка CI (`schema-check.ts`); системные таблицы вроде `users`
+  законно хранят владельца как `systemTable`. «Общее + своё» в одной таблице нельзя.
 - `userOwnedTable` сама даёт `id` (`uuidv7()`), `household_id NOT NULL`, `user_id`, `created_at`, `updated_at`,
   PK `(household_id, id)`; ссылки на пользовательские таблицы — только `ownedFk(...)`. `ON DELETE SET NULL` на
   составном FK drizzle-kit генерирует неверно — правь миграцию на `SET NULL (<колонка>)`.
@@ -35,6 +36,14 @@ paths:
 - Миграции: `make db-generate` → прочитать SQL глазами (HNSW, `CONCURRENTLY`, `SET NULL (col)`, расширения — руками)
   → закоммитить вместе со схемой. Откатов нет (`make db-reset`). В `public` — никаких `VIEW`, функций, триггеров
   над пользовательскими таблицами. Таблицы pg-boss Drizzle не трогает (`schemaFilter: ["public"]`).
+- Роли БД (ADR-0020): приложение ходит ролью `kosht_app` — только `SELECT/INSERT/UPDATE/DELETE` на таблицах схем из
+  `APP_SCHEMAS` (`platform/db/roles.ts`); DDL, `TRUNCATE`, `pg_stats` ей недоступны. Миграции и выдача прав —
+  владелец (`MIGRATION_DATABASE_URL`), `ensureAppRole` под `pg_advisory_lock`. Новая схема приложения (например,
+  `pgboss`) — строкой в `APP_SCHEMAS`, без ручных `GRANT`; роли не выдавать членство в ролях и `CREATE` на `public`:
+  `assertAppRole` остановит старт.
+- В `*.int.test.ts`: `db.pool` — роль приложения (код под тестом), `db.owner` — DDL, фикстуры, `pg_stat_activity`.
+  Тест, который портит роль или выдаёт ей права, работает со своей ролью `testRoleName()` и удаляет её
+  `dropTestRole`, а не трогает `kosht_app`.
 - Индексы — под реальные запросы сценариев; HNSW — только для публичных данных (законы).
 
 Правильно (JOIN и интерфейс `ScopedDb` — `docs/ARCHITECTURE.md` §6.3):

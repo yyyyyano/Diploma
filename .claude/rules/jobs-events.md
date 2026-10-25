@@ -23,7 +23,8 @@ paths:
   массовые проходы по pravo.by — только в ночном окне (LAW-35).
 - «Для всех пользователей» — `defineSweep` (`*.sweep.ts`): найти `(id, householdId, userId)` → задача на каждого.
 - Долгое — показывай прогресс: `platform.realtime.progress(s.scope, {...})`; «данные изменились» —
-  `realtime.changed(s.scope, { entity, ids })`. В сигнале — вид и id, без данных.
+  `realtime.changed(s, { entity, ids })` с `ScopedDb` (внутри `s.transaction` — `tx`: NOTIFY уходит при коммите, при
+  откате его нет). В сигнале — вид и id, без данных.
 - Тяжёлое (PDF, XLSX, HEIC, QR, эмбеддинги) — только в задачах `worker` с таймаутом, не в обработчике HTTP.
 - Подписаться можно только на события модуля из своего `dependsOn`; файл — `subscriptions/on-<событие>.ts`.
 

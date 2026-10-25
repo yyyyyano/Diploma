@@ -2,6 +2,7 @@
 paths:
   - "apps/server/src/modules/{identity,privacy,files,mail,telegram,admin}/**"
   - "apps/server/src/platform/{http,secrets,settings,config,telemetry,logging,blob-store,rate-limit}/**"
+  - "apps/server/src/platform/db/roles.ts"
 ---
 # Безопасность и приватность
 
@@ -10,6 +11,11 @@ paths:
 - **Секреты** (ключи API, SMTP, токен бота) — через `platform/secrets`: AES-256-GCM, мастер-ключ `secrets/master.key`;
   поле только для записи (наружу — «задан ✓ / не задан»), приоритет «админка > env > умолчание»; не попадают в логи,
   ответы, трассы, ошибки, резервную копию ключа.
+- **Пароли БД** — два файла: `secrets/db_password` (владелец, только миграции и выдача прав) и
+  `secrets/db_app_password` (`kosht_app`, создаёт `make init`: 32 байта hex, 0600). В `CREATE/ALTER ROLE` уходит
+  SCRAM-SHA-256 verifier, а не пароль; на время выдачи прав `SET LOCAL log_statement='none'` и
+  `log_min_error_statement='panic'` — пароль не попадает ни в лог Postgres, ни в логи приложения. `ALTER ROLE … SET`
+  не использовать; приложению суперпользователь не нужен — `AppRoleError` не обходить.
 - **Логи** — ключ события + id из белого списка полей; никогда: email, ФИО, номера счетов и карт, телефоны, суммы с
   привязкой к пользователю, тексты переписки и документов, токены, cookie (OBS-04). Ошибки — через `scrub()`.
 - **Локальный вход**: два слушателя — `local` (127.0.0.1:8140) и `lan` (8141, открывается переключателем в админке).

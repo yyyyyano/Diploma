@@ -30,14 +30,16 @@ paths:
   (`${RENDER_GID:-992}`); `down`/`ps`/`logs` — с `--profile '*'`; том Postgres 18 — в `/var/lib/postgresql`; образы —
   точные теги (не `latest`); GPU — `devices: /dev/dri` + `group_add`; секреты — Compose `secrets:` из `secrets/`.
 - **Образ**: сборка точек входа tsdown в `.mjs`, `node:26-trixie-slim`, `USER node`, `read_only`, `cap_drop: ALL`,
-  `init: true`; миграции — приложением при старте.
+  `init: true`; миграции и выдача прав роли `kosht_app` — приложением при старте под владельцем (`MIGRATION_*`),
+  боевой пул — `kosht_app` (ADR-0020); образ везёт `node_modules` рядом с бандлом (`libpg-query` с `.wasm` — внешний, ADR-0019).
 - **Версии**: oxfmt, Drizzle, llama.cpp, AI SDK, pg-boss, OTel-пакеты Langfuse — **точные**; общие версии — через
   `catalog:` в `pnpm-workspace.yaml`; нативная зависимость — строка в `allowBuilds`; обновление мажора — отдельная задача.
 - **dependency-cruiser**: правила генерируются из `tooling/architecture/modules.ts`; рядом `typescript@6`
   (`packageExtensions`); `deps-guard.mjs` с порогом `MIN_MODULES`. Новое правило ⇒ фикстура нарушения в
   `tooling/architecture/fixtures/` и тест «правило ловит своё». Правило, которое ничего не ловит, — сломанное правило.
-- **Свои проверки** (`tooling/checks/*.mjs`) — маленькие, с кодом выхода 0/1 и сообщением «что и где исправить»,
-  каждая — с тестом на фикстурах.
+- **Свои проверки** (`tooling/checks/*.mjs`) — маленькие, с кодом выхода 0/1/2 (2 — не смог проверить: нет файлов,
+  меньше порога, внешний инструмент упал) и сообщением «файл:строка — что исправить», каждая — с тестом на
+  фикстурах; запускаются целью `make static-checks`, она входит в `check` и `check-quick`.
 - **Хуки git** (lefthook): `pre-commit` — только проверка staged-файлов без автоправки; `commit-msg` — commitlint,
   размер коммита, запрет подписей ИИ (`tooling/git-hooks/check-no-ai-attribution.mjs`); `pre-push` — `make check-quick`.
 - `.env.example` — все переменные с безопасными умолчаниями и комментарием; `.env`, `secrets/`, `data/`, `models/`,

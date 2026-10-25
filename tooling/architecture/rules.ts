@@ -66,10 +66,11 @@ const TEST_CODE = [
 
 const SCHEMA = `${MOD}/[^/]+/infrastructure/db/schema(\\.ts$|/)`;
 /**
- * Схемы и репозитории платформы со своими системными таблицами (ARCHITECTURE §6.1, решение по T-005): settings,
- * secrets, rate_limits. Им нужен drizzle-orm, хотя они не в platform/db; остальной платформе — нет.
+ * Схемы и репозитории платформы со своими системными таблицами (ARCHITECTURE §6.1, решения по T-005 и T-006):
+ * settings, secrets, rate_limits, background_job_run. Им нужен drizzle-orm, хотя они не в platform/db; остальной
+ * платформе (и прочим файлам jobs/) — нет.
  */
-const PLATFORM_TABLES = `^${PLATFORM}/(settings|secrets|rate-limit)/(schema|[^/]+\\.repo)\\.ts$`;
+const PLATFORM_TABLES = `^${PLATFORM}/(settings|secrets|rate-limit|jobs)/(schema|[^/]+\\.repo)\\.ts$`;
 const PLATFORM_SCHEMA = `^${PLATFORM}/[^/]+/schema\\.ts$`;
 const REPO = `${MOD}/[^/]+/infrastructure/db/[^/]+\\.(repo|sql)\\.ts$`;
 
@@ -455,7 +456,8 @@ function libraryRules(): ForbiddenRule[] {
       "drizzle-orm и pg — только в infrastructure/db модулей и platform/db: запросы через ScopedDb " +
         "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключения: @kosht/testing/db — шаблонная " +
         "база тестов создаёт и удаляет базы test_* (ARCHITECTURE §12), данных пользователя не читает; " +
-        "schema.ts и *.repo.ts платформы settings, secrets, rate-limit — системные таблицы платформы (T-005).",
+        "schema.ts и *.repo.ts платформы settings, secrets, rate-limit, jobs — системные таблицы платформы " +
+        "(T-005, T-006).",
       {
         pathNot: [
           `^${MOD}/[^/]+/infrastructure/db/`,

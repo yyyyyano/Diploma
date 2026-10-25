@@ -107,11 +107,16 @@
   `stopBoss` — `stop({ graceful: true, timeout: BOSS_STOP_TIMEOUT_MS = 8000, close: false })`.
 
 ## Таблицы платформы
-`settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
+`settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило
 `system-db-only-for-flagged-modules` смотрит только на `modules/*`. Схему видят только своя папка,
 `drizzle.config.ts` и тесты (правило `schema-only-in-infrastructure`); `drizzle-orm` вне `platform/db` — только в
-этих `schema.ts` и `*.repo.ts` (исключение `drizzle-and-pg-only-in-db`, решение по T-005).
+этих `schema.ts` и `*.repo.ts` (исключение `drizzle-and-pg-only-in-db`, решения по T-005 и T-006).
+- `background_job_run` (OBS-07): строка на запуск — `kind`, `schedule_key`, `status` (`running | completed | failed |
+  dropped`), `progress` 0…100, `watermark` (день, расписания платформы), `error_code` (код каталога, без текста),
+  `started_at`, `finished_at`; без `household_id`/`user_id`. Имя — единственное число, как в ADR-0008 и SPEC.
+  `jobs.repo.ts`: `startRun`, `finishRun`, `recordDropped`, `setProgress`, `lastWatermark`; строки старше 30 дней
+  (`RETENTION_DAYS`) удаляются по 100 перед новой, кроме строки с текущим водяным знаком расписания.
 
 ## Публичный API — `db/` (ROLE-01, SEC-04, PRIV-07, ADR-0006). Общего `index.ts` нет: возможность = файл
 - `tables.ts` — виды таблиц: `userOwnedTable` (id `uuidv7()`, `household_id`/`user_id` NOT NULL, `created_at`,

@@ -155,7 +155,10 @@ const EXPECTED: Record<string, string[]> = {
     `${P}/settings/settings.ts → drizzle-orm`,
     "packages/testing/src/factories.ts → pg",
   ],
-  "orpc-server-only-in-api": [`${M}/receipts/application/get-receipt.ts → @orpc/server`],
+  "orpc-server-only-in-api": [
+    `${M}/receipts/application/get-receipt.ts → @orpc/server`,
+    `${M}/receipts/application/serve-openapi.ts → @orpc/openapi`,
+  ],
 };
 
 const staticNames = [...new Set(allRules.map((r) => r.name))].filter((n) => !GENERATED.test(n));

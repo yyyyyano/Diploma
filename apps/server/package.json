@@ -6,9 +6,13 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@hono/node-server": "catalog:",
     "@kosht/contract": "workspace:*",
     "@kosht/kernel": "workspace:*",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
     "drizzle-orm": "catalog:",
+    "hono": "catalog:",
     "libpg-query": "catalog:",
     "pg": "catalog:",
     "pino": "catalog:",

@@ -459,9 +459,9 @@ function libraryRules(): ForbiddenRule[] {
     ),
     rule(
       "orpc-server-only-in-api",
-      "@orpc/server — только в api/ модулей, platform/http и main (ADR-0005).",
+      "@orpc/server и @orpc/openapi — только в api/ модулей, platform/http и main (ADR-0005).",
       { pathNot: [`^${MOD}/[^/]+/api/`, `^${PLATFORM}/http/`, `^${SERVER}/main/`] },
-      { path: npmPattern(["@orpc/server"]) },
+      { path: npmPattern(["@orpc/server", "@orpc/openapi"]) },
     ),
   ];
 }

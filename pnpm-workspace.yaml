@@ -6,7 +6,11 @@ packages:
 
 # Единые версии для всех пакетов: в package.json пишется "<пакет>": "catalog:" (ADR-0001).
 catalog:
+  # HTTP (ADR-0005): Hono — оболочка и два слушателя; oRPC — все пакеты строго одной версии с @orpc/contract.
+  "@hono/node-server": 2.1.5
   "@orpc/contract": 1.16.1
+  "@orpc/openapi": 1.16.1
+  "@orpc/server": 1.16.1
   "@types/node": 26.6.5
   "@types/pg": 8.23.1
   "@vitest/coverage-v8": 5.0.5
@@ -15,6 +19,7 @@ catalog:
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   fast-check: 4.10.2
+  hono: 4.13.13
   i18next: 26.5.7
   # Парсер PostgreSQL 18 (WASM) для аудитора SQL — точная версия, обновление с прогоном канареек (ADR-0019).
   libpg-query: 18.2.0

@@ -99,6 +99,11 @@ describe("npmPattern — запреты библиотек в обеих рас�
       "@orpc/server",
       "node_modules/.pnpm/@orpc+server@1.16.0/node_modules/@orpc/server/dist/index.mjs",
     ],
+    ["@orpc/openapi", "@orpc/openapi/fetch"],
+    [
+      "@orpc/openapi",
+      "node_modules/.pnpm/@orpc+openapi@1.16.1/node_modules/@orpc/openapi/dist/adapters/fetch/index.mjs",
+    ],
     ["grammy", "node_modules/.pnpm/grammy@1.38.0/node_modules/grammy/out/mod.js"],
   ])("%s узнаётся в «%s»", (pkg, path) => {
     expect(matches(npmPattern([pkg]), path)).toBe(true);
@@ -118,6 +123,7 @@ describe("npmPattern — запреты библиотек в обеих рас�
       "node_modules/.pnpm/@orpc+contract@1.16.0/node_modules/@orpc/contract/dist/index.mjs",
     ],
     ["@orpc/server", "@orpc/client"],
+    ["@orpc/openapi", "@orpc/openapi-client"],
   ])("%s не путается с «%s»", (pkg, path) => {
     expect(matches(npmPattern([pkg]), path)).toBe(false);
   });

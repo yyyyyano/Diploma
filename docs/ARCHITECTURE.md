@@ -538,16 +538,21 @@ apps/web/src/
 │              телефона, плавающая кнопка «Спросить ассистента», панель чата, граница ошибок
 ├─ routes/     файловые маршруты TanStack — ТОНКИЕ: схема параметров адреса, loader, вызов страницы фичи
 │              _public/ (login, register, recovery, laws, policy) · _local/ (setup, mailbox) · _app/ (…) ·
-│              _app/admin/ (beforeLoad: роль admin) · dev.gallery.tsx (витрина компонентов, только в разработке)
+│              _app/admin/ (beforeLoad: роль admin) · dev.gallery.tsx (витрина компонентов, только в разработке);
+│              группа-файл (_public.tsx) появляется с первой страницей: пустые группы генератор не различает;
+│              каркас и сессию маршруты получают из контекста роутера (lib/router-context), а не импортом app
 ├─ features/   ЭКРАНЫ по design/SCREENS.md (список — docs/CAPABILITIES.md), у каждой — CLAUDE.md-паспорт
 ├─ entities/   общие предметные виджеты + хуки данных: transaction, receipt, category, account, law (чип и
 │              цитата), explanation («Откуда эта цифра?»), limit, goal, calendar-event, notification
 ├─ ui/         ДИЗАЙН-СИСТЕМА поверх Mantine — только представление, без запросов
-│  ├─ theme/   tokens.css (копия design/tokens.css + --warn-bar), theme.ts, category-colors.ts, chart-colors.ts, fonts.ts
-│  └─ components/  Money · WhyButton · Formula · LawRefChip · LawQuote · StatusBadge · CategoryIcon · LimitBar ·
-│                  StatCard · EmptyState · Skeletons · Sheet · ConfirmDialog · UndoToast · PageHeader · Steps
+│  ├─ theme/   tokens.css (копия design/tokens.css + --warn-bar), theme.ts, category-colors.ts, chart-colors.ts, fonts.ts,
+│  │           kit.css (прочие значения design/kit.css: оттенки меню, тени, шкала отступов --s-<px>)
+│  ├─ components/  Money · WhyButton · Formula · LawRefChip · LawQuote · StatusBadge · CategoryIcon · LimitBar ·
+│  │               StatCard · EmptyState · Skeletons · Sheet · ConfirmDialog · UndoToast · PageHeader · Steps
+│  └─ shell/   части каркаса без данных: SideNav, BottomNav, AppFrame (пункты и переходы подставляет app/shell)
 ├─ lib/        api (клиент oRPC + TanStack Query) · events (SSE → invalidate) · i18n · page-context ·
-│              assistant-bridge (открыть чат с вопросом) · media · env
+│              assistant-bridge (открыть чат с вопросом) · media · env · session (кто вошёл, роль, выход) ·
+│              nav (меню из staticData.nav маршрутов) · router-context
 └─ test/       setup, render-with-providers, MSW-обработчики
 ```
 

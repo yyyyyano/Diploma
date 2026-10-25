@@ -157,3 +157,11 @@
     min-height: 0;
   }
 }
+
+/* Подложка для знака на тёмной хвое (панель бренда входа). */
+.darkSwatch {
+  display: inline-flex;
+  padding: var(--s-12) var(--s-16);
+  border-radius: var(--r-md);
+  background: var(--brand-ink);
+}

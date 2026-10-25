@@ -23,8 +23,18 @@ function lookup(dictionary: object, key: string): unknown {
 }
 
 describe("словари ru", () => {
-  it("пространства имён: common, errors, formulas, tools и сайта — shell, ui", () => {
-    expect(NAMESPACES).toEqual(["common", "errors", "formulas", "tools", "shell", "ui"]);
+  it("пространства имён: common, errors, formulas, tools и сайта — shell, ui и экранов", () => {
+    expect(NAMESPACES).toEqual([
+      "common",
+      "errors",
+      "formulas",
+      "tools",
+      "shell",
+      "ui",
+      "auth",
+      "setup",
+      "accounts",
+    ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
 });
@@ -38,6 +48,17 @@ describe("errors — текст на каждый код каталога оши
     const text = t(`errors:${code}`);
     expect(text).not.toBe(code);
     expect(text.length).toBeGreaterThan(10);
+  });
+});
+
+describe("accounts — множественные числа счётчика счетов", () => {
+  it.each([
+    [1, "1 счёт"],
+    [3, "3 счёта"],
+    [5, "5 счетов"],
+    [21, "21 счёт"],
+  ])("%i → «%s»", (count, text) => {
+    expect(t("accounts:count", { count })).toBe(text);
   });
 });
 

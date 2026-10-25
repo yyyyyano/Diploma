@@ -31,6 +31,7 @@ import {
   ConfirmDialog,
   EmptyState,
   Formula,
+  Logo,
   Money,
   PageHeader,
   Sheet,
@@ -246,6 +247,15 @@ export function GalleryPage() {
             <StatusBadge tone="brand" icon={Wallet}>
               Счёт · 5530
             </StatusBadge>
+          </div>
+        </Section>
+
+        <Section id="logo" title="Logo — знак и название">
+          <div className={classes.row}>
+            <Logo />
+            <span className={classes.darkSwatch}>
+              <Logo on="dark" />
+            </span>
           </div>
         </Section>
 

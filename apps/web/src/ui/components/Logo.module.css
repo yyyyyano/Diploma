@@ -1,0 +1,30 @@
+/* .k-logo, .k-mark, .k-word из design/kit.css; .su-logo и .au-logo экранов Setup и Login. */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-10);
+  color: var(--ink);
+}
+
+.dark {
+  color: var(--kit-on-dark);
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--s-9);
+  background: var(--amber);
+  color: var(--brand-ink);
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.word {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

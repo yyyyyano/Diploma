@@ -19,6 +19,7 @@
   `SkeletonCard`, `SkeletonList`, `SkeletonText` (`<output aria-busy>` + «Загрузка…»).
 - Панели и подтверждения (P5): `Sheet` (Drawer 460 px справа или снизу), `ConfirmDialog` (кнопка-глагол, `tone`
   danger, `pending`), `UndoToast` (5 с, пауза при фокусе и указателе на «Отменить»), `PageHeader` (единственный h1).
+- `Logo` — знак и название «Кошт» (`on`: light — белая шапка, dark — тёмная хвоя): шапки входа и первого запуска.
 - Тема: `theme/tokens.css` — значения `design/tokens.css` + `--warn-bar` (SPEC §7.1); `theme/kit.css` — прочие
   значения набора (`--kit-*`, шкала `--s-<px>`, радиусы `--r-xs…--r-pill`); шрифты — `@fontsource-variable` (DES-09).
 

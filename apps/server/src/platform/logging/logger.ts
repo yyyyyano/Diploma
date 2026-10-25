@@ -129,7 +129,7 @@ export async function openLogFile(logDir: string, role: LogRole): Promise<RollSt
   return stream;
 }
 
-/** Удалить старые файлы роли сверх 14 (с текущим); файлы других ролей и чужие имена не трогаются. */
+/** Удалить старые файлы роли сверх 14 (с текущим); файлы других ролей и чужие имена не трогаются; сбой — не ошибка. */
 async function pruneLogFiles(logDir: string, role: LogRole, current: string): Promise<void> {
   const pattern = new RegExp(`^${role}\\.(\\d{4}-\\d{2}-\\d{2})\\.(\\d+)\\.log$`);
   const older = (await readdir(logDir))
@@ -141,7 +141,9 @@ async function pruneLogFiles(logDir: string, role: LogRole, current: string): Pr
     // Новые — вперёд: дата (строка гггг-ММ-дд сравнивается как дата), затем номер файла за день.
     .sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number);
   const extra = older.slice(LOG_FILES_PER_ROLE - 1);
-  await Promise.all(extra.map(async (file) => rm(join(logDir, file.name), { force: true })));
+  // Чистка не роняет запуск (как removeOldFiles у pino-roll): не удалённый файл (EACCES, каталог с тем же именем)
+  // остаётся до следующего открытия или ротации. Логгера ещё нет — сбой не пишется.
+  await Promise.allSettled(extra.map(async (file) => rm(join(logDir, file.name), { force: true })));
 }
 
 /** Закрыть файл лога, дослав буфер (завершение процесса, тесты). */

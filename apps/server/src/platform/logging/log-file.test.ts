@@ -56,6 +56,23 @@ describe("OBS-06: ротация логов", () => {
     );
   });
 
+  it("лишний файл не удаляется (каталог с именем файла лога) — запуск не падает, остальные лишние удалены", async () => {
+    const logDir = join(dir, "retention-failure");
+    mkdirSync(logDir, { recursive: true });
+    const old = Array.from(
+      { length: 20 },
+      (_, i) => `api.2026-02-${String(i + 1).padStart(2, "0")}.1.log`,
+    );
+    for (const name of old.slice(1)) writeFileSync(join(logDir, name), "{}\n");
+    // Самый старый — каталог: rm без recursive отказывает (EISDIR).
+    mkdirSync(join(logDir, old[0] ?? ""));
+    const stream = await openLogFile(logDir, "api");
+    const current = basename(stream.file ?? "");
+    await closeLogFile(stream);
+    const apiLogs = readdirSync(logDir).filter((name) => /^api\..+\.log$/.test(name));
+    expect(apiLogs.sort()).toEqual([current, old[0] ?? "", ...old.slice(7)].sort());
+  });
+
   it("файл роли — <роль>.<гггг-ММ-дд>.<n>.log с правами 0600, папка 0700 создаётся сама", async () => {
     const logDir = join(dir, "roll", "logs");
     const stream = await openLogFile(logDir, "api");

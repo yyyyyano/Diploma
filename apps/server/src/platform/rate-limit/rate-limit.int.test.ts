@@ -1,8 +1,11 @@
 import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import pg from "pg";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { MasterKey } from "../config/master-key.ts";
+import { createPool } from "../db/connection.ts";
 import { createSystemDb } from "../db/system-db.ts";
 import { memoryLogger } from "../logging/__fixtures__/memory-logger.ts";
 import { createRateLimiter, defineRateRule } from "./rate-limit.ts";
@@ -24,7 +27,7 @@ beforeEach(async () => {
 });
 
 function limiterOn(
-  pool: pg.Pool,
+  pool: Parameters<typeof createSystemDb>[0],
   clock = new FakeClock("2026-10-21T09:00:00Z"),
   timeoutMs = 2_000,
 ) {
@@ -96,7 +99,13 @@ describe("SEC-02: ограничение частоты", () => {
 
 describe("SEC-02: база недоступна — UNAVAILABLE, а не «пропустить»", () => {
   it("нет соединения с базой → UNAVAILABLE, в логе — правило, без ключа", async () => {
-    const dead = new pg.Pool({ host: "127.0.0.1", port: 1, user: "x", database: "x" });
+    // Порт 1 никто не слушает: соединение отклоняется сразу.
+    const dir = mkdtempSync(join(tmpdir(), "kosht-dead-db-"));
+    writeFileSync(join(dir, "password"), "x");
+    const dead = createPool({
+      url: "postgres://x@127.0.0.1:1/x",
+      passwordFile: join(dir, "password"),
+    });
     const { limiter, logs } = limiterOn(dead);
     await expect(limiter.hit(LOGIN, EMAIL)).rejects.toMatchObject({ code: "UNAVAILABLE" });
     expect(logs.lines()).toContainEqual(
@@ -104,6 +113,7 @@ describe("SEC-02: база недоступна — UNAVAILABLE, а не «пр�
     );
     expect(logs.text()).not.toContain(EMAIL);
     await dead.end();
+    rmSync(dir, { recursive: true, force: true });
   });
 
   it("база не ответила вовремя (все соединения пула заняты) → UNAVAILABLE", async () => {

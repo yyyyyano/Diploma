@@ -5,7 +5,7 @@
 // сразу в конечное состояние (deadletter без очереди мёртвых писем = failed без повторов).
 import { randomUUID } from "node:crypto";
 import { isRetryable } from "@kosht/contract";
-import { makeScope, type Clock } from "@kosht/kernel";
+import { makeScope, type Clock, type TimeZone } from "@kosht/kernel";
 import { fromDrizzle, type Db, type Job, type JobResult, type PgBoss } from "pg-boss";
 import { bossDb, bossTransaction } from "../db/boss-db.ts";
 import { createScopedDb, type ScopedDb } from "../db/scoped-db.ts";
@@ -16,7 +16,9 @@ import type { Logger } from "../logging/logger.ts";
 import { createBoss, stopBoss, type BossRole } from "./boss.ts";
 import { JobEnvelope, queuePolicy, type JobDef } from "./define-job.ts";
 import { finishRun, recordDropped, setProgress, startRun } from "./jobs.repo.ts";
+import { runSchedule, type ScheduleDef, type ScheduleOutcome } from "./schedule.ts";
 import type { ScopeVerifierRegistry } from "./scope-verifier.ts";
+import { runSweep, type SweepDef } from "./sweep.ts";
 
 /** Порт очереди (ARCHITECTURE §4.4): в тестах сценариев — InlineJobs из @kosht/testing. */
 export interface Jobs {
@@ -33,6 +35,11 @@ export interface JobsDeps {
   readonly log: Logger;
   readonly clock: Clock;
   readonly scopes: ScopeVerifierRegistry;
+  /**
+   * Пояс расписаний — настройка system.time-zone (NFR-23); worker читает её при старте, поэтому смена пояса
+   * действует после перезапуска worker.
+   */
+  timeZone(): Promise<TimeZone>;
   /** Как часто worker спрашивает новые задачи, с (по умолчанию 2; тесты — 0.5). */
   readonly pollingIntervalSeconds?: number;
 }
@@ -40,10 +47,13 @@ export interface JobsDeps {
 /** Что раскладывает по очередям корень композиции (реестры модулей — T-007). */
 export interface JobsRegistry {
   readonly jobs: readonly JobDef[];
+  readonly schedules?: readonly ScheduleDef[];
+  /** Задача обхода регистрируется вместе с ним, если её нет в jobs. */
+  readonly sweeps?: readonly SweepDef[];
 }
 
 export interface JobsRuntime extends Jobs {
-  /** Создать очереди (все роли — ставить можно сразу) и, в worker, начать обработку. */
+  /** Создать очереди (все роли — ставить можно сразу) и, в worker, начать обработку и расписания. */
   start(registry: JobsRegistry): Promise<void>;
   /** Новые задачи не берутся, обработчики в полёте доводятся (≤ 8 с); пул остаётся вызывающему. */
   stop(): Promise<void>;
@@ -61,7 +71,7 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
     scope: ScopedDb["scope"],
     job: JobDef<unknown>,
     payload: unknown,
-    db: Db,
+    db?: Db,
   ): Promise<void> {
     if (boss === undefined) throw new Error("Очередь задач не запущена: сначала jobs.start().");
     if (queues.get(job.name) !== job) {
@@ -82,7 +92,7 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
       payload: parsed.data,
     };
     await boss.send(job.name, envelope, {
-      db,
+      ...(db === undefined ? {} : { db }),
       ...(job.options.priority === undefined ? {} : { priority: job.options.priority }),
       ...(job.options.startAfterSeconds === undefined
         ? {}
@@ -99,8 +109,14 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
 
     async start(registry) {
       if (boss !== undefined) throw new Error("Очередь задач уже запущена.");
-      for (const job of registry.jobs) {
-        if (queues.has(job.name)) throw new Error(`Задача ${job.name} объявлена дважды.`);
+      const timers = [...(registry.schedules ?? []), ...(registry.sweeps ?? [])];
+      const sweepJobs = (registry.sweeps ?? []).map((sweep) => sweep.job);
+      for (const job of [...registry.jobs, ...sweepJobs]) {
+        const known = queues.get(job.name);
+        if (known === job) continue;
+        if (known !== undefined || timers.some((timer) => timer.name === job.name)) {
+          throw new Error(`Очередь ${job.name} объявлена дважды.`);
+        }
         queues.set(job.name, job);
       }
       const instance = createBoss(bossDb(pool), role);
@@ -121,21 +137,69 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
             : { expireInSeconds: job.options.expireInSeconds }),
         });
       }
-      if (role !== "worker") return;
-      for (const job of queues.values()) {
-        await instance.work(
-          job.name,
-          {
-            pollingIntervalSeconds: deps.pollingIntervalSeconds ?? DEFAULT_POLLING_SECONDS,
-            perJobResults: true,
-          },
-          async (batch) =>
+      if (role === "worker") {
+        const work = {
+          pollingIntervalSeconds: deps.pollingIntervalSeconds ?? DEFAULT_POLLING_SECONDS,
+          perJobResults: true,
+        } as const;
+        for (const job of queues.values()) {
+          await instance.work(job.name, work, async (batch) =>
             Promise.all(
               batch.map((item) => runJob({ pool, system, log, clock, scopes }, job, item)),
             ),
-        );
+          );
+        }
+        // Расписание и обход — очередь short: пока один тик ждёт, следующий не копится.
+        const timeZone = await deps.timeZone();
+        const ticks: Tick[] = [
+          ...(registry.schedules ?? []).map((schedule) => ({
+            name: schedule.name,
+            cron: schedule.cron,
+            run: async (item: Job<unknown>) =>
+              SCHEDULE_STATUS[
+                await runSchedule(
+                  schedule,
+                  { system, clock, log },
+                  { requestId: item.id, log, signal: item.signal },
+                )
+              ],
+          })),
+          ...(registry.sweeps ?? []).map((sweep) => ({
+            name: sweep.name,
+            cron: sweep.cron,
+            run: async () => {
+              try {
+                await runSweep(sweep, {
+                  pool,
+                  system,
+                  clock,
+                  log,
+                  enqueue: (scope, job, payload) => send(scope, job, payload),
+                });
+                return "completed" as const;
+              } catch (error) {
+                log.error({ err: error, job: sweep.name }, "jobs.sweep-failed");
+                return failureStatus(error);
+              }
+            },
+          })),
+        ];
+        for (const tick of ticks) {
+          await instance.createQueue(tick.name, { policy: "short", retryLimit: 2 });
+          await instance.work(tick.name, work, async (batch) =>
+            Promise.all(
+              batch.map(async (item) => ({
+                id: item.id,
+                status: await withLogContext({ requestId: item.id, source: "job" }, () =>
+                  tick.run(item),
+                ),
+              })),
+            ),
+          );
+          await instance.schedule(tick.name, tick.cron, null, { tz: timeZone, missed: "once" });
+        }
       }
-      log.info({ role, count: queues.size }, "jobs.started");
+      log.info({ role, count: queues.size + timers.length }, "jobs.started");
     },
 
     async stop() {
@@ -144,6 +208,26 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
       boss = undefined;
     },
   };
+}
+
+/** Очередь по cron: расписание платформы или обход; requestId прогона — id задачи pg-boss (ищется в логе). */
+interface Tick {
+  readonly name: string;
+  readonly cron: string;
+  run(item: Job<unknown>): Promise<JobResult["status"]>;
+}
+
+/** Итог прогона расписания → итог задачи pg-boss: retry — повторить, failed — без повторов. */
+const SCHEDULE_STATUS = {
+  idle: "completed",
+  completed: "completed",
+  retry: "failed",
+  failed: "deadletter",
+} as const satisfies Record<ScheduleOutcome, JobResult["status"]>;
+
+/** Ошибка → итог для pg-boss: повтор (failed) только для retryable-кода каталога, иначе deadletter без повторов. */
+function failureStatus(error: unknown): "failed" | "deadletter" {
+  return error instanceof AppError && isRetryable(error.code) ? "failed" : "deadletter";
 }
 
 /** Вид предупреждения pg-boss (`queue_backlog`, `slow_query`…): текст и прочие поля в лог не идут. */
@@ -200,14 +284,13 @@ async function runJob(deps: RunDeps, job: JobDef, item: Job<unknown>): Promise<J
       );
     } catch (error) {
       const code = error instanceof AppError ? error.code : "INTERNAL";
-      const retry = error instanceof AppError && isRetryable(error.code);
       log.error({ err: error, job: job.name, jobId: item.id, code }, "jobs.failed");
       await finishRun(system, runId, {
         status: "failed",
         finishedAt: clock.now(),
         errorCode: code,
       });
-      return done(retry ? "failed" : "deadletter");
+      return done(failureStatus(error));
     }
     await finishRun(system, runId, { status: "completed", finishedAt: clock.now() });
     log.info(

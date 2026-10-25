@@ -7,15 +7,18 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 import { migrateFixtures } from "../db/__fixtures__/fixture-db.ts";
 import { fxReceipts } from "../db/__fixtures__/schema.ts";
+import { findStuckReceipts } from "../db/__fixtures__/stuck-receipts.ts";
 import { bossDb } from "../db/boss-db.ts";
 import { createScopedDb } from "../db/scoped-db.ts";
 import { AppError } from "../errors/app-error.ts";
 import { memoryLogger } from "../logging/__fixtures__/memory-logger.ts";
 import { withLogContext } from "../logging/context.ts";
 import { createBoss, stopBoss, type BossRole } from "./boss.ts";
-import { defineJob, type JobDef } from "./define-job.ts";
+import { defineJob } from "./define-job.ts";
+import { defineSchedule } from "./schedule.ts";
+import { defineSweep } from "./sweep.ts";
 import { installJobsSchema } from "./install.ts";
-import { createJobs, type JobsRuntime } from "./jobs.ts";
+import { createJobs, type JobsRegistry, type JobsRuntime } from "./jobs.ts";
 import { createScopeVerifierRegistry, type ScopeVerifier } from "./scope-verifier.ts";
 
 const scopeA = testScope({ user: 1, household: 1 });
@@ -32,7 +35,12 @@ afterAll(async () => {
 });
 
 /** Очередь процесса роли role на пуле роли приложения; проверка scope — своя у каждого теста. */
-async function startJobs(role: BossRole, jobs: readonly JobDef[], verify: ScopeVerifier) {
+async function startJobs(
+  role: BossRole,
+  registry: JobsRegistry,
+  verify: ScopeVerifier,
+  timeZone = "Europe/Minsk",
+) {
   const scopes = createScopeVerifierRegistry();
   scopes.register(verify);
   const logs = memoryLogger();
@@ -42,9 +50,10 @@ async function startJobs(role: BossRole, jobs: readonly JobDef[], verify: ScopeV
     log: logs.log,
     clock: new FakeClock("2026-10-21T09:00:00Z"),
     scopes,
+    timeZone: async () => timeZone,
     pollingIntervalSeconds: 0.5,
   });
-  await runtime.start({ jobs });
+  await runtime.start(registry);
   running.push(runtime);
   return { runtime, logs };
 }
@@ -130,7 +139,7 @@ const receiptPayload = z.object({ receiptId: z.uuid() });
 describe("ADR-0008: постановка в транзакции данных (ScopedDb)", () => {
   it("коммит — и запись, и задача; откат — ни записи, ни задачи", async () => {
     const job = defineJob({ name: "test.in-tx", payload: receiptPayload, handle: async () => {} });
-    const { runtime } = await startJobs("api", [job], async () => true);
+    const { runtime } = await startJobs("api", { jobs: [job] }, async () => true);
     const s = createScopedDb(db.pool, scopeA);
     const write = (fail: boolean) =>
       s.transaction(async (tx) => {
@@ -160,7 +169,7 @@ describe("SEC-04, OBS-01: задача выполняется от имени в
       payload: receiptPayload,
       handle: async (ctx) => seen.resolve({ scope: ctx.s.scope, requestId: ctx.requestId }),
     });
-    const { runtime } = await startJobs("worker", [job], async () => true);
+    const { runtime } = await startJobs("worker", { jobs: [job] }, async () => true);
     const s = createScopedDb(db.pool, scopeA);
     await withLogContext({ requestId: "req-owner-0001" }, () =>
       s.transaction((tx) => runtime.enqueue(tx, job, { receiptId: scopeA.userId })),
@@ -182,7 +191,7 @@ describe("SEC-04, OBS-01: задача выполняется от имени в
     // Есть только пользователь 1 в домохозяйстве 1.
     const { runtime, logs } = await startJobs(
       "worker",
-      [job],
+      { jobs: [job] },
       async (c) => c.userId === scopeA.userId && c.householdId === scopeA.householdId,
     );
     const enqueue = (scope: Scope) =>
@@ -221,7 +230,7 @@ describe("ADR-0008: повтор — только для retryable-ошибок 
         if (n === 3 && attempts.get(2) === 2) finished.resolve();
       },
     });
-    const { runtime } = await startJobs("worker", [job], async () => true);
+    const { runtime } = await startJobs("worker", { jobs: [job] }, async () => true);
     const s = createScopedDb(db.pool, scopeA);
     for (const n of [1, 2, 3]) await s.transaction((tx) => runtime.enqueue(tx, job, { n }));
     await finished.promise;
@@ -232,5 +241,65 @@ describe("ADR-0008: повтор — только для retryable-ошибок 
       ["test.retry"],
     );
     expect(rows).toEqual([{ state: "failed", retry_count: 0 }]);
+  });
+});
+
+describe("NFR-22, NFR-23: расписания и обходы ведёт worker", () => {
+  it("расписание ставится по поясу настройки system.time-zone с missed: once", async () => {
+    const schedule = defineSchedule({
+      name: "test.nightly",
+      cron: "0 3 * * *",
+      stepDays: 1,
+      handle: async () => {},
+    });
+    await startJobs("worker", { jobs: [], schedules: [schedule] }, async () => true, "Asia/Tokyo");
+    const { rows } = await db.owner.query(
+      "select timezone, cron, options->>'missed' as missed from pgboss.schedule where name = $1",
+      ["test.nightly"],
+    );
+    expect(rows).toEqual([{ timezone: "Asia/Tokyo", cron: "0 3 * * *", missed: "once" }]);
+  });
+
+  it("обход fx_receipts находит владельцев (id, householdId, userId) и ставит задачу каждому под его scope", async () => {
+    const owners = [testScope({ user: 1, household: 1 }), testScope({ user: 2, household: 2 })];
+    const ids: string[] = [];
+    for (const owner of owners) {
+      const { rows } = await db.owner.query<{ id: string }>(
+        `insert into fx_receipts (household_id, user_id, merchant, total_minor, status)
+         values ($1, $2, 'Магазин', 100, 'stuck') returning id`,
+        [owner.householdId, owner.userId],
+      );
+      ids.push(rows[0]?.id ?? "");
+    }
+    const seen: { scope: Scope; receiptId: string }[] = [];
+    const all = signal<void>();
+    const job = defineJob({
+      name: "test.unstick",
+      payload: receiptPayload,
+      handle: async (ctx, { receiptId }) => {
+        seen.push({ scope: ctx.s.scope, receiptId });
+        if (seen.length === owners.length) all.resolve();
+      },
+    });
+    const sweep = defineSweep({
+      name: "test.stuck-receipts",
+      cron: "0 0 1 1 *",
+      find: findStuckReceipts,
+      job,
+      payload: (row) => ({ receiptId: row.id }),
+    });
+    await startJobs("worker", { jobs: [], sweeps: [sweep] }, async () => true);
+    // Тик расписания вручную — та же задача, которую pg-boss ставит по cron.
+    const tick = createBoss(bossDb(db.pool), "api");
+    await tick.start();
+    await tick.send("test.stuck-receipts", null);
+    await stopBoss(tick);
+    await all.promise;
+
+    expect(seen.toSorted((a, b) => a.receiptId.localeCompare(b.receiptId))).toEqual(
+      owners
+        .map((scope, i) => ({ scope, receiptId: ids[i] ?? "" }))
+        .toSorted((a, b) => a.receiptId.localeCompare(b.receiptId)),
+    );
   });
 });

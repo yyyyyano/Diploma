@@ -119,6 +119,16 @@
   контекста лога; `stop()`. Выполнение: конверт → `scopes.verify` → `makeScope` (единственное место для задач) →
   `ctx.s` → обработчик → `background_job_run`. Не прошёл конверт, владелец или нагрузка — `dropped` (`VALIDATION`,
   `FORBIDDEN`), `jobs.scope-rejected` в логе, без повтора; ошибка — `failed` с кодом, повтор только для `retryable`.
+  Реестр `start({ jobs, schedules?, sweeps? })`: в `worker` расписания и обходы — очереди `short` с
+  `schedule(имя, cron, null, { tz: deps.timeZone(), missed: "once" })`; пояс — настройка `system.time-zone`,
+  читается при старте (смена — после перезапуска `worker`).
+- `periods.ts` — `pendingPeriods(watermark, today, stepDays)`: закончившиеся периоды после водяного знака (текущий —
+  нет); без водяного знака — только последний закончившийся.
+- `schedule.ts` — `defineSchedule({ name, cron, stepDays, handle(ctx, periods) })` (расписание платформы, без scope)
+  и `runSchedule`: водяной знак из `background_job_run` → `pendingPeriods` → обработчик → новый водяной знак только
+  после успеха; итог `idle | completed | retry | failed`.
+- `sweep.ts` — `defineSweep({ name, cron, find, job, payload(row) })` и `runSweep`: `crossTenant(pool, name, find)`
+  (только `id, householdId, userId`) → `makeScope` строки → задача владельцу; строка журнала на обход.
 
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,

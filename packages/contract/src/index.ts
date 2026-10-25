@@ -1,4 +1,10 @@
 // Публичный API @kosht/contract — форма данных «на проводе» (паспорт — packages/contract/CLAUDE.md).
+export {
+  AccountId,
+  AccountKind,
+  AccountListItem,
+  accountsContract,
+} from "./accounts/accounts.contract.ts";
 export { CardPart, ChatMessagePart, StepPart, TextPart } from "./chat/message-parts.ts";
 export { PageContext } from "./chat/page-context.ts";
 export {

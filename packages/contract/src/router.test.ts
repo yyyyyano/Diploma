@@ -21,7 +21,7 @@ function procedures(router: AnyContractRouter, path = ""): [string, AnyContractP
 const all = procedures(contract);
 
 describe("дерево процедур", () => {
-  it("процедуры бетонной фазы: платформа и вход (identity)", () => {
+  it("процедуры бетонной фазы: платформа, вход (identity) и счета (accounts)", () => {
     expect(all.map(([path]) => path)).toEqual([
       "system.health",
       "events.stream",
@@ -30,6 +30,7 @@ describe("дерево процедур", () => {
       "identity.signIn",
       "identity.signOut",
       "identity.me",
+      "accounts.list",
     ]);
   });
 

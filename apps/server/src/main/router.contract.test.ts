@@ -1,5 +1,6 @@
 import { contract } from "@kosht/contract";
 import { testScope } from "@kosht/testing";
+import type { ContractRouterClient } from "@orpc/contract";
 import { createRouterClient } from "@orpc/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ScopedDb } from "../platform/db/scoped-db.ts";
@@ -11,6 +12,8 @@ import type { Session } from "../platform/http/session.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
 import { BODY_LIMIT } from "../platform/http/body-limit.ts";
 import { publicProc } from "../platform/http/procedures.ts";
+import { createAccountsModule, type AccountsFacades } from "../modules/accounts/index.ts";
+import type { Platform } from "../platform/module/define-module.ts";
 import { contractPaths, routerPaths } from "./__fixtures__/router-paths.ts";
 import { createRouter } from "./router.ts";
 
@@ -26,6 +29,10 @@ const signedIn = sessionOf();
 
 const hub = createRealtimeHub({ log: memoryLogger().log });
 const router = createRouter({ streams: hub });
+
+// Ветка accounts — из фабрики модуля: порты платформы процедуре списка без сессии не нужны.
+const accountsBranch =
+  createAccountsModule({ platform: {} as Platform, facades: {} as AccountsFacades }).router ?? {};
 
 function context(overrides: Partial<HttpContext> = {}): HttpContext {
   return {
@@ -151,9 +158,9 @@ describe("ADR-0005: ветки модулей из реестра", () => {
   });
 
   it("ветка модуля встаёт под свой ключ, пустая ветка допустима", () => {
-    const tree = createRouter({ streams: hub, modules: { accounts: {}, fxRates: {} } });
+    const tree = createRouter({ streams: hub, modules: { accounts: accountsBranch, fxRates: {} } });
     expect(Object.keys(tree).toSorted()).toEqual(["accounts", "events", "fxRates", "system"]);
-    expect(routerPaths(tree)).toEqual(["events.stream", "system.health"]);
+    expect(routerPaths(tree)).toEqual(["accounts.list", "events.stream", "system.health"]);
   });
 
   it("ветка модуля system дополняет общую ветку контракта, health остаётся платформенным", async () => {
@@ -173,5 +180,17 @@ describe("ADR-0005: ветки модулей из реестра", () => {
     expect(() => createRouter({ streams: hub, modules: { system: { health } } })).toThrow(
       /system\.health/,
     );
+  });
+});
+
+describe("ROLE-01: процедуры модулей требуют входа", () => {
+  it("accounts.list без сессии → UNAUTHORIZED", async () => {
+    const tree = createRouter({ streams: hub, modules: { accounts: accountsBranch } });
+    // Ветки модулей приходят реестром (запись по строковому ключу): тип клиента — по контракту.
+    const client = createRouterClient(tree, {
+      context: context(),
+    }) as unknown as ContractRouterClient<typeof contract>;
+    const error: unknown = await client.accounts.list().catch((thrown: unknown) => thrown);
+    expect(error).toMatchObject({ code: "UNAUTHORIZED" });
   });
 });

@@ -1,5 +1,4 @@
-// Модуль accounts (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль accounts (паспорт — CLAUDE.md): счета домохозяйства и «Наличные» с самого начала (STMT-01).
 import {
   defineModule,
   type ModuleDeps,
@@ -8,6 +7,10 @@ import {
 import type { IdentityFacade } from "../identity/index.ts";
 import type { FxRatesFacade } from "../fx-rates/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
+import { accountsRouter } from "./api/router.ts";
+import { makeEnsureCash } from "./application/ensure-cash.ts";
+import { onUserRegistered } from "./subscriptions/on-user-registered.ts";
+import { accountsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface AccountsFacades {
@@ -16,8 +19,13 @@ export interface AccountsFacades {
   readonly explain: ExplainFacade;
 }
 
-export function createAccountsModule(_deps: ModuleDeps<AccountsFacades, Platform>) {
-  return defineModule({ id: "accounts" });
+export function createAccountsModule({ platform }: ModuleDeps<AccountsFacades, Platform>) {
+  return defineModule({
+    id: "accounts",
+    router: accountsRouter(),
+    subscriptions: [onUserRegistered(makeEnsureCash(platform))],
+    userData: accountsUserData,
+  });
 }
 
 /** Что модуль даёт соседям: пока ничего (undefined). */

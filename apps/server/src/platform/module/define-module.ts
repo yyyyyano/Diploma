@@ -105,6 +105,11 @@ export interface ModuleDescriptor<F = unknown> {
 /** id модуля — как в tooling/architecture/modules.ts. */
 const MODULE_ID = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
+/** Ключ модуля в дереве процедур и в фасадах соседей: id в camelCase (`legal-base` → `legalBase`). */
+export function moduleKey(id: string): string {
+  return id.replace(/-([a-z0-9])/g, (_dash, letter: string) => letter.toUpperCase());
+}
+
 export function defineModule(
   spec: ModuleParts & { readonly id: string },
 ): ModuleDescriptor<undefined>;

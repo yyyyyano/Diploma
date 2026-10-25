@@ -35,7 +35,8 @@ paths:
 - **Версии**: oxfmt, Drizzle, llama.cpp, AI SDK, pg-boss, OTel-пакеты Langfuse — **точные**; общие версии — через
   `catalog:` в `pnpm-workspace.yaml`; нативная зависимость — строка в `allowBuilds`; обновление мажора — отдельная задача.
 - **dependency-cruiser**: правила генерируются из `tooling/architecture/modules.ts`; рядом `typescript@6`
-  (`packageExtensions`); `deps-guard.mjs` с порогом `MIN_MODULES`. Новое правило ⇒ фикстура нарушения в
+  (`packageExtensions`); `deps-guard.mjs` с порогом `MIN_MODULES` (файлов) и требованием,
+  чтобы в графе был `modules/<id>/index.ts` каждого модуля карты (иначе код 2). Новое правило ⇒ фикстура нарушения в
   `tooling/architecture/fixtures/` и тест «правило ловит своё». Правило, которое ничего не ловит, — сломанное правило.
 - **Свои проверки** (`tooling/checks/*.mjs`) — маленькие, с кодом выхода 0/1/2 (2 — не смог проверить: нет файлов,
   меньше порога, внешний инструмент упал) и сообщением «файл:строка — что исправить», каждая — с тестом на

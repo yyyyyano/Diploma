@@ -541,7 +541,7 @@
 - Зависимости: T-059, T-060
 
 ### T-007 · Все 36 модулей пустыми, но живыми: паспорта, корень композиции и реестры
-- Статус: todo
+- Статус: in-progress
 - Модули: все 36 модулей `docs/CAPABILITIES.md`, `apps/server/src/main`, `platform/tools`, `tooling/gen`
 - SPEC: NFR-10, AGT-03, PRIV-06
 - Критерии приёмки:
@@ -674,6 +674,8 @@
   - Пустой `ScopeVerifier` не пропускает никого; `identity` регистрирует его вместе с `sessions.register`. `bodyLimit` —
     `defineSetting`, превышение → `VALIDATION` через `app.onError`.
   - Скиллы: `security-and-hardening`, `doubt-driven-development`, `test-driven-development`.
+  - [ ] Выбор `platform` / `systemPlatform` по `systemTables` модуля проверен тестом на `identity` (первый модуль с
+    таблицами `system`). (Optional ревью T-007.)
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/main
 - Риск: high — вход, сессия и первый тест изоляции; на них опираются все следующие задачи
 - Зависимости: T-008, T-004, T-005, T-007, T-059
@@ -923,6 +925,8 @@
     `FakeClock`); «Доступ с других устройств» открывает и закрывает слушатель `lan` без перезапуска; статус Langfuse
     и ссылка. Токен бота и «Пересоздать демо-данные» скрыты до T-052 и T-054.
   - [ ] axe 0 на `/admin/users` и `/admin/system` при 1440 и 390.
+  - [ ] Ключи настроек и секретов модуля имеют префикс его id, платформенные — свой префикс, не совпадающий ни с одним
+    модулем (сейчас `system.time-zone` платформы совпал бы с модулем `system`); проверка при старте и тест. (Находка T-007.)
 - Проверка: make check; make e2e
 - Риск: high — права администратора и запрет доступа к чужим данным (PRIV-07, R37)
 - Зависимости: T-016, T-013, T-015

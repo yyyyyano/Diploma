@@ -51,6 +51,28 @@ describe("deps-guard: неразрешённые импорты и наруше�
   });
 });
 
+describe("deps-guard: все модули карты в графе (T-007)", () => {
+  it("в графе нет index.ts модуля из карты — код 2 с именем модуля, даже без нарушений", async () => {
+    const result = await runDepsGuard({
+      baseDir: join(fixtures, "missing-module"),
+      minModules: 1,
+      requiredModules: ["accounts", "identity"],
+    });
+    expect(result.code).toBe(2);
+    expect(result.messages.join("\n")).toContain("apps/server/src/modules/identity/index.ts");
+    expect(result.messages.join("\n")).not.toContain("modules/accounts/");
+  });
+
+  it("index.ts всех требуемых модулей в графе — код 0", async () => {
+    const result = await runDepsGuard({
+      baseDir: join(fixtures, "missing-module"),
+      minModules: 1,
+      requiredModules: ["accounts"],
+    });
+    expect(result.code).toBe(0);
+  });
+});
+
 describe("deps-guard на репозитории", () => {
   it("make deps-check на текущем дереве зелёный и проверяет не меньше MIN_MODULES файлов", () => {
     const run = spawnSync(process.execPath, [script], { cwd: repoRoot, encoding: "utf8" });

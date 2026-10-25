@@ -10,4 +10,5 @@ export interface DepsGuardResult {
 export declare function runDepsGuard(options: {
   baseDir: string;
   minModules: number;
+  requiredModules?: readonly string[];
 }): Promise<DepsGuardResult>;

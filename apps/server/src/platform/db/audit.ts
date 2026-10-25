@@ -12,7 +12,8 @@
 // InsertStmt, UpdateStmt, DeleteStmt, TransactionStmt и SET TRANSACTION; DO, COPY, CALL, SET, DDL и прочее —
 // нарушение; SELECT … INTO — нигде в дереве (Postgres берёт INTO у левой ветки UNION: это CREATE TABLE AS);
 // MERGE — нигде в дереве (WITH … MERGE и MERGE в CTE вставляют без INSERT); нет функций,
-// исполняющих SQL из строки (query_to_xml, ts_stat, dblink…) или меняющих настройки соединения (set_config);
+// исполняющих SQL из строки (query_to_xml, ts_stat, dblink…), читающих файлы сервера (pg_read_file, lo_import…)
+// или меняющих настройки соединения (set_config);
 // пользовательская таблица — только в схеме public. Каждое обращение к пользовательской таблице (RangeVar в
 // FROM, JOIN, подзапросе, CTE, цели UPDATE/DELETE) сужено условием своей области (см. narrowLevel): конъюнктом
 // WHERE или ON соединения (ON внешнего соединения — только для nullable-стороны), OR — если сужает каждая ветка;
@@ -24,6 +25,9 @@
 // записи, блокировок и UNION, возвращающий только id, household_id, user_id.
 //
 // Чего не видит: SQL внутри представлений и функций базы (их запрещает проверка схемы, schema-check.ts);
+// функции с побочным эффектом, не открывающие чужих строк (pg_advisory_lock, pg_sleep, pg_notify, nextval,
+// pg_cancel_backend/pg_terminate_backend, lo_create/lo_get), и FOR UPDATE в подзапросе — он блокирует только
+// строки, уже суженные own; вредят они доступности, а не изоляции — их ловит ревью сырого SQL;
 // побочные каналы — выражение рядом с фильтром (`note::int = 1`, деление на ноль) база может вычислить и на
 // чужой строке раньше фильтра, и ошибка покажет значение; это закрывают построитель ScopedDb (s.own, s.update,
 // s.delete ставят фильтр сами) и ревью сырого SQL. Ошибается аудитор в сторону «громко»: не засчитывает
@@ -486,11 +490,13 @@ const ALLOWED_TRANSACTION = new Set(
 );
 
 /**
- * Функции, исполняющие SQL или читающие таблицу по имени из строки (аудитор строки не разбирает), и set_config —
- * настройка (search_path), которая осталась бы на соединении пула для следующих запросов.
+ * Функции, исполняющие SQL или читающие таблицу по имени из строки (аудитор строки не разбирает); файлы сервера по
+ * пути из строки — роль приложения суперпользователь, и pg_read_binary_file(pg_relation_filepath('t')) отдаёт
+ * страницы таблицы со строками всех домохозяйств; set_config — настройка (search_path), которая осталась бы на
+ * соединении пула для следующих запросов.
  */
 const HIDDEN_SQL_FUNCTION =
-  /^(?:(?:query|table|cursor|schema|database)_to_xml(?:schema|_and_xmlschema)?|ts_stat|ts_rewrite|dblink\w*|set_config)$/;
+  /^(?:(?:query|table|cursor|schema|database)_to_xml(?:schema|_and_xmlschema)?|ts_stat|ts_rewrite|dblink\w*|set_config|pg_read_(?:binary_)?file|pg_ls_\w+|pg_stat_file|lo_import|lo_export)$/;
 
 function notAllowed(command: string): Fault {
   return {
@@ -545,7 +551,7 @@ function statementFault(
         fault = {
           reason: "HIDDEN_SQL",
           hint:
-            `${name}: SQL или имя таблицы внутри строки аудитор не проверяет — пишите запрос построителем ` +
+            `${name}: SQL, имя таблицы или файл сервера внутри строки аудитор не проверяет — пишите запрос построителем ` +
             "или sql`…` с ${s.own(таблица)}",
         };
       }

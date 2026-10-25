@@ -1297,3 +1297,26 @@ describe("ROLE-01, SEC-04: SELECT … INTO создаёт таблицу, где
     );
   });
 });
+
+describe("ROLE-01, SEC-04: файлы сервера по пути из строки — HIDDEN_SQL", () => {
+  // Роль приложения в Compose — суперпользователь: pg_read_binary_file(pg_relation_filepath('t')) отдаёт страницы
+  // таблицы со строками всех домохозяйств, а RangeVar в дереве нет (проверено на PostgreSQL 18).
+  it.each([
+    [
+      "pg_read_binary_file страниц таблицы",
+      "select pg_read_binary_file(pg_relation_filepath('fx_receipts'))",
+    ],
+    ["pg_read_file", "select pg_read_file('base/1/2')"],
+    ["pg_catalog.pg_read_file", "select pg_catalog.pg_read_file($1)"],
+    ["pg_ls_dir", "select * from pg_ls_dir('base')"],
+    ["pg_stat_file", "select (pg_stat_file('base/1/2')).size"],
+    ["lo_import", "select lo_import('/var/lib/postgresql/data/base/1/2')"],
+    ["lo_export", "select lo_export(1, '/tmp/x')"],
+  ])("%s → HIDDEN_SQL во всех режимах", (_name, text) => {
+    expect(violation(() => audit({ sql: text, params: [A] })).reason).toBe("HIDDEN_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, system)).reason).toBe("HIDDEN_SQL");
+    expect(violation(() => audit({ sql: text, params: [A] }, crossTenant)).reason).toBe(
+      "HIDDEN_SQL",
+    );
+  });
+});

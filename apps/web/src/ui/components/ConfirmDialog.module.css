@@ -1,0 +1,28 @@
+/* .modal и .scrim из design/kit.css: 440 px, скругление 16, мягкая тень. */
+.overlay {
+  background: var(--kit-scrim);
+}
+
+.content {
+  box-shadow: var(--kit-shadow-modal);
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  color: var(--ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-8);
+  margin-top: var(--s-20);
+}

@@ -1,0 +1,32 @@
+/* .sheet, .sheet-h, .sheet-b, .scrim из design/kit.css; снизу — .ph-sheet каркаса телефона. */
+.overlay {
+  background: var(--kit-scrim);
+}
+
+.content {
+  box-shadow: var(--kit-shadow-sheet);
+}
+
+.contentBottom {
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow: var(--kit-shadow-sheet-up);
+  max-height: 88%;
+}
+
+.header {
+  gap: var(--s-10);
+  padding: var(--s-16) var(--s-16) var(--s-14) var(--s-20);
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+  padding: var(--s-20);
+}

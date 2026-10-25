@@ -16,7 +16,12 @@ export type ApiClient = JsonifiedClient<ContractRouterClient<typeof contract>>;
 
 /** Клиент своего же адреса: cookie сессии идут сами (same-origin), в разработке — через прокси Vite. */
 export function createApiClient(origin: () => string = () => window.location.origin): ApiClient {
-  const link = new OpenAPILink(contract, { url: () => `${origin()}${API_PREFIX}` });
+  const link = new OpenAPILink(contract, {
+    url: () => `${origin()}${API_PREFIX}`,
+    // fetch — в момент запроса, а не при создании клиента: клиент модуля создаётся при импорте, а подмена fetch
+    // (MSW в тестах, расширения браузера) может прийти позже.
+    fetch: (request, init) => globalThis.fetch(request, init),
+  });
   return createORPCClient(link);
 }
 

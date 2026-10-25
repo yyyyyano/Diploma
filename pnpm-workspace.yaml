@@ -14,6 +14,7 @@ catalog:
   "@hono/node-server": 2.1.5
   # Сайт (ADR-0013): Mantine 9 — все пакеты строго одной версии.
   "@mantine/core": 9.7.3
+  "@mantine/form": 9.7.3
   "@mantine/hooks": 9.7.3
   "@orpc/client": 1.16.1
   "@orpc/contract": 1.16.1

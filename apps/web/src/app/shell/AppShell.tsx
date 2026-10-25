@@ -6,7 +6,7 @@ import { Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useEventStream } from "../../lib/events.ts";
 import { buildNav, isNavActive, splitPhoneNav, type NavItem } from "../../lib/nav.ts";
-import { signOut, type SessionSource } from "../../lib/session.ts";
+import { sessionQuery, signOut, type SessionSource } from "../../lib/session.ts";
 import {
   AppFrame,
   BottomNav,
@@ -15,15 +15,8 @@ import {
   type ShellNavItem,
 } from "../../ui/shell/index.ts";
 
-/** Ключ кэша пользователя сессии: выход чистит кэш целиком — и его тоже. */
-export const SESSION_QUERY_KEY = ["session", "current"] as const;
-
 export function useSessionUser(session: SessionSource) {
-  return useQuery({
-    queryKey: SESSION_QUERY_KEY,
-    // TanStack Query не хранит undefined: гость — null.
-    queryFn: async () => (await session.current()) ?? null,
-  });
+  return useQuery(sessionQuery(session));
 }
 
 export function AppShell() {

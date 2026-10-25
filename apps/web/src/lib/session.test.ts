@@ -2,9 +2,13 @@
 import { QueryClient } from "@tanstack/react-query";
 import { isNotFound } from "@tanstack/react-router";
 import { describe, expect, it } from "vitest";
+import { http, HttpResponse } from "msw";
+import { server } from "../test/msw.ts";
+import { createApiClient } from "./api.ts";
 import {
-  guestSession,
+  createApiSession,
   requireRole,
+  requireUser,
   signOut,
   type SessionSource,
   type SessionUser,
@@ -32,7 +36,9 @@ describe("requireRole — раздел «Администрирование»", 
   });
 
   it("гость (сайт без входа) тоже не проходит", async () => {
-    const error: unknown = await requireRole(guestSession, "admin").catch((e: unknown) => e);
+    const error: unknown = await requireRole(sessionOf(undefined), "admin").catch(
+      (e: unknown) => e,
+    );
     expect(isNotFound(error)).toBe(true);
   });
 });
@@ -50,5 +56,59 @@ describe("signOut — выход", () => {
     queryClient.setQueryData(["accounts", "list"], []);
     await expect(signOut(sessionOf(admin, new Error("сеть")), queryClient)).rejects.toThrow("сеть");
     expect(queryClient.getQueryCache().getAll()).toHaveLength(0);
+  });
+});
+
+describe("AUTH-08: сессия из процедур identity", () => {
+  const api = createApiSession(createApiClient(() => "http://127.0.0.1:8140"));
+  const unauthorized = {
+    defined: true,
+    code: "UNAUTHORIZED",
+    status: 401,
+    message: "UNAUTHORIZED",
+    data: { requestId: "req-00000001", params: {} },
+  };
+
+  it("вошедший — email, роль; пустое имя заменяет email", async () => {
+    server.use(
+      http.get("*/api/identity/me", () =>
+        HttpResponse.json({ email: "admin@example.test", name: "", role: "admin" }),
+      ),
+    );
+    expect(await api.current()).toEqual({
+      name: "admin@example.test",
+      email: "admin@example.test",
+      role: "admin",
+    });
+  });
+
+  it("без сессии (UNAUTHORIZED) — гость, а не ошибка", async () => {
+    server.use(
+      http.get("*/api/identity/me", () => HttpResponse.json(unauthorized, { status: 401 })),
+    );
+    expect(await api.current()).toBeUndefined();
+  });
+
+  it("гость в разделе пользователя — переход на вход", async () => {
+    const queryClient = new QueryClient();
+    const error: unknown = await requireUser({ session: sessionOf(undefined), queryClient }).catch(
+      (e: unknown) => e,
+    );
+    expect(error).toMatchObject({ options: { to: "/login" } });
+  });
+
+  it("вошедший проходит; кто вошёл — из кэша сессии, повторно сервер не спрашивается", async () => {
+    const queryClient = new QueryClient();
+    let calls = 0;
+    const session: SessionSource = {
+      current: () => {
+        calls += 1;
+        return Promise.resolve(admin);
+      },
+      signOut: () => Promise.resolve(),
+    };
+    await expect(requireUser({ session, queryClient })).resolves.toEqual(admin);
+    await expect(requireUser({ session, queryClient })).resolves.toEqual(admin);
+    expect(calls).toBe(1);
   });
 });

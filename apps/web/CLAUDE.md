@@ -9,17 +9,21 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 `changeOrigin`: сервер сверяет `Host` и `Origin`); в работе — статика `apps/web/dist` из процесса `api`.
 
 ## Публичный API
-- Вход: `index.html` → `src/main.tsx` (стили темы, `App` с источником сессии).
+- Вход: `index.html` → `src/main.tsx` (стили темы, `App` с сессией `createApiSession(client)` — процедуры identity).
 - `app/`: `App` (провайдеры), `createAppRouter({ queryClient, session, history? })` (контекст роутера: `queryClient`,
   `session`, `Shell`; граница ошибок `ErrorScreen`, «нет страницы» `NotFoundScreen`), `shell/AppShell` (меню из
   реестра маршрутов под роль, поток событий, выход).
-- `routes/`: `__root`, `_app` (каркас из контекста), `_app/admin` (`beforeLoad`: `requireRole(…, "admin")` → иначе
-  «нет такой страницы»), `dev.gallery` (витрина; только разработка и `--mode e2e`). Группы `_public`, `_local`
-  появляются с первой страницей (T-009): пустые группы генератор маршрутов считает одним путём «/».
+- `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/accounts`, гость → `/setup`, если `setupAvailable`, иначе
+  `/login`); `_public/login` (гость); `_local/setup` (только пока `setupAvailable`); `_app` (`beforeLoad`:
+  `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/admin` (`requireRole(…, "admin")`
+  → иначе «нет такой страницы»), `dev.gallery` (витрина; только разработка и `--mode e2e`).
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
   нет маршрута — нет пункта (DES-15).
-- `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions), `events` (`useEventStream`, `runEventStream`,
-  `progressQueryKey`), `i18n`, `session` (`SessionSource`, `requireRole`, `signOut` → `queryClient.clear()`), `nav`.
+- `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`
+  (`useEventStream`, `runEventStream`, `progressQueryKey`), `errors` (`errorCodeOf` → код для `errors:<код>`), `i18n`,
+  `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
+  `signOut` → `queryClient.clear()`), `nav`.
+- `entities/account` — `AccountCard`; экраны `features/setup`, `features/auth`, `features/accounts`.
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 
 ## Можно зависеть от

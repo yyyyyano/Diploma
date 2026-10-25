@@ -17,6 +17,7 @@
     "@kosht/i18n": "workspace:*",
     "@kosht/kernel": "workspace:*",
     "@mantine/core": "catalog:",
+    "@mantine/form": "catalog:",
     "@mantine/hooks": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/contract": "catalog:",

@@ -81,14 +81,66 @@ describe("раздел «Администрирование» — проверк
 });
 
 describe("каркас: пользователь и выход", () => {
-  it("«Выйти» завершает сессию, чистит кэш, и раздел админа закрывается", async () => {
+  it("«Выйти» завершает сессию, чистит кэш и ведёт на вход (AUTH-08)", async () => {
+    server.use(
+      http.get("*/api/identity/status", () =>
+        HttpResponse.json({ initialized: true, setupAvailable: false }),
+      ),
+    );
     const { session, signOut } = sessionOf(admin);
-    const { queryClient } = renderApp("/admin", session);
+    const { queryClient, router } = renderApp("/admin", session);
     queryClient.setQueryData(["accounts", "list"], [{ name: "Наличные" }]);
     await userEvent.click(await screen.findByRole("button", { name: "Выйти" }));
     expect(signOut).toHaveBeenCalledOnce();
-    expect(await screen.findByRole("heading", { name: "Такой страницы нет" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Вход в Кошт" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/login");
     expect(queryClient.getQueryData(["accounts", "list"])).toBeUndefined();
+  });
+
+  it("гость в разделе пользователя — на вход", async () => {
+    server.use(
+      http.get("*/api/identity/status", () =>
+        HttpResponse.json({ initialized: true, setupAvailable: false }),
+      ),
+    );
+    const { router } = renderApp("/accounts", sessionOf(undefined).session);
+    expect(await screen.findByRole("heading", { name: "Вход в Кошт" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/login");
+  });
+});
+
+describe("AUTH-10, NFR-24: стартовый маршрут «/»", () => {
+  function status(setupAvailable: boolean) {
+    server.use(
+      http.get("*/api/identity/status", () =>
+        HttpResponse.json({ initialized: !setupAvailable, setupAvailable }),
+      ),
+    );
+  }
+
+  it("гость, система не инициализирована, вход локальный — первый запуск", async () => {
+    status(true);
+    const { router } = renderApp("/", sessionOf(undefined).session);
+    expect(
+      await screen.findByRole("heading", { name: "Создайте администратора" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/setup");
+  });
+
+  it("гость, первый запуск недоступен (пройден или вход сетевой) — вход; /setup тоже ведёт на вход", async () => {
+    status(false);
+    const { router } = renderApp("/", sessionOf(undefined).session);
+    expect(await screen.findByRole("heading", { name: "Вход в Кошт" })).toBeInTheDocument();
+    await router.navigate({ to: "/setup" });
+    expect(await screen.findByRole("heading", { name: "Вход в Кошт" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/login");
+  });
+
+  it("вошедший — в раздел «Счета»", async () => {
+    server.use(http.get("*/api/accounts", () => HttpResponse.json({ items: [] })));
+    const { router } = renderApp("/", sessionOf(admin).session);
+    expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/accounts");
   });
 });
 

@@ -1,7 +1,8 @@
 // Жизнь процесса (ARCHITECTURE §3, ADR-0015): конфигурация → лог → compose() → старт роли → ожидание SIGTERM/SIGINT
 // → корректная остановка. Точки входа api.ts, worker.ts, bot.ts — тонкие обёртки над runProcess.
 // Остановка: process.stopping → api перестаёт принимать соединения, закрывает простаивающие и доводит запросы в
-// полёте (не дольше 80 % срока), долгие потоки сайта завершаются сигналом остановки → очередь задач остановлена
+// полёте (не дольше 80 % срока), долгие потоки сайта завершаются сигналом остановки → LISTEN закрыт без
+// переподключения (realtime.stopped, только api) → очередь задач остановлена
 // (обработчики worker доводятся не дольше 8 с) → пул закрыт → process.stopped →
 // лог дописан на диск → код 0. Не уложились в срок (10 с) — process.stop-timeout и код 1: Docker и make не ждут
 // зависший процесс вечно.
@@ -12,6 +13,7 @@ import { AppRoleError } from "../platform/db/roles.ts";
 import { createApiHandler } from "../platform/http/api.ts";
 import { createApp, type HttpApp } from "../platform/http/app.ts";
 import { createListeners, ListenError } from "../platform/http/listeners.ts";
+import { RealtimeStartError } from "../platform/realtime/listener.ts";
 import { withLogContext } from "../platform/logging/context.ts";
 import {
   closeLogFile,
@@ -30,6 +32,8 @@ const GRACE_SHARE = 0.8;
 export interface RunOptions {
   /** Маршруты процесса api сверх платформы (до статики сайта). */
   readonly routes?: (app: HttpApp) => void;
+  /** Подготовить собранный процесс до старта роли (тестовые фикстуры: источник сессий и т. п.). */
+  readonly setup?: (composition: Composition) => void;
   readonly stopTimeoutMs?: number;
   readonly env?: NodeJS.ProcessEnv;
 }
@@ -133,7 +137,8 @@ async function startRole(
 function startupMessage(error: unknown): string | undefined {
   return error instanceof ConfigError ||
     error instanceof ListenError ||
-    error instanceof AppRoleError
+    error instanceof AppRoleError ||
+    error instanceof RealtimeStartError
     ? error.message
     : undefined;
 }
@@ -155,6 +160,7 @@ export async function runProcess(role: ProcessRole, options: RunOptions = {}): P
   try {
     running = await withLogContext({ source: "startup" }, async () => {
       composition = await compose(config, role, { log });
+      options.setup?.(composition);
       return startRole(composition, options, timeoutMs);
     });
   } catch (error) {

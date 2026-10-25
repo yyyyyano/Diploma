@@ -3,7 +3,7 @@
 ## Назначение
 Общая техника всех модулей (ARCHITECTURE §2, §6, §9): `db` (T-004); `config`, `logging`, `errors`, `clock`,
 `blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` (T-059; точки входа — `src/entrypoints`);
-`jobs` и `events` — T-006; `realtime` и `events.stream` — T-061. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+`jobs` и `events` — T-006; `realtime` и поток `events.stream` — T-061. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
@@ -84,19 +84,23 @@
 - `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул владельца (`max: 1`, имя
   `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
   `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий, реестр проверки
-  scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний — `settings.get(TIME_ZONE)`) и
-  `events` (подписок пока нет) → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
-  `allowLan()`, `startJobs()` (`jobs.start` с реестрами — пустыми до T-007), `close()` (`jobs.stop`, пул, затем
-  `db.closed`). Модули добавит T-007.
+  scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний — `settings.get(TIME_ZONE)`),
+  `events` (подписок пока нет) и `realtime` (отправка — все роли; в `api` — `createRealtimeStreams` с LISTEN
+  `kosht-api-listen`, первое подключение — до слушателей, неудача — `RealtimeStartError`, пул закрывается) →
+  `router` (`createRouter({ streams })` из `main/router.ts`; у `worker`/`bot` — пустой хаб); `session(headers)`,
+  `ready()` (`pingDb`), `allowLan()`, `startJobs()` (`jobs.start` с реестрами — пустыми до T-007), `close()` (потоки и
+  LISTEN — `realtime.stopped`, затем `jobs.stop`, пул, `db.closed`). Модули добавит T-007.
 - `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole)`: миграции Drizzle → схема очереди pgboss
   (`installJobsSchema` под `withMigrationLock`) → `ensureAppRole` последним (`GRANT … ON ALL TABLES` видит только
   созданные таблицы). Одна последовательность для `compose`, `make migrate` (`main/migrate-cli.ts`) и шаблона тестов.
-- `entrypoints/run.ts` — `runProcess(role, { routes?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
-  `ConfigError` в stderr, код 1; так же — текст `AppRoleError` на старте) → лог `<DATA_DIR>/logs` → `compose` →
+- `entrypoints/run.ts` — `runProcess(role, { routes?, setup?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
+  `ConfigError` в stderr, код 1; так же — тексты `AppRoleError` и `RealtimeStartError` на старте) → лог
+  `<DATA_DIR>/logs` → `compose` → `setup(composition)` (тестовые фикстуры) →
   `startJobs()` (до слушателей) → роль (`api` — слушатели и приложения на
   каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` держит `setInterval`, пул процесс не
   держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` → сигнал остановки потокам,
-  слушатели (`stop(80 % срока)`) → очередь (≤ 8 с) → пул → `process.stopped` → лог на диск → код 0; дольше
+  слушатели (`stop(80 % срока)`) → потоки и LISTEN (`realtime.stopped`) → очередь (≤ 8 с) → пул → `db.closed` →
+  `process.stopped` → лог на диск → код 0; дольше
   `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
 - `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
 - `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов
@@ -135,6 +139,32 @@
   после успеха; итог `idle | completed | retry | failed`.
 - `sweep.ts` — `defineSweep({ name, cron, find, job, payload(row) })` и `runSweep`: `crossTenant(pool, name, find)`
   (только `id, householdId, userId`) → `makeScope` строки → задача владельцу; строка журнала на обход.
+
+## Публичный API — `realtime/` (T-061: NFR-21, ROLE-01, SEC-04, OBS-04, ADR-0008)
+- `realtime.ts` — `createRealtime({ pool })` → `Realtime`: `changed(s: ScopedDb, { entity, ids })` — `pg_notify` через
+  `s.db` (в `s.transaction` — при COMMIT; откат и `ROLLBACK TO SAVEPOINT` — сигнала нет), `progress(scope, { entity, id,
+  percent? })` — сразу через пул (SystemDb). Домохозяйство сигнала — из `s.scope`/`scope`, не из входа.
+  `createRealtimeStreams({ connect, log })` → `{ streams, start, stop }` — приём в `api`: слушатель и хаб; `stop` —
+  потоки (`stopped`), затем LISTEN.
+- `message.ts` — `RealtimeMessage` (Zod, strict: `householdId`, `type` `changed | progress`, `entity` (EntityKind),
+  `ids` (uuid, ≥ 1), `percent?`), `encodeSignal(batch)` — куски JSON ≤ `NOTIFY_MAX_BYTES` = 7500 (`Buffer.byteLength`;
+  не по схеме — `RangeError` без значений), `decodeSignal(payload)` — не JSON или не по схеме — `undefined`.
+- `listener.ts` — `createRealtimeListener({ connect, log, onMessage, onReady, onLost? })`: `start()` — первое
+  подключение (неудача — `RealtimeStartError`, текст для консоли без значений конфигурации); потеря — `realtime.lost`,
+  переподключение через `reconnectDelayMs(n)` = 0,2 с × 2ⁿ, потолок 5 с (`realtime.reconnect-failed`), успех —
+  `realtime.listening` и `onReady`; неверное сообщение — `realtime.bad-message` без текста; `stop()` — без
+  переподключения, `realtime.stopped`.
+- `hub.ts` — `createRealtimeHub({ log, queueLimit?, streamsPerUser? })` → `RealtimeHub`: карта `householdId → потоки`,
+  ключ — `scope` сессии; `open(scope, signal)` → `StreamIterator` (конец — причина `StreamEnd`: `closed | reconnect |
+  overflow | replaced | stopped`, oRPC шлёт её событием `done`; `return()` закрывает сразу), `deliver(message)`,
+  `closeAll(reason)`, `size`. Не больше `STREAMS_PER_USER` = 8 потоков пользователя — девятый закрывает его самый
+  старый (`realtime.stream-replaced`); переполнение очереди — `realtime.stream-overflow`, поток закрыт.
+- `connection-queue.ts` — `ConnectionQueue(limit = QUEUE_LIMIT = 1000)`: `push` (схлопывание по `(type, entity, id)`,
+  новый ключ сверх предела — `false`), `take`, `size`; без таймеров и ввода-вывода.
+- `db/listen.ts` — единственное место `pg_notify` и `pg.Client`: `REALTIME_CHANNEL` = `kosht_realtime`,
+  `notify(db, payloads)` (канал — параметром), `listenConnector(dbConfig, applicationName)` → `ListenConnect`
+  (`keepAlive`, `LISTEN` с именем через `escapeIdentifier`, `onLost` один раз и не после `close()`).
+- Процедура `events.stream` — `main/router.ts`: `authed`, `streams.open(context.s.scope, abort запроса ∪ shutdownSignal)`.
 
 ## Публичный API — `events/` (T-006: ADR-0004, ADR-0008, ARCHITECTURE §5)
 - `define-event.ts` — `defineEvent({ name: "<модуль>.<прошедшее>", payload: z.object({ ids, … }) })` → `EventDef`:
@@ -188,7 +218,7 @@
   `appRoleOptions(dbConfig)`, `APP_SCHEMAS` (`public`, `pgboss`), `scramVerifier`, `scramMatches`.
 
 ## Можно зависеть от
-`@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
+`@kosht/kernel`, `@kosht/contract` (каталог ошибок; `SiteEvent`, `EntityKind`, `EntityId` — `realtime/`), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
 `schema.ts`/`*.repo.ts` settings, secrets, rate-limit); `libpg-query` — только `db/` (ADR-0019); `pino`, `pino-roll` —
 `logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev); `pg-boss` — только `jobs/` (ADR-0008); `hono`, `@hono/node-server`, `@orpc/server`,
 `@orpc/openapi` — `http/` (oRPC — ещё `main/` и `api/` модулей). Модули — нет.
@@ -199,6 +229,8 @@
 - Лог: данные в строке сообщения (только ключ `^[a-z]+(\.[a-z0-9-]+)+$`), поля вне белого списка (`fields.ts`),
   `message`/`detail`/`where` ошибок pg, параметры `DrizzleQueryError` (OBS-04).
 - `clock/` не импортирует `settings/` (цикл): пояс подаётся функцией.
+- `pg_notify`, `LISTEN` и `pg.Client` вне `db/listen.ts`; имя канала, склеенное с данными; ключ потока хаба из
+  сообщения канала или входа запроса (только `context.s.scope`); данные (тексты, суммы) в сигнале realtime.
 - `audit.ts`, `audited.ts` вне `platform/db` и тестов; `connection.ts`, `migrate.ts` — ещё и в `main/`
   (правило `db-internals-only-in-platform-db`, пути — `PLATFORM_DB_INTERNALS` в `tooling/architecture/rules.ts`).
 - `ISOLATION_VIOLATION` не входит в каталог ошибок `@kosht/contract`: наружу — как `INTERNAL` (`toErrorBody`).
@@ -215,6 +247,10 @@
   → ≤ 5 задач, два домохозяйства); ожидание — промис из обработчика, опрос 0,5 с. Догон расписаний — на `FakeClock`
   без pg-boss (`jobs/schedule.int.test.ts`), журнал — `jobs/jobs.repo.int.test.ts`. Тест процессов: у очереди нет
   своих соединений, SIGTERM `worker`/`bot` — меньше 10 с.
+- Живые сигналы: модульно — `realtime/*.test.ts` (куски NOTIFY, очередь, хаб, паузы переподключения на поддельных
+  таймерах); на Postgres — `db/listen.int.test.ts` (LISTEN, потеря, NOTIFY в транзакции) и
+  `main/events-stream.int.test.ts` (SSE на порту 0 через `readSse`: A не получает сигналы B — барьер-«часовой», 300
+  сигналов, 1000 id, откат и коммит, `pg_terminate_backend`, остановка). SIGTERM при открытом SSE — `processes.int.test.ts`.
 - Канарейки логов — `logging/log-file.test.ts` (по тексту файла pino-roll: email, карта, сумма, текст документа,
   значение строки в ошибке pg), секретов — `secrets/secrets.int.test.ts`; логгер в память для тестов —
   `logging/__fixtures__/memory-logger.ts`.
@@ -243,7 +279,12 @@
 
 ## Подводные камни
 - oRPC: ошибка внутри потока (итератор событий) после его начала идёт мимо `clientInterceptors` — поток
-  `events.stream` (T-061) сам отдаёт только ошибки каталога. `implement(contract).router` не собирается без всех процедур контракта.
+  `events.stream` ошибок не бросает, а заканчивается причиной (`done`).
+- Поток хаба — итератор, а не `async function*`: `return()` генератора, ждущего события, встаёт в очередь за этим
+  ожиданием, и отключившийся клиент держал бы поток в хабе (и место в пределе 8 на пользователя).
+- `events.stream` слушает только `api`: сигналы, отправленные, пока LISTEN переподключается, теряются — поэтому после
+  переподключения хаб закрывает все потоки (`reconnect`), и клиент перезапрашивает данные.
+- NOTIFY доставляется в базе, где он отправлен: каждая тестовая база (`test_*`) — свой канал. `implement(contract).router` не собирается без всех процедур контракта.
 - Прокси Vite — без `changeOrigin`: проверка CSRF сверяет `Origin` с `Host` (`127.0.0.1:5173`), иначе 403.
 - Ключ события: голова — только строчные буквы (`ratelimit.exceeded`, не `rate-limit.exceeded`): тип `EventKey` и
   проверка при записи совпадают; неверный ключ при записи заменяется на `log.bad-key` без текста.
@@ -268,7 +309,8 @@
   `pg_stats_ext`, `pg_stats_ext_exprs`, `pg_statistic`, `pg_statistic_ext_data` в любой схеме) — `HIDDEN_SQL`: роли
   приложения они закрыты правами (ADR-0020), но аудитор — независимый замок (у суперпользователя страницы таблицы
   читаются мимо `RangeVar`, статистика показывает значения строк всех домохозяйств). Не видит: функции с побочным эффектом без доступа к чужим строкам
-  (`pg_advisory_lock`, `pg_sleep`, `pg_notify`, `nextval`, `pg_terminate_backend`) — их ловит ревью; VIEW и
+  (`pg_advisory_lock`, `pg_sleep`, `nextval`, `pg_terminate_backend`) — их ловит ревью; `pg_notify` пропускает
+  намеренно — его зовёт только `db/listen.ts` (`notify`, канал — параметром); VIEW и
   функции базы; побочные каналы (ошибка в выражении рядом с фильтром на чужой строке).
   INSERT в пользовательскую таблицу — только отдельной командой без WITH и только VALUES; MERGE — нигде;
   пользовательская таблица — только в схеме `public`. Незагруженная схема не аудируется — старт (T-007) и

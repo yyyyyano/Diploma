@@ -1,16 +1,27 @@
 import { testScope } from "@kosht/testing";
 import { createRouterClient } from "@orpc/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { ScopedDb } from "../platform/db/scoped-db.ts";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import { createApiHandler } from "../platform/http/api.ts";
 import { createApp } from "../platform/http/app.ts";
 import type { HttpContext } from "../platform/http/procedures.ts";
 import type { Session } from "../platform/http/session.ts";
-import { router } from "./router.ts";
+import { createRealtimeHub } from "../platform/realtime/hub.ts";
+import { createRouter } from "./router.ts";
 
-// Поток событий данных пока не читает: из ScopedDb нужен только scope (uid в контексте лога), запросов нет.
-const signedIn: Session = { s: { scope: testScope() } as ScopedDb, role: "user" };
+const scopeA = testScope({ user: 1, household: 1 });
+const scopeB = testScope({ user: 2, household: 2 });
+const receiptId = "0190f0a0-0000-7000-8000-000000000001";
+
+// Поток событий данных не читает: из ScopedDb нужен только scope (uid в контексте лога), запросов нет.
+function sessionOf(scope = scopeA): Session {
+  return { s: { scope } as ScopedDb, role: "user" };
+}
+const signedIn = sessionOf();
+
+const hub = createRealtimeHub({ log: memoryLogger().log });
+const router = createRouter({ streams: hub });
 
 function context(overrides: Partial<HttpContext> = {}): HttpContext {
   return {
@@ -57,7 +68,7 @@ describe("ADR-0005: дерево процедур реализует контр�
     expect(error).toMatchObject({ code: "UNAUTHORIZED" });
   });
 
-  it("events.stream с сессией пуст и завершается, когда процесс начинает остановку", async () => {
+  it("events.stream с сессией завершается, когда процесс начинает остановку", async () => {
     const shutdown = new AbortController();
     const client = createRouterClient(router, {
       context: context({ session: async () => signedIn, shutdownSignal: shutdown.signal }),
@@ -83,5 +94,46 @@ describe("ADR-0005: дерево процедур реализует контр�
     })();
     request.abort();
     await expect(reading).resolves.toBeUndefined();
+  });
+
+  it("events.stream отдаёт сигналы домохозяйства сессии и не отдаёт чужие", async () => {
+    const request = new AbortController();
+    const client = createRouterClient(router, {
+      context: context({ session: async () => signedIn }),
+    });
+    const stream = await client.events.stream(undefined, { signal: request.signal });
+    const next = stream.next();
+    // Поток регистрируется в хабе, когда oRPC впервые просит событие (после проверки сессии).
+    await vi.waitFor(() => expect(hub.size).toBe(1));
+    // Барьер: сигнал B, затем «часовой» A — первым в поток A приходит часовой.
+    hub.deliver({
+      householdId: scopeB.householdId,
+      type: "changed",
+      entity: "receipt",
+      ids: [receiptId],
+    });
+    hub.deliver({
+      householdId: scopeA.householdId,
+      type: "progress",
+      entity: "receipt",
+      ids: [receiptId],
+      percent: 50,
+    });
+    expect(await next).toEqual({
+      done: false,
+      value: { type: "progress", entity: "receipt", id: receiptId, percent: 50 },
+    });
+    request.abort();
+  });
+
+  it("поток, закрытый хабом, заканчивается причиной (событие done), а не ошибкой", async () => {
+    const client = createRouterClient(router, {
+      context: context({ session: async () => sessionOf(scopeB) }),
+    });
+    const stream = await client.events.stream();
+    const next = stream.next();
+    await vi.waitFor(() => expect(hub.size).toBe(1));
+    hub.closeAll("reconnect");
+    expect(await next).toEqual({ done: true, value: "reconnect" });
   });
 });

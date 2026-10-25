@@ -2,13 +2,15 @@
 // пул владельца (одно соединение kosht-<роль>-migrate) → миграции, схема очереди pgboss и выдача прав роли приложения
 // под pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
 // (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий,
-// очередь задач на том же пуле и события, ADR-0008) → дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
+// очередь задач на том же пуле и события, ADR-0008; живые сигналы — отправка у всех ролей, а в api ещё и одно
+// соединение LISTEN kosht-api-listen с хабом потоков) → дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
 // Логики сверх «соединить» здесь нет.
 import type { Clock } from "@kosht/kernel";
 import { createClock } from "../platform/clock/clock.ts";
 import type { AppConfig } from "../platform/config/config.ts";
 import { createPool, pingDb } from "../platform/db/connection.ts";
 import { appRoleOptions, assertAppRole } from "../platform/db/roles.ts";
+import { listenConnector } from "../platform/db/listen.ts";
 import { createSystemDb } from "../platform/db/system-db.ts";
 import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
 import {
@@ -24,10 +26,16 @@ import {
   type ScopeVerifierRegistry,
 } from "../platform/jobs/scope-verifier.ts";
 import type { Logger, LogRole } from "../platform/logging/logger.ts";
+import { createRealtimeHub } from "../platform/realtime/hub.ts";
+import {
+  createRealtime,
+  createRealtimeStreams,
+  type Realtime,
+} from "../platform/realtime/realtime.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
 import { migrateDatabase } from "./migrate-database.ts";
-import { router } from "./router.ts";
+import { createRouter, type Router } from "./router.ts";
 
 /** Роль процесса (ARCHITECTURE §3). */
 export type ProcessRole = Exclude<LogRole, "cli">;
@@ -45,17 +53,22 @@ export interface Composition {
   /** Очередь задач процесса (порт Jobs) и события поверх неё; реестры модулей — T-007. */
   readonly jobs: Jobs;
   readonly events: Events;
+  /** Живые сигналы в браузеры домохозяйства: changed(s, …) и progress(scope, …). */
+  readonly realtime: Realtime;
   /** Запустить очередь: все роли ставят задачи, worker ещё и обрабатывает их и ведёт расписания. */
   startJobs(): Promise<void>;
   /** Дерево процедур oRPC (main/router.ts). */
-  readonly router: typeof router;
+  readonly router: Router;
   /** Сессия запроса сайта по заголовкам. */
   session(headers: Headers): Promise<Session | undefined>;
   /** БД отвечает (/readyz). */
   ready(): Promise<void>;
   /** Открыт ли сетевой вход (настройка network.allow-lan). */
   allowLan(): Promise<boolean>;
-  /** Остановить очередь (обработчики в полёте — ≤ 8 с) и закрыть пул: соединений процесса в pg_stat_activity нет. */
+  /**
+   * Остановка: потоки events.stream и LISTEN без переподключения (realtime.stopped, только api) → очередь
+   * (обработчики в полёте — ≤ 8 с) → пул: соединений процесса в pg_stat_activity нет.
+   */
   close(): Promise<void>;
 }
 
@@ -109,6 +122,24 @@ export async function compose(
   });
   // Подписки, задачи и расписания модулей раскладывает T-007; до него реестры пусты.
   const events = createEvents({ jobs, subscriptions: [] });
+  const realtime = createRealtime({ pool });
+  // Слушает канал только api (ADR-0008): одно соединение на процесс. Без него сайт не узнаёт об изменениях —
+  // неудача первого подключения есть ошибка старта (RealtimeStartError).
+  const live =
+    role === "api"
+      ? createRealtimeStreams({
+          connect: listenConnector(config.db.app, "kosht-api-listen"),
+          log,
+        })
+      : undefined;
+  try {
+    await live?.start();
+  } catch (error) {
+    await pool.end();
+    throw error;
+  }
+  // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.
+  const router = createRouter({ streams: live?.streams ?? createRealtimeHub({ log }) });
   return {
     role,
     config,
@@ -119,12 +150,14 @@ export async function compose(
     scopes,
     jobs,
     events,
+    realtime,
     startJobs: () => jobs.start({ jobs: [] }),
     router,
     session: (headers) => openSession(sessions, pool, headers),
     ready: () => pingDb(pool),
     allowLan: () => settings.get(ALLOW_LAN),
     close: async () => {
+      await live?.stop();
       await jobs.stop();
       await pool.end();
       log.info({ role }, "db.closed");

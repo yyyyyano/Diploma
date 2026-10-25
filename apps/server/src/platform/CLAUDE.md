@@ -16,7 +16,8 @@
   HKDF-SHA-256; в JSON и `inspect` — `[MasterKey]`).
 - `logging/logger.ts` — `createLogger({ role, level, destination })` → `Logger` (`fatal…trace(fields, key)`);
   `openLogFile(dir, role)` / `closeLogFile` — pino-roll в процессе: `<dir>/<роль>.<гггг-ММ-дд>.<n>.log`, ежедневно,
-  `limit.count: 13` (14 файлов), 0600; `rollOptions`, `EVENT_KEY`, `BAD_KEY`. `logging/context.ts` —
+  14 файлов на роль (`LOG_FILES_PER_ROLE`; при открытии лишние удаляются сразу, при ротации — `limit.count: 13`,
+  `removeOtherLogFiles`), папка 0700, файлы 0600; `rollOptions`, `EVENT_KEY`, `BAD_KEY`. `logging/context.ts` —
   `withLogContext({ requestId, uid, source }, fn)`. `logging/fields.ts` — белый список `LogFields`.
   `logging/scrub.ts` — `scrub(text)`: email, карта (Луна), IBAN BY. `logging/serialize-error.ts` — ошибка → лог.
   `logging/log-find.ts` (+ `log-find-cli.ts`) — `make log-find id=…`; `make logs` — хвост через pino-pretty.

@@ -1,6 +1,7 @@
 // Типы pino-roll 4.0.0 (пакет без своих .d.ts): только используемые параметры — README пакета, раздел «Options».
 // Возвращает поток SonicBoom; здесь — та его часть, которая нужна логгеру.
 declare module "pino-roll" {
+  import type { EventEmitter } from "node:events";
   import type { DestinationStream } from "pino";
 
   interface PinoRollOptions {
@@ -15,11 +16,10 @@ declare module "pino-roll" {
     readonly symlink?: boolean;
   }
 
-  export interface RollStream extends DestinationStream {
-    /** Имя текущего файла. */
-    readonly file: string;
+  export interface RollStream extends DestinationStream, EventEmitter {
+    /** Путь текущего файла; null, пока файл не открыт (до события «ready»). */
+    readonly file: string | null;
     end(): void;
-    once(event: "close" | "error", listener: (...args: unknown[]) => void): this;
   }
 
   export default function pinoRoll(options: PinoRollOptions): Promise<RollStream>;

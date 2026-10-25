@@ -3,8 +3,11 @@
 // uid и source подмешиваются из контекста (context.ts). Данных в строке сообщения быть не может: ключ проверяется
 // и типом, и при записи — не ключ заменяется на log.bad-key, сам текст не пишется.
 // Файл на роль процесса — data/logs/<роль>.<гггг-ММ-дд>.<n>.log, ротация ежедневно, 14 файлов (pino-roll как поток
-// в процессе: pino.transport() не переживает сборку в один .mjs, T-011).
-import { join } from "node:path";
+// в процессе: pino.transport() не переживает сборку в один .mjs, T-011). Лишние файлы роли удаляются и при открытии:
+// pino-roll чистит только при ротации, а процесс, который перезапускают чаще раза в сутки, до неё не доживает.
+import { once } from "node:events";
+import { mkdir, readdir, rm } from "node:fs/promises";
+import { basename, join } from "node:path";
 import { pino, type DestinationStream } from "pino";
 import pinoRoll, { type RollStream } from "pino-roll";
 import type { LogLevel } from "../config/config.ts";
@@ -97,22 +100,48 @@ export function createLogger(options: LoggerOptions): Logger {
   };
 }
 
-/** Параметры pino-roll (OBS-06): ежедневно, 13 прошлых файлов + текущий = 14 на роль, права 0600. */
+/** Файлов лога на роль (OBS-06, ADR-0010): текущий и 13 прошлых. */
+export const LOG_FILES_PER_ROLE = 14;
+
+/**
+ * Параметры pino-roll (OBS-06): ежедневно, права 0600. removeOtherLogFiles — счёт по всем файлам роли в папке, а не
+ * только по созданным этим процессом (без него файлы прошлых запусков не удаляются никогда). pino-roll 4.0.0
+ * (lib/utils.js, removeOldFiles) оставляет count файлов, считая новый, если он уже создан, — 13 или 14 вместе с ним.
+ */
 export function rollOptions(logDir: string, role: LogRole) {
   return {
     file: join(logDir, role),
     frequency: "daily",
     dateFormat: "yyyy-MM-dd",
     extension: ".log",
-    limit: { count: 13 },
-    mkdir: true,
+    limit: { count: LOG_FILES_PER_ROLE - 1, removeOtherLogFiles: true },
     mode: 0o600,
   } as const;
 }
 
-/** Файл лога роли в data/logs; закрывать — end() и ожидание «close» (досылает буфер). */
+/** Файл лога роли в data/logs (папка 0700); закрывать — end() и ожидание «close» (досылает буфер). */
 export async function openLogFile(logDir: string, role: LogRole): Promise<RollStream> {
-  return pinoRoll(rollOptions(logDir, role));
+  await mkdir(logDir, { recursive: true, mode: 0o700 });
+  const stream = await pinoRoll(rollOptions(logDir, role));
+  // Файл SonicBoom открывает асинхронно: имя текущего известно после «ready» (ошибка открытия — исключение здесь).
+  if (stream.file === null) await once(stream, "ready");
+  await pruneLogFiles(logDir, role, basename(stream.file ?? ""));
+  return stream;
+}
+
+/** Удалить старые файлы роли сверх 14 (с текущим); файлы других ролей и чужие имена не трогаются. */
+async function pruneLogFiles(logDir: string, role: LogRole, current: string): Promise<void> {
+  const pattern = new RegExp(`^${role}\\.(\\d{4}-\\d{2}-\\d{2})\\.(\\d+)\\.log$`);
+  const older = (await readdir(logDir))
+    .filter((name) => name !== current)
+    .flatMap((name) => {
+      const match = pattern.exec(name);
+      return match === null ? [] : [{ name, date: match[1] ?? "", number: Number(match[2]) }];
+    })
+    // Новые — вперёд: дата (строка гггг-ММ-дд сравнивается как дата), затем номер файла за день.
+    .sort((a, b) => b.date.localeCompare(a.date) || b.number - a.number);
+  const extra = older.slice(LOG_FILES_PER_ROLE - 1);
+  await Promise.all(extra.map(async (file) => rm(join(logDir, file.name), { force: true })));
 }
 
 /** Закрыть файл лога, дослав буфер (завершение процесса, тесты). */

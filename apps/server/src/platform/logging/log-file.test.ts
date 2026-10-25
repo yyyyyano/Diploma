@@ -1,8 +1,16 @@
 // Файл лога на диске: параметры ротации (OBS-06) и канарейки «ПД не попали в лог» (OBS-04) — по тексту файла,
 // а не по объектам в памяти: так видно всё, что реально записано.
-import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { withLogContext } from "./context.ts";
 import type { LogFields } from "./fields.ts";
@@ -12,19 +20,43 @@ const dir = mkdtempSync(join(tmpdir(), "kosht-logs-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("OBS-06: ротация логов", () => {
-  it("ежедневно, 13 прошлых файлов + текущий = 14 на роль, файл 0600", () => {
+  it("ежедневно, при ротации — счёт по всем файлам роли в папке, файл 0600", () => {
     expect(rollOptions("/data/logs", "worker")).toEqual({
       file: "/data/logs/worker",
       frequency: "daily",
       dateFormat: "yyyy-MM-dd",
       extension: ".log",
-      limit: { count: 13 },
-      mkdir: true,
+      limit: { count: 13, removeOtherLogFiles: true },
       mode: 0o600,
     });
   });
 
-  it("файл роли — <роль>.<гггг-ММ-дд>.<n>.log с правами 0600, папка создаётся сама", async () => {
+  it("при открытии остаётся 14 файлов роли: текущий и 13 новейших прошлых; файлы другой роли целы", async () => {
+    const logDir = join(dir, "retention");
+    mkdirSync(logDir, { recursive: true });
+    const old = Array.from(
+      { length: 20 },
+      (_, i) => `api.2026-01-${String(i + 1).padStart(2, "0")}.1.log`,
+    );
+    for (const name of [
+      ...old,
+      "api.2026-01-20.2.log",
+      "worker.2026-01-01.1.log",
+      "api.notes.txt",
+    ]) {
+      writeFileSync(join(logDir, name), "{}\n");
+    }
+    const stream = await openLogFile(logDir, "api");
+    const current = basename(stream.file ?? "");
+    await closeLogFile(stream);
+    const apiLogs = readdirSync(logDir).filter((name) => /^api\..+\.log$/.test(name));
+    expect(apiLogs.sort()).toEqual([current, "api.2026-01-20.2.log", ...old.slice(8)].sort());
+    expect(readdirSync(logDir)).toEqual(
+      expect.arrayContaining(["worker.2026-01-01.1.log", "api.notes.txt"]),
+    );
+  });
+
+  it("файл роли — <роль>.<гггг-ММ-дд>.<n>.log с правами 0600, папка 0700 создаётся сама", async () => {
     const logDir = join(dir, "roll", "logs");
     const stream = await openLogFile(logDir, "api");
     createLogger({ role: "api", level: "info", destination: stream }).info({}, "process.started");
@@ -34,6 +66,7 @@ describe("OBS-06: ротация логов", () => {
     expect(files[0]).toMatch(/^api\.\d{4}-\d{2}-\d{2}\.1\.log$/);
     const file = join(logDir, files[0] ?? "");
     expect(statSync(file).mode & 0o777).toBe(0o600);
+    expect(statSync(logDir).mode & 0o777).toBe(0o700);
     expect(JSON.parse(readFileSync(file, "utf8"))).toMatchObject({ msg: "process.started" });
   });
 });

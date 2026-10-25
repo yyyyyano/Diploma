@@ -586,7 +586,8 @@
     и whisper.cpp (точные версии, `/dev/dri` + `group_add: ${RENDER_GID:-992}`; модели здесь не скачиваются —
     загрузчик в T-024); `observability` — Langfuse v4 (свой Postgres, ClickHouse с лимитом памяти, Valkey, SeaweedFS),
     включён по умолчанию, `127.0.0.1:3001`, регистрация закрыта, телеметрия выключена. Порты только с адресом,
-    образы — с точными тегами, секреты — Compose `secrets:`.
+    образы — с точными тегами, секреты — Compose `secrets:` (два: `db_password` и `db_app_password`; в сервисе `app`
+    `DB_PASSWORD_FILE=/run/secrets/db_app_password`, `MIGRATION_DB_PASSWORD_FILE=/run/secrets/db_password`).
   - [ ] Dockerfile: tsdown → один `.mjs` на точку входа, `node:26-trixie-slim`, `USER node`, `read_only`,
     `cap_drop: ALL`, `init: true`.
   - [ ] Цели: `dev` (инфраструктура в контейнерах, код на хосте, Vite `127.0.0.1:5173` с прокси `/api`), `up`, `down`

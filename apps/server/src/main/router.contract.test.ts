@@ -1,3 +1,4 @@
+import { contract } from "@kosht/contract";
 import { testScope } from "@kosht/testing";
 import { createRouterClient } from "@orpc/server";
 import { describe, expect, it, vi } from "vitest";
@@ -8,6 +9,8 @@ import { createApp } from "../platform/http/app.ts";
 import type { HttpContext } from "../platform/http/procedures.ts";
 import type { Session } from "../platform/http/session.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
+import { publicProc } from "../platform/http/procedures.ts";
+import { contractPaths, routerPaths } from "./__fixtures__/router-paths.ts";
 import { createRouter } from "./router.ts";
 
 const scopeA = testScope({ user: 1, household: 1 });
@@ -135,5 +138,38 @@ describe("ADR-0005: дерево процедур реализует контр�
     await vi.waitFor(() => expect(hub.size).toBe(1));
     hub.closeAll("reconnect");
     expect(await next).toEqual({ done: true, value: "reconnect" });
+  });
+});
+
+describe("ADR-0005: ветки модулей из реестра", () => {
+  it("без веток модулей дерево совпадает с контрактом — ни лишних, ни пропущенных процедур", () => {
+    expect(routerPaths(createRouter({ streams: hub, modules: {} }))).toEqual(
+      contractPaths(contract),
+    );
+  });
+
+  it("ветка модуля встаёт под свой ключ, пустая ветка допустима", () => {
+    const tree = createRouter({ streams: hub, modules: { accounts: {}, fxRates: {} } });
+    expect(Object.keys(tree).toSorted()).toEqual(["accounts", "events", "fxRates", "system"]);
+    expect(routerPaths(tree)).toEqual(contractPaths(contract));
+  });
+
+  it("ветка модуля system дополняет общую ветку контракта, health остаётся платформенным", async () => {
+    const tree = createRouter({
+      streams: hub,
+      modules: {
+        system: { ping: publicProc.system.health.handler(() => ({ status: "ok" as const })) },
+      },
+    });
+    expect(routerPaths(tree)).toEqual(["events.stream", "system.health", "system.ping"]);
+    const client = createRouterClient(tree, { context: context() });
+    expect(await client.system.health()).toEqual({ status: "ok" });
+  });
+
+  it("процедура с именем платформенной в ветке модуля — ошибка при сборке", () => {
+    const health = publicProc.system.health.handler(() => ({ status: "ok" as const }));
+    expect(() => createRouter({ streams: hub, modules: { system: { health } } })).toThrow(
+      /system\.health/,
+    );
   });
 });

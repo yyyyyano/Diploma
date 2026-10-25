@@ -154,6 +154,12 @@
   font-size: 14px;
 }
 
+.error > svg,
+.ok > svg,
+.privacy > svg {
+  flex: none;
+}
+
 .error {
   background: var(--danger-soft);
   color: var(--danger);
@@ -177,6 +183,11 @@
 }
 
 @media (max-width: 960px) {
+  /* Две строки (панель над формой): высоту не делить между ними поровну. */
+  .wrap {
+    align-content: flex-start;
+  }
+
   .brand {
     flex-basis: 100%;
     gap: var(--s-16);

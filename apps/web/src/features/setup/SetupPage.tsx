@@ -66,6 +66,7 @@ export function SetupPage() {
             >
               <div className={classes.grid}>
                 <TextInput
+                  size="md"
                   label={t("setup:email")}
                   placeholder={t("setup:emailPlaceholder")}
                   type="email"
@@ -75,6 +76,7 @@ export function SetupPage() {
                   error={form.errors["email"] === undefined ? undefined : t("setup:emailInvalid")}
                 />
                 <PasswordInput
+                  size="md"
                   label={t("setup:password")}
                   placeholder={t("setup:passwordPlaceholder")}
                   description={t("setup:passwordHint")}

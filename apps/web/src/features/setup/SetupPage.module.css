@@ -104,6 +104,12 @@
   font-size: 14px;
 }
 
+.note > svg,
+.error > svg,
+.local > svg {
+  flex: none;
+}
+
 .note {
   background: var(--brand-soft);
   color: var(--brand-ink);

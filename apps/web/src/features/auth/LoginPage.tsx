@@ -92,6 +92,7 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
             onSubmit={form.onSubmit((values) => signIn.mutate(values))}
           >
             <TextInput
+              size="md"
               label={t("auth:login.email")}
               type="email"
               autoComplete="username"
@@ -100,6 +101,7 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
               error={form.errors["email"] === undefined ? undefined : t("auth:login.emailInvalid")}
             />
             <PasswordInput
+              size="md"
               label={t("auth:login.password")}
               placeholder={t("auth:login.passwordPlaceholder")}
               autoComplete="current-password"

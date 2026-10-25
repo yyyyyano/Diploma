@@ -186,7 +186,7 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
     let extracted = await d.llm.extract(s.scope, { task: "receipt.extract", ...receiptExtraction, images: [image] });
     let check = validateReceipt(extracted, d.settings.tolerance);               // @kosht/calc → { value, trace }
     for (let i = 1; !check.value.ok && i <= d.settings.maxRechecks; i++) {      // RCPT-06: модель — вне транзакции
-      d.platform.realtime.progress(s.scope, { receiptId, stage: "rechecking", line: check.value.firstBadLine });
+      await d.platform.realtime.progress(s.scope, { entity: "receipt", id: receiptId });   // сигнал без данных
       extracted = await d.llm.extract(s.scope, { task: "receipt.extract", ...recheckPrompt(extracted, check.value) });
       check = validateReceipt(extracted, d.settings.tolerance);
     }
@@ -200,7 +200,8 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
 ```
 
 - **Первый аргумент** сценария, фасада и репозитория, трогающего данные пользователя, — `s: ScopedDb`
-  (внутри транзакции — `tx`, тоже `ScopedDb`). В `llm`, конверт задачи и `realtime` уходит `s.scope`.
+  (внутри транзакции — `tx`, тоже `ScopedDb`). В `llm`, конверт задачи и `realtime.progress` уходит `s.scope`;
+  `realtime.changed(s, …)` получает сам `s` (в транзакции — `tx`: сигнал уходит при коммите, при откате — нет).
 - **Транзакция — явно** `s.transaction(tx => …)`, только когда нужна атомарность. Внутри — только БД,
   `events.publish(tx, …)` и фасады соседей с `tx`. Модель, HTTP, чтение файлов — между транзакциями
   (`LlmGateway` бросает `LLM_IN_TRANSACTION`, если его позвать внутри: флаг транзакции хранится в
@@ -258,10 +259,13 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
   идемпотентны по ключу «лимит + месяц + порог» (BUD-03).
 - Порядок доставки не гарантирован: обработчик перечитывает актуальное состояние, а не доверяет нагрузке.
 
-**Живые сигналы в браузер.** `platform.realtime.progress(scope, …)` / `realtime.changed(scope, { entity, ids })` →
-`NOTIFY kosht_realtime` (в сообщении `householdId`, вид и id — без данных) → `api` → `events.stream` (SSE) отдаёт
-клиенту только события его домохозяйства → `invalidateQueries`. Так таблицы обновляются и после действий агента
-и бота.
+**Живые сигналы в браузер.** `platform.realtime.changed(s, { entity, ids })` (через `s.db`: в транзакции — при
+коммите) / `realtime.progress(scope, { entity, id, percent? })` (сразу через пул) → `pg_notify('kosht_realtime', …)`
+(в сообщении `householdId`, вид, сущность и id — без данных; пачка режется на куски ≤ 7500 байт) → одно соединение
+`LISTEN` в `api` (`kosht-api-listen`; разрыв — переподключение 0,2 с ×2 до 5 с, после него все потоки закрываются)
+→ хаб `householdId → потоки` (ключ — `scope` сессии, не сообщение) → `events.stream` (SSE; очередь потока ≤ 1000 со
+схлопыванием, ≤ 8 потоков на пользователя, конец — событие `done`) → `invalidateQueries`. Так таблицы обновляются и
+после действий агента и бота.
 
 **Ожидающие решения — в `actions`** (решение пользователя 2026-10-24). Всё, что ждёт «Да/Нет» человека, — строка
 «ожидающего решения» в `actions`: подтверждение удаления и массового действия (AGT-07, TXN-03/04) и вопрос

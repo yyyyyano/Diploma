@@ -25,7 +25,7 @@ export const SiteEvent = z.discriminatedUnion("type", [ProgressEvent, ChangedEve
 export type SiteEvent = z.infer<typeof SiteEvent>;
 
 export const eventsContract = {
-  /** Поток событий своего домохозяйства (фильтр — на сервере по сессии, T-006). */
+  /** Поток событий своего домохозяйства (фильтр — на сервере по сессии, T-061); конец — событие done. */
   stream: oc
     .route({ method: "GET", path: "/events/stream" })
     .output(eventIterator(SiteEvent))

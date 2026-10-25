@@ -101,6 +101,18 @@
   правка+ревью на задачу, затем задача принимается с записью причины. Запреты остаются (`git push`, необратимые
   действия, правки `.claude/**` и `CONSTRAINTS.md` ролями).
 
+**Подготовка фазы (2026-10-25)** — критик по оставшимся задачам T-007…T-011; вопросов к пользователю нет.
+
+- Пачки: [T-007] · [T-008] · [T-009] · [T-010] (тот же имплементатор, что T-009, сообщением) · [T-011].
+- Правки: T-007 — готовые `define*` платформы не переписываются, новые критерии «порты платформы», «подписки и
+  очереди», «схемы при старте», «роутер», `MIN_MODULES`/`deps-guard`, генерация паспортов; T-008 сужена до 11
+  компонентов (LawRefChip, LawQuote → T-038; Steps → T-028; LimitBar → T-032; CategoryIcon → T-020), `OpenAPILink`,
+  галерея в `features/dev-gallery`; T-009 — `Set-Cookie` через `resHeaders`, нагрузка событий `{ ids }`, вход
+  «первый запуск» со `ScopedDb`, `realtime.changed` после «Наличные», стартовый маршрут, обвязка e2e на своей базе;
+  T-010 — Langfuse перенесён в T-011, `ReplayModel` в `llm`, `ConsentSource`, контракт `chat.send` без `ai`;
+  T-011 — секреты Langfuse, `models` только явно, сайт в образе, порядок проверки на чистой машине. В T-012 и T-034
+  дописаны критерии `ConsentSource` и контакта загрузчика.
+
 ### T-001 · Ворота качества: монорепозиторий, проверки, хуки git и Makefile
 - Статус: done · 1a5faab..1191080
 - Модули: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tooling/tsconfig.base.json`, `.oxlintrc.json`,
@@ -534,17 +546,39 @@
 - SPEC: NFR-10, AGT-03, PRIV-06
 - Критерии приёмки:
   - [ ] Цели `new-module id=…` и `new-table module=… name=…` (заготовка схемы `userOwnedTable` + строка
-    `defineUserData` + подсказка фикстуры изоляции); ими созданы 36 папок `apps/server/src/modules/<id>/`:
-    `CLAUDE.md` по `docs/templates/module-passport.md` (≤ 60 строк: назначение, требования, ярус, зависимости,
+    `defineUserData` + подсказка фикстуры изоляции; `new-table` отказывает, если вида таблицы нет в `tables` модуля в `modules.ts`); ими созданы 36 папок `apps/server/src/modules/<id>/`:
+    `CLAUDE.md` по `docs/templates/module-passport.md`, генерируется из `modules.ts` (SPEC, ответственность,
+    `dependsOn`, `publishes`; тест: ярус и зависимости паспорта равны `modules.ts`) (≤ 60 строк, лучше 25–40: назначение, требования, ярус, зависимости,
     запреты), `index.ts`, `module.ts` с `defineModule({ id })`.
-  - [ ] `defineModule` и помощники `defineJob`, `defineSweep`, `defineSubscription`, `defineTool` (`read | write |
-    destructive`, наборы `core | legal | planning | reports`), `defineUserData`, `defineSetting`; реестры (роутеры,
+  - [ ] `defineModule`, `defineTool` (`read | write | destructive`, наборы `core | legal | planning | reports`),
+    `defineUserData` — новые; уже готовые в `platform` (`defineJob`, `defineSweep`, `defineSchedule`,
+    `defineSubscription`, `defineEvent`, `defineSetting`, `defineSecret`, `defineRateRule`) не переписываются, а
+    подключаются к реестрам; реестры (роутеры,
     задачи, подписки, расписания, инструменты, каналы доставки, обработчики отмены и подтверждения, владельцы данных,
     настройки) работают на пустых списках; повторное имя → ошибка при старте.
   - [ ] `main/compose.ts` создаёт модули в порядке топологической сортировки `modules.ts` — тест сверяет порядок;
-    граф dependency-cruiser содержит все 36 модулей, `MIN_MODULES` поднят до их охвата.
+    граф dependency-cruiser содержит все 36 модулей, `MIN_MODULES` (считает файлы, не модули) поднят до заметной доли фактического числа файлов; `deps-guard` падает с
+    кодом 2, если в графе нет `modules/<id>/index.ts` любого из 36 модулей (тест на фикстуре).
   - [ ] Паспорт `transactions` фиксирует фасад с агрегатами пачками (`aggregate(s, { period, groupBy })`) до первой
     задачи модуля (ARCHITECTURE §15).
+  - [ ] Порты платформы: `compose` собирает и отдаёт модулям `secrets`, `rateLimiter`, `blobs`, `scoped(scope)` и `system`
+    (сейчас не создаются).
+  - [ ] Подписки и очереди: `jobs.start({ jobs })` во всех трёх ролях получает задачи всех подписок, задач и обходов
+    модулей (`Jobs.send` бросает ошибку на незарегистрированную задачу, а публикуют и `api`, и `bot`); тест: событие,
+    опубликованное в `api`, доходит до подписчика в `worker`.
+  - [ ] Схемы при старте: схемы всех модулей импортируются статически через `module.ts` (`globSync` не переживёт сборку
+    в один `.mjs`); тест: после `compose()` `registeredTables()` содержит все таблицы, найденные glob'ом по
+    `modules/*/infrastructure/db/schema*`.
+  - [ ] Роутер: `createRouter` принимает ветки модулей из реестра (`<модуль>Router`), пустая ветка допустима; тест
+    контракта: дерево совпадает с `contract`.
+- Уточнения критика:
+  - Подпись фабрики модуля фиксируется сейчас: `create<Id>Module(deps: { platform, facades })` → описание модуля;
+    `facades` — только модули из `dependsOn` (если не выходит типами — тест по `modules.ts`).
+  - `defineTool` по ARCHITECTURE §8.2 (`ToolCtx { s, requestId, channel, page? }`, `destructive` без `execute`), с
+    тестами типов («удалить нельзя по типу»).
+  - Коммиты: сначала генератор и реестры, затем одна генерация 36 модулей с трейлером
+    `Large-Commit: сгенерировано make new-module`.
+  - Правило `module-public-api-only` не мешает `main/compose.ts`. Скилл: `incremental-implementation`.
 - Проверка: make check; make deps-check; pnpm vitest run apps/server/src/main
 - Риск: medium — ошибка в реестрах и порядке сборки всплывёт сразу у всех модулей
 - Зависимости: T-006, T-061, T-002
@@ -557,17 +591,19 @@
   нижняя панель телефона); компоненты — `design/kit.css`, `design/DESIGN.md`
 - Критерии приёмки:
   - [ ] Vite + React 19, TanStack Router (группы `_public`, `_local`, `_app`, `_app/admin` с проверкой роли
-    в `beforeLoad`), TanStack Query + типизированный клиент oRPC из `@kosht/contract`, Mantine 9; тема из
+    в `beforeLoad`), TanStack Query + типизированный клиент oRPC из `@kosht/contract` (`OpenAPILink` из `@orpc/openapi-client`:
+    сервер — `OpenAPIHandler`), Mantine 9; тема из
     `ui/theme/tokens.css` (копия `design/tokens.css` + `--warn-bar`), `category-colors.ts`, `chart-colors.ts`; Onest
     и Literata через `@fontsource-variable` — e2e: ни одного запроса шрифтов и стилей на внешние адреса.
-  - [ ] Компоненты `ui/components` (Money, WhyButton, Formula, LawRefChip, LawQuote, StatusBadge, CategoryIcon,
-    LimitBar, StatCard, EmptyState, Skeletons, Sheet, ConfirmDialog, UndoToast, PageHeader, Steps) с компонентными
-    тестами состояний и ролей; `StatusBadge` без иконки не компилируется; `LimitBar` при 79 / 80 / 99 / 100 % —
-    `--brand` / `--warn-bar` + треугольник / `--danger` + «!»; `Money` — формат DES-17, `tabular-nums` в таблицах.
+  - [ ] Компоненты `ui/components` (Money, WhyButton, Formula, StatusBadge, StatCard, EmptyState, Skeletons, Sheet,
+    ConfirmDialog, UndoToast, PageHeader) с компонентными тестами состояний и ролей; `StatusBadge` без иконки не
+    компилируется; `Money` — формат DES-17, `tabular-nums` в таблицах. (LawRefChip и LawQuote → T-038, Steps → T-028,
+    LimitBar → T-032, CategoryIcon → T-020; токены `--warn-bar`, `category-colors.ts`, `chart-colors.ts` — здесь.)
   - [ ] Каркас: меню по DES-15 строится из реестра маршрутов — пункты ещё не готовых фич скрыты; колокольчик,
     «Сканировать чек» и плавающая кнопка ассистента скрыты до задач своих модулей; нижняя панель телефона; граница
     ошибок; i18n; клиент `events.stream` → `invalidateQueries`; `queryClient.clear()` при выходе.
-  - [ ] `/dev/gallery` (только в разработке) — все компоненты во всех состояниях; цели `e2e` (Playwright +
+  - [ ] `/dev/gallery` (только в разработке; страница — `features/dev-gallery`, маршрут `dev.gallery.tsx` тонкий по
+    `web-routes-thin`, путь пропуска в `jsx-literals.mjs` обновлён) — все компоненты во всех состояниях; цели `e2e` (Playwright +
     `@axe-core/playwright`) и `new-feature id=…`; Vitest-проект `web` (Testing Library + MSW).
   - [ ] `make e2e`: axe — 0 нарушений (`wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`) на `/dev/gallery` при 1440
     и 390 px, нет горизонтальной прокрутки; скриншоты галереи сверены с `kit.css` (отличия — в итоге задачи);
@@ -576,6 +612,19 @@
     CSRF и `Host` из T-059 даст 403); `TRUSTED_ORIGINS` в `make dev` по умолчанию пуст.
   - [ ] Клиент `events.stream`: конец потока (`event: done`) или ошибка → переподключение и `invalidateQueries()` всех
     запросов.
+- Уточнения критика:
+  - Новые пакеты сверх ADR-0013: `@orpc/client`, `@orpc/openapi-client` (1.16.1, как остальной oRPC),
+    `@tanstack/router-plugin` (или `-cli`) — точные версии через `catalog:`, записать в итог.
+  - `tsconfig` сайта: `jsx: react-jsx`, `lib: dom`, `types: vite/client`, `module: preserve`, `moduleResolution: bundler`;
+    импорты `.tsx` с расширением.
+  - `routeTree.gen.ts` не коммитится (`.gitignore`), генерируется перед `typecheck`, `vite`, `vitest` (задача `generate`
+    в turbo); исключений в «Пол» не добавлять.
+  - Vitest-проект `web`: `*.test.tsx`, jsdom, MSW, Testing Library; проект `unit` `.tsx` не подхватывает.
+  - Галерея — при `import.meta.env.DEV` или сборке `--mode e2e`, в боевой сборке её нет (бюджет `bundle-size` — по
+    боевой); галерея показывает и каркас (меню, нижняя панель) как демо-состояния для axe без входа.
+  - Меню — из `staticData: { nav, page }` маршрутов; в T-008 проверяется тестом с тестовым набором маршрутов.
+  - `make e2e` в T-008 поднимает только сайт; без Chromium цель сообщает команду установки (в `make init` или отдельной
+    цели). Скриншоты сверяются вручную, `bundle-size.mjs` — на настоящей сборке. Скилл: `frontend-ui-engineering`.
 - Проверка: make check; make e2e; вручную: скриншоты 1440/390 рядом с `design/screenshots/desktop/Main.png`
 - Риск: medium — от дизайн-системы зависят все экраны; ошибка доступности размножится
 - Зависимости: T-007, T-003, T-057, T-061
@@ -585,56 +634,92 @@
 - Модули: `identity`, `accounts`, `features/setup`, `features/auth`, `features/accounts`, `entities/account`,
   `@kosht/testing`, `e2e`
 - SPEC: AUTH-10, AUTH-08, ROLE-01, ROLE-02, ADM-01, SEC-01, SEC-04, STMT-01, NFR-24
-- Экран: Setup — design/screens/Setup.dc.html (только создание администратора); Login — design/screens/Login.dc.html
+- Экран: Setup — design/screens/Setup.dc.html (только создание администратора: email и пароль ≥ 12; код
+  восстановления — T-013, контакт загрузчика — T-034); Login — design/screens/Login.dc.html
   (форма входа без «Забыли пароль?» и демо-входа); Accounts — design/screens/Accounts.dc.html (только список)
 - Критерии приёмки:
   - [ ] Better Auth — только ядро; его таблицы — `systemTable` модуля `identity`, поля `role`, `status`, `demo`,
     `household_id`; `householdId` в сессии; argon2id из `node:crypto` (m = 64 МиБ, t = 3, p = 1); cookie
-    `kosht_session` (`HttpOnly`, `SameSite=Lax`), `cookieCache` выключен; выход завершает сессию.
+    `kosht_session` (`HttpOnly`, `SameSite=Lax`), `cookieCache` выключен; выход завершает сессию. `HttpContext` получает способ отдать `Set-Cookie` (`resHeaders` через
+    `ResponseHeadersPlugin` в `platform/http/api.ts`); вход и выход — процедуры oRPC поверх `auth.api.*` с
+    `returnHeaders`, `auth.handler` Better Auth не монтируется.
   - [ ] Признак `system_state.initialized`: экран первого запуска доступен только на локальном слушателе и только пока
     система не инициализирована (повторно и через `lan` — нет); создание администратора заводит домохозяйство
-    и публикует `identity.system-initialized` и `identity.user-registered`.
-  - [ ] `accounts` по `identity.user-registered` создаёт «Наличные» идемпотентно (двойная доставка — один счёт);
+    и публикует `identity.system-initialized` и `identity.user-registered` с нагрузкой `{ ids: [userId] }` (без
+    `userId`/`householdId` по смыслу; строки в `docs/CAPABILITIES.md` поправить); один явный вход «регистрация /
+    первый запуск» строит `ScopedDb` нового пользователя (ARCHITECTURE §6.4 и разрешённые места `makeScope` в
+    `isolation.mjs` дополнить, тест); пользователь, домохозяйство и события — в одной транзакции.
+  - [ ] `accounts` по `identity.user-registered` создаёт «Наличные» идемпотентно (двойная доставка — один счёт) и вызывает `realtime.changed`, чтобы список обновился без перезагрузки;
     `contract.accounts.list` (`authed`) → роутер → сценарий → `ScopedDb` + аудитор → страница сайта через TanStack Query.
-  - [ ] Генератор тестов изоляции в `@kosht/testing` по реестрам процедур и инструментов: пользователь A с id из B →
+  - [ ] Генератор тестов изоляции в `@kosht/testing` получает реестры аргументом (`generate({ contract, procedures,
+    tools, fixtures })`, импорт из `apps/server` пакету запрещён; сам тест — `apps/server/src/main/isolation.*.int.test.ts`): пользователь A с id из B →
     `NOT_FOUND` или пусто; тест полноты `defineUserData` (каждая `userOwnedTable` в реестре); новая процедура без
     фикстуры → подсказка «добавьте фикстуру»; контрактный тест: `accounts.list` без сессии → `UNAUTHORIZED`.
-  - [ ] e2e на чистой БД: `127.0.0.1:8140` → экран первого запуска → администратор создан → вход →
+  - [ ] e2e на чистой БД (`make e2e` поднимает `api` и `worker` на своей свежей базе из шаблона `@kosht/testing/db` и
+    своём порту, сайт — сборка Vite из `api`; 8140, `make dev` и дев-база `kosht` не трогаются) → экран первого запуска → администратор создан → вход →
     «Наличные · 0,00 BYN»; axe 0 на этих маршрутах при 1440 и 390.
   - [ ] Ограничение размера тела запроса `/api` (`bodyLimit` Hono; значение — настройка, по умолчанию достаточное для
     JSON, файлы идут отдельным путём T-016); превышение → `VALIDATION`; тест. (Находка ревью T-059.)
   - [ ] `identity` регистрирует `ScopeVerifier` (порт из T-006): пользователь существует и домохозяйство то же;
     тест: задача фоновой очереди с чужим `householdId` отбрасывается.
+  - [ ] Стартовый маршрут: публичная процедура статуса `{ initialized }`; без сессии: не инициализирована и слушатель
+    `local` → `/setup`, иначе → `/login`; с `lan` `/setup` недоступен (`NOT_FOUND`, UI показывает вход).
+- Уточнения критика:
+  - Спайк первым делом: `better-auth` (+ `@better-auth/drizzle-adapter`) с Drizzle `1.0.0-rc.5` и аудитором на
+    `SystemDb`, без `$client`; не подходит — свой адаптер (`createAdapterFactory`) на `SystemDb`, ADR-0016 дополнить.
+  - Таблицы Better Auth: `identity_users`, `identity_sessions`, `identity_credentials`, `identity_verifications` через
+    `modelName`; `signUp` по HTTP не открывается; хэш — свой `password.hash/verify` (`crypto.argon2`, PHC-строка,
+    сравнение постоянное по времени); имя cookie через `advanced`.
+  - `system_state.initialized` атомарно: параллельный повторный `setup` → `CONFLICT` (тест на две попытки).
+  - Пустой `ScopeVerifier` не пропускает никого; `identity` регистрирует его вместе с `sessions.register`. `bodyLimit` —
+    `defineSetting`, превышение → `VALIDATION` через `app.onError`.
+  - Скиллы: `security-and-hardening`, `doubt-driven-development`, `test-driven-development`.
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/main
 - Риск: high — вход, сессия и первый тест изоляции; на них опираются все следующие задачи
 - Зависимости: T-008, T-004, T-005, T-007, T-059
 
 ### T-010 · ИИ-шлюз и чат-заглушка: поток ответа агента через oRPC
 - Статус: todo
-- Модули: `llm`, `agent`, `chat`, `accounts`, `platform/telemetry`, `platform/tools`, `features/assistant`,
+- Модули: `llm`, `agent`, `chat`, `accounts`, `platform/telemetry`, `platform/tools`, `platform/db` (флаг транзакции в `AsyncLocalStorage`;
+  `LLM_IN_TRANSACTION` — класс ошибки вне каталога, наружу `INTERNAL`), `features/assistant`,
   `@kosht/testing`, `e2e`
 - SPEC: LLM-01, LLM-06, LLM-09, NFR-04, NFR-11, NFR-21, AGT-01, CHAT-02, OBS-03, QA-17
 - Экран: Assistant — design/screens/Assistant.dc.html (только лента: поток текста, подпись шага, одна карточка)
 - Критерии приёмки:
   - [ ] `LlmGateway` (`model`, `extract`, `classify`, `embed`, `transcribe`) по ARCHITECTURE §8.1; реестр моделей
     (таблица) и цепочки по задаче из возможностей — unit-тесты выбора; инвариант: при `cloudAllowed = false` в цепочке
-    только локальные записи; `systemCaller("<модуль>")` для задач без данных пользователя.
+    только локальные записи; `systemCaller("<модуль>")` для задач без данных пользователя; облачное согласие — реестр `ConsentSource` (по образцу
+    `ScopeVerifier`), пустой — облако запрещено; тестовый провайдер помечен локальным.
   - [ ] Тестовый провайдер — настоящий адаптер `ProviderAdapter` в реестре (не заглушка в коде сценариев); режимы
     `replay | record | live`; в тестах `replay`: промах кассеты → ошибка с подсказкой `make ai-record SCENARIO=…`;
-    цель `ai-record`; `ReplayModel` и `MockLanguageModelV4` в `@kosht/testing`.
+    цель `ai-record`; `ReplayModel` и движок кассет — в `llm/infrastructure/providers/` (боевому коду нельзя `@kosht/testing`), в
+    `@kosht/testing` — помощники пути и отпечатка кассет и реэкспорт `MockLanguageModelV4` (ARCHITECTURE §4.4, §12
+    поправить); `ai-record` в T-010 пишет кассеты со скриптованного тестового провайдера, без сети и ключей.
   - [ ] Журнал расхода: строка на каждый вызов (задача, провайдер, модель, токены, длительность, стоимость, ошибка)
-    без текстов (тест); Langfuse через `@langfuse/vercel-ai-sdk` + `@langfuse/otel` с закреплёнными версиями OTel,
-    при выключенном Langfuse всё работает; вызов внутри `s.transaction` → `LLM_IN_TRANSACTION`; интерфейсы
+    без текстов (тест); порт `Telemetry` (по умолчанию выключен) и передача `functionId`, `userId` (внутренний id), `sessionId` в опцию
+    `telemetry` вызовов — подключение Langfuse перенесено в T-011 (пакета `@langfuse/vercel-ai-sdk` нет; ARCHITECTURE
+    §8.1 и ADR-0010 поправить); вызов внутри `s.transaction` → `LLM_IN_TRANSACTION`; интерфейсы
     маскирования (`Masker`, порт `KnownNames`) объявлены, реализация — T-024.
   - [ ] `agent`: `ToolLoopAgent` ≤ 8 шагов, на последнем `toolChoice: "none"`; адаптер `defineTool` → AI SDK строит
     `ctx.s` из scope запуска; инструмент `list_accounts` (`read`, `core`) модуля `accounts` проверен тестом без
     модели; ошибка инструмента → `{ ok: false, code }`; префикс (подсказка + `core`) ≤ 3 000 токенов (`o200k_base`, тест).
-  - [ ] `chat`: диалоги и сообщения (`UIMessage.parts`, `userOwnedTable`); `chat.send` — итератор событий oRPC →
+  - [ ] `chat`: диалоги и сообщения (`UIMessage.parts`, `userOwnedTable`); `chat.send` — итератор событий oRPC (`contract` не импортирует `ai`: вывод — `eventIterator` со своей слабой
+    Zod-схемой `UIMessageChunk`, решение — в паспорт контракта; сервер `streamToAsyncIteratorObject`, клиент
+    `asyncIteratorToUnproxiedDataStream`) →
     `useChat` рисует поток, подпись шага из словаря `tools` и карточку; запуск не привязан к соединению: вкладку
     закрыли — ответ дописан в БД и виден при повторном открытии (int-тест + e2e); `chat.stop(runId)` проверяет
     владельца и освобождает модель; поток идёт через прокси Vite. Интеграция oRPC ↔ AI SDK 7 не выходит —
     `ESCALATE` с проектом ADR на маршрут Hono `/api/chat` (ADR-0005).
   - [ ] e2e на кассетах: первое событие потока ≤ 1 с после отправки; axe 0 на `/assistant` при 1440 и 390.
+- Уточнения критика:
+  - AI SDK 7 — по `node_modules/ai/docs`, не по памяти (`ToolLoopAgent`, `stopWhen: isStepCount(n)`); версии `ai`,
+    `@ai-sdk/*`, `@ai-sdk/react` точные; на сайте — только в `features/assistant`; OTel `@ai-sdk/otel` — в `llm` (T-011).
+  - Отвязанный запуск: реестр в памяти по `householdId:runId`, без `AbortSignal` запроса; `chat.stop` проверяет владельца
+    по ключу; при `SIGTERM` ответы доводятся в пределах 10 с или обрываются записью состояния.
+  - Кассета e2e с задержкой между кусками (≥ 1,5 с общая), «первое событие ≤ 1 с» — отдельное утверждение.
+  - Подсчёт `o200k_base` — dev-зависимость (`gpt-tokenizer` или `js-tiktoken`), выбор — в итог; подпись шага
+    `list_accounts` — в словарь `tools`. Журнал расхода — тест-канарейка без текста и сумм.
+  - Скиллы: `source-driven-development`, `security-and-hardening`, `doubt-driven-development`.
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/modules/llm apps/server/src/modules/agent apps/server/src/modules/chat
 - Риск: medium — спайк потока чата с записанным запасным путём (ARCHITECTURE §15); данные наружу пока не уходят
 - Зависимости: T-009, T-006
@@ -650,15 +735,21 @@
     загрузчик в T-024); `observability` — Langfuse v4 (свой Postgres, ClickHouse с лимитом памяти, Valkey, SeaweedFS),
     включён по умолчанию, `127.0.0.1:3001`, регистрация закрыта, телеметрия выключена. Порты только с адресом,
     образы — с точными тегами, секреты — Compose `secrets:` (два: `db_password` и `db_app_password`; в сервисе `app`
-    `DB_PASSWORD_FILE=/run/secrets/db_app_password`, `MIGRATION_DB_PASSWORD_FILE=/run/secrets/db_password`).
+    `DB_PASSWORD_FILE=/run/secrets/db_app_password`, `MIGRATION_DB_PASSWORD_FILE=/run/secrets/db_password`). `make init` создаёт секреты Langfuse (`NEXTAUTH_SECRET`,
+    salt, encryption key, пароли ClickHouse/Valkey/S3, `LANGFUSE_INIT_*`) в `secrets/`; ключи — в `.env.example` и
+    `config`. `models` не стартует из `make up`/`make dev` до T-024 (явно `WITH_MODELS=1`), `docker compose --profile
+    models config` валиден.
   - [ ] Dockerfile: tsdown → один `.mjs` на точку входа, `node:26-trixie-slim`, `USER node`, `read_only`,
-    `cap_drop: ALL`, `init: true`.
+    `cap_drop: ALL`, `init: true`; образ содержит собранный сайт (`vite build` → `apps/web/dist`, `WEB_DIST_DIR`).
   - [ ] Цели: `dev` (инфраструктура в контейнерах, код на хосте, Vite `127.0.0.1:5173` с прокси `/api`), `up`, `down`
     (`--profile '*'`), `restart`, `ps`, `build`, `db-reset` и `restore file=…` (через ввод `yes`), `backup`
     (`pg_dump -Fc` + файлы, без мастер-ключа), `doctor` (Node, pnpm, Docker Engine — не Desktop, версия ≥ 28.3.3,
     группы `docker`/`render`, свободны 8140–8143, 5440, 3001), `audit`, `check-full` (`check` + `e2e` + `audit` +
     бюджет бандла); `init` записывает `RENDER_GID`.
-  - [ ] На чистой машине `make init && make up` → `/readyz` 200 → первый запуск и вход из T-009 работают
+  - [ ] Подключение Langfuse (из T-010): `@langfuse/otel` + `@opentelemetry/sdk-trace-node`, `@ai-sdk/otel` в `llm`,
+    закреплённые версии OTel, конфигурация и секреты; при выключенном Langfuse всё работает.
+  - [ ] На чистой машине (дев-данные одноразовые: остановить стек, удалить том `pgdata` проекта `kosht`; `make doctor`
+    считает порты, занятые контейнерами этого проекта, свободными) `make init && make up` → `/readyz` 200 → первый запуск и вход из T-009 работают
     в контейнерах; трасса ответа чата-заглушки видна в Langfuse.
   - [ ] Паспорта `apps/web/CLAUDE.md`, `apps/server/CLAUDE.md` и пакетов актуальны; база покрытия записана
     в `tooling/coverage-baseline.json`, падение больше 0,5 п. п. делает `make check` красным (тест).
@@ -669,6 +760,12 @@
     пишут `process.stopped` и выходят чисто; `MIGRATIONS_DIR` в `platform/db/migrate.ts` не зависит от
     `import.meta.url` (сборка в один `.mjs` через tsdown); образ везёт `node_modules` рядом с бандлом (пакет
     `libpg-query` с `.wasm` остаётся внешним, ADR-0019). (Находки ревью T-059 и T-058.)
+- Уточнения критика:
+  - Образы с точными тегами; нет образа whisper.cpp с Vulkan — `main` с точным digest или сервис без запуска до T-024,
+    решение — в итог.
+  - В Compose БД — `db:5432`, хост/порт/база обеих ролей совпадают; `8141` публикуется всегда, слушатель закрыт настройкой.
+  - `tsdown`: `libpg-query` и `pg-boss` с `node_modules` рядом, `drizzle/` едет в образ. База покрытия — после T-009/T-010;
+    бюджеты — решение главной сессии (`ESCALATE`). Скилл: `shipping-and-launch`.
 - Проверка: make check; make check-full; make doctor; вручную: make init && make up, экран первого запуска на
   127.0.0.1:8140, трасса в Langfuse на 127.0.0.1:3001
 - Риск: medium — сбой запуска на чистой машине ломает показ, но откатывается `git revert`
@@ -704,6 +801,8 @@
     сетевому адресу (NFR-24).
   - [ ] e2e: регистрация → письмо в ящике → подтверждение по ссылке → вход; axe 0 на `/register`, `/mailbox`,
     `/policy`, `/settings` при 1440 и 390.
+  - [ ] `privacy` регистрирует источник облачного согласия (порт `ConsentSource` из T-010); до этого реестр пуст и
+    облако запрещено; отзыв (T-016) действует на следующий вызов.
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/modules/identity apps/server/src/modules/privacy apps/server/src/modules/mail
 - Риск: high — согласия на обработку ПД и облако — юридически значимые записи (99-З)
 - Зависимости: T-011, T-009
@@ -890,6 +989,7 @@
   - [ ] Пакетная категоризация: из 100 операций, 90 покрытых правилами, модель вызывается один раз на 10 (тест со
     шпионом шлюза); кэш одинаковых классификаций контрагента (LLM-05).
   - [ ] Позиции чека категоризируются тем же порядком по наименованию («Молоко 3,2%» → Продукты) — тест.
+  - [ ] Компонент `CategoryIcon` в `ui/components` с компонентными тестами (перенесено из T-008).
 - Проверка: make check; pnpm vitest run apps/server/src/modules/merchants apps/server/src/modules/categories
 - Риск: medium — неверная категория заметна и правится пользователем
 - Зависимости: T-019, T-010
@@ -1083,6 +1183,7 @@
     к МНС нет; позиции с гарантией отмечены, событие `receipts.warranty-items-found`; уведомление «чек требует проверки».
   - [ ] Инструменты `get_receipt`, `receipt_status` (`read`); e2e «фото чека → карточка»; axe 0 на `/documents`
     и телефонном сканировании.
+  - [ ] Компонент `Steps` в `ui/components` с компонентными тестами (перенесено из T-008).
 - Проверка: make check; make e2e
 - Риск: medium — расчёты проверены в T-027, здесь учёт и интерфейс
 - Зависимости: T-027, T-021
@@ -1161,6 +1262,8 @@
   - [ ] Экран: полосы `LimitBar`, новый лимит и правка, удаление лимита или цели — через подтверждение; инструменты
     `list_budgets` (`read`), `set_limit`, `create_goal`, `contribute_to_goal` («отложи 200 на отпуск», `write`),
     `delete_limit`, `delete_goal` (`destructive`).
+  - [ ] Компонент `LimitBar`: при 79 / 80 / 99 / 100 % — `--brand` / `--warn-bar` + треугольник / `--danger` + «!»,
+    компонентные тесты (перенесено из T-008).
 - Проверка: make check; make e2e
 - Риск: medium — проценты и уведомления заметны, расчёты под тестами `calc`
 - Зависимости: T-031, T-015
@@ -1209,6 +1312,8 @@
     Пленума, не НПА».
   - [ ] Канарейки (Закон № 90-З — 51 статья) и карантин LAW-39; КП LAW: тестовая страница с иной вёрсткой уходит
     в карантин, действующая редакция остаётся, администратор уведомлён.
+  - [ ] Контакт загрузчика (AUTH-10, LAW-36): по умолчанию — email первого администратора (факт `identity`), правится
+    в админке и на Setup; пустой контакт останавливает загрузчик.
 - Проверка: make check; pnpm vitest run apps/server/src/modules/legal-base
 - Риск: high — автоматические запросы к внешнему сайту: нарушение robots или частоты недопустимо
 - Зависимости: T-033, T-006
@@ -1279,6 +1384,8 @@
   - [ ] Читалка: оглавление по структуре, текст Literata, «редакция по состоянию на <дата снимка>», предупреждение
     о принятых изменениях, ссылка на pravo.by у каждого акта; акт «только карточка» — без текста, со ссылкой.
   - [ ] axe 0 на `/laws` (гость и пользователь) и в читалке при 1440 и 390.
+  - [ ] Компоненты `LawRefChip` и `LawQuote` в `ui/components` (DES-06, DES-12, Literata) с компонентными тестами
+    (перенесено из T-008).
 - Проверка: make check; make e2e
 - Риск: low — только чтение публичных данных
 - Зависимости: T-037

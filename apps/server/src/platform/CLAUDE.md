@@ -130,6 +130,17 @@
 - `sweep.ts` — `defineSweep({ name, cron, find, job, payload(row) })` и `runSweep`: `crossTenant(pool, name, find)`
   (только `id, householdId, userId`) → `makeScope` строки → задача владельцу; строка журнала на обход.
 
+## Публичный API — `events/` (T-006: ADR-0004, ADR-0008, ARCHITECTURE §5)
+- `define-event.ts` — `defineEvent({ name: "<модуль>.<прошедшее>", payload: z.object({ ids, … }) })` → `EventDef`:
+  нагрузка — пачка `ids` (1…`MAX_EVENT_IDS` = 1000), проверяется всегда (`and` со схемой модуля).
+- `define-subscription.ts` — `defineSubscription({ event, module, options?: { singletonKey, startAfterSeconds,
+  retryLimit }, handle(ctx, p) })` → `SubscriptionDef` с задачей очереди `evt.<событие>.<модуль>` (политика short);
+  без ключа модуля ключ — `jobKey(scope, sha256(нагрузки))`: одинаковые ожидающие события домохозяйства
+  схлопываются, чужие — нет. pg-boss здесь не нужен: подписка — задача фасада `jobs`.
+- `events.ts` — `createEvents({ jobs, subscriptions })` → `Events.publish(tx, event, payload)`: задача каждой подписке
+  через `jobs.enqueue(tx, …)` в той же транзакции; подписок нет — ничего; нагрузка не по схеме — `RangeError`;
+  модуль подписан на событие дважды — ошибка при создании.
+
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило

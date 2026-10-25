@@ -10,7 +10,7 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, inject, it, vi } from "vitest";
 import { z } from "zod";
 import { MODULES } from "../../../../tooling/architecture/modules.ts";
 import { topologicalOrder } from "../../../../tooling/gen/module-order.ts";
@@ -71,6 +71,26 @@ async function start(
   opened.push(composition);
   return composition;
 }
+
+describe("повторное имя в реестре — ошибка старта", () => {
+  it("два модуля с одним id: compose отказывает и закрывает свой пул роли приложения", async () => {
+    // Тест идёт первым: других процессов bot в этой базе ещё нет, и после отказа соединений kosht-bot не остаётся.
+    const connections = async () =>
+      (
+        await db.owner.query<{ n: number }>(
+          "select count(*)::int as n from pg_stat_activity where datname = $1 and application_name = 'kosht-bot'",
+          [db.name],
+        )
+      ).rows[0]?.n;
+    await expect(
+      compose(config, "bot", {
+        log: memoryLogger().log,
+        createModules: () => [defineModule({ id: "twin" }), defineModule({ id: "twin" })],
+      }),
+    ).rejects.toThrow(RegistryError);
+    await vi.waitFor(async () => expect(await connections()).toBe(0));
+  });
+});
 
 describe("ARCHITECTURE §3: 36 модулей в корне композиции", () => {
   let api: Composition;
@@ -176,25 +196,4 @@ describe("подписки и очереди во всех ролях", () => {
       { ids: [idB], householdId: scopeB.householdId },
     ]);
   }, 30_000);
-});
-
-describe("повторное имя в реестре — ошибка старта", () => {
-  it("два модуля с одним id: compose отказывает и закрывает свой пул роли приложения", async () => {
-    // Соединений kosht-bot после отказа столько же, сколько до (у открытого bot выше — свои).
-    const connections = async () =>
-      (
-        await db.owner.query<{ n: number }>(
-          "select count(*)::int as n from pg_stat_activity where datname = $1 and application_name = 'kosht-bot'",
-          [db.name],
-        )
-      ).rows[0]?.n;
-    const before = await connections();
-    await expect(
-      compose(config, "bot", {
-        log: memoryLogger().log,
-        createModules: () => [defineModule({ id: "twin" }), defineModule({ id: "twin" })],
-      }),
-    ).rejects.toThrow(RegistryError);
-    expect(await connections()).toBe(before);
-  });
 });

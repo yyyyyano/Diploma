@@ -83,16 +83,20 @@
 Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
 - `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул владельца (`max: 1`, имя
   `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
-  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
-  `allowLan()`, `close()` (пул, затем `db.closed`). Модули добавит T-007.
+  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий, реестр проверки
+  scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний — `settings.get(TIME_ZONE)`) и
+  `events` (подписок пока нет) → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
+  `allowLan()`, `startJobs()` (`jobs.start` с реестрами — пустыми до T-007), `close()` (`jobs.stop`, пул, затем
+  `db.closed`). Модули добавит T-007.
 - `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole)`: миграции Drizzle → схема очереди pgboss
   (`installJobsSchema` под `withMigrationLock`) → `ensureAppRole` последним (`GRANT … ON ALL TABLES` видит только
   созданные таблицы). Одна последовательность для `compose`, `make migrate` (`main/migrate-cli.ts`) и шаблона тестов.
 - `entrypoints/run.ts` — `runProcess(role, { routes?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
-  `ConfigError` в stderr, код 1; так же — текст `AppRoleError` на старте) → лог `<DATA_DIR>/logs` → `compose` → роль (`api` — слушатели и приложения на
-  каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` пока только живут — держит
-  `setInterval`, пул процесс не держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` →
-  сигнал остановки потокам, слушатели (`stop(80 % срока)`) → пул → `process.stopped` → лог на диск → код 0; дольше
+  `ConfigError` в stderr, код 1; так же — текст `AppRoleError` на старте) → лог `<DATA_DIR>/logs` → `compose` →
+  `startJobs()` (до слушателей) → роль (`api` — слушатели и приложения на
+  каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` держит `setInterval`, пул процесс не
+  держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` → сигнал остановки потокам,
+  слушатели (`stop(80 % срока)`) → очередь (≤ 8 с) → пул → `process.stopped` → лог на диск → код 0; дольше
   `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
 - `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
 - `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов

@@ -1,8 +1,8 @@
 // Корень композиции (ARCHITECTURE §3): все три процесса — api, worker, bot — собираются одной функцией. Порядок:
 // пул владельца (одно соединение kosht-<роль>-migrate) → миграции, схема очереди pgboss и выдача прав роли приложения
 // под pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
-// (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий) →
-// дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
+// (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий,
+// очередь задач на том же пуле и события, ADR-0008) → дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
 // Логики сверх «соединить» здесь нет.
 import type { Clock } from "@kosht/kernel";
 import { createClock } from "../platform/clock/clock.ts";
@@ -17,6 +17,12 @@ import {
   type Session,
   type SessionRegistry,
 } from "../platform/http/session.ts";
+import { createEvents, type Events } from "../platform/events/events.ts";
+import { createJobs, type Jobs } from "../platform/jobs/jobs.ts";
+import {
+  createScopeVerifierRegistry,
+  type ScopeVerifierRegistry,
+} from "../platform/jobs/scope-verifier.ts";
 import type { Logger, LogRole } from "../platform/logging/logger.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
@@ -34,6 +40,13 @@ export interface Composition {
   readonly settings: Settings;
   /** Источник сессий подключает модуль входа (T-009). */
   readonly sessions: SessionRegistry;
+  /** Перепроверка владельца задачи подключает модуль входа (T-009). */
+  readonly scopes: ScopeVerifierRegistry;
+  /** Очередь задач процесса (порт Jobs) и события поверх неё; реестры модулей — T-007. */
+  readonly jobs: Jobs;
+  readonly events: Events;
+  /** Запустить очередь: все роли ставят задачи, worker ещё и обрабатывает их и ведёт расписания. */
+  startJobs(): Promise<void>;
   /** Дерево процедур oRPC (main/router.ts). */
   readonly router: typeof router;
   /** Сессия запроса сайта по заголовкам. */
@@ -42,7 +55,7 @@ export interface Composition {
   ready(): Promise<void>;
   /** Открыт ли сетевой вход (настройка network.allow-lan). */
   allowLan(): Promise<boolean>;
-  /** Закрыть пул: после него в pg_stat_activity соединений процесса нет. */
+  /** Остановить очередь (обработчики в полёте — ≤ 8 с) и закрыть пул: соединений процесса в pg_stat_activity нет. */
   close(): Promise<void>;
 }
 
@@ -84,6 +97,18 @@ export async function compose(
   });
   const clock = createClock(() => settings.peek(TIME_ZONE));
   const sessions = createSessionRegistry();
+  const scopes = createScopeVerifierRegistry();
+  // pg-boss — на том же пуле роли приложения (своего пула нет); пояс расписаний — настройка system.time-zone.
+  const jobs = createJobs({
+    pool,
+    role,
+    log,
+    clock,
+    scopes,
+    timeZone: () => settings.get(TIME_ZONE),
+  });
+  // Подписки, задачи и расписания модулей раскладывает T-007; до него реестры пусты.
+  const events = createEvents({ jobs, subscriptions: [] });
   return {
     role,
     config,
@@ -91,11 +116,16 @@ export async function compose(
     clock,
     settings,
     sessions,
+    scopes,
+    jobs,
+    events,
+    startJobs: () => jobs.start({ jobs: [] }),
     router,
     session: (headers) => openSession(sessions, pool, headers),
     ready: () => pingDb(pool),
     allowLan: () => settings.get(ALLOW_LAN),
     close: async () => {
+      await jobs.stop();
       await pool.end();
       log.info({ role }, "db.closed");
     },

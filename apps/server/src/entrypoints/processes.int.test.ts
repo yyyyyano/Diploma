@@ -261,16 +261,25 @@ describe.each<Role>(["worker", "bot"])(
   "ADR-0015: %s живёт до SIGTERM и останавливается корректно",
   (role) => {
     it(
-      "старт с миграциями, остановка: код 0, process.stopped последней строкой, соединений с БД нет",
+      "старт с миграциями и очередью, остановка меньше чем за 10 с: код 0, process.stopped последней строкой, соединений с БД нет",
       async () => {
         const proc = await start(role);
         await waitForLog(proc, role, "db.migrated");
+        await waitForLog(proc, role, "jobs.started");
         await waitForLog(proc, role, "process.started");
         expect(proc.child.exitCode).toBeNull();
         expect(await connections(`kosht-${role}`)).toBeGreaterThan(0);
+        // ADR-0008: очередь pg-boss работает на пуле процесса — своих соединений у неё нет.
+        const names = await db.owner.query<{ name: string }>(
+          "select distinct application_name as name from pg_stat_activity where usename = $1 and datname = $2",
+          [inject("testDb").app.user, db.name],
+        );
+        expect(names.rows).toEqual([{ name: `kosht-${role}` }]);
 
+        const stopping = Date.now();
         proc.child.kill("SIGTERM");
         expect(await proc.exited).toBe(0);
+        expect(Date.now() - stopping).toBeLessThan(10_000);
         const lines = (await logLines(proc.dataDir, role)).map((line) => line["msg"]);
         expect(lines.slice(-2)).toEqual(["db.closed", "process.stopped"]);
         await vi.waitFor(async () => expect(await connections(`kosht-${role}`)).toBe(0), {

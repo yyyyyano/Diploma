@@ -1,0 +1,2 @@
+import "./schema.ts";
+export {};

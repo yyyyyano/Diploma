@@ -111,6 +111,8 @@ const EXPECTED: Record<string, string[]> = {
   ],
   "schema-only-in-infrastructure": [
     `apps/server/src/main/compose.ts → ${M}/receipts/infrastructure/db/schema.ts`,
+    `apps/server/src/main/compose.ts → ${P}/settings/schema.ts`,
+    `${P}/secrets/secrets.repo.ts → ${P}/settings/schema.ts`,
     `${M}/receipts/application/recognize.ts → ${M}/receipts/infrastructure/db/schema.ts`,
     `${M}/receipts/infrastructure/db/receipts.repo.ts → ${M}/transactions/infrastructure/db/schema.ts`,
   ],
@@ -150,6 +152,7 @@ const EXPECTED: Record<string, string[]> = {
   ],
   "drizzle-and-pg-only-in-db": [
     `${M}/receipts/application/recognize.ts → drizzle-orm/pg-core`,
+    `${P}/settings/settings.ts → drizzle-orm`,
     "packages/testing/src/factories.ts → pg",
   ],
   "orpc-server-only-in-api": [`${M}/receipts/application/get-receipt.ts → @orpc/server`],

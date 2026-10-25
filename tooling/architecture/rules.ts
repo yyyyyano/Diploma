@@ -64,6 +64,12 @@ const TEST_CODE = [
 ];
 
 const SCHEMA = `${MOD}/[^/]+/infrastructure/db/schema(\\.ts$|/)`;
+/**
+ * Схемы и репозитории платформы со своими системными таблицами (ARCHITECTURE §6.1, решение по T-005): settings,
+ * secrets, rate_limit. Им нужен drizzle-orm, хотя они не в platform/db; остальной платформе — нет.
+ */
+const PLATFORM_TABLES = `^${PLATFORM}/(settings|secrets|rate-limit)/(schema|[^/]+\\.repo)\\.ts$`;
+const PLATFORM_SCHEMA = `^${PLATFORM}/[^/]+/schema\\.ts$`;
 const REPO = `${MOD}/[^/]+/infrastructure/db/[^/]+\\.(repo|sql)\\.ts$`;
 
 /** Запрет dependency-cruiser с обязательными именем, пояснением и уровнем «ошибка». */
@@ -316,6 +322,20 @@ function isolationRules(modules: readonly ModuleDef[]): ForbiddenRule[] {
       { path: `^${SCHEMA}` },
     ),
     rule(
+      "schema-only-in-infrastructure",
+      "Схема таблиц папки платформы — только для своей папки (репозиторий): соседняя папка платформы работает " +
+        "через её функции, а не через таблицы (ARCHITECTURE §6.2, замок 4).",
+      { path: `^${PLATFORM}/([^/]+)/`, pathNot: TEST_CODE },
+      { path: PLATFORM_SCHEMA, pathNot: `^${PLATFORM}/$1/` },
+    ),
+    rule(
+      "schema-only-in-infrastructure",
+      "Схемы платформы (settings, secrets, rate_limit) вне платформы видят только тесты и drizzle.config.ts: " +
+        "модуль читает настройки и секреты через их функции, а не через таблицы (ARCHITECTURE §6.2, замок 4).",
+      { pathNot: [`^${PLATFORM}/`, "^apps/server/drizzle\\.config\\.ts$", ...TEST_CODE] },
+      { path: PLATFORM_SCHEMA },
+    ),
+    rule(
       "no-cross-module-repo",
       "Репозиторий модуля вызывает только сам модуль; соседу — фасад в index.ts (ARCHITECTURE §4.3).",
       { path: `^${MOD}/([^/]+)/` },
@@ -424,13 +444,15 @@ function libraryRules(): ForbiddenRule[] {
     rule(
       "drizzle-and-pg-only-in-db",
       "drizzle-orm и pg — только в infrastructure/db модулей и platform/db: запросы через ScopedDb " +
-        "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключение — @kosht/testing/db: шаблонная " +
-        "база тестов создаёт и удаляет базы test_* (ARCHITECTURE §12), данных пользователя не читает.",
+        "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключения: @kosht/testing/db — шаблонная " +
+        "база тестов создаёт и удаляет базы test_* (ARCHITECTURE §12), данных пользователя не читает; " +
+        "schema.ts и *.repo.ts платформы settings, secrets, rate-limit — системные таблицы платформы (T-005).",
       {
         pathNot: [
           `^${MOD}/[^/]+/infrastructure/db/`,
           `^${PLATFORM}/db/`,
           String.raw`^packages/testing/src/db(\.ts$|/)`,
+          PLATFORM_TABLES,
         ],
       },
       { path: npmPattern(["drizzle-orm", "pg"]) },

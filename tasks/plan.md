@@ -541,7 +541,7 @@
 - Зависимости: T-059, T-060
 
 ### T-007 · Все 36 модулей пустыми, но живыми: паспорта, корень композиции и реестры
-- Статус: in-progress
+- Статус: done · 32c0ebe..7311d3d
 - Модули: все 36 модулей `docs/CAPABILITIES.md`, `apps/server/src/main`, `platform/tools`, `tooling/gen`
 - SPEC: NFR-10, AGT-03, PRIV-06
 - Критерии приёмки:

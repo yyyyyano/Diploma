@@ -1,7 +1,7 @@
 // Счётчики ограничения частоты (SEC-02, ADR-0016): окно на пару «правило + ключ». Ключ (email, user_id) хранится
 // только HMAC-SHA-256 с ключом из мастер-ключа — простой хеш email подбирается словарём. Вид — systemTable
 // платформы, доступ только из platform/rate-limit.
-import { bytea, integer, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { bytea, index, integer, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 import { systemTable } from "../db/tables.ts";
 
 export const rateLimits = systemTable(
@@ -15,5 +15,9 @@ export const rateLimits = systemTable(
     /** Попыток в окне, включая отклонённые. */
     count: integer().notNull(),
   },
-  (t) => [primaryKey({ columns: [t.rule, t.keyHash] })],
+  (t) => [
+    primaryKey({ columns: [t.rule, t.keyHash] }),
+    // Очистка прошлых окон при каждой попытке (purgeExpired): без индекса — просмотр всех строк правила.
+    index("rate_limits_rule_window_start_idx").on(t.rule, t.windowStart),
+  ],
 );

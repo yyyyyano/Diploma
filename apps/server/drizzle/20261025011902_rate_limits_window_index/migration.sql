@@ -1,0 +1,1 @@
+CREATE INDEX "rate_limits_rule_window_start_idx" ON "rate_limits" ("rule","window_start");

@@ -1,0 +1,58 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "63ddb210-bde4-479a-947b-ddc75ce93313",
+  "prevIds": ["4f3836bf-4e90-45ef-a7b9-45b61a3a2d8d"],
+  "footprints": [
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "rate_limits", "rate_limits_rule_window_start_idx"],
+      "writes": [
+        "s|idx|public.rate_limits_rule_window_start_idx",
+        "n|idx|public.rate_limits_rule_window_start_idx",
+        "e|idx|public.rate_limits_rule_window_start_idx",
+        "n|rel|public.rate_limits_rule_window_start_idx"
+      ],
+      "reads": [
+        "n|tbl|public.rate_limits",
+        "n|sch|public",
+        "n|col|public.rate_limits.rule",
+        "n|col|public.rate_limits.window_start"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "rate_limits",
+        "name": "rate_limits_rule_window_start_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "rule",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "window_start",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

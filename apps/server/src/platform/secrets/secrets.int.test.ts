@@ -109,6 +109,16 @@ describe("NFR-16: чужой мастер-ключ или порча — «не 
     expect(await secrets.reveal(SMTP)).toBeUndefined();
   });
 
+  it("тег короче 16 байт (усечённый настоящий) → unreadable: короткий тег подбирается перебором", async () => {
+    const { secrets } = secretsWith(KEY_A);
+    await secrets.set(SMTP, CANARY);
+    await db.pool.query("update secrets set tag = substring(tag from 1 for 4) where name = $1", [
+      SMTP.name,
+    ]);
+    expect(await secrets.status(SMTP)).toBe("unreadable");
+    expect(await secrets.reveal(SMTP)).toBeUndefined();
+  });
+
   it("шифротекст одного секрета под именем другого не читается (AAD = имя)", async () => {
     const { secrets } = secretsWith(KEY_A);
     await secrets.set(GROQ, CANARY);

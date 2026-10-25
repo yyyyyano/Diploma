@@ -16,6 +16,8 @@ import { deleteSealed, readSealed, writeSealed, type SealedSecret } from "./secr
 const SECRET_NAME = /^[a-z]+(\.[a-z0-9-]+)+$/;
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 const IV_BYTES = 12;
+/** Тег GCM — только полный: короткий подбирается перебором. Node 26 сам отвергает тег ≠ 16 байт, параметр — явно. */
+const GCM = { authTagLength: 16 } as const;
 /** Ключ API или токен длиннее — почти наверняка вставлено не то. */
 export const MAX_SECRET_LENGTH = 4096;
 
@@ -75,7 +77,7 @@ export function createSecrets(deps: SecretsDeps): Secrets {
 
   function seal(name: string, value: string): SealedSecret {
     const iv = randomBytes(IV_BYTES);
-    const cipher = createCipheriv("aes-256-gcm", key, iv);
+    const cipher = createCipheriv("aes-256-gcm", key, iv, GCM);
     cipher.setAAD(Buffer.from(name, "utf8"));
     const ciphertext = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]);
     return { iv, tag: cipher.getAuthTag(), ciphertext };
@@ -85,7 +87,7 @@ export function createSecrets(deps: SecretsDeps): Secrets {
     const sealed = await readSealed(deps.db, def.name);
     if (sealed === undefined) return { state: "none" };
     try {
-      const decipher = createDecipheriv("aes-256-gcm", key, sealed.iv);
+      const decipher = createDecipheriv("aes-256-gcm", key, sealed.iv, GCM);
       decipher.setAAD(Buffer.from(def.name, "utf8"));
       decipher.setAuthTag(sealed.tag);
       const value = Buffer.concat([decipher.update(sealed.ciphertext), decipher.final()]);

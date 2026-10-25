@@ -22,18 +22,16 @@ export const INSTANCE_HEARTBEAT_SECONDS = 30;
 export const BOSS_STOP_TIMEOUT_MS = 8000;
 
 /**
- * pg-boss не умеет выключить поиск раздутых индексов: при reindex: false он всё равно читает pg_stats раз в
- * reindexIntervalSeconds, а pg_stats роли приложения закрыт (ADR-0020: статистика планировщика показывает
- * значения строк всех домохозяйств) — 42501 в конце каждого прохода обслуживания. Перестраивать индексы роль всё
- * равно не может (они принадлежат владельцу), поэтому поиск выключен флагом pg-boss 12.38 __test__noReindex
- * (attorney.js: noReindex, как у профилей без перестройки). Флаг не входит в типы: версия pg-boss закреплена
- * точно, а проход обслуживания под ролью приложения проверяет jobs.int.test.ts — пропал флаг, тест покраснеет.
+ * reindex: false: перестраивать индексы роль приложения всё равно не может (они принадлежат владельцу), а поиск
+ * раздутых индексов читает pg_stats, закрытый ей (ADR-0020: статистика планировщика показывает значения строк всех
+ * домохозяйств). Без поиска pg-boss 12.38 не умеет — его выключает наш патч `patches/pg-boss@12.38.0.patch`
+ * (`reindex: false` → проход без поиска). Обновление pg-boss не поставится, пока патч не перенесён, а проход
+ * обслуживания под ролью приложения проверяет jobs.int.test.ts.
  */
-type SuperviseOptions = ConstructorOptions & { readonly __test__noReindex: true };
 
 export function createBoss(db: BossDb, role: BossRole): PgBoss {
   const worker = role === "worker";
-  const options: SuperviseOptions = {
+  const options: ConstructorOptions = {
     db,
     schema: JOBS_SCHEMA,
     migrate: false,
@@ -45,7 +43,6 @@ export function createBoss(db: BossDb, role: BossRole): PgBoss {
     instanceName: role,
     instanceHeartbeatSeconds: INSTANCE_HEARTBEAT_SECONDS,
     reindex: false,
-    __test__noReindex: true,
   };
   return new PgBoss(options);
 }

@@ -1,0 +1,15 @@
+diff --git a/dist/boss.js b/dist/boss.js
+index 62d280a17ee0594993b90b141ddfd35de16e691b..210b559f54c0acb759076ef8074525d3910d790d 100644
+--- a/dist/boss.js
++++ b/dist/boss.js
+@@ -855,6 +855,10 @@ class Boss extends EventEmitter {
+         if (this.#config.noReindex)
+             return;
+         const resolved = this.#resolveReindexOptions(options);
++        // kosht: reindex: false выключает и поиск раздутых индексов — он читает pg_stats, а роли без прав на
++        // статистику планировщика (ADR-0020) каждый проход давал бы 42501.
++        if (resolved === null)
++            return;
+         const force = !!resolved?.force;
+         const rebuilding = resolved !== null && !this.#reindexUnavailable;
+         // An explicit force is a request to run now; everything else waits for an interval.

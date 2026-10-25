@@ -488,7 +488,7 @@
 - Зависимости: T-005, T-004, T-059, T-060
 
 ### T-061 · Живые сигналы: realtime и `events.stream`
-- Статус: todo
+- Статус: blocked — остановлено по просьбе пользователя после имплементатора: реализация готова (ветка `task/T-061-realtime-stream`, 9 коммитов, `make check` и `make test-int` зелёные), ревью ещё не проводилось
 - Модули: `platform/{realtime,db}` (новый `db/listen.ts`), `apps/server/src/main/{compose,router}.ts` (`createRouter({ streams })`),
   `apps/server/src/main/router.contract.test.ts`, `apps/server/src/entrypoints/run.ts`,
   `apps/server/src/entrypoints/__fixtures__/stream-api.ts`, `packages/contract` (комментарий в `events.contract.ts`),

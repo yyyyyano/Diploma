@@ -47,3 +47,6 @@ packageExtensions:
   dependency-cruiser@18:
     dependencies:
       typescript: 6.0.3
+
+patchedDependencies:
+  pg-boss@12.38.0: patches/pg-boss@12.38.0.patch

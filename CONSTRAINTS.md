@@ -34,7 +34,7 @@
 | `VIEW`, SQL-функции и триггеры над пользовательскими таблицами; таблица с `household_id` вне реестров; `household_id` nullable | проверка схемы (интеграционный тест) |
 | Числа в `apps/web` (импорт `packages/calc`); `Date.now()`/`Math.random()` в `calc`; `float` для денег | dependency-cruiser, `calc-no-clock.mjs`, ревью |
 | Вызов модели, HTTP или чтение файла внутри `s.transaction` | `LLM_IN_TRANSACTION` во время выполнения, ревью |
-| Провайдеры `@ai-sdk/*` вне `llm`; `pg-boss` вне `platform/jobs`; `grammy` вне `telegram/infrastructure`; `drizzle-orm` и `pg` вне `infrastructure/db` и `platform/db` | dependency-cruiser |
+| Провайдеры `@ai-sdk/*` вне `llm`; `pg-boss` вне `platform/jobs`; `grammy` вне `telegram/infrastructure`; `drizzle-orm` и `pg` вне `infrastructure/db` и `platform/db` (исключения: шаблонная БД `packages/testing/src/db`; `schema.ts` и `*.repo.ts` в `platform/{settings,secrets,rate-limit,jobs}`); `libpg-query` вне `platform/db`; внутренности `platform/db` (аудитор, `boss-db`) вне `platform/db`, `platform/jobs` и `main` | dependency-cruiser |
 | «Сырые» цвета (`#hex`, `rgb(`, `hsl(`) и магические отступы/радиусы вне `apps/web/src/ui/theme` | `tooling/checks/no-raw-colors.mjs` |
 | Текст интерфейса литералом в JSX, бота, писем, уведомлений (только `t()`) | проверка литералов в `make check` |
 | Текст переписки, содержимое документов, суммы с привязкой к пользователю, ПД — в логах и нагрузке задач; данные в строке сообщения лога | тест-канарейка логов, ревью |
@@ -67,7 +67,7 @@
 | `make check` | ≤ 120 с **[калибр.]** | время прогона на этой машине | конец задачи |
 | `make check-quick` (`pre-push`) | ≤ 45 с **[калибр.]** | то же | `pre-push` |
 | `pre-commit` / `commit-msg` | ≤ 3 с / ≤ 1 с | то же | каждый коммит |
-| `make deps-check` (36 модулей, с кэшем) | ≤ 10 с | то же | `make check` |
+| `make deps-check` (36 модулей) | ≤ 10 с | то же | `make check` |
 | Главная (дашборд) на демо-данных, сервер | ≤ 300 мс p95; до демо-данных (фаза 8) — на синтетическом наборе объёма демо, повторный замер на демо (T-054) | `make bench` | после фазы 4 |
 | Список операций (страница 50 строк), сервер | ≤ 150 мс p95 **[калибр.]** | `make bench` | после фазы 2 |
 | Гибридный поиск по законам (SQL, ~25 тыс. фрагментов) | ≤ 200 мс p95; инструмент `search_law` целиком (с эмбеддингом запроса) ≤ 600 мс p95 **[калибр.]** | `make bench` | после фазы 5 |

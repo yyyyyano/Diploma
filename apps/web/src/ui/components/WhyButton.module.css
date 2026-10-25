@@ -1,0 +1,27 @@
+/* .why из design/kit.css; на телефоне — цель касания 44 px (ph-root .why). */
+.why {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-pill);
+  border: 0;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  vertical-align: middle;
+  padding: 0;
+}
+
+.why:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+@media (max-width: 760px) {
+  .why {
+    width: 44px;
+    height: 44px;
+    margin: calc(var(--s-9) * -1);
+  }
+}

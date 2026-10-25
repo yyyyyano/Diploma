@@ -32,6 +32,8 @@ export default defineConfig({
           environment: "jsdom",
           include: ["src/**/*.test.{ts,tsx}", "*.test.ts"],
           setupFiles: ["src/test/setup.ts"],
+          // CSS-модули компонентов — с читаемыми именами классов: тест видит тон («warn») и вид («tabular»).
+          css: { include: [/\.module\.css$/], modules: { classNameStrategy: "non-scoped" } },
         },
       },
     ],

@@ -1,0 +1,45 @@
+/* .num, .cur, .inc, .exp, .big из design/kit.css. */
+.money {
+  white-space: nowrap;
+  font-variant-numeric: proportional-nums;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.income {
+  color: var(--income);
+}
+
+.expense {
+  color: var(--ink);
+}
+
+.transfer {
+  color: var(--ink-2);
+}
+
+.icon {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-right: var(--s-4);
+}
+
+.currency {
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.kpi {
+  font-size: 30px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.kpi .currency {
+  font-size: 0.55em;
+  letter-spacing: 0;
+}

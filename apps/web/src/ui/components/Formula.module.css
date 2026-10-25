@@ -1,0 +1,42 @@
+/* .formula, .formula-r, .formula-t из design/kit.css. */
+.formula {
+  margin: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--s-6) var(--s-14);
+}
+
+.row,
+.total {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-16);
+}
+
+.row {
+  padding: var(--s-8) 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 14px;
+}
+
+.row:has(+ .total) {
+  border-bottom: 0;
+}
+
+.total {
+  padding: var(--s-10) 0 var(--s-4);
+  font-weight: 700;
+  font-size: 15px;
+  border-top: 1.5px solid var(--ink);
+}
+
+.formula dt,
+.formula dd {
+  margin: 0;
+}
+
+.formula dd {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

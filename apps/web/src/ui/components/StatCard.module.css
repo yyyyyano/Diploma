@@ -1,0 +1,46 @@
+/* .card, .kpi, .kpi-h, .kpi-free из design/kit.css и Main.dc.html. */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  padding: var(--s-18) var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+  min-width: 0;
+}
+
+.free {
+  background: var(--brand-soft);
+  border-color: var(--brand-soft-2);
+}
+
+.benefit {
+  background: var(--amber-soft);
+  border-color: var(--amber);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  font-size: 14px;
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+.free .head {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.value {
+  color: var(--ink);
+}
+
+.hint {
+  font-size: 13.5px;
+  color: var(--ink-2);
+}

@@ -31,7 +31,7 @@
 - `blob-store/blob-store.ts` — `BlobStore` (`put`, `get` → `undefined` если нет, `delete`, `deleteHousehold`),
   `createLocalFsBlobStore(<DATA_DIR>/files)`: путь `<householdId>/<fileId>` (`FileId` — в `@kosht/kernel`), id
   проверяются схемой (не uuid — `RangeError`), tmp+rename, папки 0700, файлы 0600. В тестах — `MemoryBlobStore`.
-- `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; помощник модуля T-007
+- `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; `defineModule({ settings })` кладёт их в реестр корня композиции
   только регистрирует здесь), `registeredSettings()`, `createSettings({ db, clock, env, log })` → `get` (кэш ≤ 5 с),
   `peek` (синхронно, для часов), `source`, `set` (не по схеме — `VALIDATION`), `reset`. `settings/time-zone.ts` —
   `TIME_ZONE` (`system.time-zone`, env `TIME_ZONE`, по умолчанию `Europe/Minsk`); в корне композиции:
@@ -81,15 +81,24 @@
 
 ## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
 Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
-- `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул владельца (`max: 1`, имя
+- `main/compose.ts` — `compose(config, role, { log, createModules? })` → `Composition`: пул владельца (`max: 1`, имя
   `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
-  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий, реестр проверки
-  scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний — `settings.get(TIME_ZONE)`),
-  `events` (подписок пока нет) и `realtime` (отправка — все роли; в `api` — `createRealtimeStreams` с LISTEN
-  `kosht-api-listen`, первое подключение — до слушателей, неудача — `RealtimeStartError`, пул закрывается) →
-  `router` (`createRouter({ streams })` из `main/router.ts`; у `worker`/`bot` — пустой хаб); `session(headers)`,
-  `ready()` (`pingDb`), `allowLan()`, `startJobs()` (`jobs.start` с реестрами — пустыми до T-007), `close()` (потоки и
-  LISTEN — `realtime.stopped`, затем `jobs.stop`, пул, `db.closed`). Модули добавит T-007.
+  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → `SystemDb`, часы, настройки, реестр сессий, реестр
+  проверки scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний —
+  `settings.get(TIME_ZONE)`), `realtime` → `platform: Platform` (+ `secrets`, `rateLimiter`, `blobs` —
+  `<DATA_DIR>/files`, `scoped(scope)`; `events` — с поздним связыванием: публикация из фабрики модуля — ошибка) и
+  `SystemPlatform` (+ `system`) → модули (`main/create-modules.ts`, сгенерирован `make new-module`: топологический
+  порядок `modules.ts`, фасады — ровно `dependsOn`) → `buildRegistries` (`main/registries.ts`; повтор имени —
+  `RegistryError`) → `createEvents` с подписками модулей → `createRouter({ streams, modules: registries.routers })`
+  (у `worker`/`bot` — пустой хаб) → в `api` — `createRealtimeStreams` с LISTEN `kosht-api-listen` (неудача —
+  `RealtimeStartError`); любая ошибка этой части закрывает пул. `startJobs()` — `jobs.start` с задачами, подписками,
+  расписаниями и обходами модулей **во всех ролях** (ставят задачи и `api`, и `bot`); `platform`, `modules`,
+  `registries`, `session(headers)`, `ready()` (`pingDb`), `allowLan()`, `close()` (потоки и LISTEN —
+  `realtime.stopped`, затем `jobs.stop`, пул, `db.closed`).
+- `main/router.ts` — `createRouter({ streams, modules? })`: ветки модулей под ключом `moduleKey(id)` (camelCase),
+  пустая ветка допустима; общая с модулем ветка контракта (`system`) дополняется, повтор платформенной процедуры —
+  ошибка. Полноту против контракта проверяют `router.contract.test.ts` и `compose.int.test.ts` (`routerPaths` /
+  `contractPaths` — `main/__fixtures__/router-paths.ts`).
 - `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole)`: миграции Drizzle → схема очереди pgboss
   (`installJobsSchema` под `withMigrationLock`) → `ensureAppRole` последним (`GRANT … ON ALL TABLES` видит только
   созданные таблицы). Одна последовательность для `compose`, `make migrate` (`main/migrate-cli.ts`) и шаблона тестов.
@@ -114,7 +123,7 @@
   `SUPERVISE_INTERVAL_SECONDS` и `MONITOR_INTERVAL_SECONDS` = 60, `INSTANCE_HEARTBEAT_SECONDS` = 30, `reindex: false`;
   `stopBoss` — `stop({ graceful: true, timeout: BOSS_STOP_TIMEOUT_MS = 8000, close: false })`.
 - `define-job.ts` — `defineJob({ name: "<модуль>.<глагол>", payload: z.object(...), options, handle(ctx, p) })` →
-  `JobDef` (определение без реестра: реестры — T-007); `options`: `priority`, `retryLimit` (2), `retryDelaySeconds`,
+  `JobDef` (реестр — `defineModule({ jobs })` → `main/registries.ts`); `options`: `priority`, `retryLimit` (2), `retryDelaySeconds`,
   `startAfterSeconds`, `expireInSeconds`, `singletonKey(p, scope)` — только `jobKey`; с ключом очередь `short`
   (одна ожидающая на ключ), без — `standard` (`queuePolicy`). `ctx`: `s` (ScopedDb владельца), `requestId`, `log`,
   `signal`, `progress(0…100)`. `JobEnvelope` — `{ scope: { userId, householdId }, requestId, payload }`.

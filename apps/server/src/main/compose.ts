@@ -3,14 +3,19 @@
 // под pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
 // (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий,
 // очередь задач на том же пуле и события, ADR-0008; живые сигналы — отправка у всех ролей, а в api ещё и одно
-// соединение LISTEN kosht-api-listen с хабом потоков) → дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
-// Логики сверх «соединить» здесь нет.
+// соединение LISTEN kosht-api-listen с хабом потоков; секреты, лимиты частоты, файлы, ScopedDb и SystemDb) → 36
+// модулей в порядке топологической сортировки tooling/architecture/modules.ts (create-modules.ts) → реестры
+// (registries.ts; повторное имя — ошибка старта) → подписки событий, очереди всех задач и дерево процедур с ветками
+// модулей. Логики сверх «соединить» здесь нет.
 import type { Clock } from "@kosht/kernel";
+import { join } from "node:path";
+import { createLocalFsBlobStore } from "../platform/blob-store/blob-store.ts";
 import { createClock } from "../platform/clock/clock.ts";
 import type { AppConfig } from "../platform/config/config.ts";
 import { createPool, pingDb } from "../platform/db/connection.ts";
 import { appRoleOptions, assertAppRole } from "../platform/db/roles.ts";
 import { listenConnector } from "../platform/db/listen.ts";
+import { createScopedDb } from "../platform/db/scoped-db.ts";
 import { createSystemDb } from "../platform/db/system-db.ts";
 import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
 import {
@@ -26,15 +31,24 @@ import {
   type ScopeVerifierRegistry,
 } from "../platform/jobs/scope-verifier.ts";
 import type { Logger, LogRole } from "../platform/logging/logger.ts";
+import type {
+  ModuleDescriptor,
+  Platform,
+  SystemPlatform,
+} from "../platform/module/define-module.ts";
+import { createRateLimiter } from "../platform/rate-limit/rate-limit.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
 import {
   createRealtime,
   createRealtimeStreams,
   type Realtime,
 } from "../platform/realtime/realtime.ts";
+import { createSecrets } from "../platform/secrets/secrets.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
+import { createModules, type ModulePorts } from "./create-modules.ts";
 import { migrateDatabase } from "./migrate-database.ts";
+import { buildRegistries, type Registries } from "./registries.ts";
 import { createRouter, type Router } from "./router.ts";
 
 /** Роль процесса (ARCHITECTURE §3). */
@@ -50,12 +64,21 @@ export interface Composition {
   readonly sessions: SessionRegistry;
   /** Перепроверка владельца задачи подключает модуль входа (T-009). */
   readonly scopes: ScopeVerifierRegistry;
-  /** Очередь задач процесса (порт Jobs) и события поверх неё; реестры модулей — T-007. */
+  /** Очередь задач процесса (порт Jobs) и события поверх неё с подписками модулей. */
   readonly jobs: Jobs;
   readonly events: Events;
   /** Живые сигналы в браузеры домохозяйства: changed(s, …) и progress(scope, …). */
   readonly realtime: Realtime;
-  /** Запустить очередь: все роли ставят задачи, worker ещё и обрабатывает их и ведёт расписания. */
+  /** Порты платформы, которые получили модули (SystemDb — только модулям с таблицами system/public). */
+  readonly platform: Platform;
+  /** Модули в порядке создания (топологическая сортировка modules.ts). */
+  readonly modules: readonly ModuleDescriptor[];
+  /** Реестры частей модулей. */
+  readonly registries: Registries;
+  /**
+   * Запустить очередь со всеми задачами, подписками, расписаниями и обходами модулей — во всех ролях: ставят
+   * задачи и api, и bot (незарегистрированную Jobs не поставит), а worker ещё обрабатывает их и ведёт расписания.
+   */
   startJobs(): Promise<void>;
   /** Дерево процедур oRPC (main/router.ts). */
   readonly router: Router;
@@ -75,6 +98,8 @@ export interface Composition {
 export interface ComposeDeps {
   /** Лог процесса: его открывает и закрывает точка входа (последняя строка — process.stopped). */
   readonly log: Logger;
+  /** Сборка модулей; по умолчанию — все 36 (create-modules.ts), тесты подставляют свои. */
+  readonly createModules?: (ports: ModulePorts) => readonly ModuleDescriptor[];
 }
 
 export async function compose(
@@ -101,9 +126,10 @@ export async function compose(
     await pool.end();
     throw error;
   }
+  const system = createSystemDb(pool);
   // Часам нужен пояс из настроек, настройкам — «сейчас» без пояса (кэш ≤ 5 с): иначе был бы цикл.
   const settings = createSettings({
-    db: createSystemDb(pool),
+    db: system,
     clock: createClock(),
     env: config.env,
     log,
@@ -120,9 +146,36 @@ export async function compose(
     scopes,
     timeZone: () => settings.get(TIME_ZONE),
   });
-  // Подписки, задачи и расписания модулей раскладывает T-007; до него реестры пусты.
-  const events = createEvents({ jobs, subscriptions: [] });
   const realtime = createRealtime({ pool });
+  // Подписки известны только после сборки модулей, а модулям events нужен сразу: публикация до конца сборки
+  // (в фабрике модуля) — ошибка программы.
+  let events: Events | undefined;
+  const platform: Platform = {
+    clock,
+    log,
+    settings,
+    secrets: createSecrets({
+      db: system,
+      masterKey: config.masterKey,
+      env: config.env,
+      clock,
+      log,
+    }),
+    rateLimiter: createRateLimiter({ db: system, clock, masterKey: config.masterKey, log }),
+    blobs: createLocalFsBlobStore(join(config.dataDir, "files")),
+    jobs,
+    events: {
+      publish: async (tx, event, payload) => {
+        if (events === undefined) {
+          throw new Error(`Событие ${event.name} опубликовано до конца сборки модулей.`);
+        }
+        await events.publish(tx, event, payload);
+      },
+    },
+    realtime,
+    scoped: (scope) => createScopedDb(pool, scope),
+  };
+  const systemPlatform: SystemPlatform = { ...platform, system };
   // Слушает канал только api (ADR-0008): одно соединение на процесс. Без него сайт не узнаёт об изменениях —
   // неудача первого подключения есть ошибка старта (RealtimeStartError).
   const live =
@@ -132,14 +185,24 @@ export async function compose(
           log,
         })
       : undefined;
+  let registries: Registries;
+  let router: Router;
   try {
+    // Повторное имя в реестре или процедура платформы в ветке модуля — ошибка старта.
+    registries = buildRegistries(
+      (deps.createModules ?? createModules)({ platform, systemPlatform }),
+    );
+    events = createEvents({ jobs, subscriptions: registries.subscriptions });
+    // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.
+    router = createRouter({
+      streams: live?.streams ?? createRealtimeHub({ log }),
+      modules: registries.routers,
+    });
     await live?.start();
   } catch (error) {
     await pool.end();
     throw error;
   }
-  // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.
-  const router = createRouter({ streams: live?.streams ?? createRealtimeHub({ log }) });
   return {
     role,
     config,
@@ -149,9 +212,17 @@ export async function compose(
     sessions,
     scopes,
     jobs,
-    events,
+    events: platform.events,
     realtime,
-    startJobs: () => jobs.start({ jobs: [] }),
+    platform,
+    modules: registries.modules,
+    registries,
+    startJobs: () =>
+      jobs.start({
+        jobs: registries.jobs,
+        schedules: registries.schedules,
+        sweeps: registries.sweeps,
+      }),
     router,
     session: (headers) => openSession(sessions, pool, headers),
     ready: () => pingDb(pool),

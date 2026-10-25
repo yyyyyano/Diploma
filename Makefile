@@ -51,7 +51,7 @@ need-node:
 install: need-node ## Установить зависимости по pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
-init: install secrets/db_password ## Первый запуск: зависимости, .env из .env.example, пароль БД в secrets/, git-хуки
+init: install secrets/db_password secrets/master.key ## Первый запуск: зависимости, .env из .env.example, пароль БД и мастер-ключ в secrets/, git-хуки
 	@if [ -f .env ]; then echo ".env уже есть — не трогаю."; else cp .env.example .env && echo "Создан .env из .env.example."; fi
 	$(BIN)/lefthook install
 
@@ -59,6 +59,12 @@ init: install secrets/db_password ## Первый запуск: зависимо
 secrets/db_password:
 	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32).toString("hex"))' > $@
 	@echo "Создан $@ — пароль БД (вне git)."
+
+# Мастер-ключ секретов (NFR-16, ADR-0016): 32 случайных байта, права 0600; существующий не меняется — с новым ключом
+# сохранённые в админке секреты станут «не читается». В резервную копию не входит.
+secrets/master.key:
+	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32))' > $@
+	@echo "Создан $@ — мастер-ключ секретов (вне git и вне резервной копии)."
 
 # ── База данных ────────────────────────────────────────────────────────────────────────────────────
 

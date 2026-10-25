@@ -4,6 +4,7 @@
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { uuid } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { loadProductionSchemas } from "./__fixtures__/production-schemas.ts";
 import { migrateFixtures } from "./__fixtures__/fixture-db.ts";
 import "./__fixtures__/schema.ts";
 import { checkSchema, type SchemaProblemKind } from "./schema-check.ts";
@@ -11,6 +12,8 @@ import { publicTable, registeredTables, systemTable, userOwnedTable } from "./ta
 
 let db: TestDb;
 beforeAll(async () => {
+  // База собрана из боевых миграций: их таблицы тоже должны быть в реестре, иначе «чистая схема» не чиста.
+  await loadProductionSchemas();
   db = await createTestDb();
   await migrateFixtures(db.pool);
 });

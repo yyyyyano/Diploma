@@ -1,8 +1,8 @@
 # Пакет `@kosht/testing` — помощники тестов: часы, фабрики примитивов, тестовая база
 
 ## Назначение
-Всё, что делает тесты офлайн и детерминированными (`.claude/rules/testing.md`, ARCHITECTURE §12). Остальное
-(кассеты моделей, генератор тестов изоляции) добавляют задачи, которым оно нужно.
+Всё, что делает тесты офлайн и детерминированными (`.claude/rules/testing.md`, ARCHITECTURE §12), и генератор тестов
+изоляции. Остальное (кассеты моделей) добавляют задачи, которым оно нужно.
 
 ## Кто использует
 Только тесты (`*.test.ts`, `*.int.test.ts`, `e2e/`) во всех пакетах и приложениях; боевому коду — запрещено.
@@ -21,6 +21,13 @@
   поставленные по порядку. Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
 - `readSse(body)` — события Server-Sent Events из тела ответа `fetch` по порядку: `{ event, data }` и комментарии
   keepalive (`{ comment: true }`); для тестов `events.stream` (T-061): клиента oRPC на сервере нет.
+- Генератор тестов изоляции (`isolation.ts`, ROLE-01, замок 5): `generate({ contract, procedures, tools, fixtures })`
+  → `{ cases, exempted, problems }` — реестры приходят аргументом (дерево контракта, путь → доступ
+  `authed | admin | public | local`, имена инструментов); у каждой процедуры и инструмента (`tool:<имя>`) — фикстура
+  `{ input: (b) => вход из данных B }` или `{ exempt: "причина ≥ 10 символов" }`, иначе проблема «добавьте фикстуру»;
+  лишняя фикстура и процедура вне дерева сервера — тоже проблемы. `contractProcedurePaths`, `leakedIds(ответ, id B)`,
+  `uncoveredUserTables(таблицы, владельцы)` — полнота `defineUserData`. Сам тест —
+  `apps/server/src/main/isolation.registry.int.test.ts`.
 - Вход `@kosht/testing/db` (`src/db.ts`, отдельно — чтобы unit-тесты не грузили `pg`): `createTestDb()` — своя база
   `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`) с двумя пулами: `pool` — роль
   приложения `kosht_app` (только DML, как приложение), `owner` — владелец (DDL, фикстуры, служебные запросы; ADR-0020).

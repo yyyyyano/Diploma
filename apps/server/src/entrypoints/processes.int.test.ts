@@ -2,6 +2,7 @@
 // (Node 26 стирает типы сам, workspace-пакеты — по realpath, ADR-0002), на своей тестовой базе, с временными
 // DATA_DIR и мастер-ключом и портами 0. Порт api читается из строки http.listening лога. Обе роли базы (ADR-0020) —
 // явно: приложение kosht_app (DATABASE_URL) и владелец для миграций и выдачи прав (MIGRATION_*).
+import { readSse, testHouseholdId, type SseEvent } from "@kosht/testing";
 import { createTestDb, dropTestRole, testRoleName, type TestDb } from "@kosht/testing/db";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -21,6 +22,9 @@ const ENTRY: Record<Role, string> = {
   worker: fileURLToPath(new URL("./worker.ts", import.meta.url)),
   bot: fileURLToPath(new URL("./bot.ts", import.meta.url)),
 };
+
+/** api с тестовым источником сессий (x-test-user: a) — для SIGTERM при открытом events.stream. */
+const STREAM_API = fileURLToPath(new URL("./__fixtures__/stream-api.ts", import.meta.url));
 
 /** Запуск процесса с миграциями и WASM-аудитором — секунды; ждём с запасом. */
 const START_MS = 20_000;
@@ -62,11 +66,15 @@ interface Started {
 
 let runs = 0;
 
-async function start(role: Role, env: Record<string, string> = {}): Promise<Started> {
+async function start(
+  role: Role,
+  env: Record<string, string> = {},
+  entry: string = ENTRY[role],
+): Promise<Started> {
   runs += 1;
   const dataDir = join(dir, `${role}-${runs}`);
   const { app, admin } = inject("testDb");
-  const child = spawn(process.execPath, [ENTRY[role]], {
+  const child = spawn(process.execPath, [entry], {
     // Окружение — только своё: .env и переменные разработчика тест не видит.
     env: {
       PATH: process.env["PATH"] ?? "",
@@ -205,6 +213,69 @@ describe("ADR-0015: api останавливается по SIGTERM коррек
       } finally {
         await new Promise((done) => blocker.close(done));
       }
+    },
+    TEST_MS,
+  );
+});
+
+describe("ADR-0015, ADR-0008: api с открытым events.stream останавливается по SIGTERM", () => {
+  it(
+    "поток получает сигнал и заканчивается событием done; код 0 меньше чем за 10 с; realtime.stopped до db.closed; соединения LISTEN нет",
+    async () => {
+      const api = await start("api", {}, STREAM_API);
+      const listening = await waitForLog(api, "api", "http.listening");
+      const base = `http://127.0.0.1:${String(listening["port"])}`;
+      await waitForLog(api, "api", "process.started");
+      // ADR-0008: одно соединение LISTEN на процесс api, роль приложения.
+      expect(await connections("kosht-api-listen")).toBe(1);
+
+      const response = await fetch(`${base}/api/events/stream`, {
+        headers: { "x-test-user": "a", accept: "text/event-stream" },
+      });
+      expect(response.status).toBe(200);
+      if (response.body === null) throw new Error("у ответа нет тела");
+      const events = readSse(response.body);
+      const next = async (): Promise<SseEvent> => {
+        const { value, done } = await events.next();
+        if (done) throw new Error("поток закончился без события done");
+        return value;
+      };
+      // Первый комментарий — поток уже в хабе: процедура открывает его до ответа.
+      expect(await next()).toEqual({ comment: true });
+      const id = "0190f0a0-0000-7000-8000-000000000001";
+      await db.owner.query("select pg_notify('kosht_realtime', $1)", [
+        JSON.stringify({
+          householdId: testHouseholdId(1),
+          type: "changed",
+          entity: "receipt",
+          ids: [id],
+        }),
+      ]);
+      let event = await next();
+      while (event.comment === true) event = await next();
+      expect(event).toEqual({
+        event: "message",
+        data: JSON.stringify({ type: "changed", entity: "receipt", id }),
+      });
+
+      const stopping = Date.now();
+      api.child.kill("SIGTERM");
+      event = await next();
+      while (event.comment === true) event = await next();
+      expect(event).toEqual({ event: "done", data: '"closed"' });
+      expect(await api.exited).toBe(0);
+      expect(Date.now() - stopping).toBeLessThan(10_000);
+      const lines = (await logLines(api.dataDir, "api")).map((line) => line["msg"]);
+      expect(lines.slice(-2)).toEqual(["db.closed", "process.stopped"]);
+      expect(lines.indexOf("realtime.stopped")).toBeGreaterThan(-1);
+      expect(lines.indexOf("realtime.stopped")).toBeLessThan(lines.indexOf("db.closed"));
+      await vi.waitFor(
+        async () => {
+          expect(await connections("kosht-api-listen")).toBe(0);
+          expect(await connections("kosht-api")).toBe(0);
+        },
+        { interval: 50 },
+      );
     },
     TEST_MS,
   );

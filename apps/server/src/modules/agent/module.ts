@@ -1,5 +1,5 @@
-// Модуль agent (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль agent (паспорт — CLAUDE.md): цикл агента на AI SDK 7 с моделью из шлюза llm и инструментами модулей из
+// реестра корня композиции; предметные модули агент не импортирует (ADR-0009).
 import {
   defineModule,
   type ModuleDeps,
@@ -9,6 +9,8 @@ import type { LlmFacade } from "../llm/index.ts";
 import type { ActionsFacade } from "../actions/index.ts";
 import type { ProfileFacade } from "../profile/index.ts";
 import type { LegalConsultFacade } from "../legal-consult/index.ts";
+import { makeRunAgent } from "./application/run-agent.ts";
+import { MAX_STEPS } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface AgentFacades {
@@ -18,9 +20,16 @@ export interface AgentFacades {
   readonly legalConsult: LegalConsultFacade;
 }
 
-export function createAgentModule(_deps: ModuleDeps<AgentFacades, Platform>) {
-  return defineModule({ id: "agent" });
+export function createAgentModule({ platform, facades }: ModuleDeps<AgentFacades, Platform>) {
+  const run = makeRunAgent({
+    llm: facades.llm,
+    tools: () => platform.tools(),
+    scoped: (scope) => platform.scoped(scope),
+    log: platform.log,
+    maxSteps: () => platform.settings.get(MAX_STEPS),
+  });
+  return defineModule({ id: "agent", facade: { run }, settings: [MAX_STEPS] });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: запуск агента с потоком UI-сообщения. */
 export type AgentFacade = ReturnType<typeof createAgentModule>["facade"];

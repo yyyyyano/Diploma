@@ -1,7 +1,8 @@
 // Шаблонная база на тестовый файл (ARCHITECTURE §12, ADR-0007): клоны независимы, удаляются только test_*,
 // базы упавших прогонов убираются следующим.
 import { afterAll, beforeAll, describe, expect, inject, it } from "vitest";
-import { createTestDb, dropDatabase, dropOrphans, type TestDb } from "./db.ts";
+import pg from "pg";
+import { createTestDb, dropDatabase, dropOrphans, dropTestRole, type TestDb } from "./db.ts";
 
 const context = inject("testDb");
 let first: TestDb;
@@ -57,5 +58,23 @@ describe("защита по префиксу test_", () => {
     expect(dropped).not.toContain(first.name);
     expect(await databaseExists(orphan.name)).toBe(false);
     expect(await databaseExists(first.name)).toBe(true);
+  });
+
+  it("роль test_* прогона, процесса которого нет, удаляется вместе с базами", async () => {
+    const orphan = "test_999999999_1_r1";
+    const admin = new pg.Client(context.admin);
+    await admin.connect();
+    try {
+      await admin.query(`create role ${orphan}`);
+      expect(await dropOrphans(context.admin)).toContain(orphan);
+      const { rows } = await admin.query("select 1 from pg_roles where rolname = $1", [orphan]);
+      expect(rows).toEqual([]);
+    } finally {
+      await admin.end();
+    }
+  });
+
+  it("роль без префикса test_ удалить нельзя — ошибка до запроса", async () => {
+    await expect(dropTestRole(context.admin, context.app.user)).rejects.toThrow(/только test_/);
   });
 });

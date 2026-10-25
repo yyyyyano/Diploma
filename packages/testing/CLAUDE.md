@@ -17,8 +17,13 @@
   `deleteHousehold`; id — uuid-бренды, иначе `RangeError`; копии массивов), `size`. Форму сверяет
   `apps/server/src/platform/blob-store/blob-store.test.ts`: один набор проверок для обоих хранилищ.
 - Вход `@kosht/testing/db` (`src/db.ts`, отдельно — чтобы unit-тесты не грузили `pg`): `createTestDb()` — своя база
-  `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`), `prepareTemplate`, `dropOrphans`,
-  `fingerprintDir`, `dropDatabase` — для globalSetup проекта `int` (он в `apps/server/src/platform/db/__fixtures__/`).
+  `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`) с двумя пулами: `pool` — роль
+  приложения `kosht_app` (только DML, как приложение), `owner` — владелец (DDL, фикстуры, служебные запросы; ADR-0020).
+  `TestDbContext` (`inject("testDb")`): `admin` (владелец из `MIGRATION_*`: создание и удаление `test_*`, шаблон),
+  `app` (роль приложения из `DATABASE_URL`), `template`, `runId`. `testRoleName()` и `dropTestRole(admin, name)` — своя
+  роль `test_<запуск>_<процесс>_r<n>` для тестов, которые портят роль (роль общая для кластера). `prepareTemplate(…,
+  { rebuild })`, `dropOrphans` (базы, затем роли `test_*` мёртвых прогонов), `fingerprintDir`, `dropDatabase` — для
+  globalSetup проекта `int` (он в `apps/server/src/platform/db/__fixtures__/`).
 
 ## Можно зависеть от
 `@kosht/kernel`; `pg` — только в `src/db.ts` (исключение правила `drizzle-and-pg-only-in-db`); `vitest` (`inject`).
@@ -26,7 +31,7 @@
 ## Запреты
 - Импорт из боевого кода (`testing-not-in-prod` в `.dependency-cruiser.mjs`) и из `apps/server`: миграции в шаблон
   применяет globalSetup сервера, пакет только клонирует и удаляет базы.
-- Базы без префикса `test_` — не создаются и не удаляются (ошибка до запроса).
+- Базы и роли без префикса `test_` — не создаются и не удаляются (ошибка до запроса).
 - Случайность и реальное время: данные одинаковы при каждом запуске.
 - Реальные ПД, `samples/`, реальные выписки (NFR-18) — только синтетика.
 
@@ -37,5 +42,7 @@
 - `makeScope` здесь разрешён (ARCHITECTURE §6.4): `isolation.mjs` пакет не проверяет — не выносите отсюда Scope
   в боевой код.
 - `FakeClock.now()` возвращает копию: правка возвращённой `Date` часы не двигает.
-- Шаблон `test_tpl_<отпечаток apps/server/drizzle>` переиспользуется между прогонами; изменилась миграция —
-  собирается новый, старый удаляется. Клон — стратегией по умолчанию (WAL_LOG, ≈30 мс; FILE_COPY ≈77 мс).
+- Шаблон `test_tpl_<отпечаток>` (папка `apps/server/drizzle` + текст выдачи прав роли приложения) переиспользуется
+  между прогонами; изменилась миграция или выдача прав — собирается новый, старый удаляется. Роль приложения не
+  входит (нет роли или пароль из `secrets/db_app_password` не подходит) — шаблон собирается заново, и сборка приводит
+  роль в порядок. Права роли копируются с шаблоном в клон. Клон — стратегией по умолчанию (WAL_LOG, ≈30 мс; FILE_COPY ≈77 мс).

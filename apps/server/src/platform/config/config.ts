@@ -153,7 +153,8 @@ export function loadConfig(env: Env = process.env): AppConfig {
     Object.entries(env).filter((entry): entry is [string, string] => entry[1] !== undefined),
   );
   return {
-    db: { url: parsed.DATABASE_URL, passwordFile: parsed.DB_PASSWORD_FILE },
+    // Та же схема, что у make migrate и тестов: адрес БД читается одинаково везде.
+    db: loadDbConfig(env),
     listeners: {
       local: { host: parsed.LISTEN_LOCAL_HOST, port: parsed.LISTEN_LOCAL_PORT },
       lan: { host: parsed.LISTEN_LAN_HOST, port: parsed.LISTEN_LAN_PORT },

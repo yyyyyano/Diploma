@@ -23,7 +23,12 @@ export type StreamEnd = "closed" | "reconnect" | "overflow" | "replaced" | "stop
 
 /** Что нужно процедуре events.stream: поток событий домохозяйства scope до сигнала signal. */
 export interface EventStreams {
-  open(scope: Scope, signal: AbortSignal): AsyncGenerator<SiteEvent, StreamEnd>;
+  open(scope: Scope, signal: AbortSignal): StreamIterator;
+}
+
+/** Поток событий: next() — следующее событие или конец с причиной; return() — закрыть поток сейчас. */
+export interface StreamIterator extends AsyncIteratorObject<SiteEvent, StreamEnd, undefined> {
+  return(): Promise<IteratorReturnResult<StreamEnd>>;
 }
 
 export interface RealtimeHub extends EventStreams {
@@ -102,28 +107,43 @@ export function createRealtimeHub(deps: RealtimeHubDeps): RealtimeHub {
   }
 
   return {
-    async *open(scope, signal) {
+    open(scope, signal) {
       const stream = register(scope);
       const onAbort = () => close(stream, "closed");
       signal.addEventListener("abort", onAbort, { once: true });
       if (signal.aborted) onAbort();
-      try {
-        for (;;) {
-          if (stream.end !== undefined) return stream.end;
-          const event = stream.queue.take();
-          if (event !== undefined) {
-            yield event;
-            continue;
-          }
-          await new Promise<void>((resolve) => {
-            stream.wake = resolve;
-          });
-          stream.wake = undefined;
-        }
-      } finally {
+      const finish = (): IteratorReturnResult<StreamEnd> => {
         signal.removeEventListener("abort", onAbort);
-        remove(stream);
-      }
+        return { done: true, value: stream.end ?? "closed" };
+      };
+      // Итератор, а не async-генератор: return() генератора, ждущего следующего события, встал бы в очередь за
+      // этим ожиданием, и отключившийся клиент держал бы поток в хабе. Здесь return() закрывает поток сразу и
+      // будит ждущий next(). next() зовут по одному (oRPC читает поток последовательно).
+      const iterator: StreamIterator = {
+        next() {
+          if (stream.end !== undefined) return Promise.resolve(finish());
+          const event = stream.queue.take();
+          if (event !== undefined) return Promise.resolve({ done: false, value: event });
+          return new Promise((resolve) => {
+            stream.wake = () => {
+              stream.wake = undefined;
+              resolve(iterator.next());
+            };
+          });
+        },
+        async return() {
+          close(stream, "closed");
+          return finish();
+        },
+        [Symbol.asyncIterator]() {
+          return iterator;
+        },
+        async [Symbol.asyncDispose]() {
+          close(stream, "closed");
+          finish();
+        },
+      };
+      return iterator;
     },
 
     deliver(message) {

@@ -80,6 +80,15 @@ describe("NFR-21: как заканчивается поток", () => {
     expect(realtime.size).toBe(0);
   });
 
+  it("return() во время ожидания события закрывает поток сразу: ждущий next() получает конец", async () => {
+    const { hub: realtime } = hub();
+    const stream = realtime.open(scopeA, new AbortController().signal);
+    const waiting = stream.next();
+    expect(await stream.return()).toEqual({ done: true, value: "closed" });
+    expect(await waiting).toEqual({ done: true, value: "closed" });
+    expect(realtime.size).toBe(0);
+  });
+
   it("сигнал уже отменён — поток сразу заканчивается", async () => {
     const { hub: realtime } = hub();
     expect(await realtime.open(scopeA, AbortSignal.abort()).next()).toEqual({

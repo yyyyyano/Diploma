@@ -20,4 +20,14 @@ export {
   type ErrorCode,
 } from "./errors.ts";
 export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract.ts";
+export {
+  Email,
+  identityContract,
+  NewPassword,
+  Password,
+  Role,
+  SessionUser,
+  SetupInput,
+  SignInInput,
+} from "./identity/identity.contract.ts";
 export { contract } from "./router.ts";

@@ -144,16 +144,16 @@ describe("ADR-0005: дерево процедур реализует контр�
 });
 
 describe("ADR-0005: ветки модулей из реестра", () => {
-  it("без веток модулей дерево совпадает с контрактом — ни лишних, ни пропущенных процедур", () => {
+  it("без веток модулей дерево — ровно платформенные ветки контракта (system, events)", () => {
     expect(routerPaths(createRouter({ streams: hub, modules: {} }))).toEqual(
-      contractPaths(contract),
+      contractPaths(contract).filter((path) => /^(system|events)\./.test(path)),
     );
   });
 
   it("ветка модуля встаёт под свой ключ, пустая ветка допустима", () => {
     const tree = createRouter({ streams: hub, modules: { accounts: {}, fxRates: {} } });
     expect(Object.keys(tree).toSorted()).toEqual(["accounts", "events", "fxRates", "system"]);
-    expect(routerPaths(tree)).toEqual(contractPaths(contract));
+    expect(routerPaths(tree)).toEqual(["events.stream", "system.health"]);
   });
 
   it("ветка модуля system дополняет общую ветку контракта, health остаётся платформенным", async () => {

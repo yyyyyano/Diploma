@@ -91,9 +91,9 @@
 
 | Событие (нагрузка — только id, пачкой) | Слушатели |
 |---|---|
-| `identity.system-initialized` | `legal-base` (стартовый каталог, LAW-10), `llm` (скачивание моделей, NFR-25), `demo` (демо-данные, DEMO-04) |
-| `identity.user-registered {userId, householdId}` | `accounts` («Наличные», STMT-01) |
-| `identity.user-deleted {userId}` | — (удаление идёт синхронно через реестр владельцев данных `privacy`; событие — для журналов) |
+| `identity.system-initialized { ids: [userId] }` (администратор) | `legal-base` (стартовый каталог, LAW-10), `llm` (скачивание моделей, NFR-25), `demo` (демо-данные, DEMO-04) |
+| `identity.user-registered { ids: [userId] }` (владелец — scope задачи) | `accounts` («Наличные», STMT-01) |
+| `identity.user-deleted { ids: [userId] }` | — (удаление идёт синхронно через реестр владельцев данных `privacy`; событие — для журналов) |
 | `transactions.changed {ids}` | `budgets` (пороги 80/100 %), `recurring` (пересчёт), `tax` (поиск вычетов), `calendar` (страховки CAL-05) |
 | `transactions.merged {receiptId, transactionId}` | `receipts` (перепривязка чека, TXN-10) |
 | `accounts.balances-changed {accountIds}` | `budgets` (цели по счёту, BUD-04) |

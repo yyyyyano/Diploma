@@ -63,8 +63,9 @@ describe("папка и паспорт каждого модуля", () => {
     "%s: index.ts, module.ts с defineModule и паспорт ≤ 60 строк с ярусом и зависимостями карты",
     (id, m) => {
       expect(existsSync(moduleFile(id, "index.ts"))).toBe(true);
-      expect(readFileSync(moduleFile(id, "module.ts"), "utf8")).toContain(
-        `defineModule({ id: "${id}"`,
+      // id — первым полем описания (форматтер переносит его на свою строку, когда полей много).
+      expect(readFileSync(moduleFile(id, "module.ts"), "utf8")).toMatch(
+        new RegExp(`defineModule\\(\\{\\s*id: "${id}"`),
       );
       const passport = readFileSync(moduleFile(id, "CLAUDE.md"), "utf8");
       expect(passport.trimEnd().split("\n").length).toBeLessThanOrEqual(60);

@@ -74,6 +74,8 @@ describe("isolation: нарушения на фикстуре", () => {
       expect.arrayContaining([
         "apps/server/src/platform/realtime/channel.ts:1 scope-outside-entry",
         "apps/server/src/modules/telegram/application/link.ts:1 scope-outside-entry",
+        "apps/server/src/modules/identity/application/sign-up.ts:1 scope-outside-entry",
+        "apps/server/src/modules/identity/application/sign-up.ts:3 scope-outside-entry",
         "packages/contract/src/scope.ts:1 scope-outside-entry",
         "apps/server/src/platform/http/raw.ts:1 db-client-bypass",
         "apps/server/src/platform/http/raw.ts:4 db-client-bypass",
@@ -84,9 +86,9 @@ describe("isolation: нарушения на фикстуре", () => {
     );
   });
 
-  it("ничего лишнего: ровно 26 нарушений, код 1, сообщение «файл:строка — что исправить»", () => {
+  it("ничего лишнего: ровно 28 нарушений, код 1, сообщение «файл:строка — что исправить»", () => {
     const result = runIsolation({ baseDir: join(fixtures, "violation") });
-    expect({ code: result.code, count: violations.length }).toEqual({ code: 1, count: 26 });
+    expect({ code: result.code, count: violations.length }).toEqual({ code: 1, count: 28 });
     expect(result.messages).toContain(
       `${receipts}/application/forge-scope.ts:5 — ` +
         "Scope собирается только на входах (ARCHITECTURE §6.4), найдено «as Scope»: " +
@@ -96,11 +98,11 @@ describe("isolation: нарушения на фикстуре", () => {
 });
 
 describe("isolation: законный код не ловится", () => {
-  it("чистая фикстура — код 0; тесты не проверяются, остальные 12 файлов — да", () => {
+  it("чистая фикстура — код 0; тесты не проверяются, остальные 13 файлов — да", () => {
     const result = runIsolation({ baseDir: join(fixtures, "clean") });
     expect({ code: result.code, files: result.files, findings: result.findings }).toEqual({
       code: 0,
-      files: 12,
+      files: 13,
       findings: [],
     });
   });

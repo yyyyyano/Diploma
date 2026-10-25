@@ -21,8 +21,16 @@ function procedures(router: AnyContractRouter, path = ""): [string, AnyContractP
 const all = procedures(contract);
 
 describe("дерево процедур", () => {
-  it("процедуры бетонной фазы: system.health и events.stream", () => {
-    expect(all.map(([path]) => path)).toEqual(["system.health", "events.stream"]);
+  it("процедуры бетонной фазы: платформа и вход (identity)", () => {
+    expect(all.map(([path]) => path)).toEqual([
+      "system.health",
+      "events.stream",
+      "identity.status",
+      "identity.setup",
+      "identity.signIn",
+      "identity.signOut",
+      "identity.me",
+    ]);
   });
 
   it("у каждой процедуры есть метод и путь REST/OpenAPI (oc.route)", () => {

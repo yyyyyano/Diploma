@@ -15,6 +15,8 @@ export const ERRORS = {
   VALIDATION: { status: 400, retryable: false },
   /** Нет сессии: нужно войти. */
   UNAUTHORIZED: { status: 401, retryable: false },
+  /** Вход не удался: неверный email или пароль (что именно — не говорим, AUTH-08). */
+  INVALID_CREDENTIALS: { status: 401, retryable: false },
   /** Вход есть, а права нет (админка без роли admin); запрос с чужого сайта или с чужим Host. */
   FORBIDDEN: { status: 403, retryable: false },
   /**

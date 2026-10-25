@@ -19,13 +19,14 @@ const SERVER = "apps/server/src";
 
 /**
  * Где рождается Scope (ARCHITECTURE §6.4). Уточняют T-004 (kernel, testing), T-059 (http), T-006 (jobs, tools),
- * T-052 (вход Telegram). Тесты, `__fixtures__` и `packages/testing` не проверяются вовсе (TEST_CODE).
+ * T-009 (регистрация и первый запуск — один файл identity), T-052 (вход Telegram). Тесты, `__fixtures__` и `packages/testing` не проверяются вовсе (TEST_CODE).
  */
 export const SCOPE_ENTRIES = [
   `${SERVER}/platform/http/`, // сайт: сессия → makeScope → context.s
   `${SERVER}/platform/jobs/`, // конверт задачи → scope с перепроверкой пользователя
   `${SERVER}/platform/tools/`, // адаптер defineTool → ctx.s из scope запуска агента
   `${SERVER}/modules/telegram/infrastructure/`, // вход Telegram: chat_id → telegram_links → scope
+  `${SERVER}/modules/identity/application/new-user-scope.ts`, // регистрация / первый запуск: id нового пользователя
   "packages/kernel/", // определение makeScope и бренда Scope
 ];
 

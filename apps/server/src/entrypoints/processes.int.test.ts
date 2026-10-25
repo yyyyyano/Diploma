@@ -2,7 +2,7 @@
 // (Node 26 стирает типы сам, workspace-пакеты — по realpath, ADR-0002), на своей тестовой базе, с временными
 // DATA_DIR и мастер-ключом и портами 0. Порт api читается из строки http.listening лога. Обе роли базы (ADR-0020) —
 // явно: приложение kosht_app (DATABASE_URL) и владелец для миграций и выдачи прав (MIGRATION_*).
-import { readSse, testHouseholdId, type SseEvent } from "@kosht/testing";
+import { readSse, type SseEvent } from "@kosht/testing";
 import { createTestDb, dropTestRole, testRoleName, type TestDb } from "@kosht/testing/db";
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes } from "node:crypto";
@@ -22,9 +22,6 @@ const ENTRY: Record<Role, string> = {
   worker: fileURLToPath(new URL("./worker.ts", import.meta.url)),
   bot: fileURLToPath(new URL("./bot.ts", import.meta.url)),
 };
-
-/** api с тестовым источником сессий (x-test-user: a) — для SIGTERM при открытом events.stream. */
-const STREAM_API = fileURLToPath(new URL("./__fixtures__/stream-api.ts", import.meta.url));
 
 /** Запуск процесса с миграциями и WASM-аудитором — секунды; ждём с запасом. */
 const START_MS = 20_000;
@@ -222,15 +219,41 @@ describe("ADR-0015, ADR-0008: api с открытым events.stream остана
   it(
     "поток получает сигнал и заканчивается событием done; код 0 меньше чем за 10 с; realtime.stopped до db.closed; соединения LISTEN нет",
     async () => {
-      const api = await start("api", {}, STREAM_API);
+      const api = await start("api");
       const listening = await waitForLog(api, "api", "http.listening");
       const base = `http://127.0.0.1:${String(listening["port"])}`;
       await waitForLog(api, "api", "process.started");
       // ADR-0008: одно соединение LISTEN на процесс api, роль приложения.
       expect(await connections("kosht-api-listen")).toBe(1);
 
+      // Сессия — настоящая (identity): первый запуск на локальном входе и вход по cookie kosht_session.
+      const credentials = JSON.stringify({
+        email: "admin@example.test",
+        password: "пароль-для-sigterm",
+      });
+      const json = { "content-type": "application/json" };
+      expect(
+        (
+          await fetch(`${base}/api/identity/setup`, {
+            method: "POST",
+            headers: json,
+            body: credentials,
+          })
+        ).status,
+      ).toBe(200);
+      const signIn = await fetch(`${base}/api/identity/sign-in`, {
+        method: "POST",
+        headers: json,
+        body: credentials,
+      });
+      const cookie = signIn.headers.getSetCookie()[0]?.split(";")[0] ?? "";
+      const { rows } = await db.owner.query<{ household_id: string }>(
+        "select household_id from identity_users",
+      );
+      const householdId = rows[0]?.household_id;
+
       const response = await fetch(`${base}/api/events/stream`, {
-        headers: { "x-test-user": "a", accept: "text/event-stream" },
+        headers: { cookie, accept: "text/event-stream" },
       });
       expect(response.status).toBe(200);
       if (response.body === null) throw new Error("у ответа нет тела");
@@ -245,7 +268,7 @@ describe("ADR-0015, ADR-0008: api с открытым events.stream остана
       const id = "0190f0a0-0000-7000-8000-000000000001";
       await db.owner.query("select pg_notify('kosht_realtime', $1)", [
         JSON.stringify({
-          householdId: testHouseholdId(1),
+          householdId,
           type: "changed",
           entity: "receipt",
           ids: [id],

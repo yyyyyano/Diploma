@@ -8,10 +8,12 @@
 //   выключен — блокировка и выход действуют сразу (AUTH-11);
 // - householdId — поле сессии: копируется из пользователя при входе, сессия сайта даёт scope без запроса за ним;
 // - ip сессии не хранится (лишние ПД), телеметрия и лимиты Better Auth выключены (лимиты — platform/rate-limit).
+import { HouseholdId, UserId } from "@kosht/kernel";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
-import { householdOf } from "./db/identity.repo.ts";
+import { householdOf, type UserRole } from "./db/identity.repo.ts";
 import {
   identityCredentials,
   identitySessions,
@@ -99,3 +101,58 @@ export function createAuth(deps: AuthDeps) {
 }
 
 export type Auth = ReturnType<typeof createAuth>;
+
+/** Кто вошёл — по сессии Better Auth (только активный пользователь, AUTH-11). */
+export interface AuthSession {
+  readonly userId: UserId;
+  readonly householdId: HouseholdId;
+  readonly role: UserRole;
+}
+
+/**
+ * Узкий порт над Better Auth для сценариев identity: application не видит better-auth (правило границ). Cookie —
+ * готовыми строками Set-Cookie: процедура кладёт их в ответ как есть.
+ */
+export interface AuthGateway {
+  /** Вход; неверный email или пароль — undefined. */
+  signIn(
+    credentials: { readonly email: string; readonly password: string },
+    headers: Headers,
+  ): Promise<{ readonly userId: UserId; readonly cookies: readonly string[] } | undefined>;
+  /** Выход: сессия из cookie запроса удаляется; cookie снимается (Set-Cookie). */
+  signOut(headers: Headers): Promise<readonly string[]>;
+  /** Сессия запроса; нет, истекла или пользователь не активен — undefined. */
+  session(headers: Headers): Promise<AuthSession | undefined>;
+}
+
+export function createAuthGateway(auth: Auth): AuthGateway {
+  return {
+    async signIn(credentials, headers) {
+      try {
+        const { headers: out, response } = await auth.api.signInEmail({
+          body: credentials,
+          headers,
+          returnHeaders: true,
+        });
+        return { userId: UserId.parse(response.user.id), cookies: out.getSetCookie() };
+      } catch (error) {
+        // Неверный email или пароль — штатный ответ Better Auth (401), а не сбой; остальное — наружу.
+        if (error instanceof APIError && error.statusCode === 401) return undefined;
+        throw error;
+      }
+    },
+    async signOut(headers) {
+      const { headers: out } = await auth.api.signOut({ headers, returnHeaders: true });
+      return out.getSetCookie();
+    },
+    async session(headers) {
+      const found = await auth.api.getSession({ headers });
+      if (found === null || found.user.status !== "active") return undefined;
+      return {
+        userId: UserId.parse(found.user.id),
+        householdId: HouseholdId.parse(found.session.householdId),
+        role: found.user.role === "admin" ? "admin" : "user",
+      };
+    },
+  };
+}

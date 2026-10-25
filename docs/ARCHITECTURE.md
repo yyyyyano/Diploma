@@ -349,9 +349,10 @@ async withItems(s: ScopedDb, id: ReceiptId) {                // JOIN: у каж�
 
 | Вход | Как |
 |---|---|
-| Сайт (oRPC) | middleware: сессия Better Auth → `userId` и `householdId` из сессии (без отдельного запроса на каждый вызов — решение пользователя) → `makeScope` → `platform.scoped(scope)` → `context.s` |
+| Сайт (oRPC) | middleware: сессия Better Auth (источник сессий — `defineModule({ sessionSource })` модуля `identity`, корень композиции регистрирует его в `platform/http/session.ts`) → `userId` и `householdId` из сессии (`householdId` — поле строки сессии, без отдельного запроса за ним — решение пользователя) → `makeScope` → `platform.scoped(scope)` → `context.s` |
 | Telegram | `chat_id` → `telegram_links` (системная таблица) → пользователь; только личные чаты; для непривязанного чата scope не создаётся |
-| Задача / подписка | scope из конверта задачи + перепроверка «пользователь существует, домохозяйство то же» |
+| Регистрация / первый запуск | `identity/application/new-user-scope.ts`: id нового пользователя и домохозяйства выдаёт база (`uuidv7()`) до транзакции → `makeScope` → `platform.scoped`; в этой транзакции — пользователь, домохозяйство и события (`identity.user-registered`) |
+| Задача / подписка | scope из конверта задачи + перепроверка «пользователь существует, активен, домохозяйство то же» (`defineModule({ scopeVerifier })` модуля `identity`) |
 | Инструмент агента | адаптер `defineTool → AI SDK` строит `ctx.s` из scope запуска агента; во входной схеме инструмента нет `userId`/`householdId` |
 | Тесты, сидирование | `makeScope` разрешён в `*.test.ts` и `packages/testing` |
 

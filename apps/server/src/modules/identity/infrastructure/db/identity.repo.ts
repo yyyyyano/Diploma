@@ -106,3 +106,17 @@ export async function isActiveMember(
     );
   return rows.length === 1;
 }
+
+/** Email, имя и роль пользователя — для каркаса сайта; нет пользователя — undefined. */
+export async function userCard(
+  db: IdentityDb,
+  userId: UserId,
+): Promise<{ email: string; name: string; role: UserRole } | undefined> {
+  const rows = await db
+    .select({ email: identityUsers.email, name: identityUsers.name, role: identityUsers.role })
+    .from(identityUsers)
+    .where(eq(identityUsers.id, userId));
+  const row = rows[0];
+  if (row === undefined) return undefined;
+  return { email: row.email, name: row.name, role: row.role === "admin" ? "admin" : "user" };
+}

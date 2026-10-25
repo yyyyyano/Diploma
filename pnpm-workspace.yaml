@@ -21,7 +21,8 @@ catalog:
   "@orpc/openapi-client": 1.16.1
   "@orpc/server": 1.16.1
   "@orpc/tanstack-query": 1.16.1
-  "@playwright/test": 1.64.1
+  # e2e (make e2e): версия задаёт сборку Chromium (1.63.0 — chromium 1243); новая версия — вместе с make e2e-install.
+  "@playwright/test": 1.63.0
   "@tanstack/react-query": 5.104.5
   # Маршруты сайта: router, его генератор (плагин Vite и CLI для make typecheck) — одной линейки.
   "@tanstack/react-router": 1.170.46

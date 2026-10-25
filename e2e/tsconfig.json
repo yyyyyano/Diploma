@@ -1,0 +1,8 @@
+{
+  "//": "e2e (Playwright + axe): сценарии и конфиг; запускает make e2e. lib dom — для функций page.evaluate (выполняются в браузере).",
+  "extends": "../tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"]
+  },
+  "include": ["*.ts", "specs/**/*.ts"]
+}

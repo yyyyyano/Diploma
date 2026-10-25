@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find new-module new-table
+	test-int logs log-find new-module new-table e2e e2e-install new-feature
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -152,6 +152,19 @@ check: fmt-check lint typecheck deps-check static-checks test ## Все пров
 check-quick: typecheck deps-check static-checks ## Быстрые проверки для pre-push: типы, границы, свои проверки и тесты без БД
 	$(BIN)/vitest run --project unit
 
+# e2e (T-008, CONSTRAINTS «Доступность»): Playwright сам собирает сайт (vite build --mode e2e — с витриной
+# /dev/gallery) и поднимает его на 127.0.0.1:8150; axe на каждом маршруте при 1440 и 390 px. Chromium — своей сборки
+# Playwright: нет его в кэше — подсказка make e2e-install, а не скачивание из цели проверки.
+PLAYWRIGHT := node_modules/.bin/playwright
+
+e2e: need-node ## e2e сайта: Playwright + axe (WCAG 2.2 AA) при 1440 и 390 px; Chromium — make e2e-install
+	@dir=$$(cd e2e && $(PLAYWRIGHT) install --dry-run chromium 2>/dev/null | awk '/Install location/ { print $$3; exit }'); \
+	test -n "$$dir" && test -d "$$dir" || { echo "Нет Chromium для Playwright — установите: make e2e-install" >&2; exit 2; }
+	cd e2e && $(PLAYWRIGHT) test
+
+e2e-install: need-node ## Скачать Chromium своей версии Playwright для make e2e (~170 МБ, в ~/.cache/ms-playwright)
+	cd e2e && $(PLAYWRIGHT) install chromium
+
 check-commits: need-node ## Проверить коммиты ветки относительно BASE (по умолчанию main)
 	node tooling/git-hooks/check-commits.mjs $(BASE)
 
@@ -166,6 +179,12 @@ new-module: need-node ## Модуль сервера из modules.ts: make new-m
 	@test -n "$${id:-}" || { echo "Укажите модуль: make new-module id=<id>" >&2; exit 2; }
 	@node tooling/gen/new-module.ts "$${id}"
 	@$(BIN)/oxfmt "apps/server/src/modules/$${id}" apps/server/src/main/create-modules.ts >/dev/null
+
+# Заготовка экрана сайта (T-008, ADR-0014) — только экран из таблицы «Экраны сайта» docs/CAPABILITIES.md.
+new-feature: need-node ## Экран сайта: make new-feature id=<id> (паспорт по шаблону, index.ts в apps/web/src/features/<id>)
+	@test -n "$${id:-}" || { echo "Укажите экран: make new-feature id=<id>" >&2; exit 2; }
+	@node tooling/gen/new-feature.ts "$${id}"
+	@$(BIN)/oxfmt "apps/web/src/features/$${id}" >/dev/null
 
 new-table: need-node ## Таблица модуля: make new-table module=<id> name=<таблица> [kind=user|system|public] (+ defineUserData)
 	@test -n "$${module:-}" -a -n "$${name:-}" || { echo "Укажите: make new-table module=<id> name=<таблица> [kind=user]" >&2; exit 2; }

@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find
+	test-int logs log-find new-module
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -159,3 +159,11 @@ check-commits: need-node ## Проверить коммиты ветки отн�
 
 capabilities: need-node ## Перегенерировать таблицы ярусов docs/CAPABILITIES.md из tooling/architecture/modules.ts
 	node tooling/architecture/capabilities.ts
+
+# Заготовки модулей (T-007, ARCHITECTURE §4.1) — только из карты tooling/architecture/modules.ts. Значения проверяет
+# программа, а в команду они попадают из окружения рецепта ("$${id}"), а не подстановкой в текст.
+new-module: need-node ## Модуль сервера из modules.ts: make new-module id=<id> (паспорт, index.ts, module.ts, сборка в main/)
+	@test -n "$${id:-}" || { echo "Укажите модуль: make new-module id=<id>" >&2; exit 2; }
+	@node tooling/gen/new-module.ts "$${id}"
+	@$(BIN)/oxfmt "apps/server/src/modules/$${id}" apps/server/src/main/create-modules.ts >/dev/null
+

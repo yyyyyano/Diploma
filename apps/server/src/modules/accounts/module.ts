@@ -7,6 +7,7 @@ import {
 import type { IdentityFacade } from "../identity/index.ts";
 import type { FxRatesFacade } from "../fx-rates/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
+import { listAccountsTool } from "./agent/tools.ts";
 import { accountsRouter } from "./api/router.ts";
 import { makeEnsureCash } from "./application/ensure-cash.ts";
 import { onUserRegistered } from "./subscriptions/on-user-registered.ts";
@@ -24,6 +25,7 @@ export function createAccountsModule({ platform }: ModuleDeps<AccountsFacades, P
     id: "accounts",
     router: accountsRouter(),
     subscriptions: [onUserRegistered(makeEnsureCash(platform))],
+    tools: [listAccountsTool],
     userData: accountsUserData,
   });
 }

@@ -53,6 +53,7 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
+  "tool:list_accounts": { input: () => ({}) },
 };
 
 let db: TestDb;
@@ -165,7 +166,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
 
   it("каждый случай: ответ — NOT_FOUND или в нём нет ни id, ни email домохозяйства B", async () => {
     const { cases } = plan();
-    expect(cases.map((c) => c.name)).toEqual(["accounts.list", "identity.me"]);
+    expect(cases.map((c) => c.name)).toEqual(["accounts.list", "identity.me", "list_accounts"]);
     const foreign = [b.scope.userId, b.scope.householdId, b.accountId, b.email];
     const violations: string[] = [];
     for (const c of cases) {

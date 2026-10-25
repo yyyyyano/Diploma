@@ -18,6 +18,8 @@ STMT-01/02. Макет: `Accounts.dc.html` (сайт — `features/accounts`, `e
 - Подписка `identity.user-registered` (`subscriptions/on-user-registered.ts`) → `ensureCash(ctx.s)`: «Наличные»
   идемпотентно (частичный уникальный индекс, `ON CONFLICT DO NOTHING`), сигнал `realtime.changed(tx, { entity:
   "account" })` при коммите — только если счёт создан.
+- Инструмент агента (`agent/tools.ts`): `list_accounts` (`read`, набор `core`) — счета домохозяйства запуска с
+  остатками (`{ items: AccountListItem[] }`); сайт рисует их карточками счёта, подпись шага — словарь `tools`.
 - Владелец данных (`user-data.ts`): таблица `accounts`.
 
 ## Зависимости

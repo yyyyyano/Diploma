@@ -584,7 +584,7 @@
 - Зависимости: T-006, T-061, T-002
 
 ### T-008 · Каркас сайта и дизайн-система «Пуща и янтарь»
-- Статус: in-progress
+- Статус: done · 0a3acc2..9888306
 - Модули: `apps/web`, `apps/web/src/app`, `apps/web/src/ui`, `apps/web/src/lib`, `e2e`
 - SPEC: DES-00, DES-01, DES-02, DES-05, DES-06, DES-07, DES-08, DES-09, DES-15, DES-16, DES-17, NFR-19, NFR-20, P9
 - Экран: каркас — design/screens/Main.dc.html и design/screens/MobileHome.dc.html (боковое меню, верхняя панель,

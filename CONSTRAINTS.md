@@ -35,7 +35,7 @@
 | Числа в `apps/web` (импорт `packages/calc`); `Date.now()`/`Math.random()` в `calc`; `float` для денег | dependency-cruiser, `calc-no-clock.mjs`, ревью |
 | Вызов модели, HTTP или чтение файла внутри `s.transaction` | `LLM_IN_TRANSACTION` во время выполнения, ревью |
 | Провайдеры `@ai-sdk/*` вне `llm`; `pg-boss` вне `platform/jobs`; `grammy` вне `telegram/infrastructure`; `drizzle-orm` и `pg` вне `infrastructure/db` и `platform/db` (исключения: шаблонная БД `packages/testing/src/db`; `schema.ts` и `*.repo.ts` в `platform/{settings,secrets,rate-limit,jobs}`); `libpg-query` вне `platform/db`; внутренности `platform/db` (аудитор, `boss-db`) вне `platform/db`, `platform/jobs` и `main` | dependency-cruiser |
-| «Сырые» цвета (`#hex`, `rgb(`, `hsl(`) и магические отступы/радиусы вне `apps/web/src/ui/theme` | `tooling/checks/no-raw-colors.mjs` |
+| «Сырые» цвета (`#hex`, `rgb(`, `hsl(`) и магические отступы/радиусы вне `apps/web/src/ui/theme` (значения набора — `ui/theme/kit.css`, только из `design/kit.css`) | `tooling/checks/no-raw-colors.mjs` |
 | Текст интерфейса литералом в JSX, бота, писем, уведомлений (только `t()`) | проверка литералов в `make check` |
 | Текст переписки, содержимое документов, суммы с привязкой к пользователю, ПД — в логах и нагрузке задач; данные в строке сообщения лога | тест-канарейка логов, ревью |
 | Тест, который ходит в интернет или тратит лимиты API (вне `make eval` и `make ai-record`) | кассеты в режиме `replay` по умолчанию: промах = ошибка |

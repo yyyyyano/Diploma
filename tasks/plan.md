@@ -584,7 +584,7 @@
 - Зависимости: T-006, T-061, T-002
 
 ### T-008 · Каркас сайта и дизайн-система «Пуща и янтарь»
-- Статус: todo
+- Статус: in-progress
 - Модули: `apps/web`, `apps/web/src/app`, `apps/web/src/ui`, `apps/web/src/lib`, `e2e`
 - SPEC: DES-00, DES-01, DES-02, DES-05, DES-06, DES-07, DES-08, DES-09, DES-15, DES-16, DES-17, NFR-19, NFR-20, P9
 - Экран: каркас — design/screens/Main.dc.html и design/screens/MobileHome.dc.html (боковое меню, верхняя панель,
@@ -676,6 +676,8 @@
   - Скиллы: `security-and-hardening`, `doubt-driven-development`, `test-driven-development`.
   - [ ] Выбор `platform` / `systemPlatform` по `systemTables` модуля проверен тестом на `identity` (первый модуль с
     таблицами `system`). (Optional ревью T-007.)
+  - [ ] Группы маршрутов `_public` и `_local` сайта создаются с первыми страницами (Setup, Login); `main.tsx` уходит с
+    `guestSession` на настоящую сессию (снять `TODO(T-009)`). (Отступление T-008.)
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/main
 - Риск: high — вход, сессия и первый тест изоляции; на них опираются все следующие задачи
 - Зависимости: T-008, T-004, T-005, T-007, T-059
@@ -768,6 +770,10 @@
   - В Compose БД — `db:5432`, хост/порт/база обеих ролей совпадают; `8141` публикуется всегда, слушатель закрыт настройкой.
   - `tsdown`: `libpg-query` и `pg-boss` с `node_modules` рядом, `drizzle/` едет в образ. База покрытия — после T-009/T-010;
     бюджеты — решение главной сессии (`ESCALATE`). Скилл: `shipping-and-launch`.
+  - [ ] `make dev` запускает Vite с пустым `TRUSTED_ORIGINS` по умолчанию (перенесено из T-008).
+  - [ ] Стабильность `make check`: int-тесты не мигают под нагрузкой (таймауты базы в `db.int.test.ts` и
+    `rate-limit.int.test.ts` при общем прогоне с проектом `web`) — ограничить параллелизм int-проекта или поднять его
+    таймауты, не ослабляя проверок; 5 прогонов подряд зелёные. (Optional ревью T-008.)
 - Проверка: make check; make check-full; make doctor; вручную: make init && make up, экран первого запуска на
   127.0.0.1:8140, трасса в Langfuse на 127.0.0.1:3001
 - Риск: medium — сбой запуска на чистой машине ломает показ, но откатывается `git revert`
@@ -1024,6 +1030,8 @@
     и `update_transaction` (`write` + `undoToken`), `delete_transaction` (`destructive`); изоляция по реестру зелёная.
   - [ ] Цель `bench`: страница 50 строк на 10 000 операциях — ≤ 150 мс p95 на сервере (замер в итоге).
   - [ ] axe 0 на `/operations` во всех состояниях при 1440 и 390.
+  - [ ] Сигнал `changed` инвалидирует только запросы своей сущности (привязка «сущность → ключи запросов»), а не все
+    активные. (Находка T-008.)
 - Проверка: make check; make e2e; make bench
 - Риск: high — суммы и итоги, которые видит пользователь, и самый нагруженный фасад («бог-модуль», ARCHITECTURE §15)
 - Зависимости: T-020, T-019, T-015

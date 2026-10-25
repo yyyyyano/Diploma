@@ -1320,3 +1320,37 @@ describe("ROLE-01, SEC-04: файлы сервера по пути из стро
     );
   });
 });
+
+describe("ROLE-01, SEC-04: булев анализ на записи, самосоединении, UNION и = any", () => {
+  it.each<[string, string, unknown[]]>([
+    [
+      "UPDATE … where household_id = $1 or true",
+      "update fx_receipts set note = $2 where household_id = $1 or true",
+      [A, "n"],
+    ],
+    [
+      "DELETE … where household_id = $1 or true",
+      "delete from fx_receipts where household_id = $1 or true",
+      [A],
+    ],
+    [
+      "самосоединение: предикат только у одного алиаса",
+      "select a.note from fx_receipts a, fx_receipts b where a.household_id = $1 and a.id = b.id",
+      [A],
+    ],
+    [
+      "UNION: вторая ветка без own",
+      "select note from fx_receipts where household_id = $1 union select note from fx_receipts",
+      [A],
+    ],
+    [
+      "household_id = any($1)",
+      "select note from fx_receipts where household_id = any($1)",
+      [[A, B]],
+    ],
+  ])("%s → MISSING_HOUSEHOLD_FILTER", (_name, text, params) => {
+    const error = violation(() => audit({ sql: text, params }));
+    expect(error.reason).toBe("MISSING_HOUSEHOLD_FILTER");
+    expect(error.table).toBe("fx_receipts");
+  });
+});

@@ -27,6 +27,7 @@ export const PLATFORM_DB = {
   unsafe: `${PLATFORM}/db/unsafe-raw`,
   crossTenant: `${PLATFORM}/db/cross-tenant`,
   system: `${PLATFORM}/db/system-db`,
+  boss: `${PLATFORM}/db/boss-db`,
 } as const;
 
 /**
@@ -386,6 +387,14 @@ function isolationRules(modules: readonly ModuleDef[]): ForbiddenRule[] {
         "(id, householdId, userId), дальше — задача под scope владельца (ARCHITECTURE §6.6).",
       { pathNot: [`^${PLATFORM}/(db|jobs)/`, String.raw`\.sweep\.ts$`, ...TEST_CODE] },
       { path: fileOrDir(PLATFORM_DB.crossTenant) },
+    ),
+    rule(
+      "boss-db-only-in-jobs",
+      "Подключение pg-boss к пулу и транзакции (boss-db) — только platform/jobs, корень композиции main/ " +
+        "(схему очереди ставит владелец) и тесты: задачу ставит jobs.enqueue(tx, …), событие — " +
+        "events.publish(tx, …) (ADR-0008). Служебные запросы pg-boss идут мимо аудитора SQL.",
+      { pathNot: [`^${PLATFORM}/(db|jobs)/`, `^${SERVER}/main/`, ...TEST_CODE] },
+      { path: fileOrDir(PLATFORM_DB.boss) },
     ),
     rule(
       "system-db-only-for-flagged-modules",

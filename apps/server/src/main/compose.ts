@@ -1,6 +1,6 @@
 // Корень композиции (ARCHITECTURE §3): все три процесса — api, worker, bot — собираются одной функцией. Порядок:
-// пул владельца (одно соединение kosht-<роль>-migrate) → миграции и выдача прав роли приложения под
-// pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
+// пул владельца (одно соединение kosht-<роль>-migrate) → миграции, схема очереди pgboss и выдача прав роли приложения
+// под pg_advisory_lock (до слушателей: /readyz = «БД отвечает») → пул владельца закрыт → пул роли приложения
 // (kosht-<роль>, ADR-0020) и проверка, что у неё нет лишних прав → платформа (часы, настройки, реестр сессий) →
 // дерево процедур. Модули добавит T-007 — в порядке топологической сортировки tooling/architecture/modules.ts.
 // Логики сверх «соединить» здесь нет.
@@ -8,8 +8,7 @@ import type { Clock } from "@kosht/kernel";
 import { createClock } from "../platform/clock/clock.ts";
 import type { AppConfig } from "../platform/config/config.ts";
 import { createPool, pingDb } from "../platform/db/connection.ts";
-import { runMigrations } from "../platform/db/migrate.ts";
-import { appRoleOptions, assertAppRole, ensureAppRole } from "../platform/db/roles.ts";
+import { appRoleOptions, assertAppRole } from "../platform/db/roles.ts";
 import { createSystemDb } from "../platform/db/system-db.ts";
 import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
 import {
@@ -21,6 +20,7 @@ import {
 import type { Logger, LogRole } from "../platform/logging/logger.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
+import { migrateDatabase } from "./migrate-database.ts";
 import { router } from "./router.ts";
 
 /** Роль процесса (ARCHITECTURE §3). */
@@ -63,8 +63,7 @@ export async function compose(
     applicationName: `kosht-${role}-migrate`,
   });
   try {
-    await runMigrations(owner);
-    await ensureAppRole(owner, appRoleOptions(config.db.app));
+    await migrateDatabase(owner, appRoleOptions(config.db.app));
   } finally {
     await owner.end();
   }

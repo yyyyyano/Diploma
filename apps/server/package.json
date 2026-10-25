@@ -16,6 +16,7 @@
     "hono": "catalog:",
     "libpg-query": "catalog:",
     "pg": "catalog:",
+    "pg-boss": "catalog:",
     "pino": "catalog:",
     "pino-roll": "catalog:",
     "zod": "catalog:"

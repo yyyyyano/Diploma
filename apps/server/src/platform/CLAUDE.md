@@ -3,7 +3,7 @@
 ## Назначение
 Общая техника всех модулей (ARCHITECTURE §2, §6, §9): `db` (T-004); `config`, `logging`, `errors`, `clock`,
 `blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` (T-059; точки входа — `src/entrypoints`);
-`jobs`, `events`, `realtime` — T-006. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+`jobs` и `events` — T-006; `realtime` и `events.stream` — T-061. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
@@ -82,9 +82,12 @@
 ## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
 Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
 - `main/compose.ts` — `compose(config, role, { log })` → `Composition`: пул владельца (`max: 1`, имя
-  `kosht-<роль>-migrate`) → миграции и `ensureAppRole` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
+  `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
   `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → часы, настройки, реестр сессий → `router` (`main/router.ts`); `session(headers)`, `ready()` (`pingDb`),
   `allowLan()`, `close()` (пул, затем `db.closed`). Модули добавит T-007.
+- `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole)`: миграции Drizzle → схема очереди pgboss
+  (`installJobsSchema` под `withMigrationLock`) → `ensureAppRole` последним (`GRANT … ON ALL TABLES` видит только
+  созданные таблицы). Одна последовательность для `compose`, `make migrate` (`main/migrate-cli.ts`) и шаблона тестов.
 - `entrypoints/run.ts` — `runProcess(role, { routes?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
   `ConfigError` в stderr, код 1; так же — текст `AppRoleError` на старте) → лог `<DATA_DIR>/logs` → `compose` → роль (`api` — слушатели и приложения на
   каждый; занятый порт — текст `ListenError` в stderr, код 1; `worker`/`bot` пока только живут — держит
@@ -94,6 +97,14 @@
 - `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
 - `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов
   два: владельца — только на старте (`kosht-<роль>-migrate`), роли приложения — на всю жизнь процесса (`kosht-<роль>`).
+
+## Публичный API — `jobs/` (T-006: NFR-21, NFR-22, OBS-01, OBS-07, SEC-04, ADR-0008)
+- `install.ts` — `installJobsSchema(bossDb(client))`: схему `pgboss` ставит или мигрирует владелец (pg-boss с
+  `migrate: true` без обработчиков и таймеров); `JOBS_SCHEMA`, `PG_BOSS_VERSION` (входит в отпечаток шаблона тестов).
+- `boss.ts` — `createBoss(bossDb(pool), role)`: единственное место настроек pg-boss; своего пула нет, `migrate: false`;
+  `api`/`bot` — `supervise: false`, `schedule: false` (только ставят задачи); `worker` — обслуживание и расписания,
+  `SUPERVISE_INTERVAL_SECONDS` и `MONITOR_INTERVAL_SECONDS` = 60, `INSTANCE_HEARTBEAT_SECONDS` = 30, `reindex: false`;
+  `stopBoss` — `stop({ graceful: true, timeout: BOSS_STOP_TIMEOUT_MS = 8000, close: false })`.
 
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
@@ -109,7 +120,10 @@
 - `scoped-db.ts` — `createScopedDb(pool, scope): ScopedDb` (`own`, `insert`, `update`, `delete`, `transaction`;
   вложенная — SAVEPOINT); выключателя аудита нет.
 - `system-db.ts` (`createSystemDb`), `cross-tenant.ts` (`crossTenant(pool, label, find)` — только
-  `id, household_id, user_id`), `unsafe-raw.ts` (без аудита: миграции и тесты) — пути = `PLATFORM_DB` в
+  `id, household_id, user_id`), `unsafe-raw.ts` (без аудита: миграции и тесты), `boss-db.ts` (подключение pg-boss:
+  `bossDb(pool | client)` — IDatabase на пул приложения или соединение владельца, мимо аудитора;
+  `bossTransaction(tx)` — `{ tx: tx.db, sql }` для `fromDrizzle`, через аудитор; только `jobs/`, `main/` и тесты —
+  правило `boss-db-only-in-jobs`) — пути = `PLATFORM_DB` в
   `tooling/architecture/rules.ts`; переименовали файл — правьте `PLATFORM_DB` (тест T-002 краснеет).
 - `audit.ts` — `auditQuery(sql, params, mode, owned)` и `IsolationViolation` (`code: "ISOLATION_VIOLATION"`,
   `reason: ViolationReason` — в том числе `UNPARSEABLE_SQL`, `table`); вызывается из `Logger` Drizzle (`audited.ts`)
@@ -125,12 +139,12 @@
   `SELECT` на `pg_stats`, `pg_stats_ext`, `pg_stats_ext_exprs` у `PUBLIC`; роль = владелец — `AppRoleError`.
   `assertAppRole(pool)` / `appRoleProblems(pool)` (для `make doctor`, T-011) — отказ роли с `rolsuper`, `rolcreatedb`,
   `rolcreaterole`, `rolreplication`, `rolbypassrls`, членством в любой роли или `CREATE` на `public`.
-  `appRoleOptions(dbConfig)`, `APP_SCHEMAS` (`public`; T-006 добавит `pgboss`), `scramVerifier`, `scramMatches`.
+  `appRoleOptions(dbConfig)`, `APP_SCHEMAS` (`public`, `pgboss`), `scramVerifier`, `scramMatches`.
 
 ## Можно зависеть от
 `@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
 `schema.ts`/`*.repo.ts` settings, secrets, rate-limit); `libpg-query` — только `db/` (ADR-0019); `pino`, `pino-roll` —
-`logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev); `hono`, `@hono/node-server`, `@orpc/server`,
+`logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev); `pg-boss` — только `jobs/` (ADR-0008); `hono`, `@hono/node-server`, `@orpc/server`,
 `@orpc/openapi` — `http/` (oRPC — ещё `main/` и `api/` модулей). Модули — нет.
 
 ## Запреты
@@ -164,8 +178,8 @@
 
 ## Роли БД (ADR-0020)
 - Приложение работает ролью `kosht_app` (только DML на таблицах `APP_SCHEMAS`); владелец `kosht` (суперпользователь
-  из `compose.yaml`) — миграции, выдача прав, `make migrate`, сборка тестового шаблона. Новую схему с таблицами
-  приложения (T-006: `pgboss`) создаёт и мигрирует владелец, а роль получает права через список схем.
+  из `compose.yaml`) — миграции, выдача прав, `make migrate`, сборка тестового шаблона. Схему с таблицами
+  приложения вне `public` (`pgboss`) создаёт и мигрирует владелец, а роль получает права через `APP_SCHEMAS`.
 - Роль общая для кластера, блокировка миграций — на базу: правка роли идёт только при расхождении, транзакция
   повторяется на 23505/42710/XX000. Тест, который портит роль, работает со своей ролью `test_*` (`testRoleName`).
 - Права и права по умолчанию живут в каталогах базы и копируются с ней (клон шаблона).
@@ -206,3 +220,10 @@
   `production-schema.int.test.ts` импортируют все схемы модулей.
 - Drizzle закреплён точно (`1.0.0-rc.5`): после обновления красные канарейки = стоп (запасной путь — наследник `Pool`).
 - `ON DELETE SET NULL` на составном FK drizzle-kit пишет неверно — правьте миграцию на `SET NULL (col)`.
+- pg-boss 12.38 при `reindex: false` всё равно ищет раздутые индексы через `pg_stats`, а он роли приложения закрыт
+  (ADR-0020) — 42501 в конце прохода обслуживания. Поиск выключен флагом pg-boss `__test__noReindex` (вне типов,
+  `boss.ts`); пропадёт флаг при обновлении pg-boss — краснеет `jobs.int.test.ts` (проход `supervise` под ролью
+  приложения). Индексы pgboss перестраивать некому: владелец есть только на старте.
+- Служебные запросы pg-boss (многокомандные транзакции с `SET LOCAL` и `pg_advisory_xact_lock`) аудитор SQL не
+  принимает (`MULTIPLE_STATEMENTS`, `STATEMENT_NOT_ALLOWED`), поэтому `bossDb` идёт мимо него; через аудитор —
+  только постановка в транзакции (`bossTransaction`). Пользовательских таблиц pg-boss не называет; держат права роли.

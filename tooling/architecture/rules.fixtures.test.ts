@@ -132,6 +132,10 @@ const EXPECTED: Record<string, string[]> = {
     `${M}/calendar/infrastructure/db/reminders.repo.ts → ${P}/db/cross-tenant.ts`,
     `${M}/calendar/jobs/remind.job.ts → ${P}/db/cross-tenant.ts`,
   ],
+  "boss-db-only-in-jobs": [
+    `${M}/receipts/application/recognize.ts → ${P}/db/boss-db.ts`,
+    `${P}/events/events.ts → ${P}/db/boss-db.ts`,
+  ],
   "system-db-only-for-flagged-modules": [
     `${M}/files/infrastructure/db/files.repo.ts → ${P}/db/system-db.ts`,
     `${M}/fin/application/balance.ts → ${P}/db/system-db.ts`,

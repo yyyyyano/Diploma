@@ -24,12 +24,15 @@ export interface AppRoleOptions {
   readonly appRole: string;
   /** Файл пароля роли приложения (DB_PASSWORD_FILE): им же подключается приложение. */
   readonly passwordFile: string;
-  /** Схемы с таблицами приложения: public; T-006 добавит pgboss. */
+  /** Схемы с таблицами приложения: public и pgboss (очередь задач). */
   readonly schemas: readonly string[];
 }
 
-/** Схемы с таблицами приложения: на них роль приложения получает DML (T-006 добавит pgboss). */
-export const APP_SCHEMAS: readonly string[] = ["public"];
+/**
+ * Схемы с таблицами приложения: на них роль приложения получает DML. pgboss — таблицы очереди задач (ADR-0008):
+ * их создаёт владелец (platform/jobs/install.ts), а роль ставит, берёт и завершает задачи.
+ */
+export const APP_SCHEMAS: readonly string[] = ["public", "pgboss"];
 
 /** Параметры ensureAppRole из подключения приложения: роль — пользователь DATABASE_URL, пароль — его файл. */
 export function appRoleOptions(

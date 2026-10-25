@@ -182,6 +182,7 @@ describe("PLATFORM_DB — пути возможностей БД совпада�
         `${PLATFORM_DB.unsafe}.ts`,
         `${PLATFORM_DB.crossTenant}/index.ts`,
         `${PLATFORM_DB.system}.ts`,
+        `${PLATFORM_DB.boss}.ts`,
       ],
       (baseDir) => {
         expect(missingPlatformDbPaths(baseDir)).toEqual([]);
@@ -195,6 +196,7 @@ describe("PLATFORM_DB — пути возможностей БД совпада�
         `${PLATFORM_DB.unsafe}.ts`,
         "apps/server/src/platform/db/cross-tenant-db.ts",
         `${PLATFORM_DB.system}.ts`,
+        `${PLATFORM_DB.boss}.ts`,
       ],
       (baseDir) => {
         expect(missingPlatformDbPaths(baseDir)).toEqual([PLATFORM_DB.crossTenant]);
@@ -202,12 +204,13 @@ describe("PLATFORM_DB — пути возможностей БД совпада�
     );
   });
 
-  it("возможности отданы через общий platform/db/index.ts — все три пути отсутствуют", () => {
+  it("возможности отданы через общий platform/db/index.ts — все пути отсутствуют", () => {
     withTree(["apps/server/src/platform/db/index.ts"], (baseDir) => {
       expect(missingPlatformDbPaths(baseDir)).toEqual([
         PLATFORM_DB.unsafe,
         PLATFORM_DB.crossTenant,
         PLATFORM_DB.system,
+        PLATFORM_DB.boss,
       ]);
     });
   });

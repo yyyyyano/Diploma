@@ -83,8 +83,8 @@ db-up: secrets/db_password ## Поднять только Postgres (сервис
 db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
 
-migrate: need-node db-up secrets/db_app_password ## Применить миграции apps/server/drizzle и выдать права роли приложения — под владельцем БД (приложение делает то же при старте)
-	$(NODE_APP) apps/server/src/platform/db/migrate-cli.ts
+migrate: need-node db-up secrets/db_app_password ## Применить миграции apps/server/drizzle, поставить схему очереди pgboss и выдать права роли приложения — под владельцем БД (приложение делает то же при старте)
+	$(NODE_APP) apps/server/src/main/migrate-cli.ts
 
 # Тестовая схема механизма изоляции: make db-generate DRIZZLE_CONFIG=apps/server/src/platform/db/__fixtures__/drizzle.config.ts
 DRIZZLE_CONFIG ?= apps/server/drizzle.config.ts

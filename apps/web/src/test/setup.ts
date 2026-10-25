@@ -39,4 +39,6 @@ function installDomGaps(): void {
   window.ResizeObserver = NoopResizeObserver;
   // Mantine прокручивает к активному элементу и ждёт scrollIntoView, которого в jsdom нет.
   Element.prototype.scrollIntoView = function scrollIntoView() {};
+  // Роутер восстанавливает прокрутку при переходах (scrollRestoration); jsdom её не умеет и пишет в консоль.
+  window.scrollTo = () => {};
 }

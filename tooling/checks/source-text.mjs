@@ -11,6 +11,7 @@ import { FIXTURES_DIR } from "../architecture/rules.ts";
 const SKIP_DIRS = new Set([
   "node_modules",
   "dist",
+  "dist-e2e",
   "build",
   "coverage",
   ".turbo",

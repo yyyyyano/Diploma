@@ -484,8 +484,8 @@ function libraryRules(): ForbiddenRule[] {
   ];
 }
 
-/** Не обходятся: сборки приложений и пакетов, фикстуры нарушений. */
-export const EXCLUDE = ["^(apps|packages)/[^/]+/dist/", `^${FIXTURES_DIR}/`] as const;
+/** Не обходятся: сборки приложений и пакетов (и сборка сайта стенда e2e — dist-e2e), фикстуры нарушений. */
+export const EXCLUDE = ["^(apps|packages)/[^/]+/dist(-e2e)?/", `^${FIXTURES_DIR}/`] as const;
 
 /** Все запреты dependency-cruiser для карты модулей; одно имя может объединять несколько условий. */
 export function buildForbiddenRules(modules: readonly ModuleDef[]): ForbiddenRule[] {

@@ -393,17 +393,52 @@
 
 ### T-060 · Роль приложения без суперпользователя
 - Статус: todo
-- Модули: `platform/db`, `platform/config`, `apps/server/src/main/compose.ts` (два пула: владелец для миграций и
-  `kosht_app` для работы), `compose.yaml`, `Makefile` (`init`), `.env.example` (`MIGRATION_DATABASE_URL`),
-  `@kosht/testing`, `docs/adr/` (ADR-0006, ADR-0019), `apps/server/src/platform/CLAUDE.md`
+- Модули: `platform/db` (новый `roles.ts`: `ensureAppRole`, `assertAppRole`; `audit.ts`; `migrate-cli.ts`),
+  `platform/config`, `apps/server/src/main/compose.ts`, `Makefile` (`init`) и скрипт правки `.env` в `tooling/`,
+  `.env.example`, `@kosht/testing`, `docs/adr/0020-db-roles.md`, `docs/ARCHITECTURE.md` §6,
+  `apps/server/src/platform/CLAUDE.md`; `compose.yaml` без изменений
 - SPEC: ROLE-01, SEC-04, PRIV-07, NFR-16
 - Критерии приёмки:
-  - [ ] `DATABASE_URL` — роль `kosht_app` (`NOSUPERUSER`, без `pg_read_server_files`, `CREATEDB`, `CREATEROLE`),
-    пароль в `secrets/db_app_password`; `MIGRATION_DATABASE_URL` — владелец; роль и права (`GRANT`,
-    `DEFAULT PRIVILEGES` и `GRANT … ON ALL TABLES` для уже созданных таблиц) создаёт мигратор идемпотентно; int-тест: `pg_read_binary_file`, `COPY … TO PROGRAM`, DDL
-    под ролью приложения → отказ, DML и `ScopedDb` работают; `pg_stats` / `pg_statistic`: `HIDDEN_SQL` в аудиторе
-    плюс `REVOKE`.
-- Проверка: make check; make test-int
+  - [ ] Конфигурация: `DATABASE_URL` (по умолчанию `postgres://kosht_app@…`) и `DB_PASSWORD_FILE`
+    (`secrets/db_app_password`); `MIGRATION_DATABASE_URL` (`postgres://kosht@…`) и `MIGRATION_DB_PASSWORD_FILE`
+    (`secrets/db_password`); хост, порт и база обоих адресов должны совпадать, иначе `ConfigError` без значений;
+    `make init` создаёт `secrets/db_app_password` (32 случайных байта в hex, 0600, существующий не меняет); сверка
+    `CONFIG_VARIABLES` с `.env.example` остаётся зелёной.
+  - [ ] `ensureAppRole(ownerPool, { appRole, passwordFile, schemas })` на пуле владельца, после миграций, под той же
+    `pg_advisory_lock`; идемпотентно (`CREATE ROLE`, ловить 42710: роль общая для кластера, а блокировка — на базу);
+    на каждом старте `ALTER ROLE … LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS` (лечит
+    ручную порчу), пароль из файла, `GRANT USAGE ON SCHEMA`, `GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES`,
+    `ALTER DEFAULT PRIVILEGES FOR ROLE <владелец> … GRANT … TO kosht_app`, `USAGE` на sequences, если они есть,
+    `REVOKE SELECT ON pg_catalog.pg_stats, pg_stats_ext, pg_stats_ext_exprs FROM PUBLIC`, `CREATE` на `public` у
+    `PUBLIC` отозван явно; без `TRUNCATE`, `REFERENCES`, `TRIGGER`; на схему `drizzle` прав нет; без
+    `ALTER ROLE … SET`; пароль не попадает в лог Postgres (`SET log_min_error_statement = 'panic'` на сессии либо
+    готовый SCRAM-verifier) и в логи приложения; список схем — параметр (T-006 добавит `pgboss`).
+  - [ ] `assertAppRole(pool)` в `compose.ts` до приёма запросов: старт отказывает с ошибкой без значений, если у
+    роли есть `rolsuper`, `rolcreatedb`, `rolcreaterole`, `rolreplication`, `rolbypassrls`, членство в любой роли
+    (в том числе `pg_read_server_files`) или `CREATE` на схему `public`.
+  - [ ] `compose.ts`: пул владельца с `max: 1` и именем `kosht-<роль>-migrate` закрывается (`end`) до возврата
+    `compose`, боевой пул — `kosht_app`; int-тест: после `compose()` в `pg_stat_activity` нет сессий владельца с этим
+    именем; `make init` заменяет в существующем `.env` значения `DATABASE_URL` и `DB_PASSWORD_FILE`, равные старым
+    умолчаниям, и дописывает `MIGRATION_*` (правит программа, агент `.env` не открывает); `make migrate` идёт под
+    владельцем.
+  - [ ] Int-тест через сырой `pg.Client` под `kosht_app` (мимо аудитора): код 42501 у `pg_read_binary_file`,
+    `COPY … TO PROGRAM`, `COPY … FROM PROGRAM`, `lo_import('/etc/passwd')`, `CREATE TABLE`, `CREATE SCHEMA`,
+    `CREATE EXTENSION dblink`, `CREATE ROLE`, `CREATE DATABASE`, `ALTER TABLE settings`, `TRUNCATE settings`,
+    `SET ROLE kosht`, `ALTER ROLE kosht_app SUPERUSER`, `select` из `pg_stats`, `pg_stats_ext`, `pg_statistic` и
+    `drizzle.__drizzle_migrations`; работают: DML через `ScopedDb` и `SystemDb`; таблица, созданная владельцем после
+    выдачи прав, сразу доступна; повтор `ensureAppRole` ничего не ломает и возвращает роли атрибуты после ручной
+    порчи; `GRANT … ON ALL TABLES` покрывает таблицу, созданную до `DEFAULT PRIVILEGES`.
+  - [ ] Аудитор: обращение к `pg_stats`, `pg_stats_ext`, `pg_stats_ext_exprs`, `pg_statistic`,
+    `pg_statistic_ext_data` с любой схемой или без неё — `HIDDEN_SQL` (канарейки в `audit.test.ts`); функции
+    остаются; комментарий в `audit.ts` («роль — суперпользователь») и паспорт обновлены.
+  - [ ] Тестовая инфраструктура: `TestDbContext` получает `admin` (из `MIGRATION_*`: создание и удаление `test_*`,
+    шаблон, DDL) и `app` (`kosht_app`); `createTestDb()` отдаёт `pool` (приложение) и `owner` (DDL, фикстуры);
+    существующие int-тесты с DDL переведены на `owner`; шаблон собирается владельцем с `ensureAppRole`, отпечаток
+    включает текст выдачи прав; `production-schema` и `schema-check` идут под `owner`.
+  - [ ] ADR-0020 «Роли БД» (ADR-0006 не правится); `docs/ARCHITECTURE.md` §6: добавлен замок «права роли БД»; в
+    итог — список правок `.claude/rules/database.md` и `security-privacy.md` для пользователя.
+- Проверка: make check; make test-int; вручную: `make init && make migrate` на существующем томе без `db-reset`,
+  `select rolsuper from pg_roles where rolname = 'kosht_app'` → `f`
 - Риск: high — главный замок изоляции данных держится на правах роли
 - Зависимости: T-005
 
@@ -427,6 +462,9 @@
     каталога; `InlineJobs` для тестов.
   - [ ] `realtime.progress` / `realtime.changed` → `NOTIFY kosht_realtime` (`householdId`, вид, id — без данных) →
     `events.stream` (SSE) в `api`; int-тест: клиент домохозяйства A не получает сигналы B.
+  - [ ] pg-boss: схему `pgboss` создаёт и мигрирует владелец (`migrate: false` и `createSchema: false` у боевого
+    экземпляра — сверить по документации pg-boss 12); `kosht_app` получает DML, `USAGE` на sequences и `EXECUTE` на
+    функции схемы через `ensureAppRole({ schemas: [..., "pgboss"] })`; прав на DDL у `kosht_app` нет (T-060).
 - Проверка: make check; make test-int
 - Риск: medium — дубли и штормы задач заметны не сразу, но механизм целиком под тестами
 - Зависимости: T-005, T-004, T-059, T-060

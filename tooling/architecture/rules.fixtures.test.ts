@@ -154,6 +154,10 @@ const EXPECTED: Record<string, string[]> = {
     `${M}/telegram/application/send.ts → @grammyjs/runner`,
     `${M}/telegram/application/send.ts → grammy`,
   ],
+  "better-auth-only-in-identity-infrastructure": [
+    `${M}/identity/application/sign-in.ts → better-auth`,
+    `${M}/identity/application/sign-in.ts → better-auth/adapters/drizzle`,
+  ],
   "drizzle-and-pg-only-in-db": [
     `${M}/receipts/application/recognize.ts → drizzle-orm/pg-core`,
     `${P}/jobs/jobs.ts → drizzle-orm`,

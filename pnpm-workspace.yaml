@@ -37,6 +37,8 @@ catalog:
   "@types/react-dom": 19.3.0
   "@vitejs/plugin-react": 6.1.2
   "@vitest/coverage-v8": 5.0.5
+  # Вход (ADR-0016): Better Auth — только ядро (email + пароль, сессии), без плагинов; точная версия.
+  better-auth: 1.7.12
   # Drizzle 1.0 RC — строго одна точная версия для orm и kit: аудитор SQL опирается на порядок вызова
   # Logger.logQuery (ADR-0006); обновление — отдельная задача с прогоном канареек.
   drizzle-kit: 1.0.0-rc.5

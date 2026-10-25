@@ -452,6 +452,13 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["grammy", "@grammyjs/*"]) },
     ),
     rule(
+      "better-auth-only-in-identity-infrastructure",
+      "Better Auth — только в identity/infrastructure: вход, выход и сессия — процедуры identity, остальным " +
+        "модулям — scope из сессии (ADR-0016).",
+      { pathNot: `^${MOD}/identity/infrastructure/` },
+      { path: npmPattern(["better-auth", "@better-auth/*"]) },
+    ),
+    rule(
       "drizzle-and-pg-only-in-db",
       "drizzle-orm и pg — только в infrastructure/db модулей и platform/db: запросы через ScopedDb " +
         "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключения: @kosht/testing/db — шаблонная " +

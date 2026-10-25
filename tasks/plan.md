@@ -392,7 +392,7 @@
 - Зависимости: T-005
 
 ### T-060 · Роль приложения без суперпользователя
-- Статус: todo
+- Статус: done · a7390e4..fcef673
 - Модули: `platform/db` (новый `roles.ts`: `ensureAppRole`, `assertAppRole`; `audit.ts`; `migrate-cli.ts`),
   `platform/config`, `apps/server/src/main/compose.ts`, `Makefile` (`init`) и скрипт правки `.env` в `tooling/`,
   `.env.example`, `@kosht/testing`, `docs/adr/0020-db-roles.md`, `docs/ARCHITECTURE.md` §6,

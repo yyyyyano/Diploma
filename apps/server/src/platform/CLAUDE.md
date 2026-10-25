@@ -2,8 +2,8 @@
 
 ## Назначение
 Общая техника всех модулей (ARCHITECTURE §2, §6, §9): `db` (T-004); `config`, `logging`, `errors`, `clock`,
-`blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` и точки входа — T-059; `jobs`, `events`,
-`realtime` — T-006. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+`blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` (T-059; точки входа — `src/entrypoints`);
+`jobs`, `events`, `realtime` — T-006. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
@@ -42,6 +42,20 @@
   (`PURGE_BATCH`) строк того же правила из прошлых окон (индекс `(rule, window_start)`) — отдельной задачи
   очистки нет.
 
+## Публичный API — `http/` (T-059: SEC-01, NFR-24, R40, OBS-01/02, ADR-0005, ADR-0016)
+- `app.ts` — `createApp({ listener, trustedOrigins, log, ready, routes? })` → `HttpApp` (Hono) на один слушатель:
+  request-id и контекст лога → Host и CSRF → маршрут → заголовки безопасности и строка `http.request` (`method`,
+  `httpStatus`, `ms`, `listener`) на каждом ответе; `/healthz` (без БД), `/readyz` (`ready()` ≤ 2 с, иначе 503
+  `UNAVAILABLE` без деталей); неизвестный маршрут — 404 `NOT_FOUND`; исключение — 500 `INTERNAL` + `http.error` со
+  стеком; `routes` — маршруты процесса до статики.
+- `guard.ts` — `ListenerName` (`local | lan`), `SECURITY_HEADERS` (CSP, `nosniff`, `Referrer-Policy: no-referrer`,
+  `Permissions-Policy: camera=(self), microphone=(self)`; без HSTS), `isAllowedHost(host, listener)` (local — `localhost`,
+  `127.0.0.1`, `[::1]`; lan — они же и IP; имена — нет), `isSameSiteRequest` (кроме GET/HEAD/OPTIONS: `Sec-Fetch-Site`
+  `cross-site`/`same-site` — отказ; `Origin` = `http://<Host>` или из `TRUSTED_ORIGINS`; оба пусты — не браузер),
+  `requestIdFrom` (`[A-Za-z0-9-]{8,64}`, иначе новый uuid).
+- `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
+  params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
+
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило
@@ -67,7 +81,8 @@
 ## Можно зависеть от
 `@kosht/kernel`, `@kosht/contract` (каталог ошибок), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
 `schema.ts`/`*.repo.ts` settings, secrets, rate-limit); `libpg-query` — только `db/` (ADR-0019); `pino`, `pino-roll` —
-`logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev). Модули — нет.
+`logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev); `hono`, `@hono/node-server`, `@orpc/server`,
+`@orpc/openapi` — `http/` (oRPC — ещё `main/` и `api/` модулей). Модули — нет.
 
 ## Запреты
 - `drizzle()`, `pg`, `$client`, `unsafeRaw` вне `platform/db` и тестов; `ISOLATION_VIOLATION` не ловить и не глушить.

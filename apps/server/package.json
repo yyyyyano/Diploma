@@ -6,16 +6,21 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@kosht/contract": "workspace:*",
     "@kosht/kernel": "workspace:*",
     "drizzle-orm": "catalog:",
     "libpg-query": "catalog:",
-    "pg": "catalog:"
+    "pg": "catalog:",
+    "pino": "catalog:",
+    "pino-roll": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@kosht/testing": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
     "drizzle-kit": "catalog:",
+    "pino-pretty": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

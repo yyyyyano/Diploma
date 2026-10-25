@@ -19,6 +19,10 @@ catalog:
   # Парсер PostgreSQL 18 (WASM) для аудитора SQL — точная версия, обновление с прогоном канареек (ADR-0019).
   libpg-query: 18.2.0
   pg: 8.23.1
+  # Логи (ADR-0010): pino + pino-roll как поток в процессе (ротация), pino-pretty — чтение в make logs.
+  pino: 10.4.0
+  pino-pretty: 13.2.0
+  pino-roll: 4.0.0
   typescript: 7.0.2
   vitest: 5.0.5
   zod: 4.6.7

@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int
+	test-int logs log-find
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -77,6 +77,22 @@ DRIZZLE_CONFIG ?= apps/server/drizzle.config.ts
 db-generate: need-node ## Миграция из схем модулей: [name=имя] [custom=1 — пустая, для SQL руками]; SQL читать глазами
 	apps/server/node_modules/.bin/drizzle-kit generate --config $(DRIZZLE_CONFIG) $(if $(name),--name $(name)) $(if $(custom),--custom)
 	@$(BIN)/oxfmt apps/server/drizzle apps/server/src/platform/db/__fixtures__/drizzle >/dev/null
+
+# ── Логи ───────────────────────────────────────────────────────────────────────────────────────────
+
+# Логи ролей (OBS-06): <LOG_DIR>/<роль>.<гггг-ММ-дд>.<n>.log, 14 файлов на роль. При своём DATA_DIR — LOG_DIR=…/logs.
+LOG_DIR ?= data/logs
+PINO_PRETTY := apps/server/node_modules/.bin/pino-pretty
+
+logs: need-node ## Хвост логов ролей api, worker, bot — читаемо (pino-pretty) [LOG_DIR=data/logs]
+	@files=$$(for r in api worker bot; do { ls -1t $(LOG_DIR)/$$r.*.log 2>/dev/null || true; } | head -n 1; done); \
+	test -n "$$files" || { echo "В $(LOG_DIR) нет логов: сервер ещё не запускался." >&2; exit 1; }; \
+	tail -q -n 100 -F $$files | $(PINO_PRETTY)
+
+# id берётся из окружения рецепта ("$${id}"), а не подставляется в текст команды: кавычки в id не станут командой.
+log-find: need-node ## Строки логов всех ролей с одним requestId, по времени: make log-find id=<requestId>
+	@test -n "$${id:-}" || { echo "Укажите id: make log-find id=<requestId>" >&2; exit 2; }
+	@node apps/server/src/platform/logging/log-find-cli.ts "$(LOG_DIR)" "$${id}" | $(PINO_PRETTY)
 
 # ── Качество ───────────────────────────────────────────────────────────────────────────────────────
 

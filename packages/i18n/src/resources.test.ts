@@ -23,8 +23,8 @@ function lookup(dictionary: object, key: string): unknown {
 }
 
 describe("словари ru", () => {
-  it("пространства имён: common, errors, formulas, tools", () => {
-    expect(NAMESPACES).toEqual(["common", "errors", "formulas", "tools"]);
+  it("пространства имён: common, errors, formulas, tools и сайта — shell, ui", () => {
+    expect(NAMESPACES).toEqual(["common", "errors", "formulas", "tools", "shell", "ui"]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
 });

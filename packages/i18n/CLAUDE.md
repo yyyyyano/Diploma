@@ -11,10 +11,11 @@
 - Вход: `packages/i18n/src/index.ts`.
 - `createT(language = "ru")` — свой экземпляр i18next без React; `T` — тип перевода. Ключ — `<ns>:<ключ>`
   (`common:relativeDay.today`); несуществующий ключ или пространство имён не компилируется.
-- `resources` (`{ ru: { common, errors, formulas, tools } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
+- `resources` (`{ ru: { common, errors, formulas, tools, shell, ui } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
 - Словари (`locales/ru/`): `common` (общее; множественные числа `count.operations_*`), `errors` — по одному тексту на
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
-  (`fin.freeBalance`), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная).
+  (`fin.freeBalance`), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная); сайта: `shell` —
+  каркас (меню DES-15, нижняя панель, экраны ошибки), `ui` — подписи дизайн-системы (ⓘ, «Отменить», «Закрыть»).
 - Форматы (DES-17): `formatMoney(money)` — «1 234,56 BYN», «−840,00 BYN» (между разрядами и перед кодом U+00A0,
   минус U+2212); `formatMoneyParts(money)` — те же части отдельно `{ negative, amount, currency }` (сайт: валюта
   мельче, знак «+»/«−» по смыслу операции); `formatDate(date)` — «21.10.2026»; `formatRelativeDay(date, today)` — сегодня, вчера, завтра,

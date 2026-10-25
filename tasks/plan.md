@@ -357,7 +357,7 @@
 - Зависимости: T-004, T-057
 
 ### T-059 · Платформа сервера, часть 2: HTTP, процедуры и три процесса
-- Статус: todo
+- Статус: done · 48a3be3..351619d
 - Модули: `platform/http`, `apps/server/src/entrypoints`, `apps/server/src/main` (`compose.ts`, `router.ts`),
   `tooling/architecture/rules.ts` (+ фикстура: `@orpc/openapi` — к правилу `orpc-server-only-in-api`),
   `packages/contract` (комментарий в `errors.ts`)

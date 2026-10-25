@@ -34,7 +34,7 @@
 
 **Решено без пользователя (2026-10-24)** — пользователь может пересмотреть:
 
-- Задачи T-002, T-006 и T-010 по определению риска относятся к `high` (замок изоляции, сигналы между домохозяйствами,
+- Задачи T-002, T-006 (и новая T-061) и T-010 по определению риска относятся к `high` (замок изоляции, сигналы между домохозяйствами,
   инвариант `cloudAllowed`): фиксер на них сразу Opus. Текст T-006 и T-010 не менялся; в T-002 поле «Риск» исправлено
   в тексте (см. ниже).
 - `plan` добавляется в служебные области `scope-enum` commitlint и в список областей корневого `CLAUDE.md` одним
@@ -62,6 +62,11 @@
   новую **T-060** (до T-006, чтобы pg-boss знал роли с самого начала); зависимости T-006 и T-009 дополнены. Задач в
   плане теперь 60. Пакеты `hono`, `@hono/node-server`, `@orpc/server`, `@orpc/openapi`, `pino`, `pino-roll`,
   `pino-pretty` названы в ADR-0005 и ADR-0010 и поэтому одобрены планом; версии — точные, через `catalog:`.
+- Критик T-006 (REVISE) разрезал её (jobs + events + роль pg-boss и отдельно realtime + SSE) и уточнил текст; принято
+  (обратимо): T-006 — фоновые задачи и события (`ScopeVerifier`, `defineEvent`, `policy: 'short'`, схема `pgboss`
+  ставится владельцем до `ensureAppRole`), новая **T-061** — живые сигналы (`NOTIFY`/`LISTEN`, `events.stream`); `background_job_run`
+  — `systemTable` без владельца; T-007 и T-008 зависят от T-061, в T-009 добавлен критерий «`identity` регистрирует
+  `ScopeVerifier`». Задач в плане теперь 61.
 - T-005 (критик, раунд 2; обратимо): правило `drizzle-and-pg-only-in-db` получает узкое исключение для схем и
   репозиториев платформы `platform/{settings,secrets,rate-limit}/(schema|*.repo).ts` (по образцу исключения для
   `packages/testing/db`), схемы `platform/*/schema.ts` видят только своя папка, `drizzle.config.ts` и тесты; таблицы
@@ -442,32 +447,65 @@
 - Риск: high — главный замок изоляции данных держится на правах роли
 - Зависимости: T-005
 
-### T-006 · Платформа: фоновые задачи, события и живые сигналы
+### T-006 · Платформа: фоновые задачи и события
 - Статус: todo
-- Модули: `platform/jobs`, `platform/events`, `platform/realtime`, `@kosht/testing`
+- Модули: `platform/{jobs,events,db}`, `apps/server/src/main/compose.ts`, `apps/server/src/entrypoints/run.ts`,
+  `tooling/architecture/rules.ts`, `apps/server/drizzle.config.ts`, `Makefile`, `@kosht/testing`, `pnpm-workspace.yaml`,
+  `apps/server/package.json`, `apps/server/src/platform/CLAUDE.md`
 - SPEC: NFR-21, NFR-22, OBS-01, OBS-07, SEC-04
 - Критерии приёмки:
-  - [ ] pg-boss 12 (точная версия) только в `platform/jobs`; `defineJob({ name, payload: Zod, options, handle })`;
-    в нагрузке только id (`isolation.mjs` ловит `userId`/`householdId`); конверт несёт `scope` и `requestId`;
-    scope перепроверяется (пользователь существует, домохозяйство то же), иначе задача отбрасывается с записью в лог.
-  - [ ] `jobs.enqueue(tx, …)` и `events.publish(tx, …)` в той же транзакции: откат — ни записи, ни задачи; коммит —
-    оба (int-тест через `ScopedDb`).
-  - [ ] `defineSubscription`: очередь `evt.<событие>.<модуль>`, доставка «хотя бы раз»; `singletonKey` через
-    `jobKey(scope, …)`: 300 публикаций с одним ключом в окне задержки → ≤ 5 запусков обработчика; ключи двух
-    домохозяйств друг друга не подавляют.
-  - [ ] Расписания `cron` по Минску + `missed: "once"` + водяной знак: после «простоя» на `FakeClock` — ровно один
-    догоняющий запуск; `defineSweep` — сквозной запрос возвращает только `(id, householdId, userId)` и ставит задачу
-    на каждого владельца.
-  - [ ] `background_job_run`: вид, статус, прогресс, водяной знак, ошибка; повтор — только для `retryable` кодов
-    каталога; `InlineJobs` для тестов.
-  - [ ] `realtime.progress` / `realtime.changed` → `NOTIFY kosht_realtime` (`householdId`, вид, id — без данных) →
-    `events.stream` (SSE) в `api`; int-тест: клиент домохозяйства A не получает сигналы B.
-  - [ ] pg-boss: схему `pgboss` создаёт и мигрирует владелец (`migrate: false` и `createSchema: false` у боевого
-    экземпляра — сверить по документации pg-boss 12); `kosht_app` получает DML, `USAGE` на sequences и `EXECUTE` на
-    функции схемы через `ensureAppRole({ schemas: [..., "pgboss"] })`; прав на DDL у `kosht_app` нет (T-060).
+  - [ ] pg-boss 12 (точная версия через `catalog:`; имена опций сверены по `.d.ts` установленной версии) только в
+    `platform/jobs`; схему `pgboss` ставит владелец до `ensureAppRole` под `withMigrationLock`, в `APP_SCHEMAS`
+    добавлена `pgboss`; шаблон тестов, `make migrate` и `migrate-cli` ставят схему, отпечаток шаблона включает версию
+    pg-boss; int-тест под `kosht_app` — `createQueue`, `send`, `work`, `complete`, `schedule`, один проход
+    `supervise` без 42501 (если нужны права сверх DML — `ESCALATE`, роль молча не расширять); адаптеры `boss-db`
+    (`fromDrizzle` на пул приложения, без своего пула) лежат в `platform/db` и добавлены в `PLATFORM_DB`; исключение
+    правила `drizzle-and-pg-only-in-db` — только для схемы и репозитория `jobs`.
+  - [ ] `defineJob({ name, payload: Zod, options, handle })`; в нагрузке только id (`isolation.mjs` ловит `userId` и
+    `householdId`); конверт `{ scope, requestId, payload }`; порт `ScopeVerifier` и реестр (по образцу
+    `SessionRegistry`; пока проверка не зарегистрирована — задача отбрасывается с записью в лог); тест: пользователя нет
+    или домохозяйство другое — задача отброшена; заглушек в боевом коде нет (тест регистрирует свою реализацию).
+  - [ ] `jobs.enqueue(tx, …)` и `events.publish(tx, …)` в той же транзакции через адаптер на `ScopedDb`: откат — ни
+    записи, ни задачи; коммит — оба (int-тест); `defineEvent({ name, payload })` с нагрузкой `{ ids ≤ 1000 }`, тест на
+    `publish` без подписчиков и на 1001 id.
+  - [ ] `defineSubscription`: очередь `evt.<событие>.<модуль>` с `policy: 'short'`, доставка «хотя бы раз»;
+    `singletonKey` через `jobKey(scope, …)`: 300 `publish` с одним ключом до старта `work` → обработчик отработал
+    ≤ 5 раз (ожидание — промис, который разрешает обработчик, без `sleep`); ключи двух домохозяйств друг друга не
+    подавляют; повтор — только для `retryable` кодов каталога.
+  - [ ] Расписания: `schedule` вызывается с `{ tz: <настройка `system.time-zone`>, missed: "once" }` (пояс не зашит,
+    смена пояса действует после перезапуска `worker`); свой код — чистый помощник `pendingPeriods(watermark, now,
+    step)` и водяной знак, проверяются на `FakeClock` (после «простоя» — ровно один догоняющий запуск); `defineSweep`
+    на фикстурной таблице `fx_*`: сквозной запрос через `crossTenant` возвращает только `(id, householdId, userId)` и
+    ставит задачу на каждого владельца.
+  - [ ] `background_job_run` — `systemTable` без `household_id` и `user_id`: вид, статус, прогресс, водяной знак
+    расписаний платформы по ключу расписания, ошибка; миграция; водяной знак пользовательских расписаний живёт в
+    таблицах модулей (ADR-0008; расхождение ADR-0008 и ARCHITECTURE §9 записано в паспорт); `InlineJobs` в
+    `@kosht/testing` (принимает функцию поиска обработчика, форму сверяет тест на сервере); `api` и `bot`:
+    `migrate: false`, `supervise: false`, `schedule: false`, `start()` без `work`; `worker`: `work`, расписания,
+    `supervise` с явными интервалами; `stop({ graceful: true, timeout ≤ 8000 })` — остановка по SIGTERM ≤ 10 с.
 - Проверка: make check; make test-int
-- Риск: medium — дубли и штормы задач заметны не сразу, но механизм целиком под тестами
+- Риск: high — scope в конверте задач, подписки и права роли
 - Зависимости: T-005, T-004, T-059, T-060
+
+### T-061 · Живые сигналы: realtime и `events.stream`
+- Статус: todo
+- Модули: `platform/{realtime,db}`, `apps/server/src/main/{compose,router}.ts`, `apps/server/src/entrypoints/run.ts`,
+  `docs/ARCHITECTURE.md` §4.3
+- SPEC: NFR-21, OBS-01
+- Критерии приёмки:
+  - [ ] `realtime.progress` и `realtime.changed(scope, { entity, ids })` формы `SiteEvent` → `pg_notify('kosht_realtime')`
+    (в сообщении `householdId`, вид, `entity`, id; без данных); NOTIFY ≤ 8000 байт — длинные списки id дробятся
+    (по ~40 id).
+  - [ ] `LISTEN` на отдельном `pg.Client` из `platform/db` только в `api`; переподключение с паузой; после
+    переподключения потоки закрываются, чтобы сайт запросил данные заново.
+  - [ ] `events.stream` заменяет `authed`-заглушку в `router.ts`: фильтр по `context.s.scope.householdId`; очередь
+    соединения ≤ 1000 со схлопыванием по `(type, entity, id)`; не более 8 потоков на пользователя (старый
+    закрывается); закрытие по abort и `shutdownSignal`.
+  - [ ] Int: реальный порт 0, тестовый резолвер сессии; клиент домохозяйства A не получает сигналы B; 300 `changed`
+    не роняют поток; остановка без висящих соединений в `pg_stat_activity`.
+- Проверка: make check; make test-int
+- Риск: high — сигналы между домохозяйствами
+- Зависимости: T-059, T-060
 
 ### T-007 · Все 36 модулей пустыми, но живыми: паспорта, корень композиции и реестры
 - Статус: todo
@@ -488,7 +526,7 @@
     задачи модуля (ARCHITECTURE §15).
 - Проверка: make check; make deps-check; pnpm vitest run apps/server/src/main
 - Риск: medium — ошибка в реестрах и порядке сборки всплывёт сразу у всех модулей
-- Зависимости: T-006, T-002
+- Зависимости: T-006, T-061, T-002
 
 ### T-008 · Каркас сайта и дизайн-система «Пуща и янтарь»
 - Статус: todo
@@ -517,7 +555,7 @@
     CSRF и `Host` из T-059 даст 403); `TRUSTED_ORIGINS` в `make dev` по умолчанию пуст.
 - Проверка: make check; make e2e; вручную: скриншоты 1440/390 рядом с `design/screenshots/desktop/Main.png`
 - Риск: medium — от дизайн-системы зависят все экраны; ошибка доступности размножится
-- Зависимости: T-007, T-003, T-057
+- Зависимости: T-007, T-003, T-057, T-061
 
 ### T-009 · Сквозной срез: первый запуск, вход и счёт «Наличные» с тестом изоляции по реестру
 - Статус: todo
@@ -542,6 +580,8 @@
     «Наличные · 0,00 BYN»; axe 0 на этих маршрутах при 1440 и 390.
   - [ ] Ограничение размера тела запроса `/api` (`bodyLimit` Hono; значение — настройка, по умолчанию достаточное для
     JSON, файлы идут отдельным путём T-016); превышение → `VALIDATION`; тест. (Находка ревью T-059.)
+  - [ ] `identity` регистрирует `ScopeVerifier` (порт из T-006): пользователь существует и домохозяйство то же;
+    тест: задача фоновой очереди с чужим `householdId` отбрасывается.
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/main
 - Риск: high — вход, сессия и первый тест изоляции; на них опираются все следующие задачи
 - Зависимости: T-008, T-004, T-005, T-007, T-059

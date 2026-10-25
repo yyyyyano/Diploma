@@ -490,7 +490,7 @@
 ### T-061 · Живые сигналы: realtime и `events.stream`
 - Статус: todo
 - Модули: `platform/{realtime,db}`, `apps/server/src/main/{compose,router}.ts`, `apps/server/src/entrypoints/run.ts`,
-  `docs/ARCHITECTURE.md` §4.3
+  `apps/server/src/platform/CLAUDE.md`, `docs/ARCHITECTURE.md` §4.3 и §10.5
 - SPEC: NFR-21, OBS-01
 - Критерии приёмки:
   - [ ] `realtime.progress` и `realtime.changed(scope, { entity, ids })` формы `SiteEvent` → `pg_notify('kosht_realtime')`
@@ -503,6 +503,9 @@
     закрывается); закрытие по abort и `shutdownSignal`.
   - [ ] Int: реальный порт 0, тестовый резолвер сессии; клиент домохозяйства A не получает сигналы B; 300 `changed`
     не роняют поток; остановка без висящих соединений в `pg_stat_activity`.
+  - [ ] Переподключение `LISTEN`: int-тест — разрыв соединения (`pg_terminate_backend` под владельцем) закрывает открытые
+    потоки, новое соединение получает сигналы; `pg_notify` аудитор не видит, поэтому `realtime.changed` вызывается
+    только после `commit` — тест: при откате транзакции сигнала нет.
 - Проверка: make check; make test-int
 - Риск: high — сигналы между домохозяйствами
 - Зависимости: T-059, T-060

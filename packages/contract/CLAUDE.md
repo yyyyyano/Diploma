@@ -17,7 +17,7 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
 - Общие схемы (`common.ts`): `Money`, `LocalDate` — те же объекты, что в `kernel`; `PageNumber` (целое ≥ 1),
   `PageSize` (1..100, по умолчанию 50), `RowCount` (целое ≥ 0); `EntityKind` (kebab-case), `EntityId` (uuid).
 - Процедуры — дерево `contract` (`router.ts`), ветка модуля — `<модуль>/<модуль>.contract.ts`:
-  `system.health` — без входа и ошибок, `{ status: "ok" }`; доступ `publicProc` ставит сервер (T-005), HTTP
+  `system.health` — без входа и ошибок, `{ status: "ok" }`; доступ `publicProc` ставит сервер (T-059), HTTP
   `/healthz` она не заменяет. `events.stream` — поток `SiteEvent` (`progress` с `percent` 0..100 или без него,
   `changed`; сущность и id, без данных), ошибка `UNAUTHORIZED`.
 - Чат: `PageContext { route, params ≤ 20, selected? }`; `ChatMessagePart` — `text`, `step` (только имя инструмента),

@@ -18,7 +18,7 @@ export const ROOTS = ["apps/server/src", "packages"];
 const SERVER = "apps/server/src";
 
 /**
- * Где рождается Scope (ARCHITECTURE §6.4). Уточняют T-004 (kernel, testing), T-005 (http), T-006 (jobs, tools),
+ * Где рождается Scope (ARCHITECTURE §6.4). Уточняют T-004 (kernel, testing), T-059 (http), T-006 (jobs, tools),
  * T-052 (вход Telegram). Тесты, `__fixtures__` и `packages/testing` не проверяются вовсе (TEST_CODE).
  */
 export const SCOPE_ENTRIES = [

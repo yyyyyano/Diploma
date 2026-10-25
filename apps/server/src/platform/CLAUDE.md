@@ -38,7 +38,8 @@
   clock, log })` → `status` (`set | unset | unreadable`), `reveal` (только коду), `set`, `clear`.
 - `rate-limit/rate-limit.ts` — `defineRateRule({ name, limit, windowMs })`, `createRateLimiter({ db, clock, masterKey,
   log, timeoutMs? })` → `hit` (`{ allowed, remaining, retryAfterMs }`), `enforce` (`RATE_LIMITED` с
-  `retryAfterSeconds`); БД недоступна или молчит дольше 2 с — `UNAVAILABLE`.
+  `retryAfterSeconds`); БД недоступна или молчит дольше 2 с — `UNAVAILABLE`. Перед записью удаляется до 100
+  (`PURGE_BATCH`) строк того же правила из прошлых окон — отдельной задачи очистки нет.
 
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits` — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,

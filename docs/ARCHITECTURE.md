@@ -192,8 +192,8 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
     }
     await s.transaction(async (tx) => {                                         // короткая транзакция: атомарная запись
       const saved = await receiptsRepo.saveRecognized(tx, receiptId, extracted, check, uid);
-      const txn = await d.transactions.recordFromReceipt(tx, toPurchase(saved)); // фасад соседа получает tx
-      await d.platform.events.publish(tx, "receipts.recognized", { receiptId, transactionId: txn.id });
+      await d.transactions.recordFromReceipt(tx, toPurchase(saved));            // фасад соседа получает tx
+      await d.platform.events.publish(tx, receiptRecognized, { ids: [receiptId] }); // пачка id, без данных
     });
   };
 }

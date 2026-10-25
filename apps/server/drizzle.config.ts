@@ -1,5 +1,5 @@
-// drizzle-kit для боевой схемы (make db-generate): схемы модулей и платформы (settings, secrets, rate_limits) →
-// SQL-миграции в apps/server/drizzle/.
+// drizzle-kit для боевой схемы (make db-generate): схемы модулей и платформы (settings, secrets, rate_limits,
+// background_job_run) → SQL-миграции в apps/server/drizzle/.
 // SQL читается глазами и правится руками там, где drizzle-kit не умеет (расширения, HNSW, CONCURRENTLY,
 // ON DELETE SET NULL (колонка)), — .claude/rules/database.md, ADR-0007. Применяет миграции приложение
 // при старте под pg_advisory_lock (make migrate), а не drizzle-kit.

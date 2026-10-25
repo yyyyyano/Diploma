@@ -1,0 +1,12 @@
+{
+  "//": "Сайт (ADR-0002, ADR-0013): Vite читает исходники как есть; tsc только проверяет типы. routeTree.gen.ts создаёт make typecheck (turbo generate).",
+  "extends": "../../tooling/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["esnext", "dom", "dom.iterable"],
+    "types": ["vite/client"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx"
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "*.ts"]
+}

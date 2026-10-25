@@ -7,12 +7,34 @@ packages:
 # Единые версии для всех пакетов: в package.json пишется "<пакет>": "catalog:" (ADR-0001).
 catalog:
   # HTTP (ADR-0005): Hono — оболочка и два слушателя; oRPC — все пакеты строго одной версии с @orpc/contract.
+  "@axe-core/playwright": 4.14.0
+  # Шрифты макета локально (DES-09): переменные начертания Onest и Literata.
+  "@fontsource-variable/literata": 5.3.0
+  "@fontsource-variable/onest": 5.3.1
   "@hono/node-server": 2.1.5
+  # Сайт (ADR-0013): Mantine 9 — все пакеты строго одной версии.
+  "@mantine/core": 9.7.3
+  "@mantine/hooks": 9.7.3
+  "@orpc/client": 1.16.1
   "@orpc/contract": 1.16.1
   "@orpc/openapi": 1.16.1
+  "@orpc/openapi-client": 1.16.1
   "@orpc/server": 1.16.1
+  "@orpc/tanstack-query": 1.16.1
+  "@playwright/test": 1.64.1
+  "@tanstack/react-query": 5.104.5
+  # Маршруты сайта: router, его генератор (плагин Vite и CLI для make typecheck) — одной линейки.
+  "@tanstack/react-router": 1.170.46
+  "@tanstack/router-cli": 1.167.46
+  "@tanstack/router-plugin": 1.168.48
+  "@testing-library/jest-dom": 7.0.1
+  "@testing-library/react": 16.3.3
+  "@testing-library/user-event": 14.6.8
   "@types/node": 26.6.5
   "@types/pg": 8.23.1
+  "@types/react": 19.3.0
+  "@types/react-dom": 19.3.0
+  "@vitejs/plugin-react": 6.1.2
   "@vitest/coverage-v8": 5.0.5
   # Drizzle 1.0 RC — строго одна точная версия для orm и kit: аудитор SQL опирается на порядок вызова
   # Logger.logQuery (ADR-0006); обновление — отдельная задача с прогоном канареек.
@@ -21,8 +43,11 @@ catalog:
   fast-check: 4.10.2
   hono: 4.13.13
   i18next: 26.5.7
+  jsdom: 30.1.3
   # Парсер PostgreSQL 18 (WASM) для аудитора SQL — точная версия, обновление с прогоном канареек (ADR-0019).
   libpg-query: 18.2.0
+  lucide-react: 1.61.0
+  msw: 3.0.3
   pg: 8.23.1
   # Очередь задач на той же базе (ADR-0008) — точная версия; импортируется только в platform/jobs.
   pg-boss: 12.38.0
@@ -30,7 +55,11 @@ catalog:
   pino: 10.4.0
   pino-pretty: 13.2.0
   pino-roll: 4.0.0
+  react: 19.3.1
+  react-dom: 19.3.1
+  react-i18next: 17.1.8
   typescript: 7.0.2
+  vite: 8.3.5
   vitest: 5.0.5
   zod: 4.6.7
 

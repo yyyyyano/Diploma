@@ -1,0 +1,9 @@
+{
+  "routesDirectory": "./src/routes",
+  "generatedRouteTree": "./src/routeTree.gen.ts",
+  "addExtensions": true,
+  "quoteStyle": "double",
+  "routeTreeFileHeader": [
+    "// Сгенерировано TanStack Router (tsr generate / плагин Vite) из src/routes — не править и не коммитить."
+  ]
+}

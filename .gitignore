@@ -25,3 +25,9 @@ coverage/
 # сервера (apps/server/src/platform/secrets): в нём нет ни одного секрета.
 secrets/
 !/apps/server/src/platform/secrets/
+
+# Дерево маршрутов сайта генерирует TanStack Router (make typecheck, Vite, Vitest) — в git не хранится (T-008).
+apps/web/src/routeTree.gen.ts
+# Отчёты Playwright (make e2e).
+e2e/test-results/
+e2e/playwright-report/

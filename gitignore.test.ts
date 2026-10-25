@@ -23,6 +23,7 @@ describe(".gitignore", () => {
     "data/files/x.pdf",
     "models/model.gguf",
     "samples/receipt.jpg",
+    "apps/web/src/routeTree.gen.ts",
   ])("%s не попадает в git", (path) => {
     expect(isIgnored(path)).toBe(true);
   });

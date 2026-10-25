@@ -1,5 +1,5 @@
 // Тесты Vitest (ADR-0001, docs/ARCHITECTURE.md §12): unit — без БД, int — на настоящем Postgres (шаблонная
-// база на тестовый файл). Проект web добавит T-008.
+// база на тестовый файл), web — сайт в jsdom (Testing Library + MSW) с конфигом Vite сайта.
 import { defineConfig } from "vitest/config";
 import { FIXTURES_DIR } from "./tooling/architecture/rules.ts";
 
@@ -11,7 +11,7 @@ export default defineConfig({
           // Быстрые тесты без БД: `x.test.ts` рядом с кодом; `x.int.test.ts` — проект int (настоящий Postgres).
           name: "unit",
           include: ["*.test.ts", "{apps,packages,tooling}/**/*.test.ts"],
-          exclude: ["**/node_modules/**", "**/*.int.test.ts", `${FIXTURES_DIR}/**`],
+          exclude: ["**/node_modules/**", "**/*.int.test.ts", "apps/web/**", `${FIXTURES_DIR}/**`],
         },
       },
       {
@@ -21,6 +21,17 @@ export default defineConfig({
           include: ["{apps,packages,tooling}/**/*.int.test.ts"],
           exclude: ["**/node_modules/**", `${FIXTURES_DIR}/**`],
           globalSetup: ["apps/server/src/platform/db/__fixtures__/int-global-setup.ts"],
+        },
+      },
+      {
+        // Сайт: тот же Vite-конфиг (React, генератор маршрутов), DOM — jsdom, сеть — только MSW (ADR-0013).
+        extends: "./apps/web/vite.config.ts",
+        root: "./apps/web",
+        test: {
+          name: "web",
+          environment: "jsdom",
+          include: ["src/**/*.test.{ts,tsx}", "*.test.ts"],
+          setupFiles: ["src/test/setup.ts"],
         },
       },
     ],

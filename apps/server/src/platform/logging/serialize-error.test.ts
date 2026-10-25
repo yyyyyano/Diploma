@@ -69,6 +69,48 @@ describe("OBS-02: ошибка в логе — стек и контекст бе
     expect(serialized.message?.startsWith("[email] aaa")).toBe(true);
   });
 
+  describe("OBS-04: ПД на границе 8000 символов (бывший срез до scrub) не попадает в лог", () => {
+    // Десять «email» по 785 символов сжимаются scrub до 7 символов каждый: граница 8000 исходного текста
+    // оказывается в первых 500 символах результата.
+    const shrinking = Array.from({ length: 10 }, () => `${"a".repeat(780)}@b.cc`).join(" ");
+    const BOUNDARY = 8_000;
+
+    /** Текст, где первые `cut` символов `pii` кончаются ровно на 8000-м символе. */
+    function straddling(pii: string, cut: number): string {
+      const filler = "x".repeat(BOUNDARY - shrinking.length - 2 - cut);
+      const head = `${shrinking} ${filler} ${pii.slice(0, cut)}`;
+      expect(head).toHaveLength(BOUNDARY);
+      return `${head}${pii.slice(cut)} ${"z".repeat(20_000)}`;
+    }
+
+    it.each([
+      ["email", "ivan.petrov@mail.by", 15, "[email]", ["ivan", "@mai"]],
+      ["карта с пробелами", "4111 1111 1111 1111", 16, "[card]", ["4111", "1111 1"]],
+      ["карта с дефисами", "5500-0000-0000-0004", 12, "[card]", ["5500", "0000-0"]],
+      ["IBAN BY с пробелами", "BY13 NBRB 3600 9000 0000 2Z00 AB00", 19, "[iban]", ["BY13", "NBRB"]],
+      ["IBAN BY слитно", "BY13NBRB3600900000002Z00AB00", 12, "[iban]", ["BY13", "NBRB"]],
+    ])("%s, оборванный на границе", (_name, pii, cut, placeholder, fragments) => {
+      const message = serializeError(new Error(straddling(pii, cut))).message ?? "";
+      expect(message).toContain(placeholder);
+      for (const fragment of fragments) expect(message).not.toContain(fragment);
+    });
+  });
+
+  it("сообщение длиннее 1 млн символов не пишется: его не прочитать целиком быстро", () => {
+    const error = new Error(`ivan@mail.by ${"a".repeat(1_000_000)}`);
+    const serialized = serializeError(error);
+    expect(serialized).not.toHaveProperty("message");
+    expect(JSON.stringify(serialized)).not.toContain("ivan");
+  });
+
+  it("сообщение в 1 млн символов без «@» (худший случай scrub) — не дольше 250 мс", () => {
+    const error = new Error(`ivan@mail.by ${"a".repeat(1_000_000 - 13)}`);
+    const started = performance.now();
+    const serialized = serializeError(error);
+    expect(performance.now() - started).toBeLessThan(250);
+    expect(serialized.message?.startsWith("[email] aaa")).toBe(true);
+  });
+
   it("код и имя не токены (текст, значения) — не пишутся", () => {
     const error = Object.assign(new Error("x"), { code: "Молоко 2,49", name: "Ошибка с данными" });
     const serialized = serializeError(error);

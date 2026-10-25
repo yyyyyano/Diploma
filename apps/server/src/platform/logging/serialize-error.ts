@@ -3,8 +3,8 @@
 //   message, detail, where, hint не пишутся: в них значения строк («Key (name)=(Молоко 2,49) already exists»),
 //   которых scrub не узнаёт;
 // - DrizzleQueryError: в сообщении — параметры запроса (значения), пишутся только кадры стека и причина;
-// - прочие: имя, код, reason и table (если это машинные токены), scrub(message) и кадры стека (первая строка стека — то же
-//   сообщение, поэтому стек пишется без неё).
+// - прочие: имя, код, reason и table (если это машинные токены), scrub(message) (длиннее 1 млн символов — не пишется)
+//   и кадры стека (первая строка стека — то же сообщение, поэтому стек пишется без неё).
 import { scrub } from "./scrub.ts";
 
 export interface SerializedError {
@@ -26,12 +26,12 @@ const PG_CODE = /^[0-9A-Z]{5}$/;
 const TOKEN = /^[A-Za-z_][A-Za-z0-9_.:-]{0,79}$/;
 const MAX_MESSAGE = 500;
 /**
- * Сколько текста видит scrub: его regexp email на длинной строке без «@» работает за квадратичное время (200 тыс.
- * символов — ~20 с). Обрезок на границе (часть email или карты) в лог не попадёт: замены сокращают текст не больше
- * чем в 9 раз (IBAN BY с пробелом между каждым знаком, 52 → 6 символов), и граница 8000 после scrub остаётся
- * дальше MAX_MESSAGE, — поэтому и сообщение, и кадр стека режутся до MAX_MESSAGE после scrub.
+ * Текст длиннее — не пишется вовсе (OBS-04). Срезать его до scrub нельзя: обрезок на границе (`ivan.petrov@mai`,
+ * `4111 1111 1111 1`, `BY13 NBRB 3600`) scrub уже не узнаёт, а замены сжимают текст без предела (email любой длины →
+ * `[email]`), так что обрезок попадает в первые MAX_MESSAGE символов. Поэтому scrub видит текст целиком (он линеен:
+ * 1 млн символов — десятки мс), а потерять сообщение длиной в мегабайт дешевле, чем записать ПД.
  */
-const MAX_SCRUB_INPUT = 8_000;
+const MAX_SCRUB_INPUT = 1_000_000;
 const MAX_FRAMES = 30;
 const MAX_DEPTH = 3;
 
@@ -64,7 +64,7 @@ export function serializeError(thrown: unknown, depth = 0): SerializedError {
     type,
     ...(safeCode === undefined ? {} : { code: safeCode }),
     ...tokens(record, ["reason", "table"]),
-    message: scrub(thrown.message.slice(0, MAX_SCRUB_INPUT)).slice(0, MAX_MESSAGE),
+    ...(thrown.message.length > MAX_SCRUB_INPUT ? {} : { message: scrubbed(thrown.message) }),
     stack,
     ...cause,
   };
@@ -74,9 +74,14 @@ export function serializeError(thrown: unknown, depth = 0): SerializedError {
 function frames(stack: string | undefined): string[] {
   return (stack ?? "")
     .split("\n")
-    .filter((line) => /^\s+at\s/.test(line))
+    .filter((line) => /^\s+at\s/.test(line) && line.length <= MAX_SCRUB_INPUT)
     .slice(0, MAX_FRAMES)
-    .map((line) => scrub(line.trim().slice(0, MAX_SCRUB_INPUT)).slice(0, MAX_MESSAGE));
+    .map((line) => scrubbed(line.trim()));
+}
+
+/** scrub по всему тексту, затем обрезка: замены уже сделаны, обрывается только безопасный текст. */
+function scrubbed(text: string): string {
+  return scrub(text).slice(0, MAX_MESSAGE);
 }
 
 function token(value: unknown): string | undefined {

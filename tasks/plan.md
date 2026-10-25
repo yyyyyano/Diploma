@@ -489,23 +489,38 @@
 
 ### T-061 · Живые сигналы: realtime и `events.stream`
 - Статус: todo
-- Модули: `platform/{realtime,db}`, `apps/server/src/main/{compose,router}.ts`, `apps/server/src/entrypoints/run.ts`,
-  `apps/server/src/platform/CLAUDE.md`, `docs/ARCHITECTURE.md` §4.3 и §10.5
+- Модули: `platform/{realtime,db}` (новый `db/listen.ts`), `apps/server/src/main/{compose,router}.ts` (`createRouter({ streams })`),
+  `apps/server/src/main/router.contract.test.ts`, `apps/server/src/entrypoints/run.ts`,
+  `apps/server/src/entrypoints/__fixtures__/stream-api.ts`, `packages/contract` (комментарий в `events.contract.ts`),
+  `apps/server/src/platform/CLAUDE.md`, `docs/ARCHITECTURE.md` §4.3, §10.5 и строка 261
 - SPEC: NFR-21, OBS-01
 - Критерии приёмки:
-  - [ ] `realtime.progress` и `realtime.changed(scope, { entity, ids })` формы `SiteEvent` → `pg_notify('kosht_realtime')`
-    (в сообщении `householdId`, вид, `entity`, id; без данных); NOTIFY ≤ 8000 байт — длинные списки id дробятся
-    (по ~40 id).
-  - [ ] `LISTEN` на отдельном `pg.Client` из `platform/db` только в `api`; переподключение с паузой; после
-    переподключения потоки закрываются, чтобы сайт запросил данные заново.
-  - [ ] `events.stream` заменяет `authed`-заглушку в `router.ts`: фильтр по `context.s.scope.householdId`; очередь
-    соединения ≤ 1000 со схлопыванием по `(type, entity, id)`; не более 8 потоков на пользователя (старый
-    закрывается); закрытие по abort и `shutdownSignal`.
-  - [ ] Int: реальный порт 0, тестовый резолвер сессии; клиент домохозяйства A не получает сигналы B; 300 `changed`
-    не роняют поток; остановка без висящих соединений в `pg_stat_activity`.
-  - [ ] Переподключение `LISTEN`: int-тест — разрыв соединения (`pg_terminate_backend` под владельцем) закрывает открытые
-    потоки, новое соединение получает сигналы; `pg_notify` аудитор не видит, поэтому `realtime.changed` вызывается
-    только после `commit` — тест: при откате транзакции сигнала нет.
+  - [ ] `realtime.changed(s: ScopedDb, { entity, ids })` — `select pg_notify('kosht_realtime', …)` через `s.db`: внутри
+    транзакции сигнал уходит при коммите, при откате и `ROLLBACK TO SAVEPOINT` — нет; `realtime.progress(scope, …)` —
+    через пул; сообщение: `householdId`, вид, `entity`, id, без данных; куски ≤ 7500 байт (`Buffer.byteLength`), тест на
+    1000 id с `entity` из 48 символов: все куски в пределе, все id дошли.
+  - [ ] `LISTEN` на `pg.Client` (`kosht-api-listen`, один на процесс, `keepAlive`) только в `api`; первое подключение при
+    старте — неудача есть ошибка старта; потом переподключение с паузой (0,2 с, ×2, потолок 5 с; backoff проверяется
+    модульно с подменой таймера); все потоки, включая открытые во время разрыва, закрываются при успешном
+    переподключении; входящее сообщение проверяется схемой Zod, неверное — `realtime.bad-message` в лог без текста.
+  - [ ] `events.stream` заменяет `authed`-заглушку (`createRouter({ streams })`, хаб собирает `compose`; `platform/http`
+    не меняется): хаб хранит карту `householdId → потоки`, ключ берётся из `context.s.scope`, а не из сообщения и не
+    из входа; очередь соединения ≤ 1000 со схлопыванием по `(type, entity, id)` (чистый класс с `x.test.ts`),
+    переполнение закрывает поток; ≤ 8 потоков на пользователя (девятый закрывает самый старый); закрытие по abort,
+    `shutdownSignal` и `stop()`; закрытие потока — `event: done` (клиент выходит из `for await` без ошибки), контракт не
+    меняется; порядок остановки: потоки, затем `LISTEN` без переподключения (`realtime.stopped` до `db.closed`), затем
+    `jobs.stop`, затем пул.
+  - [ ] Int: реальный порт 0, чтение SSE через `fetch` с помощником-парсером (`event: message`, `data:` JSON,
+    комментарии keepalive, `event: done`); A не получает сигналы B — барьер: сначала `changed` для B, затем «часовой»
+    `changed` для A, получение часового доказывает, что сигнал B уже был бы доставлен; 300 `changed` по разным id
+    доходят; `pg_terminate_backend` под владельцем закрывает потоки, новый поток получает сигналы; откат — сигнала нет,
+    коммит — есть; `SIGTERM` при открытом SSE на настоящем `run.ts` (`RunOptions.setup(composition)` и фикстура
+    `stream-api.ts`) ≤ 10 с, код 0; в `pg_stat_activity` нет `kosht-api-listen`; у `worker` и `bot` по-прежнему
+    только `kosht-<роль>`; существующие проверки `processes.int.test.ts` (последние строки лога `db.closed`,
+    `process.stopped`) не ломаются.
+  - [ ] Комментарий `events.contract.ts:28` («T-006») исправлен на T-061; паспорт `platform` («Не видит … pg_notify») и
+    ARCHITECTURE приведены к факту; правка `.claude/rules/backend-module.md` («в realtime передавай `s.scope`» →
+    `changed(s, …)` с `ScopedDb`) — предложением пользователю в итоге.
 - Проверка: make check; make test-int
 - Риск: high — сигналы между домохозяйствами
 - Зависимости: T-059, T-060
@@ -556,6 +571,8 @@
     `no-raw-colors` и проверка литералов зелёные на `apps/web`.
   - [ ] Прокси Vite `/api` → `127.0.0.1:8140` настроен без `changeOrigin` (иначе `Host` станет `:8140`, а проверка
     CSRF и `Host` из T-059 даст 403); `TRUSTED_ORIGINS` в `make dev` по умолчанию пуст.
+  - [ ] Клиент `events.stream`: конец потока (`event: done`) или ошибка → переподключение и `invalidateQueries()` всех
+    запросов.
 - Проверка: make check; make e2e; вручную: скриншоты 1440/390 рядом с `design/screenshots/desktop/Main.png`
 - Риск: medium — от дизайн-системы зависят все экраны; ошибка доступности размножится
 - Зависимости: T-007, T-003, T-057, T-061

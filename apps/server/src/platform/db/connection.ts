@@ -27,17 +27,18 @@ export function connectionOptions(config: DbConfig, database?: string): pg.PoolC
     port: url.port === "" ? 5432 : Number(url.port),
     user: decodeURIComponent(url.username),
     database: database ?? decodeURIComponent(url.pathname.slice(1)),
-    password: readPassword(config.passwordFile),
+    password: readPasswordFile(config.passwordFile),
   };
 }
 
-function readPassword(file: string): string {
+/** Пароль БД из файла (без перевода строки); нет файла или он пуст — подсказка make init. */
+export function readPasswordFile(file: string): string {
   let text: string;
   try {
     text = readFileSync(file, "utf8");
   } catch (error) {
     throw new Error(
-      `Не прочитать пароль БД из ${file}: выполните make init (создаёт secrets/db_password).`,
+      `Не прочитать пароль БД из ${file}: выполните make init (создаёт secrets/db_password и secrets/db_app_password).`,
       { cause: error },
     );
   }

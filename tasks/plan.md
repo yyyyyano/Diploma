@@ -271,7 +271,7 @@
 - Зависимости: T-003
 
 ### T-058 · Аудитор SQL по настоящему разбору: парсер PostgreSQL вместо регулярок
-- Статус: todo
+- Статус: done · a9eda6f..e8362eb
 - Модули: `apps/server/src/platform/db` (`audit.ts`, тесты, паспорт), `apps/server/package.json`,
   `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tooling/architecture/rules.ts` (+ фикстура), `docs/adr/`
 - SPEC: ROLE-01, SEC-04, PRIV-07

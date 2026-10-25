@@ -1,26 +1,9 @@
-// Подключение к Postgres: адрес — из окружения (DATABASE_URL, без пароля), пароль — из файла secrets/db_password
-// (NFR-16, ADR-0015). Окружение читается здесь, пока нет platform/config: T-005 перенесёт чтение в схему
-// конфигурации, а эта функция будет получать уже проверенные значения.
+// Подключение к Postgres: адрес (DATABASE_URL, без пароля) и файл пароля (secrets/db_password) — из конфигурации
+// (platform/config, loadDbConfig/loadConfig), пароль читается из файла здесь (NFR-16, ADR-0015). Проверки адреса
+// повторяются: DbConfig может собрать и не загрузчик конфигурации, а пароль в адресе утекает в логи.
 import { readFileSync } from "node:fs";
 import pg from "pg";
-
-export interface DbConfig {
-  /** Адрес вида postgres://пользователь@хост:порт/база — без пароля. */
-  readonly url: string;
-  /** Файл с паролем: в режиме «код на хосте» — secrets/db_password, в контейнере — /run/secrets/db_password. */
-  readonly passwordFile: string;
-}
-
-const DEFAULT_URL = "postgres://kosht@127.0.0.1:5440/kosht";
-const DEFAULT_PASSWORD_FILE = "secrets/db_password";
-
-/** Настройки подключения из окружения; без переменных — значения make dev (compose.yaml, .env.example). */
-export function dbConfigFromEnv(env: NodeJS.ProcessEnv = process.env): DbConfig {
-  return {
-    url: env["DATABASE_URL"] || DEFAULT_URL,
-    passwordFile: env["DB_PASSWORD_FILE"] || DEFAULT_PASSWORD_FILE,
-  };
-}
+import type { DbConfig } from "../config/config.ts";
 
 /**
  * Параметры pg без строки подключения: пароль не склеивается с адресом (строка с паролем легко утекает в лог

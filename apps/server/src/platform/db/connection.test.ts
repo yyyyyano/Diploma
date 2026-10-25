@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
-import { connectionOptions, dbConfigFromEnv } from "./connection.ts";
+import { connectionOptions } from "./connection.ts";
 
 const dir = mkdtempSync(join(tmpdir(), "kosht-db-connection-"));
 const passwordFile = join(dir, "db_password");
@@ -11,13 +11,6 @@ writeFileSync(passwordFile, "s3cret-from-file\n");
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 
 describe("NFR-16: подключение к БД — адрес из окружения, пароль из файла", () => {
-  it("без переменных — адрес make dev и secrets/db_password", () => {
-    expect(dbConfigFromEnv({})).toEqual({
-      url: "postgres://kosht@127.0.0.1:5440/kosht",
-      passwordFile: "secrets/db_password",
-    });
-  });
-
   it("разбирает DATABASE_URL на части и берёт пароль из файла без перевода строки", () => {
     const options = connectionOptions({
       url: "postgres://kosht@127.0.0.1:5441/kosht",

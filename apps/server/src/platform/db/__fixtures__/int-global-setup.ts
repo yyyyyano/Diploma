@@ -3,11 +3,12 @@
 // @kosht/testing: пакет тестов не импортирует сервер, а миграции — его (ARCHITECTURE §12).
 import { dropOrphans, fingerprintDir, prepareTemplate } from "@kosht/testing/db";
 import type { TestProject } from "vitest/node";
-import { connectionOptions, createPool, dbConfigFromEnv } from "../connection.ts";
+import { loadDbConfig } from "../../config/config.ts";
+import { connectionOptions, createPool } from "../connection.ts";
 import { MIGRATIONS_DIR, runMigrations } from "../migrate.ts";
 
 export default async function setup(project: TestProject): Promise<void> {
-  const config = dbConfigFromEnv();
+  const config = loadDbConfig();
   const { host, port, user, password, database } = connectionOptions(config);
   if (
     host === undefined ||

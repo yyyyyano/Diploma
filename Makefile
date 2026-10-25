@@ -20,6 +20,9 @@ export TURBO_TELEMETRY_DISABLED := 1
 export TURBO_NO_UPDATE_NOTIFIER := 1
 
 BIN := node_modules/.bin
+# Программы сервера читают переменные из .env, если он есть (окружение проверяет platform/config); агент .env не
+# открывает — его читает только node.
+NODE_APP := node --env-file-if-exists=.env
 BASE ?= main
 DC := docker compose
 
@@ -66,7 +69,7 @@ db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
 
 migrate: need-node db-up ## Применить миграции apps/server/drizzle (приложение делает то же при старте)
-	node apps/server/src/platform/db/migrate-cli.ts
+	$(NODE_APP) apps/server/src/platform/db/migrate-cli.ts
 
 # Тестовая схема механизма изоляции: make db-generate DRIZZLE_CONFIG=apps/server/src/platform/db/__fixtures__/drizzle.config.ts
 DRIZZLE_CONFIG ?= apps/server/drizzle.config.ts

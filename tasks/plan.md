@@ -62,6 +62,11 @@
   новую **T-060** (до T-006, чтобы pg-boss знал роли с самого начала); зависимости T-006 и T-009 дополнены. Задач в
   плане теперь 60. Пакеты `hono`, `@hono/node-server`, `@orpc/server`, `@orpc/openapi`, `pino`, `pino-roll`,
   `pino-pretty` названы в ADR-0005 и ADR-0010 и поэтому одобрены планом; версии — точные, через `catalog:`.
+- T-005 (критик, раунд 2; обратимо): правило `drizzle-and-pg-only-in-db` получает узкое исключение для схем и
+  репозиториев платформы `platform/{settings,secrets,rate-limit}/(schema|*.repo).ts` (по образцу исключения для
+  `packages/testing/db`), схемы `platform/*/schema.ts` видят только своя папка, `drizzle.config.ts` и тесты; таблицы
+  `settings`, `secrets`, `rate_limit` — `systemTable` платформы, `modules.ts` не меняется; строка CONSTRAINTS «`drizzle-orm`
+  и `pg` вне …» должна быть поправлена пользователем. Откат: убрать исключение и вынести репозитории в `platform/db`.
 - Критик T-057 (REVISE) заменил расплывчатые критерии проверяемыми; принято (обратимо): точный формат `formatMoney`
   и дат, форма контракта (`pickErrors`, `events.stream`, `PageContext`), правило `i18n-allowed-deps`; проверка
   «каждый ключ трассы `calc` имеет подпись в `formulas`» в T-057 сужена до `fin.freeBalance`, общий реестр ключей
@@ -383,13 +388,14 @@
 
 ### T-060 · Роль приложения без суперпользователя
 - Статус: todo
-- Модули: `platform/db`, `platform/config`, `compose.yaml`, `Makefile` (`init`), `@kosht/testing`, `docs/adr/`
-  (ADR-0006, ADR-0019), `apps/server/src/platform/CLAUDE.md`
+- Модули: `platform/db`, `platform/config`, `apps/server/src/main/compose.ts` (два пула: владелец для миграций и
+  `kosht_app` для работы), `compose.yaml`, `Makefile` (`init`), `.env.example` (`MIGRATION_DATABASE_URL`),
+  `@kosht/testing`, `docs/adr/` (ADR-0006, ADR-0019), `apps/server/src/platform/CLAUDE.md`
 - SPEC: ROLE-01, SEC-04, PRIV-07, NFR-16
 - Критерии приёмки:
   - [ ] `DATABASE_URL` — роль `kosht_app` (`NOSUPERUSER`, без `pg_read_server_files`, `CREATEDB`, `CREATEROLE`),
     пароль в `secrets/db_app_password`; `MIGRATION_DATABASE_URL` — владелец; роль и права (`GRANT`,
-    `DEFAULT PRIVILEGES`) создаёт мигратор идемпотентно; int-тест: `pg_read_binary_file`, `COPY … TO PROGRAM`, DDL
+    `DEFAULT PRIVILEGES` и `GRANT … ON ALL TABLES` для уже созданных таблиц) создаёт мигратор идемпотентно; int-тест: `pg_read_binary_file`, `COPY … TO PROGRAM`, DDL
     под ролью приложения → отказ, DML и `ScopedDb` работают; `pg_stats` / `pg_statistic`: `HIDDEN_SQL` в аудиторе
     плюс `REVOKE`.
 - Проверка: make check; make test-int

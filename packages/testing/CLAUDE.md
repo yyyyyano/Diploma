@@ -19,6 +19,8 @@
 - `InlineJobs<Tx>(find)` — очередь задач без pg-boss для тестов сценариев: `enqueue(tx, job, payload)` находит
   обработчик функцией `find(name)` и выполняет его сразу в той же транзакции; нет обработчика — ошибка; `enqueued` —
   поставленные по порядку. Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
+- `readSse(body)` — события Server-Sent Events из тела ответа `fetch` по порядку: `{ event, data }` и комментарии
+  keepalive (`{ comment: true }`); для тестов `events.stream` (T-061): клиента oRPC на сервере нет.
 - Вход `@kosht/testing/db` (`src/db.ts`, отдельно — чтобы unit-тесты не грузили `pg`): `createTestDb()` — своя база
   `test_<запуск>_<процесс>_<n>` из шаблона (`beforeAll`; `afterAll` — `drop()`) с двумя пулами: `pool` — роль
   приложения `kosht_app` (только DML, как приложение), `owner` — владелец (DDL, фикстуры, служебные запросы; ADR-0020).

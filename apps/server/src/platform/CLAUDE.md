@@ -67,6 +67,13 @@
 - `static-site.ts` — `siteResponse(root, pathname)`: файл сборки (`assets/` — вечный кэш, прочее — `no-cache`) или
   `index.html` для маршрута сайта; отсутствующий файл с расширением, `/api`, dotfiles, «..», `\`, NUL, `%`, `//` и
   ссылки за пределы корня (realpath) — `undefined` (404). В `createApp` — опция `webDistDir`, только GET/HEAD.
+- `listeners.ts` — `createListeners({ local, lan, fetch(listener), allowLan, log })` → `start` (local; занят —
+  `ListenError` с адресом и `LISTEN_LOCAL_PORT`), `reconcile` (сверка lan с настройкой, по очереди; раз в 1 с —
+  `LAN_CHECK_MS`; lan не открылся — `http.lan-failed` с `code`, повтор на следующей сверке; выключили — соединения
+  lan обрываются сразу), `address(listener)`, `stop(graceMs)` (не принимать, закрывать простаивающие, через
+  `graceMs` оборвать остальные). `http.listening` — `listener`, `port`. `allow-lan.ts` — `ALLOW_LAN`
+  (`network.allow-lan`, `z.boolean()`, по умолчанию `false`, без env): смена этим процессом видна на следующей сверке,
+  другим — не позднее 5 с (кэш настроек).
 - `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 

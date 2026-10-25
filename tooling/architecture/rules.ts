@@ -66,7 +66,7 @@ const TEST_CODE = [
 const SCHEMA = `${MOD}/[^/]+/infrastructure/db/schema(\\.ts$|/)`;
 /**
  * Схемы и репозитории платформы со своими системными таблицами (ARCHITECTURE §6.1, решение по T-005): settings,
- * secrets, rate_limit. Им нужен drizzle-orm, хотя они не в platform/db; остальной платформе — нет.
+ * secrets, rate_limits. Им нужен drizzle-orm, хотя они не в platform/db; остальной платформе — нет.
  */
 const PLATFORM_TABLES = `^${PLATFORM}/(settings|secrets|rate-limit)/(schema|[^/]+\\.repo)\\.ts$`;
 const PLATFORM_SCHEMA = `^${PLATFORM}/[^/]+/schema\\.ts$`;
@@ -330,7 +330,7 @@ function isolationRules(modules: readonly ModuleDef[]): ForbiddenRule[] {
     ),
     rule(
       "schema-only-in-infrastructure",
-      "Схемы платформы (settings, secrets, rate_limit) вне платформы видят только тесты и drizzle.config.ts: " +
+      "Схемы платформы (settings, secrets, rate_limits) вне платформы видят только тесты и drizzle.config.ts: " +
         "модуль читает настройки и секреты через их функции, а не через таблицы (ARCHITECTURE §6.2, замок 4).",
       { pathNot: [`^${PLATFORM}/`, "^apps/server/drizzle\\.config\\.ts$", ...TEST_CODE] },
       { path: PLATFORM_SCHEMA },

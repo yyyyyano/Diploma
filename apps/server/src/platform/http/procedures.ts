@@ -8,7 +8,7 @@
 // - admin — сессия с ролью admin, иначе FORBIDDEN.
 // Проверки стоят на уровне роутера (до проверки входа схемой): отказ в доступе не раскрывает формат входа.
 import { contract } from "@kosht/contract";
-import { implement, os } from "@orpc/server";
+import { implement, os, type AnyRouter } from "@orpc/server";
 import { AppError } from "../errors/app-error.ts";
 import { withLogContext } from "../logging/context.ts";
 import type { ListenerName } from "./guard.ts";
@@ -56,3 +56,9 @@ export const publicProc = implementer;
 export const authed = implementer.use(requireSession);
 export const localOnly = implementer.use(requireLocal);
 export const admin = implementer.use(requireSession).use(requireAdmin);
+
+/**
+ * Ветка модуля в дереве процедур: процедуры `contract.<модуль>.*`, собранные `authed.<модуль>.<процедура>.handler`
+ * (api/router.ts модуля). Корень композиции раскладывает ветки из реестра по ключам дерева (main/router.ts).
+ */
+export type ModuleRouter = { readonly [procedure: string]: AnyRouter };

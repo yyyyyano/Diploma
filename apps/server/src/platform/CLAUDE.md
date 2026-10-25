@@ -3,7 +3,7 @@
 ## Назначение
 Общая техника всех модулей (ARCHITECTURE §2, §6, §9): `db` (T-004); `config`, `logging`, `errors`, `clock`,
 `blob-store`, `settings`, `secrets`, `rate-limit` (T-005); `http` (T-059; точки входа — `src/entrypoints`);
-`jobs` и `events` — T-006; `realtime` и поток `events.stream` — T-061. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
+`jobs` и `events` — T-006; `realtime` и поток `events.stream` — T-061; `module`, `tools`, `db/user-data.ts` — T-007. Используют модули, `main/compose.ts`, точки входа; модули сюда не импортируются.
 Общего `index.ts` ни у одной папки нет: возможность = файл.
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
@@ -165,6 +165,23 @@
   `notify(db, payloads)` (канал — параметром), `listenConnector(dbConfig, applicationName)` → `ListenConnect`
   (`keepAlive`, `LISTEN` с именем через `escapeIdentifier`, `onLost` один раз и не после `close()`).
 - Процедура `events.stream` — `main/router.ts`: `authed`, `streams.open(context.s.scope, abort запроса ∪ shutdownSignal)`.
+
+## Публичный API — `module/`, `tools/`, `db/user-data.ts` (T-007: NFR-10, AGT-03, PRIV-06, ADR-0003, ADR-0009)
+- `module/define-module.ts` — `defineModule({ id, facade?, router?, events?, jobs?, subscriptions?, schedules?, sweeps?,
+  tools?, deliveryChannels?, undo?, confirm?, userData?, settings?, secrets?, rateRules? })` → `ModuleDescriptor<F>`
+  (все списки есть, пустые — тоже). id — kebab-case; имена событий, задач, расписаний, обходов, `undo`/`confirm` —
+  `<id>.<…>`; подписка — только своего модуля (`module === id`); иначе `RangeError` при создании. `Platform` (`clock`,
+  `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `scoped(scope)`), `SystemPlatform`
+  (+ `system: SystemDb` — только модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
+  (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.
+- `tools/define-tool.ts` — `defineTool` (ARCHITECTURE §8.2): `ImmediateTool` (`read | write`, `execute(ctx, input)`,
+  `output`) или `DestructiveTool` (`propose(ctx, input)` → `PendingActionDraft { action, payload }`, без `execute` по
+  типу); `TOOLSETS` = `core | legal | planning | reports`; `ToolCtx { s, requestId, channel, page? }`. При
+  определении: имя snake_case, описание — печатаемый ASCII (по-английски), набор из `TOOLSETS`, во входе нет
+  `userId`/`householdId`/`ownerId`.
+- `db/user-data.ts` — `defineUserData({ tables })` → `UserDataDef { tables, tableNames }`: только `userOwnedTable`,
+  непусто, без повторов; порядок — порядок удаления (дети раньше родителей).
+- `http/procedures.ts` — `ModuleRouter`: ветка модуля в дереве процедур.
 
 ## Публичный API — `events/` (T-006: ADR-0004, ADR-0008, ARCHITECTURE §5)
 - `define-event.ts` — `defineEvent({ name: "<модуль>.<прошедшее>", payload: z.object({ ids, … }) })` → `EventDef`:

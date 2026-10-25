@@ -630,7 +630,7 @@
 - Зависимости: T-007, T-003, T-057, T-061
 
 ### T-009 · Сквозной срез: первый запуск, вход и счёт «Наличные» с тестом изоляции по реестру
-- Статус: in-progress
+- Статус: done · 7e1d0a6..afcecc9
 - Модули: `identity`, `accounts`, `features/setup`, `features/auth`, `features/accounts`, `entities/account`,
   `@kosht/testing`, `e2e`
 - SPEC: AUTH-10, AUTH-08, ROLE-01, ROLE-02, ADM-01, SEC-01, SEC-04, STMT-01, NFR-24

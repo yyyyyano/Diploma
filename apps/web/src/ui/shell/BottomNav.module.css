@@ -1,0 +1,76 @@
+/* .ph-nav, .ph-tab, .ph-more каркаса телефона (design/screens/MobileHome.dc.html). */
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  display: none;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: end;
+  padding: 0 var(--s-4) var(--s-18);
+  min-height: 84px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 760px) {
+  .bar {
+    display: grid;
+  }
+}
+
+.embedded {
+  position: static;
+  display: grid;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--s-4);
+  min-height: 60px;
+  padding: var(--s-6) 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--ink);
+  background: var(--kit-hover-soft);
+}
+
+.on {
+  color: var(--brand);
+}
+
+.moreList {
+  display: flex;
+  flex-direction: column;
+}
+
+.moreLink {
+  display: flex;
+  align-items: center;
+  gap: var(--s-14);
+  min-height: 52px;
+  padding: 0 var(--s-4);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 16px;
+}
+
+.moreLink:last-child {
+  border-bottom: 0;
+}

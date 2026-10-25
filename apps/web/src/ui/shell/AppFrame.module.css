@@ -1,0 +1,21 @@
+/* .k-app, .k-main из design/kit.css. */
+.app {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.main {
+  flex: 999 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Телефон: последний блок не прячется под нижнюю панель (84 px). */
+@media (max-width: 760px) {
+  .main {
+    padding-bottom: var(--s-120);
+  }
+}

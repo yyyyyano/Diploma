@@ -1,0 +1,7 @@
+/* Экран ошибки и «нет такой страницы»: по центру области содержимого. */
+.screen {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+  padding: var(--s-28) var(--s-16);
+}

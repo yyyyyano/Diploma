@@ -11,7 +11,7 @@
     "samples/",
     "data/",
     "models/",
-    "secrets/",
+    "/secrets/",
     "skills-lock.json",
     "pnpm-lock.yaml",
     "**/__cassettes__/",

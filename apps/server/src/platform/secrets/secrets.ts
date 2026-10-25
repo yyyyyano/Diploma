@@ -66,7 +66,9 @@ export interface SecretsDeps {
   readonly log: Logger;
 }
 
-type Opened = { readonly state: "value"; readonly value: string } | { readonly state: "none" | "unreadable" };
+type Opened =
+  | { readonly state: "value"; readonly value: string }
+  | { readonly state: "none" | "unreadable" };
 
 export function createSecrets(deps: SecretsDeps): Secrets {
   const key = deps.masterKey.derive("secrets/v1");

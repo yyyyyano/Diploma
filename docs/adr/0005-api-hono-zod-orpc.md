@@ -19,7 +19,8 @@
   модулей, дерево собирает `main/router.ts`; сайт — клиент + `@orpc/tanstack-query`. Тот же роутер отдаёт
   REST/OpenAPI (для `curl`, тестов, документации).
 - **Ошибки**: каталог `packages/contract/src/errors.ts` (код → статус, `retryable`); на сервере
-  `throw new AppError(КОД, params)`; ответ `{ code, status, data: { requestId, params } }`; текст — на сайте по коду
+  `throw new AppError(КОД, params)`; ответ — форма `ORPCError`: `{ defined, code, status, message: <код>, data: {
+  requestId, params } }`; текст — на сайте по коду
   через i18n. Чужая запись — `NOT_FOUND`.
 - **Версионирование**: один репозиторий — поля только добавляются, удаление через `deprecated`; `/api/v1` — если
   появятся внешние клиенты.

@@ -43,16 +43,27 @@
   очистки нет.
 
 ## Публичный API — `http/` (T-059: SEC-01, NFR-24, R40, OBS-01/02, ADR-0005, ADR-0016)
-- `app.ts` — `createApp({ listener, trustedOrigins, log, ready, routes? })` → `HttpApp` (Hono) на один слушатель:
+- `app.ts` — `createApp({ listener, trustedOrigins, log, ready, api?, routes? })` → `HttpApp` (Hono) на один слушатель:
   request-id и контекст лога → Host и CSRF → маршрут → заголовки безопасности и строка `http.request` (`method`,
   `httpStatus`, `ms`, `listener`) на каждом ответе; `/healthz` (без БД), `/readyz` (`ready()` ≤ 2 с, иначе 503
   `UNAVAILABLE` без деталей); неизвестный маршрут — 404 `NOT_FOUND`; исключение — 500 `INTERNAL` + `http.error` со
-  стеком; `routes` — маршруты процесса до статики.
+  стеком; `api` — `{ handler, session, shutdownSignal }` (процедуры под `/api`; неизвестная — 404 `NOT_FOUND`);
+  `routes` — маршруты процесса до статики.
 - `guard.ts` — `ListenerName` (`local | lan`), `SECURITY_HEADERS` (CSP, `nosniff`, `Referrer-Policy: no-referrer`,
   `Permissions-Policy: camera=(self), microphone=(self)`; без HSTS), `isAllowedHost(host, listener)` (local — `localhost`,
   `127.0.0.1`, `[::1]`; lan — они же и IP; имена — нет), `isSameSiteRequest` (кроме GET/HEAD/OPTIONS: `Sec-Fetch-Site`
   `cross-site`/`same-site` — отказ; `Origin` = `http://<Host>` или из `TRUSTED_ORIGINS`; оба пусты — не браузер),
   `requestIdFrom` (`[A-Za-z0-9-]{8,64}`, иначе новый uuid).
+- `procedures.ts` — `HttpContext` (`requestId`, `listener` из замыкания `createApp`, `session()` лениво,
+  `shutdownSignal`) и четыре вида процедур над контрактом: `publicProc` (гость), `authed` (сессия → `context.s`,
+  `context.role`, `uid` в лог; нет — `UNAUTHORIZED`), `localOnly` (только слушатель `local`; на `lan` — `NOT_FOUND`;
+  сессии не требует), `admin` (сессия с ролью `admin`, иначе `FORBIDDEN`); middleware `requireSession`,
+  `requireLocal`, `requireAdmin` — для своих деревьев (тестовый мини-контракт `http/__fixtures__/mini-router.ts`).
+- `session.ts` — `createSessionRegistry()` (`register(resolver)` — один источник на процесс, его даёт модуль входа,
+  T-009; пусто — сессии нет ни у кого), `SessionResolver(headers) → { userId, householdId, role } | undefined`,
+  `openSession(registry, pool, headers)` — **единственное** место `makeScope` для сайта (ARCHITECTURE §6.4).
+- `api.ts` — `createApiHandler(router, log)`: `OpenAPIHandler` под `/api`; перевод ошибок: вход не по схеме и битое
+  тело → `VALIDATION` (без issues), `AppError` → свой код, выход не по схеме и прочее → `INTERNAL` + `http.error`.
 - `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 
@@ -110,6 +121,9 @@
 - Тестовая схема `fx_*` и её миграции — `db/__fixtures__/` (`make db-generate DRIZZLE_CONFIG=…/__fixtures__/drizzle.config.ts`).
 
 ## Подводные камни
+- oRPC: ошибка внутри потока (итератор событий) после его начала идёт мимо `clientInterceptors` — поток T-006 сам
+  отдаёт только ошибки каталога. `implement(contract).router` не собирается без всех процедур контракта.
+- Прокси Vite — без `changeOrigin`: проверка CSRF сверяет `Origin` с `Host` (`127.0.0.1:5173`), иначе 403.
 - Ключ события: голова — только строчные буквы (`ratelimit.exceeded`, не `rate-limit.exceeded`): тип `EventKey` и
   проверка при записи совпадают; неверный ключ при записи заменяется на `log.bad-key` без текста.
 - `redact` pino (ADR-0010: «страховка») не подключён: поля вне белого списка отбрасываются до pino, страховать нечего.

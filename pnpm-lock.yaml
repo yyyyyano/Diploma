@@ -288,6 +288,9 @@ importers:
       '@kosht/kernel':
         specifier: workspace:*
         version: link:../../packages/kernel
+      '@orpc/contract':
+        specifier: 'catalog:'
+        version: 1.16.1
       '@orpc/openapi':
         specifier: 'catalog:'
         version: 1.16.1

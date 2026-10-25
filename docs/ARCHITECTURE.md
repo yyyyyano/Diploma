@@ -495,7 +495,8 @@ type ToolDef<I, O> =
   REST/OpenAPI для `curl` и тестов.
 - **Ошибки**: каталог `packages/contract/src/errors.ts` (код → HTTP-статус, повторяемость);
   `throw new AppError("RECEIPT_DUPLICATE", { receiptId, uploadedOn })` — параметры, а не текст. Перевод в ответ —
-  в одном месте каждого входа: oRPC (`{ code, status, data: { requestId, params } }`), обёртка инструмента
+  в одном месте каждого входа: oRPC (`{ defined, code, status, message, data: { requestId, params } }` — форма
+  `ORPCError` oRPC 1.16, `message` = код: клиент oRPC без него ошибку не узнаёт), обёртка инструмента
   (`{ ok: false, code }` — агент сообщает и предлагает повторить, AGT-13), обёртка задачи (повтор, если
   `retryable`). Всё прочее — `INTERNAL` без текста исключения наружу, стек — в лог. Текст для человека — на сайте
   и в боте: `t("errors:RECEIPT_DUPLICATE", params)`.

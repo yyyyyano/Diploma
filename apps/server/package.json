@@ -9,6 +9,7 @@
     "@hono/node-server": "catalog:",
     "@kosht/contract": "workspace:*",
     "@kosht/kernel": "workspace:*",
+    "@orpc/contract": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "drizzle-orm": "catalog:",

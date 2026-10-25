@@ -3,10 +3,11 @@
 // поэтому «это локальный вход» решается портом, на который пришло соединение, а не заголовками запроса.
 // Порядок для каждого запроса: request-id и контекст лога → Host и CSRF (guard.ts) → маршрут → заголовки
 // безопасности и строка http.request — на любом ответе, включая отказы и ошибки.
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { AppError } from "../errors/app-error.ts";
 import { withLogContext } from "../logging/context.ts";
 import type { Logger } from "../logging/logger.ts";
+import { API_PREFIX, type ApiHandler } from "./api.ts";
 import { errorResponse, httpErrorBody } from "./error-response.ts";
 import {
   isAllowedHost,
@@ -15,6 +16,7 @@ import {
   SECURITY_HEADERS,
   type ListenerName,
 } from "./guard.ts";
+import type { Session } from "./session.ts";
 
 /** Переменные запроса Hono. */
 export interface HttpEnv {
@@ -26,6 +28,14 @@ export type HttpApp = Hono<HttpEnv>;
 /** /readyz ждёт ответа БД не дольше: зависшая база — «не готов», а не висящая проба контейнера. */
 export const READY_TIMEOUT_MS = 2_000;
 
+export interface ApiOptions {
+  readonly handler: ApiHandler;
+  /** Сессия по заголовкам запроса (openSession с реестром и пулом процесса). */
+  readonly session: (headers: Headers) => Promise<Session | undefined>;
+  /** Сигнал остановки процесса — в контекст процедур (долгие потоки завершаются). */
+  readonly shutdownSignal: AbortSignal;
+}
+
 export interface AppOptions {
   readonly listener: ListenerName;
   /** Origin, которым доверяют изменяющие запросы сверх своего Host (TRUSTED_ORIGINS). */
@@ -33,6 +43,8 @@ export interface AppOptions {
   readonly log: Logger;
   /** Готовность к работе (БД отвечает); не готов — исключение. */
   readonly ready: () => Promise<void>;
+  /** Процедуры oRPC под /api; без них /api отвечает NOT_FOUND. */
+  readonly api?: ApiOptions;
   /** Дополнительные маршруты процесса — до статики сайта. */
   readonly routes?: (app: HttpApp) => void;
 }
@@ -89,6 +101,25 @@ export function createApp(options: AppOptions): HttpApp {
       return errorResponse(new AppError("UNAVAILABLE"), c.get("requestId"));
     }
   });
+
+  // Процедуры: имя слушателя — из замыкания, сессия — лениво и один раз на запрос. Неизвестная — NOT_FOUND в общей
+  // форме ошибки, а не HTML и не страница сайта.
+  const api = async (c: Context<HttpEnv>) => {
+    const requestId = c.get("requestId");
+    const notFound = () => errorResponse(new AppError("NOT_FOUND"), requestId);
+    if (options.api === undefined) return notFound();
+    const { handler, session, shutdownSignal } = options.api;
+    let opened: Promise<Session | undefined> | undefined;
+    const response = await handler.handle(c.req.raw, {
+      requestId,
+      listener,
+      shutdownSignal,
+      session: () => (opened ??= session(c.req.raw.headers)),
+    });
+    return response ?? notFound();
+  };
+  app.all(API_PREFIX, api);
+  app.all(`${API_PREFIX}/*`, api);
 
   options.routes?.(app);
 

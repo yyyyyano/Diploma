@@ -1,18 +1,28 @@
-// Модуль privacy (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль privacy (паспорт — CLAUDE.md): журнал согласий с версией текста (PRIV-01, PRIV-02), источник облачного
+// согласия для шлюза llm; экспорт и удаление аккаунта — T-016.
 import {
   defineModule,
   type ModuleDeps,
   type NoFacades,
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
+import { makeCloudConsentSource } from "./application/cloud-consent.ts";
+import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
+import { consentChanged } from "./events.ts";
+import { privacyUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export type PrivacyFacades = NoFacades;
 
-export function createPrivacyModule(_deps: ModuleDeps<PrivacyFacades, SystemPlatform>) {
-  return defineModule({ id: "privacy" });
+export function createPrivacyModule({ platform }: ModuleDeps<PrivacyFacades, SystemPlatform>) {
+  return defineModule({
+    id: "privacy",
+    facade: { recordRegistrationConsents: makeRecordRegistrationConsents(platform) },
+    events: [consentChanged],
+    userData: privacyUserData,
+    consentSource: makeCloudConsentSource(platform),
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: recordRegistrationConsents(tx, согласия) — в транзакции регистрации. */
 export type PrivacyFacade = ReturnType<typeof createPrivacyModule>["facade"];

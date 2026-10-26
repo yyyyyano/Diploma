@@ -48,4 +48,5 @@ export {
   SignInInput,
 } from "./identity/identity.contract.ts";
 export { MailboxMessage, mailContract, MailNoteKind } from "./mail/mail.contract.ts";
+export { ConsentVersion, RegistrationConsents } from "./privacy/privacy.contract.ts";
 export { contract } from "./router.ts";

@@ -23,13 +23,14 @@ function lookup(dictionary: object, key: string): unknown {
 }
 
 describe("словари ru", () => {
-  it("пространства имён: common, errors, formulas, tools, mail и сайта — shell, ui и экранов", () => {
+  it("пространства имён: common, errors, formulas, tools, mail, policy и сайта — shell, ui и экранов", () => {
     expect(NAMESPACES).toEqual([
       "common",
       "errors",
       "formulas",
       "tools",
       "mail",
+      "policy",
       "shell",
       "ui",
       "auth",

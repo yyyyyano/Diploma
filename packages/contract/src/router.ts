@@ -4,11 +4,13 @@ import { accountsContract } from "./accounts/accounts.contract.ts";
 import { chatContract } from "./chat/chat.contract.ts";
 import { eventsContract } from "./events/events.contract.ts";
 import { identityContract } from "./identity/identity.contract.ts";
+import { mailContract } from "./mail/mail.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 
 export const contract = {
   system: systemContract,
   events: eventsContract,
+  mail: mailContract,
   identity: identityContract,
   accounts: accountsContract,
   chat: chatContract,

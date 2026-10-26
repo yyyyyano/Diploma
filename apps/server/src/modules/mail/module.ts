@@ -6,6 +6,8 @@ import {
   type NoFacades,
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
+import { mailRouter } from "./api/router.ts";
+import { makeMailbox, makeMailboxEnabled } from "./application/mailbox.ts";
 import { makeSendMail } from "./application/send-mail.ts";
 import { createLocalMailbox } from "./infrastructure/local-mailbox.ts";
 import { createSmtpTransport } from "./infrastructure/smtp.ts";
@@ -30,6 +32,10 @@ export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPla
   return defineModule({
     id: "mail",
     facade: { send },
+    router: mailRouter({
+      mailbox: makeMailbox(platform),
+      mailboxEnabled: makeMailboxEnabled(platform),
+    }),
     settings: [SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, MAIL_FROM],
     secrets: [SMTP_PASSWORD],
   });

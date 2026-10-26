@@ -47,4 +47,5 @@ export {
   SetupInput,
   SignInInput,
 } from "./identity/identity.contract.ts";
+export { MailboxMessage, mailContract, MailNoteKind } from "./mail/mail.contract.ts";
 export { contract } from "./router.ts";

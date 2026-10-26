@@ -13,6 +13,9 @@ AUTH-03/04/06, ADM-60, NFR-24 (ящик — только локальный вх
 - Фабрика: `createMailModule({ platform, facades })`; платформа — `SystemPlatform`; соседей нет (`NoFacades`).
 - Фасад `MailFacade`: `send(to, template)` — письмо по шаблону (`MailTemplate`: `verify-email { link, hours }`);
   тексты — словарь `mail` (`@kosht/i18n`), ссылка — только http(s) (иначе `RangeError`); сбой SMTP — `UNAVAILABLE`.
+- Контракт `contract.mail.*`: `status` (publicProc: `{ mailboxAvailable }` — вход локальный и SMTP не настроен),
+  `mailbox` (localOnly: на `lan` — `NOT_FOUND`; `{ enabled, messages }` — до 100 последних писем, новые сверху; SMTP
+  настроен — `enabled: false`, писем нет).
 - Настройки (`settings.ts`): `mail.smtp-host` (пусто — почта не настроена; env `SMTP_HOST`), `mail.smtp-port` (587,
   `SMTP_PORT`), `mail.smtp-secure` (`SMTP_SECURE`), `mail.smtp-user` (`SMTP_USER`), `mail.from-address`
   (`no-reply@kosht.local`, `SMTP_FROM`); секрет `mail.smtp-password` (`SMTP_PASSWORD`). Читаются на каждое письмо.
@@ -31,7 +34,7 @@ AUTH-03/04/06, ADM-60, NFR-24 (ящик — только локальный вх
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/mail`: части письма и экранирование (`domain/message.test.ts`), оба режима
   на Postgres и поддельном SMTP на 127.0.0.1 (`application/send-mail.int.test.ts`,
-  `infrastructure/__fixtures__/fake-smtp.ts`).
+  `infrastructure/__fixtures__/fake-smtp.ts`), доступ к ящику по слушателю (`api/router.test.ts`).
 
 ## Подводные камни
 - Одно письмо — одно соединение SMTP со сроками 10/10/20 с (`SMTP_TIMEOUTS`): настройки меняются в админке, писем мало.

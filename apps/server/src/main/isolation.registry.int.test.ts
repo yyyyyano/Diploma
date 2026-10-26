@@ -46,6 +46,11 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "events.stream": {
     exempt: "поток сигналов: фильтр по домохозяйству сессии проверяет events-stream.int.test.ts",
   },
+  "mail.status": { exempt: "публичная: признак «почта не настроена», данных домохозяйства нет" },
+  "mail.mailbox": {
+    exempt:
+      "локальный ящик (localOnly): системная таблица писем, домохозяйства во входе и в данных нет",
+  },
   "identity.status": {
     exempt: "публичная: признак первого запуска системы, данных домохозяйства нет",
   },

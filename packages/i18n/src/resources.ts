@@ -6,6 +6,7 @@ import { auth } from "./locales/ru/auth.ts";
 import { common } from "./locales/ru/common.ts";
 import { errors } from "./locales/ru/errors.ts";
 import { formulas } from "./locales/ru/formulas.ts";
+import { mail } from "./locales/ru/mail.ts";
 import { setup } from "./locales/ru/setup.ts";
 import { shell } from "./locales/ru/shell.ts";
 import { tools } from "./locales/ru/tools.ts";
@@ -16,6 +17,7 @@ export const NAMESPACES = [
   "errors",
   "formulas",
   "tools",
+  "mail",
   "shell",
   "ui",
   "auth",
@@ -31,7 +33,7 @@ export const LANGUAGES = ["ru"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
 export const resources = {
-  ru: { common, errors, formulas, tools, shell, ui, auth, setup, accounts, assistant },
+  ru: { common, errors, formulas, tools, mail, shell, ui, auth, setup, accounts, assistant },
 } as const satisfies Record<Language, Record<Namespace, object>>;
 
 declare module "i18next" {
@@ -40,6 +42,7 @@ declare module "i18next" {
     errors: typeof errors;
     formulas: typeof formulas;
     tools: typeof tools;
+    mail: typeof mail;
     shell: typeof shell;
     ui: typeof ui;
     auth: typeof auth;

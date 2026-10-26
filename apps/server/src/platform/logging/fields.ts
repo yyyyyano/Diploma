@@ -33,6 +33,8 @@ const TOKEN_FIELDS = [
   "method",
   "route",
   "listener",
+  "template",
+  "transport",
 ] as const;
 
 type NumberField = (typeof NUMBER_FIELDS)[number];

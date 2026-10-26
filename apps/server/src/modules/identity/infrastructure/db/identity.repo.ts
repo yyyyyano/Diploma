@@ -6,7 +6,13 @@ import type { HouseholdId, UserId } from "@kosht/kernel";
 import { and, eq, sql } from "drizzle-orm";
 import { AppError } from "../../../../platform/errors/app-error.ts";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
-import { identityCredentials, identityHouseholds, identityUsers, systemState } from "./schema.ts";
+import {
+  identityCredentials,
+  identityHouseholds,
+  identitySessions,
+  identityUsers,
+  systemState,
+} from "./schema.ts";
 
 /** Построитель запросов: SystemDb или db транзакции ScopedDb (SystemDb подходит под этот тип). */
 export type IdentityDb = ScopedDb["db"];
@@ -171,6 +177,76 @@ export async function markEmailVerified(
   const rows = await db
     .update(identityUsers)
     .set({ emailVerified: true, updatedAt: at })
+    .where(eq(identityUsers.id, userId))
+    .returning({ id: identityUsers.id });
+  return rows.length === 1;
+}
+
+/** Пользователь по email (в нижнем регистре): id и статус; нет — undefined. */
+export async function userByEmail(
+  db: IdentityDb,
+  email: string,
+): Promise<{ userId: UserId; status: UserStatus } | undefined> {
+  const rows = await db
+    .select({ id: identityUsers.id, status: identityUsers.status })
+    .from(identityUsers)
+    .where(eq(identityUsers.email, email));
+  const row = rows[0];
+  if (row === undefined) return undefined;
+  return { userId: row.id as UserId, status: row.status === "active" ? "active" : "blocked" };
+}
+
+/** Новый хэш пароля (сброс по ссылке или коду восстановления). */
+export async function setPasswordHash(
+  db: IdentityDb,
+  userId: string,
+  passwordHash: string,
+  at: Date,
+): Promise<void> {
+  await db
+    .update(identityCredentials)
+    .set({ password: passwordHash, updatedAt: at })
+    .where(
+      and(
+        eq(identityCredentials.userId, userId),
+        eq(identityCredentials.providerId, CREDENTIAL_PROVIDER),
+      ),
+    );
+}
+
+/** Завершить все сессии пользователя (сброс пароля, блокировка — AUTH-11). Возвращает, сколько было. */
+export async function deleteSessions(db: IdentityDb, userId: string): Promise<number> {
+  const rows = await db
+    .delete(identitySessions)
+    .where(eq(identitySessions.userId, userId))
+    .returning({ id: identitySessions.id });
+  return rows.length;
+}
+
+/**
+ * Активные администраторы под блокировкой строк (FOR UPDATE) до конца транзакции (AUTH-12): параллельная смена роли
+ * или статуса другого администратора ждёт и затем видит уже изменённые строки — «последний админ» не теряется.
+ */
+export async function lockActiveAdmins(db: IdentityDb): Promise<string[]> {
+  const rows = await db
+    .select({ id: identityUsers.id })
+    .from(identityUsers)
+    .where(and(eq(identityUsers.role, "admin"), eq(identityUsers.status, "active")))
+    .orderBy(identityUsers.id)
+    .for("update");
+  return rows.map((row) => row.id);
+}
+
+/** Сменить роль или статус пользователя; пользователя нет — false. */
+export async function updateUserAccess(
+  db: IdentityDb,
+  userId: string,
+  patch: { readonly role?: UserRole; readonly status?: UserStatus },
+  at: Date,
+): Promise<boolean> {
+  const rows = await db
+    .update(identityUsers)
+    .set({ ...patch, updatedAt: at })
     .where(eq(identityUsers.id, userId))
     .returning({ id: identityUsers.id });
   return rows.length === 1;

@@ -8,6 +8,7 @@ import {
 import type { MailFacade } from "../mail/index.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import { identityRouter } from "./api/router.ts";
+import { makeAdminGuard } from "./application/admins.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
 import { makeRegister } from "./application/register.ts";
 import { makeResendVerification } from "./application/resend-verification.ts";
@@ -37,8 +38,10 @@ export function createIdentityModule({
     }),
   );
   const verification = makeEmailVerification({ platform, mail: facades.mail });
+  const admins = makeAdminGuard(platform);
   return defineModule({
     id: "identity",
+    facade: admins,
     events: [systemInitialized, userRegistered],
     router: identityRouter({
       status: makeStatus(platform),
@@ -56,5 +59,8 @@ export function createIdentityModule({
   });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/**
+ * Что модуль даёт соседям (админка T-017, удаление аккаунта T-016): setStatus, setRole, assertRemovable — с защитой
+ * последнего администратора (AUTH-12).
+ */
 export type IdentityFacade = ReturnType<typeof createIdentityModule>["facade"];

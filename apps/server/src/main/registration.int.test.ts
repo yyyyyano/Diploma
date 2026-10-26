@@ -2,6 +2,7 @@
 // пользователь с согласиями → письмо в локальном ящике со ссылкой по адресу входа → вход сразу → «Наличные» от
 // worker → подтверждение по ссылке один раз; «Отправить ещё раз» и регистрация ограничены по частоте.
 import { CONSENT_VERSIONS } from "@kosht/i18n";
+import { makeScope, type Scope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { sessionCookie, startHttpStack, type HttpStack } from "./__fixtures__/http-stack.ts";
@@ -139,6 +140,34 @@ describe("AUTH-01…03, PRIV-01/02: регистрация", () => {
       code: "RATE_LIMITED",
       data: { params: { retryAfterMinutes: expect.any(Number) } },
     });
+  });
+});
+
+/** Scope пользователя по email — строками владельца, мимо кода под тестом. */
+async function scopeOf(email: string): Promise<Scope> {
+  const { rows } = await db.owner.query<{ id: string; household_id: string }>(
+    "select id, household_id from identity_users where email = $1",
+    [email],
+  );
+  const row = rows[0];
+  if (row === undefined) throw new Error("нет пользователя");
+  return makeScope({ userId: row.id, householdId: row.household_id } as never);
+}
+
+describe("PRIV-02: облачное согласие в корне композиции", () => {
+  it("privacy — источник облачного согласия процесса: дал — облако разрешено, нет — запрещено", async () => {
+    await stack.call("local", "/identity/register", {
+      body: registration("cloud@example.test", true),
+    });
+    await stack.call("local", "/identity/register", {
+      body: registration("local@example.test", false),
+    });
+    expect(await stack.api.platform.consent.cloudAllowed(await scopeOf("cloud@example.test"))).toBe(
+      true,
+    );
+    expect(await stack.api.platform.consent.cloudAllowed(await scopeOf("local@example.test"))).toBe(
+      false,
+    );
   });
 });
 

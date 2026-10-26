@@ -1,5 +1,5 @@
-// AUTH-03: «Профиль и вход» — почта не подтверждена: отметка, «Отправить письмо ещё раз» и ссылка на ящик; после
-// отправки — «Письмо отправлено»; подтверждена — без кнопки; ошибка загрузки — что сделать.
+// AUTH-03, AUTH-05, AUTH-08: «Профиль и вход» — почта (отметка, «Отправить письмо ещё раз», ящик), смена пароля
+// (неверный текущий — текст из словаря), код восстановления (показан один раз), выход (кэш очищен, на вход).
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
@@ -16,7 +16,7 @@ import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
 import { SettingsPage } from "./SettingsPage.tsx";
 
-function renderSettings(emailVerified: boolean | "error") {
+function renderSettings(emailVerified: boolean | "error", codeCreatedAt: string | null = null) {
   server.use(
     http.get("*/api/identity/me", () =>
       emailVerified === "error"
@@ -33,11 +33,13 @@ function renderSettings(emailVerified: boolean | "error") {
         : HttpResponse.json({ email: "irina@example.by", name: "", role: "user", emailVerified }),
     ),
     http.get("*/api/mail/status", () => HttpResponse.json({ mailboxAvailable: true })),
+    http.get("*/api/identity/recovery-code", () => HttpResponse.json({ createdAt: codeCreatedAt })),
   );
   const root = createRootRoute();
   const router = createRouter({
     routeTree: root.addChildren([
       createRoute({ getParentRoute: () => root, path: "/settings", component: SettingsPage }),
+      createRoute({ getParentRoute: () => root, path: "/login", component: () => <p>Вход</p> }),
     ]),
     history: createMemoryHistory({ initialEntries: ["/settings"] }),
   });
@@ -103,5 +105,89 @@ describe("AUTH-03: почта в настройках", () => {
     expect(
       await screen.findByRole("heading", { name: "Настройки не открылись" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("AUTH-08: смена пароля и выход", () => {
+  it("верный текущий пароль — «Пароль изменён», в запросе без повтора", async () => {
+    let body: unknown;
+    server.use(
+      http.post("*/api/identity/password", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderSettings(true);
+    await userEvent.type(await screen.findByLabelText("Текущий пароль"), "старый-пароль-2026");
+    await userEvent.type(screen.getByLabelText("Новый пароль"), "новый-пароль-2026");
+    await userEvent.type(screen.getByLabelText("Повторите новый пароль"), "новый-пароль-2026");
+    await userEvent.click(screen.getByRole("button", { name: "Сменить пароль" }));
+    expect(await screen.findByText("Пароль изменён. Другие сеансы завершены.")).toBeInTheDocument();
+    expect(body).toEqual({
+      currentPassword: "старый-пароль-2026",
+      newPassword: "новый-пароль-2026",
+    });
+  });
+
+  it("неверный текущий пароль — INVALID_CREDENTIALS из словаря в role=alert", async () => {
+    server.use(
+      http.post("*/api/identity/password", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "INVALID_CREDENTIALS",
+            status: 401,
+            message: "INVALID_CREDENTIALS",
+            data: { requestId: "req-00000001", params: {} },
+          },
+          { status: 401 },
+        ),
+      ),
+    );
+    renderSettings(true);
+    await userEvent.type(await screen.findByLabelText("Текущий пароль"), "не-тот-пароль");
+    await userEvent.type(screen.getByLabelText("Новый пароль"), "новый-пароль-2026");
+    await userEvent.type(screen.getByLabelText("Повторите новый пароль"), "новый-пароль-2026");
+    await userEvent.click(screen.getByRole("button", { name: "Сменить пароль" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Неверный email или пароль");
+  });
+
+  it("«Выйти из аккаунта» — сессия завершена, переход на вход", async () => {
+    let signedOut = false;
+    server.use(
+      http.post("*/api/identity/sign-out", () => {
+        signedOut = true;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderSettings(true);
+    await userEvent.click(await screen.findByRole("button", { name: "Выйти из аккаунта" }));
+    expect(await screen.findByText("Вход")).toBeInTheDocument();
+    expect(signedOut).toBe(true);
+  });
+});
+
+describe("AUTH-05: код восстановления в настройках", () => {
+  it("кода нет — «Создать» показывает код один раз; «Я сохранил(а) код» прячет его", async () => {
+    server.use(
+      http.post("*/api/identity/recovery-code", () =>
+        HttpResponse.json({
+          recoveryCode: "KQ7M-4XPD-9TJC-2HWR",
+          createdAt: "2026-10-26T09:00:00.000Z",
+        }),
+      ),
+    );
+    renderSettings(true);
+    expect(await screen.findByText("Кода пока нет")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Создать код восстановления" }));
+    expect(await screen.findByText("KQ7M-4XPD-9TJC-2HWR")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Я сохранил(а) код" }));
+    expect(screen.queryByText("KQ7M-4XPD-9TJC-2HWR")).toBeNull();
+  });
+
+  it("код уже есть — «Код создан 26.10.2026» и «Создать новый»", async () => {
+    renderSettings(true, "2026-10-26T09:00:00.000Z");
+    expect(await screen.findByText("Код создан 26.10.2026")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Создать новый" })).toBeInTheDocument();
   });
 });

@@ -112,3 +112,15 @@
     padding-right: var(--s-16);
   }
 }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s-14);
+}

@@ -1,11 +1,27 @@
-// Настройки пользователя (design/screens/Settings.dc.html): вкладка «Профиль и вход». Сейчас — карточка почты
-// (AUTH-03): адрес, «Подтверждён» или «Не подтверждён» с пояснением, «Отправить письмо ещё раз» и ссылка на
-// локальный ящик, пока почта не настроена. Пароль, код восстановления, «Где вы вошли» — T-013; остальные вкладки
+// Настройки пользователя (design/screens/Settings.dc.html): вкладка «Профиль и вход» — почта (AUTH-03: «Подтверждён» /
+// «Не подтверждён», «Отправить письмо ещё раз», ссылка на локальный ящик), смена пароля (AUTH-08: другие сеансы
+// завершаются), код восстановления (AUTH-05: создать, показать один раз) и выход. Остальные вкладки
 // («Конфиденциальность», «Уведомления», «Мои данные», Telegram) появятся с задачами своих модулей.
-import { Button, Tabs } from "@mantine/core";
+import { ChangePasswordInput } from "@kosht/contract";
+import { formatDate } from "@kosht/i18n";
+import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
+import { Button, PasswordInput, Tabs } from "@mantine/core";
+import { schemaResolver, useForm } from "@mantine/form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { AlertCircle, AlertTriangle, CheckCircle2, ChevronRight, Mail } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronRight,
+  KeyRound,
+  LogOut,
+  Mail,
+  Plus,
+} from "lucide-react";
+import { useState } from "react";
+import { z } from "zod";
+import { RecoveryCode } from "../../entities/recovery-code/index.ts";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
@@ -24,6 +40,9 @@ export function SettingsPage() {
           </Tabs.List>
           <Tabs.Panel value="profile" className={classes.panel}>
             <EmailCard />
+            <PasswordCard />
+            <RecoveryCodeCard />
+            <SignOutCard />
           </Tabs.Panel>
         </Tabs>
       </div>
@@ -111,6 +130,186 @@ function EmailCard() {
           )}
         </>
       )}
+    </section>
+  );
+}
+
+/** Форма смены пароля: вход контракта и совпадение повтора (AUTH-08, SEC-01). */
+const PasswordForm = ChangePasswordInput.extend({ repeat: z.string() }).refine(
+  (v) => v.repeat === v.newPassword,
+  { path: ["repeat"] },
+);
+
+function PasswordCard() {
+  const { t } = useTranslation(["settings", "errors", "auth"]);
+  const form = useForm({
+    mode: "uncontrolled",
+    initialValues: { currentPassword: "", newPassword: "", repeat: "" },
+    validate: schemaResolver(PasswordForm, { sync: true }),
+  });
+  const change = useMutation(
+    orpc.identity.changePassword.mutationOptions({ onSuccess: () => form.reset() }),
+  );
+  return (
+    <section className={classes.card} aria-labelledby="settings-password">
+      <div>
+        <h2 id="settings-password" className={classes.cardTitle}>
+          {t("settings:password.title")}
+        </h2>
+        <p className={classes.hint}>{t("settings:password.hint")}</p>
+      </div>
+      <form
+        className={classes.form}
+        noValidate
+        onSubmit={form.onSubmit(({ currentPassword, newPassword }) =>
+          change.mutate({ currentPassword, newPassword }),
+        )}
+      >
+        <div className={classes.fields}>
+          <PasswordInput
+            label={t("settings:password.current")}
+            autoComplete="current-password"
+            visibilityToggleButtonProps={{ "aria-label": t("auth:password.show") }}
+            key={form.key("currentPassword")}
+            {...form.getInputProps("currentPassword")}
+          />
+          <PasswordInput
+            label={t("settings:password.next")}
+            description={t("settings:password.nextHint")}
+            inputWrapperOrder={["label", "input", "description", "error"]}
+            autoComplete="new-password"
+            visibilityToggleButtonProps={{ "aria-label": t("auth:password.show") }}
+            key={form.key("newPassword")}
+            {...form.getInputProps("newPassword")}
+            error={
+              form.errors["newPassword"] === undefined ? undefined : t("settings:password.short")
+            }
+          />
+          <PasswordInput
+            label={t("settings:password.repeat")}
+            autoComplete="new-password"
+            visibilityToggleButtonProps={{ "aria-label": t("auth:password.show") }}
+            key={form.key("repeat")}
+            {...form.getInputProps("repeat")}
+            error={
+              form.errors["repeat"] === undefined ? undefined : t("settings:password.mismatch")
+            }
+          />
+        </div>
+        <div className={classes.actions}>
+          <Button type="submit" loading={change.isPending}>
+            {t("settings:password.submit")}
+          </Button>
+        </div>
+      </form>
+      {change.isSuccess && (
+        <output className={classes.ok}>
+          <CheckCircle2 size={18} strokeWidth={1.8} aria-hidden />
+          {t("settings:password.done")}
+        </output>
+      )}
+      {change.isError && (
+        <p className={classes.error} role="alert">
+          <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+          {t(`errors:${errorCodeOf(change.error)}`, errorParamsOf(change.error))}
+        </p>
+      )}
+    </section>
+  );
+}
+
+function RecoveryCodeCard() {
+  const { t } = useTranslation("settings");
+  const queryClient = useQueryClient();
+  const status = useQuery(orpc.identity.recoveryCodeStatus.queryOptions());
+  const [shown, setShown] = useState<string | undefined>();
+  const create = useMutation(
+    orpc.identity.createRecoveryCode.mutationOptions({
+      onSuccess: async (result) => {
+        setShown(result.recoveryCode);
+        await queryClient.invalidateQueries({ queryKey: orpc.identity.recoveryCodeStatus.key() });
+      },
+    }),
+  );
+  const createdAt = status.data?.createdAt ?? null;
+  return (
+    <section className={classes.card} aria-labelledby="settings-recovery">
+      <div className={classes.row}>
+        <span className={classes.rowIcon}>
+          <KeyRound size={20} strokeWidth={1.8} aria-hidden />
+        </span>
+        <div className={classes.rowText}>
+          <h2 id="settings-recovery" className={classes.cardTitle}>
+            {t("recovery.title")}
+          </h2>
+          <p className={classes.hint}>{t("recovery.hint")}</p>
+        </div>
+      </div>
+      {shown === undefined ? (
+        <div className={classes.actions}>
+          <Button
+            variant="default"
+            leftSection={<Plus size={16} strokeWidth={1.8} aria-hidden />}
+            loading={create.isPending}
+            onClick={() => create.mutate({})}
+          >
+            {createdAt === null ? t("recovery.create") : t("recovery.createNew")}
+          </Button>
+          <span className={classes.hint}>
+            {createdAt === null
+              ? t("recovery.none")
+              : t("recovery.created", {
+                  date: formatDate(LocalDate.fromInstant(new Date(createdAt), DEFAULT_TIME_ZONE)),
+                })}
+          </span>
+        </div>
+      ) : (
+        <>
+          <RecoveryCode code={shown} />
+          <p className={classes.hint}>{t("recovery.shownHint")}</p>
+          <div className={classes.actions}>
+            <Button onClick={() => setShown(undefined)}>{t("recovery.saved")}</Button>
+          </div>
+        </>
+      )}
+      {createdAt !== null && shown === undefined && (
+        <p className={classes.hint}>{t("recovery.replaceHint")}</p>
+      )}
+    </section>
+  );
+}
+
+function SignOutCard() {
+  const { t } = useTranslation("settings");
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const signOut = useMutation(
+    orpc.identity.signOut.mutationOptions({
+      // Данные пользователя не должны мелькнуть следующему (frontend-feature.md): кэш — целиком.
+      onSettled: async () => {
+        queryClient.clear();
+        await navigate({ to: "/login" });
+      },
+    }),
+  );
+  return (
+    <section className={classes.card} aria-labelledby="settings-session">
+      <div>
+        <h2 id="settings-session" className={classes.cardTitle}>
+          {t("session.title")}
+        </h2>
+        <p className={classes.hint}>{t("session.hint")}</p>
+      </div>
+      <div className={classes.actions}>
+        <Button
+          variant="default"
+          leftSection={<LogOut size={16} strokeWidth={1.8} aria-hidden />}
+          loading={signOut.isPending}
+          onClick={() => signOut.mutate({})}
+        >
+          {t("session.signOut")}
+        </Button>
+      </div>
     </section>
   );
 }

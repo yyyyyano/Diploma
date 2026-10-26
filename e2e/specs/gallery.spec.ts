@@ -72,7 +72,7 @@ for (const viewport of VIEWPORTS) {
       await openGallery(page);
       const opener = page.getByRole("button", { name: "Открыть панель" });
       await opener.click();
-      await expect(page.getByRole("dialog", { name: "Свободный остаток" })).toBeVisible();
+      await expect(page.getByRole("dialog", { name: "Откуда эта цифра?" })).toBeVisible();
       expect(await axeViolations(page)).toEqual([]);
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toHaveCount(0);

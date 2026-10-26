@@ -37,7 +37,11 @@ describe("витрина /dev/gallery", () => {
   it("панель, подтверждение и уведомление открываются кнопками", async () => {
     renderWithProviders(<GalleryPage />);
     await userEvent.click(screen.getByRole("button", { name: "Открыть панель" }));
-    expect(screen.getByRole("dialog", { name: "Свободный остаток" })).toBeInTheDocument();
+    const panel = screen.getByRole("dialog", { name: "Откуда эта цифра?" });
+    // EXPL-01: формула свободного остатка из подписей словаря formulas.
+    expect(panel).toHaveTextContent("Средний регулярный доход");
+    expect(panel).toHaveTextContent("Подписки и онлайн-сервисы");
+    expect(panel).toHaveTextContent("Период: 01.07.2026 — 30.09.2026");
     await userEvent.keyboard("{Escape}");
 
     await userEvent.click(screen.getByRole("button", { name: "Подтверждение удаления" }));

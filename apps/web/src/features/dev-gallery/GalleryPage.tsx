@@ -2,7 +2,8 @@
 // части каркаса как демо без входа — по ней make e2e прогоняет axe при 1440 и 390 px. Только разработка и сборка
 // --mode e2e (vite.config.ts). Тексты — демонстрационные литералы: витрина не продукт, словарь им не нужен.
 import { Button } from "@mantine/core";
-import { Money as M } from "@kosht/kernel";
+import type { Explanation } from "@kosht/contract";
+import { LocalDate, Money as M, TraceId } from "@kosht/kernel";
 import {
   ArrowLeftRight,
   Bot,
@@ -44,6 +45,7 @@ import {
   WhyButton,
 } from "../../ui/index.ts";
 import { BottomNav, SideNav, type ShellNavGroup, type ShellNavItem } from "../../ui/shell/index.ts";
+import { ExplanationView } from "../../entities/explanation/index.ts";
 import classes from "./GalleryPage.module.css";
 
 const byn = (minor: number) => M.of(minor, "BYN");
@@ -121,6 +123,38 @@ function State({ label, children }: { label: string; children: ReactNode }) {
     </div>
   );
 }
+
+/** Трасса свободного остатка (FIN-20) для витрины панели «Откуда эта цифра?» — данные, а не расчёт (P1). */
+const FREE_BALANCE: Explanation = {
+  id: TraceId.parse("0199f0a0-0000-7000-8000-0000000000e1"),
+  trace: {
+    key: "fin.freeBalance",
+    op: "sub",
+    value: byn(84_000),
+    refs: [],
+    inputs: [
+      {
+        key: "fin.averageIncome",
+        op: "value",
+        value: byn(240_000),
+        inputs: [],
+        refs: [{ kind: "transaction", id: "0199f0a0-0000-7000-8000-0000000000a1" }],
+      },
+      { key: "fin.obligation.utilities", op: "value", value: byn(18_000), inputs: [], refs: [] },
+      { key: "fin.obligation.communication", op: "value", value: byn(3_500), inputs: [], refs: [] },
+      { key: "fin.obligation.loan", op: "value", value: byn(120_000), inputs: [], refs: [] },
+      {
+        key: "fin.obligation.subscriptions",
+        op: "value",
+        value: byn(14_500),
+        inputs: [],
+        refs: [{ kind: "fragmentVersion", id: "f-210-1" }],
+      },
+    ],
+  },
+  period: { from: LocalDate.parse("2026-07-01"), to: LocalDate.parse("2026-09-30") },
+  createdAt: "2026-10-21T09:00:00.000Z",
+};
 
 export function GalleryPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -365,21 +399,8 @@ export function GalleryPage() {
         </Section>
       </div>
 
-      <Sheet opened={sheetOpen} onClose={() => setSheetOpen(false)} title="Свободный остаток">
-        <Formula
-          rows={[
-            { id: "income", label: "Средний доход", value: <Money value={byn(240_000)} /> },
-            {
-              id: "obligations",
-              label: "Обязательные платежи",
-              value: <Money value={byn(67_777)} />,
-            },
-          ]}
-          total={{ id: "free", label: "Свободный остаток", value: <Money value={byn(172_223)} /> }}
-        />
-        <p className={classes.note}>
-          Все суммы посчитаны программой по вашим операциям, а не нейросетью.
-        </p>
+      <Sheet opened={sheetOpen} onClose={() => setSheetOpen(false)} title="Откуда эта цифра?">
+        <ExplanationView explanation={FREE_BALANCE} />
       </Sheet>
       <ConfirmDialog
         opened={confirm !== undefined}

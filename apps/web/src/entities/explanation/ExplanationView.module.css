@@ -1,0 +1,49 @@
+/* .why-panel из design/screens/Main.dc.html (Main--why-panel): итог крупно, период, «Расчёт», основания, пометка. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-18);
+}
+
+.subject,
+.period {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.value {
+  margin: var(--s-4) 0;
+}
+
+.heading {
+  margin: 0 0 var(--s-8);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.refs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0;
+  padding-left: var(--s-18);
+  font-size: 14px;
+}
+
+.refs a {
+  color: var(--brand);
+}
+
+.note {
+  display: flex;
+  gap: var(--s-8);
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.note > svg {
+  flex: none;
+  margin-top: var(--s-2);
+}

@@ -1,9 +1,10 @@
 // Каркас раздела пользователя (DES-15, ARCHITECTURE §10.1): меню — из реестра маршрутов (staticData.nav) под роль
-// текущей сессии, поток живых обновлений, выход с очисткой кэша. Колокольчик, «Сканировать чек» и плавающая
-// кнопка ассистента появятся с модулями уведомлений, чеков и чата (T-015, T-028, T-043).
+// текущей сессии, поток живых обновлений, выход с очисткой кэша, колокольчик уведомлений в углу (NOTIF-01).
+// «Сканировать чек» и плавающая кнопка ассистента появятся с модулями чеков и чата (T-028, T-043).
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { NotificationBell } from "../../features/notifications/index.ts";
 import { useEventStream } from "../../lib/events.ts";
 import { buildNav, isNavActive, splitPhoneNav, type NavItem } from "../../lib/nav.ts";
 import { sessionQuery, signOut, type SessionSource } from "../../lib/session.ts";
@@ -49,6 +50,7 @@ export function AppShell() {
 
   return (
     <AppFrame
+      {...(user ? { corner: <NotificationBell admin={user.role === "admin"} /> } : {})}
       side={
         <SideNav
           homeHref="/"

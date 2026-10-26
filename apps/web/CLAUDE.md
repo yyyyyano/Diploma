@@ -13,7 +13,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 - Вход: `index.html` → `src/main.tsx` (стили темы, `App` с сессией `createApiSession(client)` — процедуры identity).
 - `app/`: `App` (провайдеры), `createAppRouter({ queryClient, session, history? })` (контекст роутера: `queryClient`,
   `session`, `Shell`; граница ошибок `ErrorScreen`, «нет страницы» `NotFoundScreen`), `shell/AppShell` (меню из
-  реестра маршрутов под роль, поток событий, выход).
+  реестра маршрутов под роль, поток событий, выход, колокольчик `features/notifications` в углу `AppFrame`).
 - `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/accounts`, гость → `/setup`, если `setupAvailable`, иначе
   `/login`); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/recovery`, `_public/policy` (все);
   `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
@@ -30,8 +30,9 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 - `entities/account` — `AccountCard`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
-  (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`); экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
-  `features/accounts`,
+  (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);
+  `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
+  `features/notifications`, `features/accounts`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 

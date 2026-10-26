@@ -1,0 +1,117 @@
+/* .k-bell и .ntf-* из design/screens/Main.dc.html (Main--notifications): кнопка 44 px со счётчиком, список уведомлений. */
+.bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.bell:hover {
+  background: var(--kit-hover-soft);
+}
+
+.badge {
+  position: absolute;
+  top: calc(var(--s-6) * -1);
+  right: calc(var(--s-6) * -1);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-pill);
+  background: var(--danger);
+  color: var(--surface);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+.dropdown {
+  padding: 0;
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  padding: var(--s-14) var(--s-16);
+  border-bottom: 1px solid var(--line);
+}
+
+.title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.list {
+  max-height: min(480px, 60vh);
+  overflow-y: auto;
+}
+
+.list ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li + li {
+  border-top: 1px solid var(--line);
+}
+
+.note {
+  margin: 0;
+  padding: var(--s-16);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.admin {
+  border-bottom: 1px solid var(--line);
+}
+
+.adminTitle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  padding: var(--s-10) var(--s-16) 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--law);
+}
+
+.adminItem {
+  width: 100%;
+  padding: var(--s-10) var(--s-16);
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.admin li[data-unread="true"] .adminItem {
+  font-weight: 600;
+}
+
+.foot {
+  padding: var(--s-12) var(--s-16);
+  border-top: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.foot a {
+  font-weight: 600;
+  color: var(--brand);
+}

@@ -27,7 +27,10 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `errorParamsOf` → параметры текста, `retryAfterMinutes` всегда есть), `i18n`,
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
-- `entities/account` — `AccountCard`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»); экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
+- `entities/account` — `AccountCard`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
+  `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
+  шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
+  (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`); экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
   `features/accounts`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.

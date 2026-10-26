@@ -161,6 +161,37 @@ describe("ADR-0008: постановка в транзакции данных (S
   });
 });
 
+describe("PRIV-06: удаление аккаунта убирает ожидающие задачи домохозяйства", () => {
+  it("discardHousehold удаляет задачи домохозяйства во всех очередях, задачи другого не трогает", async () => {
+    const first = defineJob({
+      name: "test.discard-a",
+      payload: receiptPayload,
+      handle: async () => {},
+    });
+    const second = defineJob({
+      name: "test.discard-b",
+      payload: receiptPayload,
+      handle: async () => {},
+    });
+    const { runtime } = await startJobs("api", { jobs: [first, second] }, async () => true);
+    const scopeB = testScope({ user: 2, household: 2 });
+    const enqueue = (scope: Scope, job: typeof first) =>
+      createScopedDb(db.pool, scope).transaction((tx) =>
+        runtime.enqueue(tx, job, { receiptId: scope.userId }),
+      );
+    await enqueue(scopeA, first);
+    await enqueue(scopeA, second);
+    await enqueue(scopeB, first);
+
+    expect(await runtime.discardHousehold(scopeA.householdId)).toBe(2);
+    const left = await db.owner.query<{ household: string }>(
+      "select data->'scope'->>'householdId' as household from pgboss.job where name like 'test.discard-%'",
+    );
+    expect(left.rows).toEqual([{ household: scopeB.householdId }]);
+    expect(await runtime.discardHousehold(scopeA.householdId)).toBe(0);
+  });
+});
+
 describe("SEC-04, OBS-01: задача выполняется от имени владельца из конверта", () => {
   it("обработчик получает ctx.s владельца и requestId запроса, поставившего задачу", async () => {
     const seen = signal<{ scope: Scope; requestId: string }>();

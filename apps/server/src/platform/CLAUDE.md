@@ -30,7 +30,9 @@
   `ErrorParams` → `INTERNAL` без текста.
 - `clock/clock.ts` — `createClock(timeZone?: () => TimeZone): Clock` (по умолчанию Минск), `isTimeZone`,
   `TimeZoneSchema`.
-- `blob-store/blob-store.ts` — `BlobStore` (`put`, `get` → `undefined` если нет, `delete`, `deleteHousehold`),
+- `blob-store/blob-store.ts` — `BlobStore` (`put`, `putStream(…, AsyncIterable)` → размер (обрыв потока — файла нет),
+  `get` → `undefined` если нет, `open` → `Blob` для выдачи по HTTP (`openAsBlob`: читается при отправке), `delete`,
+  `deleteHousehold`),
   `createLocalFsBlobStore(<DATA_DIR>/files)`: путь `<householdId>/<fileId>` (`FileId` — в `@kosht/kernel`), id
   проверяются схемой (не uuid — `RangeError`), tmp+rename, папки 0700, файлы 0600. В тестах — `MemoryBlobStore`.
 - `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; `defineModule({ settings })` кладёт их ещё и в реестр
@@ -145,7 +147,8 @@
 - `job-key.ts` — `jobKey(scope, ...parts)` → `<householdId>:<части>`; ключ без домохозяйства `enqueue` отвергает.
 - `scope-verifier.ts` — порт `ScopeVerifier(candidate) → boolean` и `createScopeVerifierRegistry()` (`register` — один
   источник на процесс, его даёт identity, T-009; пусто — не проходит никто).
-- `jobs.ts` — порт `Jobs` (`enqueue(tx, job, payload)`) и `createJobs({ pool, role, log, clock, scopes,
+- `jobs.ts` — порт `Jobs` (`enqueue(tx, job, payload)`, `discardHousehold(householdId)` — удалить ещё не начатые
+  задачи домохозяйства во всех очередях через `findJobs` + `deleteJob` pg-boss, PRIV-06; у `InlineJobs` — всегда 0) и `createJobs({ pool, role, log, clock, scopes,
   pollingIntervalSeconds? })` → `JobsRuntime`: `start({ jobs })` — очереди (`createQueue`, все роли) и в `worker` —
   `work` (`perJobResults`); `enqueue` — `send` через `fromDrizzle` на соединении tx (аудитор), `requestId` — из
   контекста лога; `stop()`. Выполнение: конверт → `scopes.verify` → `makeScope` (единственное место для задач) →

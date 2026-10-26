@@ -5,7 +5,7 @@
 // сразу в конечное состояние (deadletter без очереди мёртвых писем = failed без повторов).
 import { randomUUID } from "node:crypto";
 import { isRetryable } from "@kosht/contract";
-import { makeScope, type Clock, type TimeZone } from "@kosht/kernel";
+import { makeScope, type Clock, type HouseholdId, type TimeZone } from "@kosht/kernel";
 import { fromDrizzle, type Db, type Job, type JobResult, type PgBoss } from "pg-boss";
 import { bossDb, bossTransaction } from "../db/boss-db.ts";
 import { createScopedDb, type ScopedDb } from "../db/scoped-db.ts";
@@ -24,6 +24,11 @@ import { runSweep, type SweepDef } from "./sweep.ts";
 export interface Jobs {
   /** Поставить задачу владельцу tx в той же транзакции: откат — задачи нет, коммит — задача есть. */
   enqueue<P>(tx: ScopedDb, job: JobDef<P>, payload: P): Promise<void>;
+  /**
+   * Удалить ещё не начатые задачи домохозяйства во всех очередях процесса (удаление аккаунта, PRIV-06); возвращает,
+   * сколько удалено. Уже выполняемую задачу доведёт или отбросит перепроверка владельца (ScopeVerifier).
+   */
+  discardHousehold(householdId: HouseholdId): Promise<number>;
 }
 
 /** Пул роли приложения: тот же, что принимает bossDb (pg напрямую сюда не импортируется). */
@@ -60,6 +65,8 @@ export interface JobsRuntime extends Jobs {
 }
 
 const DEFAULT_POLLING_SECONDS = 2;
+/** Сколько задач удалять за раз при удалении аккаунта. */
+const DISCARD_BATCH = 1000;
 
 export function createJobs(deps: JobsDeps): JobsRuntime {
   const { pool, role, log, clock, scopes } = deps;
@@ -105,6 +112,29 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
     async enqueue(tx, job, payload) {
       const { tx: db, sql } = bossTransaction(tx);
       await send(tx.scope, job as JobDef<unknown>, payload, fromDrizzle(db, sql));
+    },
+
+    async discardHousehold(householdId) {
+      if (boss === undefined) throw new Error("Очередь задач не запущена: сначала jobs.start().");
+      let discarded = 0;
+      // Публичный API pg-boss (findJobs + deleteJob), а не DELETE в его таблицах: у очереди свои счётчики.
+      for (const name of queues.keys()) {
+        for (;;) {
+          const found = await boss.findJobs(name, {
+            data: { scope: { householdId } },
+            queued: true,
+            limit: DISCARD_BATCH,
+          });
+          if (found.length === 0) break;
+          await boss.deleteJob(
+            name,
+            found.map((job) => job.id),
+          );
+          discarded += found.length;
+        }
+      }
+      log.info({ householdId, count: discarded }, "jobs.household-discarded");
+      return discarded;
     },
 
     async start(registry) {

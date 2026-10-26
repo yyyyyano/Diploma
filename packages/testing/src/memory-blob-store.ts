@@ -11,6 +11,29 @@ export class MemoryBlobStore {
     this.#files.set(key(householdId, fileId), Uint8Array.from(data));
   }
 
+  async putStream(
+    householdId: HouseholdId,
+    fileId: FileId,
+    source: AsyncIterable<Uint8Array>,
+  ): Promise<number> {
+    const target = key(householdId, fileId);
+    const parts: Uint8Array[] = [];
+    for await (const part of source) parts.push(Uint8Array.from(part));
+    const data = new Uint8Array(parts.reduce((sum, part) => sum + part.byteLength, 0));
+    let offset = 0;
+    for (const part of parts) {
+      data.set(part, offset);
+      offset += part.byteLength;
+    }
+    this.#files.set(target, data);
+    return data.byteLength;
+  }
+
+  async open(householdId: HouseholdId, fileId: FileId): Promise<Blob | undefined> {
+    const data = this.#files.get(key(householdId, fileId));
+    return data === undefined ? undefined : new Blob([Uint8Array.from(data)]);
+  }
+
   async get(householdId: HouseholdId, fileId: FileId): Promise<Uint8Array | undefined> {
     const data = this.#files.get(key(householdId, fileId));
     return data === undefined ? undefined : Uint8Array.from(data);

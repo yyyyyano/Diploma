@@ -5,14 +5,26 @@
 // вызова. В тестах — MemoryBlobStore из @kosht/testing с тем же поведением.
 import { FileId, HouseholdId } from "@kosht/kernel";
 import { randomUUID } from "node:crypto";
+import { openAsBlob } from "node:fs";
 import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 
 export interface BlobStore {
   /** Записать файл целиком (существующий заменяется). */
   put(householdId: HouseholdId, fileId: FileId, data: Uint8Array): Promise<void>;
+  /**
+   * Записать файл из потока кусков (архив «Мои данные», PRIV-05): в памяти — только текущий кусок. Возвращает размер
+   * в байтах; поток оборвался — файла нет (ни целого, ни части).
+   */
+  putStream(
+    householdId: HouseholdId,
+    fileId: FileId,
+    source: AsyncIterable<Uint8Array>,
+  ): Promise<number>;
   /** Содержимое или undefined, если файла нет. */
   get(householdId: HouseholdId, fileId: FileId): Promise<Uint8Array | undefined>;
+  /** Файл как Blob для выдачи по HTTP (содержимое читается при отправке, а не заранее); нет — undefined. */
+  open(householdId: HouseholdId, fileId: FileId): Promise<Blob | undefined>;
   /** Удалить файл; его отсутствие — не ошибка. */
   delete(householdId: HouseholdId, fileId: FileId): Promise<void>;
   /** Удалить все файлы домохозяйства (удаление аккаунта, PRIV-06). */
@@ -34,26 +46,29 @@ export function createLocalFsBlobStore(root: string): BlobStore {
 
   return {
     async put(householdId, fileId, data) {
-      const path = pathOf(householdId, fileId);
-      await mkdir(dirname(path), { recursive: true, mode: 0o700 });
-      const temp = join(dirname(path), `.${randomUUID()}.tmp`);
-      try {
-        const handle = await open(temp, "wx", 0o600);
-        try {
-          await handle.writeFile(data);
-          await handle.sync();
-        } finally {
-          await handle.close();
+      await write(pathOf(householdId, fileId), (chunk) => chunk(data));
+    },
+    async putStream(householdId, fileId, source) {
+      let size = 0;
+      await write(pathOf(householdId, fileId), async (chunk) => {
+        for await (const part of source) {
+          await chunk(part);
+          size += part.byteLength;
         }
-        await rename(temp, path);
-      } catch (error) {
-        await rm(temp, { force: true });
-        throw error;
-      }
+      });
+      return size;
     },
     async get(householdId, fileId) {
       try {
         return new Uint8Array(await readFile(pathOf(householdId, fileId)));
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
+        throw error;
+      }
+    },
+    async open(householdId, fileId) {
+      try {
+        return await openAsBlob(pathOf(householdId, fileId));
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") return undefined;
         throw error;
@@ -66,6 +81,30 @@ export function createLocalFsBlobStore(root: string): BlobStore {
       await rm(pathOf(householdId), { recursive: true, force: true });
     },
   };
+}
+
+/** Запись во временный файл рядом и rename: файл либо целый, либо его нет (в том числе при обрыве потока). */
+async function write(
+  path: string,
+  fill: (chunk: (data: Uint8Array) => Promise<void>) => Promise<void>,
+): Promise<void> {
+  await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+  const temp = join(dirname(path), `.${randomUUID()}.tmp`);
+  try {
+    const handle = await open(temp, "wx", 0o600);
+    try {
+      await fill(async (data) => {
+        await handle.write(data);
+      });
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+    await rename(temp, path);
+  } catch (error) {
+    await rm(temp, { force: true });
+    throw error;
+  }
 }
 
 function checked(schema: typeof HouseholdId | typeof FileId, value: string, name: string): string {

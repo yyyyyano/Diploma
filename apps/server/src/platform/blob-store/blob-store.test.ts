@@ -45,6 +45,29 @@ describe.each(stores)("SEC-03: хранилище файлов (%s)", (_name, st
     expect(new TextDecoder().decode(await store.get(A, file(3)))).toBe("исходный");
   });
 
+  it("PRIV-05: putStream пишет файл по кускам и возвращает размер; частичного файла при ошибке нет", async () => {
+    async function* chunks() {
+      yield bytes("архив ");
+      yield bytes("по кускам");
+    }
+    expect(await store.putStream(A, file(6), chunks())).toBe(bytes("архив по кускам").length);
+    expect(new TextDecoder().decode(await store.get(A, file(6)))).toBe("архив по кускам");
+    async function* broken(): AsyncGenerator<Uint8Array> {
+      yield bytes("начало");
+      throw new Error("поток оборвался");
+    }
+    await expect(store.putStream(A, file(7), broken())).rejects.toThrow(/оборвался/);
+    expect(await store.get(A, file(7))).toBeUndefined();
+  });
+
+  it("open отдаёт Blob с содержимым и размером; нет файла — undefined", async () => {
+    await store.put(A, file(8), bytes("выписка"));
+    const blob = await store.open(A, file(8));
+    expect(blob?.size).toBe(bytes("выписка").length);
+    expect(await blob?.text()).toBe("выписка");
+    expect(await store.open(B, file(8))).toBeUndefined();
+  });
+
   it("delete удаляет файл, повторный delete — не ошибка", async () => {
     await store.put(A, file(4), bytes("x"));
     await store.delete(A, file(4));
@@ -73,6 +96,7 @@ describe.each(stores)("SEC-03: хранилище файлов (%s)", (_name, st
     );
     await expect(store.get(forgedHousehold, forgedFile)).rejects.toThrow(/ожидается uuid/);
     await expect(store.delete(forgedHousehold, forgedFile)).rejects.toThrow(/ожидается uuid/);
+    await expect(store.open(forgedHousehold, forgedFile)).rejects.toThrow(/ожидается uuid/);
   });
 });
 

@@ -12,7 +12,7 @@ export interface Events {
 }
 
 export interface EventsDeps {
-  readonly jobs: Jobs;
+  readonly jobs: Pick<Jobs, "enqueue">;
   /** Все подписки процесса (реестр — T-007); их задачи регистрирует jobs.start. */
   readonly subscriptions: readonly SubscriptionDef[];
 }

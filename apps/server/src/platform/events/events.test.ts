@@ -17,7 +17,7 @@ const ids = (count: number) => Array.from({ length: count }, (_, i) => id(i + 1)
 /** Очередь, которая только записывает постановки; транзакция ей не нужна. */
 function recordingJobs() {
   const sent: { job: string; payload: unknown }[] = [];
-  const jobs: Jobs = {
+  const jobs: Pick<Jobs, "enqueue"> = {
     enqueue: async (_tx, job, payload) => {
       sent.push({ job: job.name, payload });
     },

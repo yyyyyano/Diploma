@@ -29,6 +29,11 @@ export class InlineJobs<Tx> {
     await handler(tx, payload);
   }
 
+  /** Ожидающих задач у InlineJobs не бывает: каждая выполнена при постановке, удалять нечего (PRIV-06). */
+  async discardHousehold(_householdId: string): Promise<number> {
+    return 0;
+  }
+
   /** Поставленные задачи по порядку (для утверждений теста). */
   get enqueued(): readonly { readonly name: string; readonly payload: unknown }[] {
     return [...this.#enqueued];

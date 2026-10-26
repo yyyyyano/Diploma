@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "9cacc013b9db78d0",
+      "fingerprint": "d8350c32d9c1a428",
       "parts": [
         {
           "delayMs": 0,
@@ -68,7 +68,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "16d3818ab49a79d7",
+      "fingerprint": "736495298f023ebd",
       "parts": [
         {
           "delayMs": 0,
@@ -109,7 +109,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",

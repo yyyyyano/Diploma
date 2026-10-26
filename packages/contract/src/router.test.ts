@@ -44,6 +44,7 @@ describe("дерево процедур", () => {
       "actions.undo",
       "actions.decision",
       "actions.answer",
+      "explain.get",
       "accounts.list",
       "chat.history",
       "chat.send",

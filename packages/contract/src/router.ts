@@ -4,6 +4,7 @@ import { accountsContract } from "./accounts/accounts.contract.ts";
 import { actionsContract } from "./actions/actions.contract.ts";
 import { chatContract } from "./chat/chat.contract.ts";
 import { eventsContract } from "./events/events.contract.ts";
+import { explainContract } from "./explain/explain.contract.ts";
 import { identityContract } from "./identity/identity.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
@@ -14,6 +15,7 @@ export const contract = {
   mail: mailContract,
   identity: identityContract,
   actions: actionsContract,
+  explain: explainContract,
   accounts: accountsContract,
   chat: chatContract,
 };

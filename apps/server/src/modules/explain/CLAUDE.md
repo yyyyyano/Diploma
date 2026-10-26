@@ -3,29 +3,28 @@
 Ярус 1 · таблицы: user · публикует: — (`docs/CAPABILITIES.md`; задачи — `tasks/plan.md`)
 
 ## Назначение
-Хранит трассы `{value, trace}` рядом с результатом, отдаёт объяснение по `traceId`. Сейчас модуль пустой, но живой
-(T-007): фабрика, описание `defineModule({ id: "explain" })` и место в корне композиции; содержимое добавляет задача
-модуля.
+Хранит трассу `{ value, trace }` рядом с результатом и отдаёт объяснение по `traceId` — ровно тот расчёт, которым
+получено число (EXPL-02, ADR-0017).
 
 ## Требования SPEC
-EXPL-01/02, P2.
+EXPL-01/02, P2, AGT-03 («объяснение»).
 
 ## Публичный API (`index.ts`)
-- Фабрика: `createExplainModule({ platform, facades })` → `defineModule({ id: "explain" })`; платформа — `Platform`
-  (без `SystemDb`); фасады — соседей нет (`NoFacades`).
-- Фасад `ExplainFacade` — пока нет (`undefined`); появится с первым сценарием, нужным соседям.
-- События (`events.ts`): —; контракт, задачи, инструменты агента, отмена, владелец данных, настройки — добавляет
-  задача модуля.
+- Фабрика: `createExplainModule({ platform, facades })`; платформа — `Platform`; соседей нет.
+- Фасад `ExplainFacade`: `save(s, calc, { period? })` → `TraceId` (в транзакции модуля-владельца — `tx`);
+  `get(s, traceId)` → `{ id, trace, period, createdAt }`; чужой — `NOT_FOUND`.
+- Контракт `contract.explain.get` (authed) — `Explanation` (`TraceNodeSchema` рекурсивно, период или `null`).
+- Инструмент агента `explain_number` (`read`, `core`): сохранённая трасса по `traceId` из результата другого инструмента.
+- Таблица `explanations` (`userOwnedTable`): `trace` jsonb, `period_from`/`period_to`; строки не меняются.
+- Подписи узлов — словарь `formulas`; ключи показателей `calc` — `TRACE_KEYS` (`@kosht/calc`).
 
 ## Зависимости
-Можно: — (`tooling/architecture/modules.ts`). Слушает: —.
+Можно: — (`tooling/architecture/modules.ts`). Слушает: —. `@kosht/calc` — только тип `Calc`.
 
 ## Запреты
-- В чужой модуль — только через его `index.ts` и только из «Можно»; сообщить наверх — событием, подставить реализацию
-  — реестром корня композиции (ADR-0004).
-- Данные домохозяйства — только через `s: ScopedDb` с `s.own(таблица)` на каждую таблицу запроса; новая таблица —
-  `make new-table`, её строки — в `defineUserData` (`user-data.ts`).
-- «Чьи данные» — только `s.scope`, никогда из входа процедуры, инструмента или нагрузки задачи.
+- Не пересчитывать объяснение: только сохранённая трасса.
+- Данные домохозяйства — только через `s.own(explanations)`; «чей» — только `s.scope`.
 
 ## Как тестировать
-- `pnpm vitest run apps/server/src/modules/explain` — unit и int (нужен `make db-up`); общий — `make check`.
+- `pnpm vitest run apps/server/src/modules/explain` — сохранённый расчёт после изменения исходных данных, чужой
+  `traceId`, инструмент (`application/explanations.int.test.ts`).

@@ -9,6 +9,7 @@
     "@ai-sdk/otel": "catalog:",
     "@ai-sdk/provider": "catalog:",
     "@hono/node-server": "catalog:",
+    "@kosht/calc": "workspace:*",
     "@kosht/contract": "workspace:*",
     "@kosht/i18n": "workspace:*",
     "@kosht/kernel": "workspace:*",

@@ -93,6 +93,8 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "actions.undo": { input: (b) => ({ token: b.actionId }) },
   "actions.decision": { input: (b) => ({ id: b.decisionId }) },
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
+  "explain.get": { input: (b) => ({ id: b.traceId }) },
+  "tool:explain_number": { input: (b) => ({ traceId: b.traceId }) },
   "tool:list_accounts": { input: () => ({}) },
   "chat.history": { input: () => undefined },
   "chat.send": {
@@ -254,10 +256,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "chat.history",
       "chat.send",
       "chat.stop",
+      "explain.get",
       "identity.createRecoveryCode",
       "identity.me",
       "identity.recoveryCodeStatus",
       "identity.resendVerification",
+      "explain_number",
       "list_accounts",
     ]);
     const foreign = [

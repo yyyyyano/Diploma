@@ -45,6 +45,12 @@ export {
   pickErrors,
   type ErrorCode,
 } from "./errors.ts";
+export {
+  Explanation,
+  explainContract,
+  TraceNodeSchema,
+  TraceRef,
+} from "./explain/explain.contract.ts";
 export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract.ts";
 export {
   Email,

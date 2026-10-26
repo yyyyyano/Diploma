@@ -420,6 +420,9 @@ importers:
       '@hono/node-server':
         specifier: 'catalog:'
         version: 2.1.5(hono@4.13.13)
+      '@kosht/calc':
+        specifier: workspace:*
+        version: link:../../packages/calc
       '@kosht/contract':
         specifier: workspace:*
         version: link:../../packages/contract

@@ -3,4 +3,5 @@
 export const tools = {
   fallback: "Выполняю шаг…",
   list_accounts: "Смотрю ваши счета…",
+  explain_number: "Разбираю, как получилась цифра…",
 } as const;

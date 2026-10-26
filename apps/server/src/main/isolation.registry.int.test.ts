@@ -41,6 +41,8 @@ interface Household {
   readonly decisionId: string;
   /** Сохранённый расчёт B. */
   readonly traceId: string;
+  /** Уведомление B в ленте сайта. */
+  readonly notificationId: string;
 }
 
 /**
@@ -95,6 +97,15 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
   "explain.get": { input: (b) => ({ id: b.traceId }) },
   "tool:explain_number": { input: (b) => ({ traceId: b.traceId }) },
+  "notifications.list": { input: () => ({}) },
+  "notifications.markRead": { input: (b) => ({ ids: [b.notificationId] }) },
+  "notifications.markAllRead": { input: () => undefined },
+  "notifications.preferences": { input: () => undefined },
+  "notifications.setPreference": {
+    input: () => ({ kind: "goal", channel: "web", enabled: false }),
+  },
+  "notifications.adminList": { input: () => ({}) },
+  "notifications.adminMarkRead": { input: (b) => ({ ids: [b.notificationId] }) },
   "tool:list_accounts": { input: () => ({}) },
   "chat.history": { input: () => undefined },
   "chat.send": {
@@ -153,6 +164,11 @@ async function seedHousehold(email: string): Promise<Household> {
      returning id`,
     [ids.household_id, ids.user_id, account.rows[0]?.id ?? ""],
   );
+  const notification = await db.owner.query<{ id: string }>(
+    `insert into notifications (household_id, user_id, kind, key, params, shown_on_web)
+     values ($1, $2, 'goal', 'g-1', jsonb_build_object('email', $3::text), true) returning id`,
+    [ids.household_id, ids.user_id, email],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -162,6 +178,7 @@ async function seedHousehold(email: string): Promise<Household> {
     actionId: action.rows[0]?.id ?? "",
     decisionId: decision.rows[0]?.id ?? "",
     traceId: explanation.rows[0]?.id ?? "",
+    notificationId: notification.rows[0]?.id ?? "",
   };
 }
 
@@ -261,6 +278,13 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "identity.me",
       "identity.recoveryCodeStatus",
       "identity.resendVerification",
+      "notifications.adminList",
+      "notifications.adminMarkRead",
+      "notifications.list",
+      "notifications.markAllRead",
+      "notifications.markRead",
+      "notifications.preferences",
+      "notifications.setPreference",
       "explain_number",
       "list_accounts",
     ]);
@@ -273,6 +297,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.actionId,
       b.decisionId,
       b.traceId,
+      b.notificationId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

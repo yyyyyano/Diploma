@@ -73,4 +73,18 @@ export {
 } from "./identity/identity.contract.ts";
 export { MailboxMessage, mailContract, MailNoteKind } from "./mail/mail.contract.ts";
 export { ConsentVersion, RegistrationConsents } from "./privacy/privacy.contract.ts";
+export {
+  ADMIN_NOTIFICATION_KINDS,
+  AdminNotification,
+  AdminNotificationKind,
+  FeedInput,
+  NotificationChannel,
+  NotificationParams,
+  notificationsContract,
+  ObjectRef,
+  Preference,
+  USER_NOTIFICATION_KINDS,
+  UserNotification,
+  UserNotificationKind,
+} from "./notifications/notifications.contract.ts";
 export { contract } from "./router.ts";

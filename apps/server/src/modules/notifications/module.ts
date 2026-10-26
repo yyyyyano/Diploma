@@ -7,7 +7,9 @@ import {
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
 import type { IdentityFacade } from "../identity/index.ts";
+import { notificationsRouter } from "./api/router.ts";
 import { makeAdminNotifications } from "./application/admin-notifications.ts";
+import { makeFeed } from "./application/feed.ts";
 import { makeNotify } from "./application/notify.ts";
 import { webChannel } from "./application/web-channel.ts";
 import { notificationsUserData } from "./user-data.ts";
@@ -24,6 +26,7 @@ export function createNotificationsModule({
   return defineModule({
     id: "notifications",
     facade: { notify: makeNotify(platform), notifyAdmins: admins.notifyAdmins },
+    router: notificationsRouter({ feed: makeFeed(platform), admin: admins }),
     deliveryChannels: [webChannel(platform)],
     userData: notificationsUserData,
   });

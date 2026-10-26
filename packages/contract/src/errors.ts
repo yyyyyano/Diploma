@@ -19,6 +19,8 @@ export const ERRORS = {
   INVALID_CREDENTIALS: { status: 401, retryable: false },
   /** Вход есть, а права нет (админка без роли admin); запрос с чужого сайта или с чужим Host. */
   FORBIDDEN: { status: 403, retryable: false },
+  /** Аккаунт заблокирован администратором (AUTH-11): вход и восстановление не проходят. */
+  ACCOUNT_BLOCKED: { status: 403, retryable: false },
   /**
    * Записи нет — и для чужой записи тоже (ADR-0005): так не узнать, что она существует. Так же отвечает процедура
    * «только с этого компьютера» на сетевом входе (R40, NFR-24): из сети её «нет».
@@ -26,6 +28,8 @@ export const ERRORS = {
   NOT_FOUND: { status: 404, retryable: false },
   /** Состояние уже изменилось: дубликат, устаревшая версия. */
   CONFLICT: { status: 409, retryable: false },
+  /** Последнего администратора нельзя заблокировать, лишить роли или удалить (AUTH-12). */
+  LAST_ADMIN: { status: 409, retryable: false },
   /** Регистрация: этот email уже занят (AUTH-01) — войти или восстановить пароль. */
   EMAIL_TAKEN: { status: 409, retryable: false },
   /** Ссылка из письма уже использована или устарела (AUTH-03, AUTH-04): нужно новое письмо. */

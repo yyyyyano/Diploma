@@ -134,6 +134,27 @@ describe("AUTH-06: SMTP настроен — ящик выключен", () => {
   });
 });
 
+describe("AUTH-04: письмо сброса пароля", () => {
+  it("тема, адрес аккаунта в тексте, кнопка «Задать новый пароль», предупреждение со сроком", async () => {
+    const { send, mailbox } = mailWith();
+    await send("irina@example.test", {
+      kind: "reset-password",
+      link: "http://127.0.0.1:8140/recovery?token=r-1",
+      minutes: 60,
+    });
+    const [letter] = (await mailbox()).messages;
+    expect(letter).toMatchObject({
+      subject: "Сброс пароля",
+      preview: "Ссылка для нового пароля. Действует 60 мин.",
+      paragraphs: expect.arrayContaining([
+        expect.stringContaining("для аккаунта irina@example.test"),
+      ]),
+      action: { label: "Задать новый пароль", url: "http://127.0.0.1:8140/recovery?token=r-1" },
+      note: { kind: "warn", text: expect.stringContaining("сработает только один раз") },
+    });
+  });
+});
+
 describe("ссылка письма", () => {
   it("ссылка не http(s) — письмо не собирается и никуда не уходит", async () => {
     const { send, mailbox } = mailWith();

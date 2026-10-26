@@ -1,17 +1,18 @@
-// Модуль actions (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль actions (паспорт — CLAUDE.md): журнал отменяемых действий и ожидающие решения «Да/Нет» — таблицы и владелец
+// данных; сценарии и процедуры — следующим шагом.
 import {
   defineModule,
   type ModuleDeps,
   type NoFacades,
   type Platform,
 } from "../../platform/module/define-module.ts";
+import { actionsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export type ActionsFacades = NoFacades;
 
 export function createActionsModule(_deps: ModuleDeps<ActionsFacades, Platform>) {
-  return defineModule({ id: "actions" });
+  return defineModule({ id: "actions", userData: actionsUserData });
 }
 
 /** Что модуль даёт соседям: пока ничего (undefined). */

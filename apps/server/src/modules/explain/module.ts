@@ -1,17 +1,17 @@
-// Модуль explain (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль explain (паспорт — CLAUDE.md): сохранённые трассы расчётов (EXPL-01, EXPL-02, P2) — таблица и владелец данных.
 import {
   defineModule,
   type ModuleDeps,
   type NoFacades,
   type Platform,
 } from "../../platform/module/define-module.ts";
+import { explainUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export type ExplainFacades = NoFacades;
 
 export function createExplainModule(_deps: ModuleDeps<ExplainFacades, Platform>) {
-  return defineModule({ id: "explain" });
+  return defineModule({ id: "explain", userData: explainUserData });
 }
 
 /** Что модуль даёт соседям: пока ничего (undefined). */

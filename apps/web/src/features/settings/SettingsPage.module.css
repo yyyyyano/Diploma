@@ -1,0 +1,114 @@
+/* .st-* из design/screens/Settings.dc.html: вкладки, карточки разделов, строка «иконка — адрес — статус». ≤ 860 px —
+   поля 16. */
+.body {
+  width: 100%;
+  max-width: 980px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-20);
+  padding-top: var(--s-20);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14);
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-12) var(--s-14);
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink-2);
+}
+
+.rowText {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.address {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.hint,
+.text {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8) var(--s-16);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.ok,
+.error {
+  display: flex;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-12) var(--s-14);
+  border-radius: var(--r-md);
+  font-size: 14px;
+}
+
+.ok > svg,
+.error > svg {
+  flex: none;
+}
+
+.ok {
+  background: var(--income-soft);
+  color: var(--income);
+}
+
+.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}

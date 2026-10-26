@@ -49,6 +49,11 @@ export interface Platform {
    * Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
    */
   tools(): readonly ToolDef[];
+  /**
+   * Обработчики «Отменить» и «Да» всех модулей (реестры undo/confirm корня композиции, ARCHITECTURE §5): actions
+   * исполняет их по имени. Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
+   */
+  actionHandlers(): ActionHandlers;
   /** ScopedDb для scope, рождённого на входе модуля (Telegram, ARCHITECTURE §6.4). */
   scoped(scope: Scope): ScopedDb;
 }
@@ -73,6 +78,12 @@ export interface ModuleDeps<F extends object = NoFacades, P extends Platform = P
 
 /** Обработчик отмены («Отменить», P5) или подтверждения («Да», AGT-07): нагрузку проверяет сам модуль. */
 export type ActionHandler = (s: ScopedDb, payload: unknown) => Promise<void>;
+
+/** Реестры обработчиков действий по имени `<модуль>.<действие>`. */
+export interface ActionHandlers {
+  readonly undo: ReadonlyMap<string, ActionHandler>;
+  readonly confirm: ReadonlyMap<string, ActionHandler>;
+}
 
 /** Канал доставки уведомлений (web, telegram) для реестра notifications; форму дополнит T-015. */
 export interface DeliveryChannel {

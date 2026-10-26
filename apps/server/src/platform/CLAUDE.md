@@ -199,7 +199,8 @@
   (все списки есть, пустые — тоже). id — kebab-case; имена событий, задач, расписаний, обходов, `undo`/`confirm` —
   `<id>.<…>`; подписка — только своего модуля (`module === id`); иначе `RangeError` при создании. `Platform` (`clock`,
   `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `telemetry`, `consent.cloudAllowed(scope)`
-  (нет источника — false), `tools()` — инструменты агента из реестра (до конца сборки — ошибка), `scoped(scope)`), `SystemPlatform`
+  (нет источника — false), `tools()` — инструменты агента из реестра (до конца сборки — ошибка), `actionHandlers()` — реестры обработчиков
+  `undo`/`confirm` всех модулей для `actions` (так же поздно), `scoped(scope)`), `SystemPlatform`
   (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа; только
   модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
   (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.

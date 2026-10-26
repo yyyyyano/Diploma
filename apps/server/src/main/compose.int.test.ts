@@ -214,3 +214,26 @@ describe("подписки и очереди во всех ролях", () => {
     ]);
   }, 30_000);
 });
+
+describe("ARCHITECTURE §5: обработчики «Отменить» и «Да» — модулям поздним связыванием", () => {
+  it("из фабрики модуля — ошибка; после сборки — реестры undo/confirm всех модулей", async () => {
+    const undo = async () => {};
+    const confirm = async () => {};
+    let early: unknown;
+    const composition = await start("bot", ({ platform }) => {
+      try {
+        platform.actionHandlers();
+      } catch (error) {
+        early = error;
+      }
+      return [
+        defineModule({ id: "first", undo: { "first.add": undo } }),
+        defineModule({ id: "second", confirm: { "second.delete": confirm } }),
+      ];
+    });
+    expect(early).toBeInstanceOf(Error);
+    const handlers = composition.platform.actionHandlers();
+    expect([...handlers.undo.entries()]).toEqual([["first.add", undo]]);
+    expect([...handlers.confirm.entries()]).toEqual([["second.delete", confirm]]);
+  });
+});

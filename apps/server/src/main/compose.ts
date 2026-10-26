@@ -187,6 +187,12 @@ export async function compose(
       }
       return [...registered.tools.values()];
     },
+    actionHandlers: () => {
+      if (registered === undefined) {
+        throw new Error("Обработчики отмены и подтверждения запрошены до конца сборки модулей.");
+      }
+      return { undo: registered.undo, confirm: registered.confirm };
+    },
     scoped: (scope) => createScopedDb(pool, scope),
   };
   const systemPlatform: SystemPlatform = {

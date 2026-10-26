@@ -19,6 +19,7 @@ import { topologicalOrder } from "../../../../tooling/gen/module-order.ts";
 import { loadConfig, type AppConfig } from "../platform/config/config.ts";
 import { loadProductionSchemas } from "../platform/db/__fixtures__/production-schemas.ts";
 import { registeredTables } from "../platform/db/tables.ts";
+import { defineUserData } from "../platform/db/user-data.ts";
 import { defineEvent } from "../platform/events/define-event.ts";
 import { defineSubscription } from "../platform/events/define-subscription.ts";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
@@ -244,5 +245,28 @@ describe("ARCHITECTURE §5: обработчики действий и кана�
     const handlers = composition.platform.actionHandlers();
     expect([...handlers.undo.entries()]).toEqual([["first.add", undo]]);
     expect([...handlers.confirm.entries()]).toEqual([["second.delete", confirm]]);
+  });
+
+  it("PRIV-06: владельцы данных — после сборки, в порядке создания модулей; из фабрики — ошибка", async () => {
+    let early: unknown;
+    const firstData = defineUserData({ tables: [], afterDelete: async () => {} });
+    const secondData = defineUserData({ tables: [], afterDelete: async () => {} });
+    const composition = await start("bot", ({ platform }) => {
+      try {
+        platform.userData();
+      } catch (error) {
+        early = error;
+      }
+      return [
+        defineModule({ id: "first", userData: firstData }),
+        defineModule({ id: "middle" }),
+        defineModule({ id: "second", userData: secondData }),
+      ];
+    });
+    expect(early).toBeInstanceOf(Error);
+    expect(composition.platform.userData()).toEqual([
+      { module: "first", data: firstData },
+      { module: "second", data: secondData },
+    ]);
   });
 });

@@ -9,7 +9,7 @@ import type { BlobStore } from "../blob-store/blob-store.ts";
 import type { ModuleKeyPurpose } from "../config/master-key.ts";
 import type { ScopedDb } from "../db/scoped-db.ts";
 import type { SystemDb } from "../db/system-db.ts";
-import type { UserDataDef } from "../db/user-data.ts";
+import type { UserDataDef, UserDataOwner } from "../db/user-data.ts";
 import type { EventDef } from "../events/define-event.ts";
 import type { Events } from "../events/events.ts";
 import type { SubscriptionDef } from "../events/define-subscription.ts";
@@ -59,6 +59,11 @@ export interface Platform {
    * через них, не зная модулей-владельцев. Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
    */
   deliveryChannels(): ReadonlyMap<string, DeliveryChannel>;
+  /**
+   * Владельцы данных всех модулей (PRIV-05/06) в порядке modules.ts: privacy выгружает и удаляет данные аккаунта, не
+   * зная модулей-владельцев (удаляет — в обратном порядке). Доступны после сборки модулей — вызов из фабрики — ошибка.
+   */
+  userData(): readonly UserDataOwner[];
   /** ScopedDb для scope, рождённого на входе модуля (Telegram, ARCHITECTURE §6.4). */
   scoped(scope: Scope): ScopedDb;
 }

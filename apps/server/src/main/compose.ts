@@ -199,6 +199,12 @@ export async function compose(
       }
       return registered.deliveryChannels;
     },
+    userData: () => {
+      if (registered === undefined) {
+        throw new Error("Владельцы данных запрошены до конца сборки модулей.");
+      }
+      return [...registered.userData].map(([module, data]) => ({ module, data }));
+    },
     scoped: (scope) => createScopedDb(pool, scope),
   };
   const systemPlatform: SystemPlatform = {

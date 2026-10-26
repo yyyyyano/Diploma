@@ -204,7 +204,7 @@
   `log`, `settings`, `secrets`, `rateLimiter`, `blobs`, `jobs`, `events`, `realtime`, `telemetry`, `consent.cloudAllowed(scope)`
   (нет источника — false), `tools()` — инструменты агента из реестра (до конца сборки — ошибка), `actionHandlers()` — реестры обработчиков
   `undo`/`confirm` всех модулей для `actions`, `deliveryChannels()` — каналы доставки уведомлений по имени (так же
-  поздно), `scoped(scope)`), `SystemPlatform`
+  поздно), `userData()` — владельцы данных в порядке `modules.ts` (так же поздно; privacy, PRIV-05/06), `scoped(scope)`), `SystemPlatform`
   (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа; только
   модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
   (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.
@@ -213,8 +213,11 @@
   типу); `TOOLSETS` = `core | legal | planning | reports`; `ToolCtx { s, requestId, channel, page? }`. При
   определении: имя snake_case, описание — печатаемый ASCII (по-английски), набор из `TOOLSETS`, во входе нет
   `userId`/`householdId`/`ownerId`.
-- `db/user-data.ts` — `defineUserData({ tables })` → `UserDataDef { tables, tableNames }`: только `userOwnedTable`,
-  непусто, без повторов; порядок — порядок удаления (дети раньше родителей).
+- `db/user-data.ts` — `defineUserData({ tables, export?, afterDelete? })` → `UserDataDef`: только `userOwnedTable`,
+  без повторов; порядок — порядок удаления (дети раньше родителей); таблиц может не быть, только если есть хук. Хуки —
+  данные вне таблиц домохозяйства: `export(s, sink)` дополняет архив «Мои данные» (`ExportSink.file`, исходные
+  файлы), `afterDelete(scope)` — идемпотентная уборка после удаления строк (каталог файлов, системные таблицы модуля,
+  трассы). `UserDataOwner { module, data }` — элемент `Platform.userData()`.
 - `http/procedures.ts` — `ModuleRouter`: ветка модуля в дереве процедур.
 
 ## Публичный API — `telemetry/`, `module/consent-source.ts`, `db/transaction-flag.ts` (T-010: OBS-03, PRIV-02, ADR-0009)

@@ -9,7 +9,7 @@ import { migrateDatabase } from "./migrate-database.ts";
 const config = loadDbConfig();
 const pool = createPool(config.migration, { max: 1, applicationName: "kosht-cli-migrate" });
 try {
-  await migrateDatabase(pool, appRoleOptions(config.app));
+  await migrateDatabase(pool, appRoleOptions(config.app), config.migrationsDir);
   console.log("Миграции применены, схема очереди поставлена, права роли приложения выданы.");
 } finally {
   await pool.end();

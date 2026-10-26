@@ -23,6 +23,11 @@ export interface DbConfig {
 export interface DbConfigs {
   readonly app: DbConfig;
   readonly migration: DbConfig;
+  /**
+   * Папка боевых миграций — абсолютный путь (MIGRATIONS_DIR). Из окружения, а не от import.meta.url: сервер в образе
+   * собран tsdown в один .mjs, и путь «от файла» там уже не ведёт к apps/server/drizzle.
+   */
+  readonly migrationsDir: string;
 }
 
 export interface Listen {
@@ -106,6 +111,7 @@ const DbEnv = z.object({
     "postgres://kosht@127.0.0.1:5440/kosht",
   ),
   MIGRATION_DB_PASSWORD_FILE: path("secrets/db_password", "файлу пароля владельца БД"),
+  MIGRATIONS_DIR: path("apps/server/drizzle", "папке миграций"),
 });
 
 const ORIGIN = "ожидаются origin через запятую: http(s)://хост[:порт] без пути";
@@ -186,6 +192,7 @@ export function loadDbConfig(env: Env = process.env): DbConfigs {
       url: parsed.MIGRATION_DATABASE_URL,
       passwordFile: parsed.MIGRATION_DB_PASSWORD_FILE,
     },
+    migrationsDir: resolve(parsed.MIGRATIONS_DIR),
   };
 }
 

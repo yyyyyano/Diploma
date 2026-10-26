@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
-import { shutdown, STOP_TIMEOUT_MS } from "./run.ts";
+import { crash, shutdown, STOP_TIMEOUT_MS } from "./run.ts";
 
 function steps(stop: () => Promise<void>) {
   const memory = memoryLogger();
@@ -50,5 +50,28 @@ describe("ADR-0015: остановка процесса по SIGTERM", () => {
 
   it("срок остановки — 10 с", () => {
     expect(STOP_TIMEOUT_MS).toBe(10_000);
+  });
+});
+
+describe("OBS-05: необработанная ошибка процесса", () => {
+  it.each(["uncaughtException", "unhandledRejection"] as const)(
+    "%s — строка process.crashed со стеком, лог дописан, код 1",
+    async (source) => {
+      const run = steps(async () => {});
+      await crash(run.steps, new Error("сломалось"), source);
+      const line = run.memory.lines().at(-1);
+      expect(line).toMatchObject({ level: "fatal", msg: "process.crashed", reason: source });
+      expect(line?.["err"]).toMatchObject({ type: "Error", message: "сломалось" });
+      expect(JSON.stringify(line?.["err"])).toContain("run.test.ts");
+      expect(run.closeLog).toHaveBeenCalledTimes(1);
+      expect(run.exit).toHaveBeenCalledWith(1);
+    },
+  );
+
+  it("лог не дописался — всё равно код 1", async () => {
+    const run = steps(async () => {});
+    run.closeLog.mockRejectedValueOnce(new Error("диск полон"));
+    await expect(crash(run.steps, "не Error", "unhandledRejection")).rejects.toThrow("диск полон");
+    expect(run.exit).toHaveBeenCalledWith(1);
   });
 });

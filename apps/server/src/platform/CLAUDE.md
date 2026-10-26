@@ -12,7 +12,8 @@
   `loadDbConfig(env?)` → `DbConfigs` — только БД, без мастер-ключа (`make migrate`, globalSetup тестов): `app` —
   роль приложения `kosht_app` (`DATABASE_URL`, `DB_PASSWORD_FILE` = `secrets/db_app_password`), `migration` — владелец
   (`MIGRATION_DATABASE_URL` = `kosht`, `MIGRATION_DB_PASSWORD_FILE` = `secrets/db_password`); хост, порт и база
-  должны совпадать, роли — различаться, иначе `ConfigError` (ADR-0020); `DbConfig`, `ConfigError` (имя переменной и
+  должны совпадать, роли — различаться, иначе `ConfigError` (ADR-0020); `migrationsDir` — `MIGRATIONS_DIR`
+  (по умолчанию `apps/server/drizzle`, абсолютный; не от `import.meta.url` — сервер в образе собран в один `.mjs`); `DbConfig`, `ConfigError` (имя переменной и
   ожидание, **без значения**), `CONFIG_VARIABLES` (сверяется с `.env.example`). `process.env` читают только `config/` и `entrypoints/` (тест `env-readers.test.ts`).
 - `config/master-key.ts` — `MasterKey` (32 байта из `secrets/master.key`; `derive("secrets/v1" | "rate-limit/v1" | "auth/v1")` —
   HKDF-SHA-256; в JSON и `inspect` — `[MasterKey]`).
@@ -101,7 +102,7 @@
   пустая ветка допустима; общая с модулем ветка контракта (`system`) дополняется, повтор платформенной процедуры —
   ошибка. Полноту против контракта проверяют `router.contract.test.ts` и `compose.int.test.ts` (`routerPaths` /
   `contractPaths` — `main/__fixtures__/router-paths.ts`).
-- `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole)`: миграции Drizzle → схема очереди pgboss
+- `main/migrate-database.ts` — `migrateDatabase(ownerPool, appRole, migrationsDir)`: миграции Drizzle → схема очереди pgboss
   (`installJobsSchema` под `withMigrationLock`) → `ensureAppRole` последним (`GRANT … ON ALL TABLES` видит только
   созданные таблицы). Одна последовательность для `compose`, `make migrate` (`main/migrate-cli.ts`) и шаблона тестов.
 - `entrypoints/run.ts` — `runProcess(role, { routes?, setup?, stopTimeoutMs?, env? })`: конфигурация (ошибка — текст
@@ -112,8 +113,12 @@
   держит) → `process.started`. `shutdown(steps, timeoutMs)`: `process.stopping` → сигнал остановки потокам,
   слушатели (`stop(80 % срока)`) → потоки и LISTEN (`realtime.stopped`) → очередь (≤ 8 с) → пул → `db.closed` →
   `process.stopped` → лог на диск → код 0; дольше
-  `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
-- `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`).
+  `STOP_TIMEOUT_MS` (10 с) — `process.stop-timeout`, код 1. Сигнал до конца старта (миграции под блокировкой) —
+  `process.stop-requested`: старт доводится, роль не запускается, остановка та же (код 0). `uncaughtException` и
+  `unhandledRejection` — `crash()`: `process.crashed` (`reason`, `err` со стеком), лог на диск, код 1 (OBS-05).
+  `api.ts`, `worker.ts`, `bot.ts` — тонкие обёртки.
+- `entrypoints/__fixtures__/slow-api.ts` — api с медленным `/slow` для SIGTERM-теста (`processes.int.test.ts`);
+  `crash-worker.ts` — worker, падающий после старта (`exception` | `rejection`).
 - `entrypoints/__fixtures__/e2e-stack.ts` — стенд `make e2e`: шаблон тестов (`db/__fixtures__/test-template.ts`, общий с
   globalSetup проекта int) → своя база → api и worker со своим окружением и портом; SIGTERM — остановка и удаление базы.
 - `db/connection.ts`: `createPool(config, { applicationName })` — имя в `pg_stat_activity`; `pingDb(pool)`. Пулов
@@ -250,7 +255,7 @@
   до отправки запроса.
 - `connection.ts` (`createPool(config: DbConfig, { applicationName? })`: адрес без пароля, пароль из файла
   `DB_PASSWORD_FILE`/`MIGRATION_DB_PASSWORD_FILE` (`readPasswordFile`); `DbConfig` и чтение окружения — в `config/`;
-  `pingDb`), `migrate.ts` (`runMigrations` и `withMigrationLock` под `pg_advisory_lock`), `schema-check.ts`.
+  `pingDb`), `migrate.ts` (`runMigrations(pool, { folder, table? })` и `withMigrationLock` под `pg_advisory_lock`), `schema-check.ts`.
 - `roles.ts` (ADR-0020) — `ensureAppRole(ownerPool, { appRole, passwordFile, schemas })`: на пуле владельца, после
   миграций, под той же блокировкой; создаёт роль (`LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION
   NOBYPASSRLS`) или возвращает ей атрибуты, пароль — готовым SCRAM-verifier и только если не совпал; `appRoleGrants` —

@@ -1,6 +1,7 @@
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { loadDbConfig } from "../config/config.ts";
 import { MIGRATION_LOCK, runMigrations } from "./migrate.ts";
 
 const COUNTER_DIR = fileURLToPath(new URL("__fixtures__/counter-migrations", import.meta.url));
@@ -23,7 +24,7 @@ describe("ADR-0007: миграции применяет приложение п�
 
   it("повторный запуск на актуальной базе ничего не применяет", async () => {
     const before = await db.owner.query("select hash from drizzle.__drizzle_migrations");
-    await runMigrations(db.owner);
+    await runMigrations(db.owner, { folder: loadDbConfig().migrationsDir });
     const after = await db.owner.query("select hash from drizzle.__drizzle_migrations");
     expect(after.rows).toEqual(before.rows);
     expect(after.rows.length).toBeGreaterThan(0);

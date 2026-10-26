@@ -16,7 +16,6 @@ import { loadDbConfig, type DbConfig } from "../../config/config.ts";
 import { connectionOptions, createPool } from "../connection.ts";
 import { migrateDatabase } from "../../../main/migrate-database.ts";
 import { PG_BOSS_VERSION } from "../../jobs/install.ts";
-import { MIGRATIONS_DIR } from "../migrate.ts";
 import { appRoleGrants, appRoleOptions } from "../roles.ts";
 
 function connectionOf(config: DbConfig): TestDbConnection {
@@ -57,7 +56,7 @@ export async function prepareServerTemplate(): Promise<TestDbContext> {
   const role = appRoleOptions(config.app);
   await dropOrphans(admin);
   const fingerprint = createHash("sha256")
-    .update(fingerprintDir(MIGRATIONS_DIR))
+    .update(fingerprintDir(config.migrationsDir))
     // Схему pgboss ставит установщик pg-boss: новая версия — новая схема, значит и новый шаблон.
     .update(`pg-boss@${PG_BOSS_VERSION}`)
     .update(appRoleGrants({ ...role, owner: admin.user }).join("\n"))
@@ -69,7 +68,7 @@ export async function prepareServerTemplate(): Promise<TestDbContext> {
     async (name) => {
       const pool = createPool(config.migration, { database: name, max: 1 });
       try {
-        await migrateDatabase(pool, role);
+        await migrateDatabase(pool, role, config.migrationsDir);
       } finally {
         await pool.end();
       }

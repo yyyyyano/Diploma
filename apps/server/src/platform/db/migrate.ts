@@ -3,18 +3,17 @@
 // из пула — первый применяет, остальные ждут и, получив блокировку, видят, что применять нечего.
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { fileURLToPath } from "node:url";
 import type pg from "pg";
-
-/** Боевые миграции: apps/server/drizzle (папка на миграцию: <время>_<имя>/migration.sql). */
-export const MIGRATIONS_DIR = fileURLToPath(new URL("../../../drizzle", import.meta.url));
 
 /** Ключ блокировки миграций: пара чисел, «KOSH» и 1 — не пересекается с блокировками pg-boss и бота. */
 export const MIGRATION_LOCK = [0x4b4f5348, 1] as const;
 
 export interface MigrateOptions {
-  /** Папка миграций; по умолчанию — боевая. */
-  readonly folder?: string;
+  /**
+   * Папка миграций (папка на миграцию: <время>_<имя>/migration.sql). Боевая — config.db.migrationsDir: путь от
+   * import.meta.url в собранном .mjs не работает (T-011).
+   */
+  readonly folder: string;
   /** Журнал применённых миграций в схеме drizzle; у тестовой схемы — свой. */
   readonly table?: string;
 }
@@ -47,10 +46,10 @@ export async function withMigrationLock<T>(
 }
 
 /** Применить недостающие миграции; одна транзакция на весь набор, под блокировкой. */
-export async function runMigrations(pool: pg.Pool, options: MigrateOptions = {}): Promise<void> {
+export async function runMigrations(pool: pg.Pool, options: MigrateOptions): Promise<void> {
   await withMigrationLock(pool, async (client) => {
     await migrate(drizzle({ client }), {
-      migrationsFolder: options.folder ?? MIGRATIONS_DIR,
+      migrationsFolder: options.folder,
       migrationsTable: options.table ?? "__drizzle_migrations",
     });
   });

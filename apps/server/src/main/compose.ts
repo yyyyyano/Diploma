@@ -116,7 +116,7 @@ export async function compose(
     applicationName: `kosht-${role}-migrate`,
   });
   try {
-    await migrateDatabase(owner, appRoleOptions(config.db.app));
+    await migrateDatabase(owner, appRoleOptions(config.db.app), config.db.migrationsDir);
   } finally {
     await owner.end();
   }

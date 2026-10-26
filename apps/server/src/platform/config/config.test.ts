@@ -150,6 +150,7 @@ describe("loadDbConfig: только подключение к БД (ADR-0020: �
         url: "postgres://kosht@127.0.0.1:5440/kosht",
         passwordFile: "secrets/db_password",
       },
+      migrationsDir: resolve("apps/server/drizzle"),
     });
   });
 
@@ -160,10 +161,12 @@ describe("loadDbConfig: только подключение к БД (ADR-0020: �
         DB_PASSWORD_FILE: "/run/a",
         MIGRATION_DATABASE_URL: "postgres://kosht@db/kosht",
         MIGRATION_DB_PASSWORD_FILE: "/run/p",
+        MIGRATIONS_DIR: "/app/drizzle",
       }),
     ).toEqual({
       app: { url: "postgres://kosht_app@db:5432/kosht", passwordFile: "/run/a" },
       migration: { url: "postgres://kosht@db/kosht", passwordFile: "/run/p" },
+      migrationsDir: "/app/drizzle",
     });
   });
 

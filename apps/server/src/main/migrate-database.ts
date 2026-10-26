@@ -11,8 +11,12 @@ import { installJobsSchema } from "../platform/jobs/install.ts";
 /** Пул владельца базы (MIGRATION_*): закрывает его вызывающий. */
 export type OwnerPool = ReturnType<typeof createPool>;
 
-export async function migrateDatabase(owner: OwnerPool, appRole: AppRoleOptions): Promise<void> {
-  await runMigrations(owner);
+export async function migrateDatabase(
+  owner: OwnerPool,
+  appRole: AppRoleOptions,
+  migrationsDir: string,
+): Promise<void> {
+  await runMigrations(owner, { folder: migrationsDir });
   await withMigrationLock(owner, (client) => installJobsSchema(bossDb(client)));
   await ensureAppRole(owner, appRole);
 }

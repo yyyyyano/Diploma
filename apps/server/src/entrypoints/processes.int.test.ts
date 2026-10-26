@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, inject, it, vi } from "vitest";
+import { MIGRATION_LOCK } from "../platform/db/migrate.ts";
 import { APP_SCHEMAS, ensureAppRole } from "../platform/db/roles.ts";
 
 type Role = "api" | "worker" | "bot";
@@ -22,6 +23,8 @@ const ENTRY: Record<Role, string> = {
   worker: fileURLToPath(new URL("./worker.ts", import.meta.url)),
   bot: fileURLToPath(new URL("./bot.ts", import.meta.url)),
 };
+
+const CRASH_WORKER = fileURLToPath(new URL("./__fixtures__/crash-worker.ts", import.meta.url));
 
 /** Запуск процесса с миграциями и WASM-аудитором — секунды; ждём с запасом. */
 const START_MS = 20_000;
@@ -67,11 +70,12 @@ async function start(
   role: Role,
   env: Record<string, string> = {},
   entry: string = ENTRY[role],
+  args: readonly string[] = [],
 ): Promise<Started> {
   runs += 1;
   const dataDir = join(dir, `${role}-${runs}`);
   const { app, admin } = inject("testDb");
-  const child = spawn(process.execPath, [entry], {
+  const child = spawn(process.execPath, [entry, ...args], {
     // Окружение — только своё: .env и переменные разработчика тест не видит.
     env: {
       PATH: process.env["PATH"] ?? "",
@@ -384,3 +388,58 @@ describe.each<Role>(["worker", "bot"])(
     );
   },
 );
+
+describe("OBS-05: необработанная ошибка роняет процесс с записью в логе", () => {
+  it.each([
+    ["exception", "uncaughtException"],
+    ["rejection", "unhandledRejection"],
+  ])(
+    "%s — последняя строка process.crashed со стеком, код 1",
+    async (mode, reason) => {
+      const proc = await start("worker", {}, CRASH_WORKER, [mode]);
+      expect(await proc.exited).toBe(1);
+      const last = (await logLines(proc.dataDir, "worker")).at(-1);
+      expect(last).toMatchObject({ level: "fatal", msg: "process.crashed", reason });
+      expect(JSON.stringify(last?.["err"])).toContain("crash-worker.ts");
+    },
+    TEST_MS,
+  );
+});
+
+describe("ADR-0015: SIGTERM во время миграций", () => {
+  it(
+    "старт доводится, роль не запускается: process.stopped последней строкой, код 0, соединений нет",
+    async () => {
+      // Блокировку миграций держит тест: процесс встаёт на ней — сигнал приходит ровно посреди миграций.
+      const holder = await db.owner.connect();
+      try {
+        await holder.query("select pg_advisory_lock($1, $2)", [...MIGRATION_LOCK]);
+        const proc = await start("worker");
+        await vi.waitFor(
+          async () => {
+            const { rows } = await db.owner.query<{ n: number }>(
+              "select count(*)::int as n from pg_stat_activity where application_name = $1 and datname = $2 and wait_event_type = 'Lock'",
+              ["kosht-worker-migrate", db.name],
+            );
+            expect(rows[0]?.n).toBe(1);
+          },
+          { timeout: START_MS, interval: 50 },
+        );
+        proc.child.kill("SIGTERM");
+        await waitForLog(proc, "worker", "process.stop-requested");
+        await holder.query("select pg_advisory_unlock($1, $2)", [...MIGRATION_LOCK]);
+        expect(await proc.exited).toBe(0);
+        const lines = (await logLines(proc.dataDir, "worker")).map((line) => line["msg"]);
+        expect(lines).not.toContain("process.started");
+        expect(lines).not.toContain("jobs.started");
+        expect(lines.slice(-2)).toEqual(["db.closed", "process.stopped"]);
+        await vi.waitFor(async () => expect(await connections("kosht-worker")).toBe(0), {
+          interval: 50,
+        });
+      } finally {
+        holder.release();
+      }
+    },
+    TEST_MS,
+  );
+});

@@ -5,7 +5,9 @@
 // переподключения (realtime.stopped, только api) → очередь задач остановлена
 // (обработчики worker доводятся не дольше 8 с) → пул закрыт → process.stopped →
 // лог дописан на диск → код 0. Не уложились в срок (10 с) — process.stop-timeout и код 1: Docker и make не ждут
-// зависший процесс вечно.
+// зависший процесс вечно. Сигнал во время старта (миграции под блокировкой) не убивает процесс посреди работы: старт
+// доводится, роль не запускается, остановка — та же (process.stopped, код 0). Необработанное исключение или отказ
+// промиса — process.crashed со стеком, лог дописан, код 1 (OBS-05: причина падения видна в make logs).
 import { join } from "node:path";
 import { compose, type Composition, type ProcessRole } from "../main/compose.ts";
 import { ConfigError, loadConfig, type AppConfig } from "../platform/config/config.ts";
@@ -83,6 +85,28 @@ export async function shutdown(steps: ShutdownSteps, timeoutMs: number): Promise
   }
 }
 
+export type CrashSource = "uncaughtException" | "unhandledRejection";
+
+/** Падение процесса: process.crashed со стеком, лог дописан на диск, код 1. */
+export async function crash(
+  steps: Omit<ShutdownSteps, "stop">,
+  error: unknown,
+  source: CrashSource,
+): Promise<void> {
+  try {
+    steps.log.fatal({ err: error, reason: source }, "process.crashed");
+    await steps.closeLog();
+  } finally {
+    steps.exit(1);
+  }
+}
+
+/** Вызвать fn один раз: лог закрывают и остановка, и падение, а поток после end второй раз не закрывается. */
+function once(fn: () => Promise<void>): () => Promise<void> {
+  let result: Promise<void> | undefined;
+  return () => (result ??= fn());
+}
+
 async function startRole(
   app: Composition,
   options: RunOptions,
@@ -156,14 +180,41 @@ export async function runProcess(role: ProcessRole, options: RunOptions = {}): P
   }
   const stream: RollStream = await openLogFile(join(config.dataDir, "logs"), role);
   const log = createLogger({ role, level: config.logLevel, destination: stream });
+  const closeLog = once(() => closeLogFile(stream));
+  const exit = (code: number) => process.exit(code);
+
+  let crashed = false;
+  const onCrash = (source: CrashSource) => (error: unknown) => {
+    if (crashed) return;
+    crashed = true;
+    void crash({ log, closeLog, exit }, error, source);
+  };
+  process.on("uncaughtException", onCrash("uncaughtException"));
+  process.on("unhandledRejection", onCrash("unhandledRejection"));
+
+  // Сигнал до конца старта только запоминается: остановка начнётся, когда старт доведён (или не удался).
+  let stopping = false;
+  let running: Running | undefined;
+  const stop = (current: Running) =>
+    shutdown({ log, stop: () => current.stop(), closeLog, exit }, timeoutMs);
+  const onSignal = () => {
+    if (stopping) return;
+    stopping = true;
+    if (running === undefined) log.info({ role }, "process.stop-requested");
+    else void stop(running);
+  };
+  process.once("SIGTERM", onSignal);
+  process.once("SIGINT", onSignal);
 
   let composition: Composition | undefined;
-  let running: Running;
   try {
     running = await withLogContext({ source: "startup" }, async () => {
-      composition = await compose(config, role, { log });
-      options.setup?.(composition);
-      return startRole(composition, options, timeoutMs);
+      const app = await compose(config, role, { log });
+      composition = app;
+      // Остановку попросили во время миграций — роль не запускаем: закрыть есть что только у compose().
+      if (stopping) return { stop: () => app.close() };
+      options.setup?.(app);
+      return startRole(app, options, timeoutMs);
     });
   } catch (error) {
     log.fatal({ err: error }, "process.start-failed");
@@ -173,25 +224,12 @@ export async function runProcess(role: ProcessRole, options: RunOptions = {}): P
     await composition?.close().catch((closeError: unknown) => {
       log.error({ err: closeError }, "db.close-failed");
     });
-    await closeLogFile(stream);
+    await closeLog();
     process.exit(1);
   }
+  if (stopping) {
+    await stop(running);
+    return;
+  }
   log.info({ role }, "process.started");
-
-  let stopping = false;
-  const onSignal = () => {
-    if (stopping) return;
-    stopping = true;
-    void shutdown(
-      {
-        log,
-        stop: () => running.stop(),
-        closeLog: () => closeLogFile(stream),
-        exit: (code) => process.exit(code),
-      },
-      timeoutMs,
-    );
-  };
-  process.once("SIGTERM", onSignal);
-  process.once("SIGINT", onSignal);
 }

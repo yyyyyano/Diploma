@@ -34,7 +34,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
 	test-int logs log-find new-module new-table e2e e2e-install new-feature ai-record coverage-baseline \
-	langfuse-secrets up down restart ps build db-reset backup restore confirm audit check-full
+	langfuse-secrets doctor dev up down restart ps build db-reset backup restore confirm audit check-full
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -94,6 +94,14 @@ MODELS_PROFILE = $(if $(filter 1,$(WITH_MODELS)),--profile models)
 UP_TIMEOUT := 600
 SECRETS := secrets/db_password secrets/db_app_password secrets/master.key
 DATA_DIRS := data/files data/logs data/backups data/exports
+
+doctor: need-node ## Проверить машину: Node, pnpm, Docker Engine (не Desktop, ≥ 28.3.3), группы docker и render, свободные порты
+	@node tooling/doctor.ts
+
+dev: need-node $(SECRETS) langfuse-secrets ## Разработка: db и Langfuse в контейнерах, api/worker/bot (node --watch) и Vite 127.0.0.1:5173 на хосте [WITH_MODELS=1]
+	@$(DC) --progress quiet --profile observability $(MODELS_PROFILE) up -d --wait --wait-timeout $(UP_TIMEOUT)
+	@echo "Сайт: http://127.0.0.1:5173 · Langfuse: http://127.0.0.1:3001 · остановка: Ctrl+C, контейнеры — make down"
+	@node tooling/dev.ts
 
 up: need-node $(SECRETS) langfuse-secrets ## Всё в контейнерах: сборка образа, db, api, worker, bot, Langfuse; ждёт готовности [WITH_MODELS=1]
 	@mkdir -p $(DATA_DIRS)

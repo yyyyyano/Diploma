@@ -1,5 +1,6 @@
-// Сквозной сценарий на чистой базе стенда (AUTH-10, AUTH-08, STMT-01, NFR-24): первый заход на сайт → экран первого
-// запуска → администратор создан → вход → «Наличные · 0,00 BYN» (их создаёт worker по событию, список обновляется сам).
+// Сквозной сценарий на чистой базе стенда (AUTH-10, AUTH-05, AUTH-08, STMT-01, NFR-24): первый заход на сайт → экран
+// первого запуска → администратор создан → код восстановления → вход → «Наличные · 0,00 BYN» (их создаёт worker по
+// событию, список обновляется сам).
 // На каждом маршруте — axe 0 нарушений WCAG 2.2 AA и нет горизонтальной прокрутки при 1440 и 390 px. Сценарий один и
 // последовательный: первый запуск у базы стенда — один раз.
 import AxeBuilder from "@axe-core/playwright";
@@ -57,6 +58,15 @@ test("первый запуск → администратор → вход → 
   await page.getByRole("textbox", { name: "Email администратора" }).fill(admin.email);
   await page.getByLabel("Пароль", { exact: true }).fill(admin.password);
   await page.getByRole("button", { name: "Создать администратора" }).click();
+
+  // AUTH-05: код восстановления администратора — один раз; «Продолжить» — после «сохранил».
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Сохраните код восстановления" }),
+  ).toBeVisible();
+  await expect(page.getByText(/^[0-9A-Z]{4}(-[0-9A-Z]{4}){3}$/)).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }).check();
+  await page.getByRole("button", { name: "Продолжить" }).click();
 
   // Администратор создан — вход с пометкой.
   await expect(page).toHaveURL(/\/login\?created=true$/);
@@ -123,7 +133,7 @@ test("первый запуск → администратор → вход → 
   await expect(page).toHaveURL(/\/accounts$/);
 
   // Выход — снова вход.
-  await page.getByRole("button", { name: "Выйти" }).click();
+  await page.getByRole("button", { name: "Выйти", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   expect(foreign).toEqual([]);
 });

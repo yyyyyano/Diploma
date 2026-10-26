@@ -67,16 +67,26 @@ describe("AUTH-10: экран первого запуска", () => {
     expect(await screen.findByText("Пароль — не короче 12 символов.")).toBeInTheDocument();
   });
 
-  it("администратор создан — на вход с пометкой created", async () => {
+  it("AUTH-05: администратор создан — код восстановления один раз; «Продолжить» только после «сохранил» — на вход", async () => {
     let body: unknown;
     server.use(
       http.post("*/api/identity/setup", async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ ok: true });
+        return HttpResponse.json({ ok: true, recoveryCode: "KQ7M-4XPD-9TJC-2HWR" });
       }),
     );
     const router = renderSetup();
     await submit("admin@example.test", "пароль-администратора");
+    expect(
+      await screen.findByRole("heading", { name: "Сохраните код восстановления" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("KQ7M-4XPD-9TJC-2HWR")).toBeInTheDocument();
+    const next = screen.getByRole("button", { name: "Продолжить" });
+    expect(next).toBeDisabled();
+    await userEvent.click(
+      screen.getByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }),
+    );
+    await userEvent.click(next);
     expect(await screen.findByText("Вход")).toBeInTheDocument();
     expect(body).toEqual({ email: "admin@example.test", password: "пароль-администратора" });
     expect(router.state.location.search).toEqual({ created: true });

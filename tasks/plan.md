@@ -811,7 +811,7 @@
   и `aggregate_transactions` из T-021 → T-031; в T-023 — текст согласия про обучение на данных (PRIV-02).
 
 ### T-012 · Регистрация с согласиями, подтверждение почты и локальный почтовый ящик
-- Статус: todo
+- Статус: in-progress
 - Модули: `identity`, `privacy`, `mail`, `features/auth`, `features/mailbox`, `features/settings`
 - SPEC: AUTH-01, AUTH-02, AUTH-03, AUTH-06, PRIV-01, PRIV-02, SEC-01, NFR-24
 - Экран: Register — design/screens/Register.dc.html; Mailbox — design/screens/Mailbox.dc.html; Settings —
@@ -850,7 +850,7 @@
 - Зависимости: T-011, T-009
 
 ### T-013 · Вход и восстановление доступа: сброс по ссылке, код восстановления, блокировка, частота попыток
-- Статус: todo
+- Статус: in-progress
 - Модули: `identity`, `mail`, `features/auth`, `features/setup`, `features/settings`
 - SPEC: AUTH-04, AUTH-05, AUTH-08, AUTH-10, AUTH-11, AUTH-12, SEC-01, SEC-02
 - Экран: Login — design/screens/Login.dc.html (состояния blocked, forgot-password, wrong-password; кнопка демо-входа
@@ -976,6 +976,8 @@
   - Удаление аккаунта организует `identity` (зависит от `privacy`): пароль → `privacy.purge(s)` → запись `identity`.
   - ZIP — поддерживаемая потоковая библиотека (`yazl` или `archiver`), точная версия, строка в ADR-0012. Скилл:
     `doubt-driven-development`.
+  - [ ] `make new-table` вставляет импорт схемы корректно и в `module.ts` с многострочным импортом (тест генератора на
+    такой фикстуре). (Находка T-012.)
 - Проверка: make check; make e2e; pnpm vitest run apps/server/src/modules/files apps/server/src/modules/privacy
 - Риск: high — необратимое удаление данных и выдача файлов только владельцу
 - Зависимости: T-015, T-010
@@ -1013,6 +1015,9 @@
     разрешённых местах `isolation.mjs`, тест.
   - Конфликт ключа `system.time-zone` с модулем `system`: переименовать ключ платформы миграцией данных строки;
     переменная `TIME_ZONE` не меняется. Пароль SMTP — `defineSecret`, хост и порт — `defineSetting`.
+  - [ ] Код восстановления гасится атомарно (`UPDATE … WHERE code_hash = …` в транзакции): два параллельных запроса с
+    одним верным кодом — проходит один (int-тест); `reset()` по ссылке отказывает пользователю, заблокированному после
+    выдачи ссылки. (Optional ревью T-013.)
 - Проверка: make check; make e2e
 - Риск: high — права администратора и запрет доступа к чужим данным (PRIV-07, R37)
 - Зависимости: T-016, T-013, T-015

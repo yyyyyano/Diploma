@@ -693,7 +693,7 @@
 - Зависимости: T-008, T-004, T-005, T-007, T-059
 
 ### T-010 · ИИ-шлюз и чат-заглушка: поток ответа агента через oRPC
-- Статус: in-progress
+- Статус: done · e57a321..286582a
 - Модули: `llm`, `agent`, `chat`, `accounts`, `platform/telemetry`, `platform/tools`, `platform/db` (флаг транзакции в `AsyncLocalStorage`;
   `LLM_IN_TRANSACTION` — класс ошибки вне каталога, наружу `INTERNAL`), `features/assistant`,
   `@kosht/testing`, `e2e`
@@ -739,7 +739,7 @@
 - Зависимости: T-009, T-006
 
 ### T-011 · Запуск одной командой и закрытие бетона: Docker Compose, образ, команды разработчика
-- Статус: in-progress
+- Статус: done · 6e72115..0cc8bf7
 - Модули: `compose.yaml`, `docker/`, `Makefile`, `apps/web/CLAUDE.md`, `apps/server/CLAUDE.md`,
   `tooling/coverage-baseline.json`
 - SPEC: NFR-01, NFR-02, NFR-14, NFR-18, OBS-05, OBS-06, QA-01

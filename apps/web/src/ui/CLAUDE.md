@@ -10,7 +10,8 @@
 
 ## Публичный API
 - Вход: `ui/index.ts` (компоненты), `ui/theme/index.ts` (стили один раз в `app`, `theme`, `cssVariablesResolver`,
-  `CATEGORY_COLORS`, `CHART_COLORS`, `MAX_CHART_SERIES`), `ui/shell/index.ts` (части каркаса: меню, нижняя панель).
+  `CATEGORY_COLORS`, `CHART_COLORS`, `MAX_CHART_SERIES`), `ui/shell/index.ts` (части каркаса: меню, нижняя панель, `AppFrame` с углом `corner` — колокольчик над заголовком
+  страницы; `PageHeader` оставляет под него место по `--k-corner`).
 - Числа и статусы: `Money` (DES-17: `formatMoneyParts`, валюта мельче; `kind` доход «+» / расход «−» / перевод ⇄;
   `tabular` — табличные цифры, DES-07; `size="kpi"`), `WhyButton` (ⓘ, `aria-label` с названием числа), `Formula`
   (`dl`: строки и итог), `StatusBadge` (иконка обязательна — без неё не компилируется), `StatCard` (`tone`: free,

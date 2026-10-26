@@ -5,6 +5,8 @@
   align-items: center;
   gap: var(--s-12) var(--s-16);
   padding: var(--s-18) var(--s-32);
+  /* Под угол каркаса (колокольчик): --k-corner задаёт AppFrame, без угла — обычное поле. */
+  padding-right: calc(var(--s-32) + var(--k-corner, var(--s-2)) - var(--s-2));
   border-bottom: 1px solid var(--line);
   background: var(--bg);
 }
@@ -38,6 +40,6 @@
 @media (max-width: 860px) {
   .top {
     padding-left: var(--s-16);
-    padding-right: var(--s-16);
+    padding-right: calc(var(--s-16) + var(--k-corner, var(--s-2)) - var(--s-2));
   }
 }

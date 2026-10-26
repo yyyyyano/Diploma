@@ -1,7 +1,7 @@
 // Соответствие словарей коду (ADR-0005, P2/EXPL-01): у каждого кода ошибки из каталога контракта есть текст для
 // человека, у ключа трассы calc — подпись для «Откуда эта цифра?». calc импортируется только здесь, в тесте.
 import { freeBalance, node, TRACE_KEYS } from "@kosht/calc";
-import { ERROR_CODES } from "@kosht/contract";
+import { ADMIN_NOTIFICATION_KINDS, ERROR_CODES, USER_NOTIFICATION_KINDS } from "@kosht/contract";
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { createT } from "./create-t.ts";
@@ -40,6 +40,7 @@ describe("словари ru", () => {
       "mailbox",
       "settings",
       "decisions",
+      "notifications",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
@@ -92,5 +93,18 @@ describe("formulas — подпись ключа трассы calc", () => {
 describe("tools — подпись шага агента", () => {
   it("есть запасная подпись для инструмента без своей", () => {
     expect(t("tools:fallback")).toBe("Выполняю шаг…");
+  });
+});
+
+describe("NOTIF-02, NOTIF-03: текст у каждого вида уведомления", () => {
+  it.each(USER_NOTIFICATION_KINDS)("%s — название, описание и текст", (kind) => {
+    const entry = resources.ru.notifications.kinds[kind];
+    expect([entry.title, entry.description, entry.text].every((text) => text.length > 0)).toBe(
+      true,
+    );
+  });
+
+  it.each(ADMIN_NOTIFICATION_KINDS)("%s — текст администратору", (kind) => {
+    expect(resources.ru.notifications.adminKinds[kind].length).toBeGreaterThan(0);
   });
 });

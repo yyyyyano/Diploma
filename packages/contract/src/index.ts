@@ -6,6 +6,15 @@ export {
   accountsContract,
 } from "./accounts/accounts.contract.ts";
 export {
+  actionsContract,
+  Decision,
+  DecisionAnswer,
+  DecisionId,
+  DecisionStatus,
+  DecisionSummary,
+  UndoToken,
+} from "./actions/actions.contract.ts";
+export {
   ChatMessage,
   chatContract,
   ConversationId,

@@ -35,6 +35,12 @@ interface Household {
   readonly conversationId: string;
   /** Запуск агента B: «Стоп» от A по его id не находит запуск (ключ — домохозяйство). */
   readonly runId: string;
+  /** Действие B в журнале отмены (undoToken). */
+  readonly actionId: string;
+  /** Ожидающее решение B «Да/Нет». */
+  readonly decisionId: string;
+  /** Сохранённый расчёт B. */
+  readonly traceId: string;
 }
 
 /**
@@ -84,6 +90,9 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
+  "actions.undo": { input: (b) => ({ token: b.actionId }) },
+  "actions.decision": { input: (b) => ({ id: b.decisionId }) },
+  "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
   "tool:list_accounts": { input: () => ({}) },
   "chat.history": { input: () => undefined },
   "chat.send": {
@@ -124,12 +133,33 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, $3, 'user', jsonb_build_array(jsonb_build_object('type', 'text', 'text', $4::text)))`,
     [ids.household_id, ids.user_id, conversationId, `переписка ${email}`],
   );
+  const action = await db.owner.query<{ id: string }>(
+    `insert into action_journal (household_id, user_id, handler, payload, subject, channel)
+     values ($1, $2, 'accounts.test', '{}', $3, 'web') returning id`,
+    [ids.household_id, ids.user_id, `account:${account.rows[0]?.id ?? ""}`],
+  );
+  const decision = await db.owner.query<{ id: string }>(
+    `insert into pending_decisions (household_id, user_id, handler, payload, summary)
+     values ($1, $2, 'accounts.test', '{}', jsonb_build_object('key', 'decisions.fallback', 'params', $3::jsonb))
+     returning id`,
+    [ids.household_id, ids.user_id, JSON.stringify({ email })],
+  );
+  const explanation = await db.owner.query<{ id: string }>(
+    `insert into explanations (household_id, user_id, trace)
+     values ($1, $2, jsonb_build_object('key', 'fin.averageIncome', 'op', 'value', 'value', 1, 'inputs',
+       '[]'::jsonb, 'refs', jsonb_build_array(jsonb_build_object('kind', 'transaction', 'id', $3::text))))
+     returning id`,
+    [ids.household_id, ids.user_id, account.rows[0]?.id ?? ""],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
     accountId: account.rows[0]?.id ?? "",
     conversationId,
     runId: randomUUID(),
+    actionId: action.rows[0]?.id ?? "",
+    decisionId: decision.rows[0]?.id ?? "",
+    traceId: explanation.rows[0]?.id ?? "",
   };
 }
 
@@ -218,6 +248,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
     const { cases } = plan();
     expect(cases.map((c) => c.name)).toEqual([
       "accounts.list",
+      "actions.answer",
+      "actions.decision",
+      "actions.undo",
       "chat.history",
       "chat.send",
       "chat.stop",
@@ -227,7 +260,16 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "identity.resendVerification",
       "list_accounts",
     ]);
-    const foreign = [b.scope.userId, b.scope.householdId, b.accountId, b.email, b.conversationId];
+    const foreign = [
+      b.scope.userId,
+      b.scope.householdId,
+      b.accountId,
+      b.email,
+      b.conversationId,
+      b.actionId,
+      b.decisionId,
+      b.traceId,
+    ];
     const violations: string[] = [];
     for (const c of cases) {
       try {

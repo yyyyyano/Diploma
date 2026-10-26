@@ -1,0 +1,36 @@
+/* Окно политики из design/screens/Register.dc.html (.rg-policy) — страницей: разделы с заголовками, список прав. */
+.policy {
+  max-width: 640px;
+}
+
+.version {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.section h2 {
+  margin: 0 0 var(--s-6);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.section p,
+.section ul {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.55;
+}
+
+.section ul {
+  padding-left: var(--s-20);
+}
+
+.law {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  align-self: flex-start;
+  font-weight: 600;
+  color: var(--law);
+}

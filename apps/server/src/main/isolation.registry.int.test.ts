@@ -43,6 +43,8 @@ interface Household {
   readonly traceId: string;
   /** Уведомление B в ленте сайта. */
   readonly notificationId: string;
+  /** Файл B (строка files; самого файла на диске нет — до него A не должен дойти). */
+  readonly fileId: string;
 }
 
 /**
@@ -96,6 +98,7 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "actions.decision": { input: (b) => ({ id: b.decisionId }) },
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
   "explain.get": { input: (b) => ({ id: b.traceId }) },
+  "files.download": { input: (b) => ({ id: b.fileId }) },
   "tool:explain_number": { input: (b) => ({ traceId: b.traceId }) },
   "notifications.list": { input: () => ({}) },
   "notifications.markRead": { input: (b) => ({ ids: [b.notificationId] }) },
@@ -169,6 +172,11 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'goal', 'g-1', jsonb_build_object('email', $3::text), true) returning id`,
     [ids.household_id, ids.user_id, email],
   );
+  const file = await db.owner.query<{ id: string }>(
+    `insert into files (household_id, user_id, kind, name, mime, size)
+     values ($1, $2, 'statement', $3, 'text/csv', 10) returning id`,
+    [ids.household_id, ids.user_id, `выписка ${email}.csv`],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -179,6 +187,7 @@ async function seedHousehold(email: string): Promise<Household> {
     decisionId: decision.rows[0]?.id ?? "",
     traceId: explanation.rows[0]?.id ?? "",
     notificationId: notification.rows[0]?.id ?? "",
+    fileId: file.rows[0]?.id ?? "",
   };
 }
 
@@ -274,6 +283,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "chat.send",
       "chat.stop",
       "explain.get",
+      "files.download",
       "identity.createRecoveryCode",
       "identity.me",
       "identity.recoveryCodeStatus",
@@ -298,6 +308,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.decisionId,
       b.traceId,
       b.notificationId,
+      b.fileId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

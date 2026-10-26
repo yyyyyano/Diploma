@@ -52,6 +52,7 @@ export {
   TraceRef,
 } from "./explain/explain.contract.ts";
 export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract.ts";
+export { FileRef, filesContract } from "./files/files.contract.ts";
 export {
   Email,
   ChangePasswordInput,

@@ -1,6 +1,8 @@
 // Стенд процедур через настоящие HTTP-приложения обоих слушателей (local и lan) над корнем композиции на тестовой базе:
 // api и worker (очередь, подписки), запрос — как из браузера: Host слушателя, cookie, JSON. Для сквозных int-тестов
 // регистрации и восстановления доступа.
+import { CONSENT_VERSIONS } from "@kosht/i18n";
+import { HouseholdId, UserId } from "@kosht/kernel";
 import type { TestDb } from "@kosht/testing/db";
 import { createApiHandler } from "../../platform/http/api.ts";
 import { createApp, type HttpApp } from "../../platform/http/app.ts";
@@ -83,4 +85,40 @@ export function sessionCookie(response: Response): string {
   const header = response.headers.getSetCookie().find((c) => c.startsWith("kosht_session="));
   if (header === undefined) throw new Error("нет cookie kosht_session");
   return header.split(";")[0] ?? "";
+}
+
+/** Пароль пользователей стенда: подходит под SEC-01 (≥ 12 символов). */
+export const STACK_PASSWORD = "пароль-пользователя";
+
+/**
+ * Зарегистрировать пользователя через HTTP (как сайт) и вернуть его cookie и id — id читаются владельцем базы по
+ * email: из них тест собирает scope (makeScope), чтобы звать фасады модулей от имени этого пользователя.
+ */
+export async function registerUser(
+  stack: HttpStack,
+  db: TestDb,
+  email: string,
+  options: { readonly cloud?: boolean } = {},
+): Promise<{ cookie: string; userId: UserId; householdId: HouseholdId }> {
+  const response = await stack.call("local", "/identity/register", {
+    body: {
+      email,
+      password: STACK_PASSWORD,
+      consents: {
+        personalData: { accepted: true, version: CONSENT_VERSIONS.personalData },
+        cloud: { accepted: options.cloud ?? false, version: CONSENT_VERSIONS.cloud },
+      },
+    },
+  });
+  const { rows } = await db.owner.query<{ id: string; household_id: string }>(
+    "select id, household_id from identity_users where email = $1",
+    [email],
+  );
+  const row = rows[0];
+  if (row === undefined) throw new Error(`пользователь ${email} не зарегистрирован`);
+  return {
+    cookie: sessionCookie(response),
+    userId: UserId.parse(row.id),
+    householdId: HouseholdId.parse(row.household_id),
+  };
 }

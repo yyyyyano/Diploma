@@ -5,8 +5,9 @@
 entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не считает (P1): числа приходят с сервера готовыми.
 
 ## Кто использует
-Браузер пользователя: в разработке — Vite на `127.0.0.1:5173` с прокси `/api` → `127.0.0.1:8140` (без
-`changeOrigin`: сервер сверяет `Host` и `Origin`); в работе — статика `apps/web/dist` из процесса `api`.
+Браузер пользователя: в разработке (`make dev`) — Vite на `127.0.0.1:5173` с прокси `/api` → `127.0.0.1:8140` (без
+`changeOrigin`: сервер сверяет `Host` и `Origin`, поэтому `TRUSTED_ORIGINS` пуст); в работе — статика из процесса
+`api`: `apps/web/dist` на хосте, в образе (`make up`) — `/app/web` (`vite build` в `docker/Dockerfile`).
 
 ## Публичный API
 - Вход: `index.html` → `src/main.tsx` (стили темы, `App` с сессией `createApiSession(client)` — процедуры identity).

@@ -31,6 +31,23 @@
 - Горячая перезагрузка — только в режиме А (`compose watch` и bind mount репозитория — нет: симлинки pnpm и нативные
   модули).
 
+## Уточнения при внедрении (T-011)
+
+- **Модели** (`models`) не стартуют из `make up`/`make dev` до загрузчика (T-024) — только `WITH_MODELS=1`. Образы —
+  тег сборки и digest: `llama.cpp:server-vulkan-b11854`, `whisper.cpp:main-vulkan-<коммит v1.9.5>` (образ whisper.cpp
+  с Vulkan есть, тег — по коммиту).
+- **Пользователь контейнеров приложения** — пользователь хоста (`user: ${APP_UID}:${APP_GID}`, пишет `make init`;
+  в образе — `USER node`, uid 1000): секреты Compose — bind mount с правами хоста (0600), а `./data` — общая с
+  `make dev`; иной uid хоста иначе не прочитал бы секреты и не записал бы логи.
+- **Секреты Langfuse** — не Compose `secrets:`, а `env_file` из `secrets/` (`make init`, `tooling/langfuse-secrets.ts`):
+  образы Langfuse, ClickHouse, Valkey читают их только из окружения, а Langfuse работает не от root и смонтированный
+  файл 0600 не прочитает. Ключи проекта для приложения — Compose `secrets:` (`LANGFUSE_*_KEY_FILE`).
+- **S3 Langfuse** — SeaweedFS `weed mini -bucket=langfuse` (всё в одном, ведро создаётся при старте; учётная запись —
+  `AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY`): отдельный одноразовый контейнер для ведра не нужен.
+- **Сетевой порт** публикуется как `0.0.0.0:8141` — адрес указан явно, слушатель закрыт настройкой админки.
+- `make doctor` проверяет и порт Vite `5173` (`make dev` с `strictPort`); группы — и по базе групп, и в текущем сеансе.
+- Папка миграций — переменная `MIGRATIONS_DIR` (в образе `/app/drizzle`), а не путь от `import.meta.url`.
+
 ## Альтернативы
 
 - **Два Compose-файла** или `compose.override.yaml` — легко получить «пол-системы» или неявное поведение.

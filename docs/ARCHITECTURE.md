@@ -763,6 +763,8 @@ apps/web/src/
   контейнерах (`make init && make up` на чистой машине). Только Docker Engine (пробрасывает iGPU `/dev/dri`).
 - Данные — тома `pgdata`, `models` и `./data/{files,logs,backups,exports}` (одни пути в обоих режимах); копия —
   `make backup` и кнопка в админке, мастер-ключ в неё не входит.
+- Образ — `docker/Dockerfile`: tsdown, один `.mjs` на точку входа, `node_modules` сервера рядом, сайт и миграции
+  внутри; секреты БД, мастер-ключ и Langfuse создаёт `make init` в `secrets/`; готовность машины — `make doctor`.
 
 ---
 

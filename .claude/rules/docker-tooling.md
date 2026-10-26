@@ -29,9 +29,13 @@ paths:
   Порты всегда с адресом (`127.0.0.1:…`); у переменных профильных сервисов — значения по умолчанию
   (`${RENDER_GID:-992}`); `down`/`ps`/`logs` — с `--profile '*'`; том Postgres 18 — в `/var/lib/postgresql`; образы —
   точные теги (не `latest`); GPU — `devices: /dev/dri` + `group_add`; секреты — Compose `secrets:` из `secrets/`.
-- **Образ**: сборка точек входа tsdown в `.mjs`, `node:26-trixie-slim`, `USER node`, `read_only`, `cap_drop: ALL`,
-  `init: true`; миграции и выдача прав роли `kosht_app` — приложением при старте под владельцем (`MIGRATION_*`),
-  боевой пул — `kosht_app` (ADR-0020); образ везёт `node_modules` рядом с бандлом (`libpg-query` с `.wasm` — внешний, ADR-0019).
+- **Образ** (`docker/Dockerfile`, контекст — белый список `docker/Dockerfile.dockerignore`): tsdown — один `.mjs` на
+  точку входа (`apps/server/tsdown.config.ts`), `node:26-trixie-slim`, `USER node`, `read_only`, `cap_drop: ALL`,
+  `init: true`, в Compose — пользователь хоста `${APP_UID}:${APP_GID}` (ADR-0015, T-011); миграции и выдача прав роли
+  `kosht_app` — приложением при старте под владельцем (`MIGRATION_*`, папка — `MIGRATIONS_DIR`), боевой пул —
+  `kosht_app` (ADR-0020); образ везёт `node_modules` рядом с бандлом (`pnpm deploy --prod`; `libpg-query` с `.wasm` — внешний, ADR-0019).
+- **Секреты**: БД, мастер-ключ, ключи Langfuse для приложения — Compose `secrets:` из `secrets/`; сервисам Langfuse —
+  `env_file: secrets/langfuse*.env` (их образы читают секреты только из окружения); всё создаёт `make init`.
 - **Версии**: oxfmt, Drizzle, llama.cpp, AI SDK, pg-boss, OTel-пакеты Langfuse — **точные**; общие версии — через
   `catalog:` в `pnpm-workspace.yaml`; нативная зависимость — строка в `allowBuilds`; обновление мажора — отдельная задача.
 - **dependency-cruiser**: правила генерируются из `tooling/architecture/modules.ts`; рядом `typescript@6`
@@ -45,8 +49,9 @@ paths:
   размер коммита, запрет подписей ИИ (`tooling/git-hooks/check-no-ai-attribution.mjs`); `pre-push` — `make check-quick`.
 - `.env.example` — все переменные с безопасными умолчаниями и комментарием; `.env`, `secrets/`, `data/`, `models/`,
   `samples/` — в `.gitignore`.
-- Пути и имена одинаковы в обоих режимах запуска (`./data/...`); `make doctor` проверяет Node, pnpm, Docker Engine
-  (не Desktop), группы `docker`/`render`, свободные порты, версию Docker.
+- Пути и имена одинаковы в обоих режимах запуска (`./data/...`); `make doctor` (`tooling/doctor.ts`) проверяет Node,
+  pnpm, Docker Engine (не Desktop), группы `docker`/`render`, свободные порты (своих контейнеров — свободны), версию
+  Docker; `make dev` — код на хосте (`tooling/dev.ts`), модели — только `WITH_MODELS=1`.
 
 Правильно:
 

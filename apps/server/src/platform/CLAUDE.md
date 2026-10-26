@@ -84,7 +84,7 @@
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 
 ## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
-Своих паспортов у `src/entrypoints` и `src/main` пока нет (`apps/server/CLAUDE.md` — T-011), поэтому здесь.
+Своих паспортов у `src/entrypoints` и `src/main` нет: обзор процессов и сборки — `apps/server/CLAUDE.md`, детали — здесь.
 - `main/compose.ts` — `compose(config, role, { log, createModules? })` → `Composition`: пул владельца (`max: 1`, имя
   `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
   `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → `SystemDb`, часы, настройки, реестр сессий, реестр

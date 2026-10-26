@@ -47,7 +47,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["packages/{calc,kernel}/src/**", "apps/server/src/**/*.repo.ts"],
-      reporter: ["text-summary"],
+      // json-summary — для базы покрытия (tooling/checks/coverage-baseline.mjs, coverage/coverage-summary.json).
+      reporter: ["text-summary", "json-summary"],
       thresholds: {
         "packages/calc/src/**": { lines: 95, branches: 90 },
         "packages/kernel/src/**": { lines: 90, branches: 85 },

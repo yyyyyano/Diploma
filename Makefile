@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find new-module new-table e2e e2e-install new-feature ai-record
+	test-int logs log-find new-module new-table e2e e2e-install new-feature ai-record coverage-baseline
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -131,8 +131,15 @@ lint-file: need-node ## Линт одного файла: make lint-file FILE=п
 typecheck: need-node ## Проверка типов TypeScript 7 во всех пакетах (Turborepo)
 	$(BIN)/turbo run typecheck --output-logs=errors-only
 
-test: need-node db-up secrets/db_app_password ## Все тесты Vitest (unit и int на Postgres) с покрытием (пороги — vitest.config.ts)
+test: need-node db-up secrets/db_app_password ## Все тесты Vitest (unit и int на Postgres) с покрытием (пороги — vitest.config.ts, база — tooling/coverage-baseline.json)
 	$(BIN)/vitest run --coverage
+	node tooling/checks/coverage-baseline.mjs
+
+# База покрытия (T-011): падение больше 0,5 п. п. от неё — красный make test; поднять её после новых тестов — эта
+# цель, опустить она отказывается (CONSTRAINTS «Пол»).
+coverage-baseline: need-node db-up secrets/db_app_password ## Прогнать тесты с покрытием и поднять базу tooling/coverage-baseline.json (опустить — нельзя)
+	$(BIN)/vitest run --coverage
+	node tooling/checks/coverage-baseline.mjs --write
 
 test-int: need-node db-up secrets/db_app_password ## Интеграционные тесты на настоящем Postgres: своя база на тестовый файл
 	$(BIN)/vitest run --project int

@@ -27,10 +27,17 @@ beforeEach(async () => {
   await db.pool.query("delete from rate_limits");
 });
 
+/**
+ * Срок ожидания базы в тестах поведения — с запасом: под нагрузкой полного прогона (make check: int вместе с web) 50
+ * параллельных попыток на маленьком пуле тестовой базы ждут дольше боевых 2 с, а проверяют атомарность, а не скорость.
+ * Сам срок проверяют тесты «не ответила вовремя» — со своим малым значением.
+ */
+const BEHAVIOUR_TIMEOUT_MS = 15_000;
+
 function limiterOn(
   pool: Parameters<typeof createSystemDb>[0],
   clock = new FakeClock("2026-10-21T09:00:00Z"),
-  timeoutMs = 2_000,
+  timeoutMs = BEHAVIOUR_TIMEOUT_MS,
 ) {
   const logs = memoryLogger();
   const limiter = createRateLimiter({

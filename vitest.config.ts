@@ -21,6 +21,11 @@ export default defineConfig({
           include: ["{apps,packages,tooling}/**/*.int.test.ts"],
           exclude: ["**/node_modules/**", `${FIXTURES_DIR}/**`],
           globalSetup: ["apps/server/src/platform/db/__fixtures__/int-global-setup.ts"],
+          // Стабильность make check (T-011): int идёт вместе с unit и web, и под этой нагрузкой клон базы в beforeAll и
+          // запросы к Postgres ждут дольше умолчаний Vitest (5 с на тест, 10 с на хук). Сроки — с запасом: скорость
+          // здесь не проверяется, бюджеты — у своих тестов со своими сроками.
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
         },
       },
       {

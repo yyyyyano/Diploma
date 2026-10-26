@@ -72,10 +72,23 @@ describe("DES-15: боковое меню", () => {
     );
     await userEvent.click(screen.getByRole("link", { name: "Счета" }));
     expect(onNavigate).toHaveBeenCalledWith("/accounts");
-    const user = userEvent.setup();
-    await user.keyboard("{Control>}");
-    await user.click(screen.getByRole("link", { name: "Операции" }));
+    // Переход по ссылке остаётся браузеру (действие по умолчанию не отменено); сам переход jsdom не умеет —
+    // его отменяет слушатель документа уже после проверки.
+    const leftToBrowser: boolean[] = [];
+    const takeOver = (event: MouseEvent) => {
+      leftToBrowser.push(!event.defaultPrevented);
+      event.preventDefault();
+    };
+    document.addEventListener("click", takeOver);
+    try {
+      const user = userEvent.setup();
+      await user.keyboard("{Control>}");
+      await user.click(screen.getByRole("link", { name: "Операции" }));
+    } finally {
+      document.removeEventListener("click", takeOver);
+    }
     expect(onNavigate).toHaveBeenCalledTimes(1);
+    expect(leftToBrowser).toEqual([true]);
   });
 
   it("пользователь и «Выйти» — кнопка с подписью", async () => {

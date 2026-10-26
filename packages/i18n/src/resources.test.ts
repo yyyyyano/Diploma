@@ -37,6 +37,8 @@ describe("словари ru", () => {
       "setup",
       "accounts",
       "assistant",
+      "mailbox",
+      "settings",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });

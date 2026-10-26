@@ -11,14 +11,15 @@
 - Вход: `packages/i18n/src/index.ts`.
 - `createT(language = "ru")` — свой экземпляр i18next без React; `T` — тип перевода. Ключ — `<ns>:<ключ>`
   (`common:relativeDay.today`); несуществующий ключ или пространство имён не компилируется.
-- `resources` (`{ ru: { common, errors, formulas, tools, mail, policy, shell, ui, auth, setup, accounts, assistant } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
+- `resources` (`{ ru: { common, errors, formulas, tools, mail, policy, shell, ui, auth, setup, accounts, assistant, mailbox, settings } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
 - Словари (`locales/ru/`): `common` (общее; множественные числа `count.operations_*`), `errors` — по одному тексту на
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
   (`fin.freeBalance`), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная), `mail` — письма
   системы (собирает модуль `mail` на сервере), `policy` — политика ПД и тексты согласий (PRIV-01/02) и
   `CONSENT_VERSIONS` — версии этих текстов (сервер хранит версию с согласием; правка текста — новая версия); сайта: `shell` —
   каркас (меню DES-15, нижняя панель, экраны ошибки), `ui` — подписи дизайн-системы (ⓘ, «Отменить», «Закрыть»); экранов — `auth` (вход), `setup` (первый
-  запуск), `accounts` (счета; `count` — «1 счёт», «3 счёта», «5 счетов»), `assistant` (чат).
+  запуск), `accounts` (счета; `count` — «1 счёт», «3 счёта», «5 счетов»), `assistant` (чат), `mailbox` (локальный
+  почтовый ящик), `settings` (настройки пользователя); `auth` — вход, регистрация, подтверждение адреса.
 - Форматы (DES-17): `formatMoney(money)` — «1 234,56 BYN», «−840,00 BYN» (между разрядами и перед кодом U+00A0,
   минус U+2212); `formatMoneyParts(money)` — те же части отдельно `{ negative, amount, currency }` (сайт: валюта
   мельче, знак «+»/«−» по смыслу операции); `formatDate(date)` — «21.10.2026»; `formatRelativeDay(date, today)` — сегодня, вчера, завтра,

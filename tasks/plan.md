@@ -891,7 +891,7 @@
 - Зависимости: T-012
 
 ### T-014 · Отмена, подтверждения и «Откуда эта цифра?»: общие механизмы действий и расчётов
-- Статус: in-progress
+- Статус: done · 13ac268..a68df97
 - Модули: `actions`, `explain`, `entities/explanation`, `apps/web/src/ui`
 - SPEC: P5, EXPL-01, EXPL-02, AGT-03, AGT-05, AGT-07
 - Экран: Main — design/screens/Main.dc.html, состояние `Main--why-panel` (панель «Откуда эта цифра?» как общий
@@ -921,7 +921,7 @@
 - Зависимости: T-013, T-008
 
 ### T-015 · Уведомления: центр с колокольчиком, виды и настройки по каналам
-- Статус: in-progress
+- Статус: done · 18a8660..0a569d3
 - Модули: `notifications`, `actions`, `features/notifications`, `features/settings`, `entities/notification`
 - SPEC: NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05
 - Экран: Main — design/screens/Main.dc.html, состояние `Main--notifications` (колокольчик со счётчиком и список);

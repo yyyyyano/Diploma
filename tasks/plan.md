@@ -811,7 +811,7 @@
   и `aggregate_transactions` из T-021 → T-031; в T-023 — текст согласия про обучение на данных (PRIV-02).
 
 ### T-012 · Регистрация с согласиями, подтверждение почты и локальный почтовый ящик
-- Статус: in-progress
+- Статус: done · 0fb756f..b112287
 - Модули: `identity`, `privacy`, `mail`, `features/auth`, `features/mailbox`, `features/settings`
 - SPEC: AUTH-01, AUTH-02, AUTH-03, AUTH-06, PRIV-01, PRIV-02, SEC-01, NFR-24
 - Экран: Register — design/screens/Register.dc.html; Mailbox — design/screens/Mailbox.dc.html; Settings —
@@ -850,7 +850,7 @@
 - Зависимости: T-011, T-009
 
 ### T-013 · Вход и восстановление доступа: сброс по ссылке, код восстановления, блокировка, частота попыток
-- Статус: in-progress
+- Статус: done · a027c1c..b6b3ecc
 - Модули: `identity`, `mail`, `features/auth`, `features/setup`, `features/settings`
 - SPEC: AUTH-04, AUTH-05, AUTH-08, AUTH-10, AUTH-11, AUTH-12, SEC-01, SEC-02
 - Экран: Login — design/screens/Login.dc.html (состояния blocked, forgot-password, wrong-password; кнопка демо-входа

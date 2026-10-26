@@ -53,6 +53,9 @@ describe("NOTIF-03: роли", () => {
     const forUser = await stack.call("local", "/notifications/admin", { cookie: userCookie });
     expect(forUser.status).toBe(403);
     expect(await forUser.json()).toMatchObject({ code: "FORBIDDEN" });
+    // GET с размером страницы в строке запроса, как шлёт сайт: «20» приводится к числу.
+    const page = await stack.call("local", "/notifications?limit=20", { cookie: userCookie });
+    expect(page.status).toBe(200);
     expect(
       await (await stack.call("local", "/notifications", { cookie: userCookie })).json(),
     ).toEqual({

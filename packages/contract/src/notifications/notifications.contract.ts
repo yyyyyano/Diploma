@@ -67,10 +67,13 @@ export const AdminNotification = z.strictObject({
 });
 export type AdminNotification = z.infer<typeof AdminNotification>;
 
-/** Страница ленты: новые сверху; курсор — id последнего показанного (uuidv7 — по времени). */
+/**
+ * Страница ленты: новые сверху; курсор — id последнего показанного (uuidv7 — по времени). GET: вход приходит строкой
+ * запроса — размер страницы приводится к числу (coerce), иначе «20» не прошло бы схему.
+ */
 export const FeedInput = z.strictObject({
   cursor: z.uuid().optional(),
-  limit: z.int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
 const Ok = z.strictObject({ ok: z.literal(true) });

@@ -8,7 +8,7 @@
 
 ## Требования SPEC
 LLM-01…10, NFR-04/05/25, PRIV-02/03/04/09, OBS-03, ADM-20/21/22/50. Сделано: LLM-01, LLM-04 (схема + повтор),
-LLM-06 (журнал), OBS-03 (трассы в Langfuse, T-011), LLM-09, NFR-04/05, PRIV-02/09 (фильтр цепочки), QA-17 (кассеты).
+LLM-06, OBS-03 (Langfuse), LLM-09, NFR-04/05, PRIV-02/09 (фильтр цепочки), QA-17 (кассеты), PRIV-06 (трассы).
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createLlmModule({ platform, facades })`; платформа — `SystemPlatform`; фасады соседей пока не нужны.
@@ -19,9 +19,10 @@ LLM-06 (журнал), OBS-03 (трассы в Langfuse, T-011), LLM-09, NFR-04/
 - `systemCaller("<модуль>")`, `Caller` — кто зовёт: scope (облако — по `platform.consent`) или задача без данных
   пользователя (облако разрешено).
 - Настройки (`settings.ts`): `llm.mode` (`LLM_MODE`: `live | record | replay`), `llm.cassette` (`LLM_CASSETTE`, путь).
+- Владелец данных (`user-data.ts`): хук `afterDelete` удаляет трассы Langfuse пользователя (`trace-deletion.ts`);
+  не вышло или Langfuse выключен — очередь `llm_trace_deletions`, расписание `llm.trace-deletions` (03:40) повторяет.
 - Таблицы (`systemTable`): `llm_models` (реестр: провайдер, модель, облачная, возможности, приоритет, вкл., цены;
-  миграция кладёт `test/scripted`), `llm_usage` (журнал: задача, провайдер, модель, токены, мс, стоимость, код
-  ошибки — без текстов и пользователя).
+  миграция кладёт `test/scripted`), `llm_usage` (журнал без текстов и пользователя), `llm_trace_deletions`.
 
 ## Устройство
 - `domain/`: `tasks.ts` (задача → возможности), `build-chain.ts` (инвариант: без согласия — только локальные),
@@ -30,8 +31,9 @@ LLM-06 (журнал), OBS-03 (трассы в Langfuse, T-011), LLM-09, NFR-04/
   вызова в `s.transaction` — `LlmInTransactionError`, строка журнала на каждый вызов), `masking/ports.ts` (`Masker`,
   `KnownNames` — реализация T-024).
 - `infrastructure/providers/`: `ProviderAdapter`, реестр провайдеров (код), тестовый провайдер (`test-provider.ts`:
-  настоящий адаптер, локальный, сценарий чата с `list_accounts`, хэш-эмбеддинги, фиксированная расшифровка; пауза
-  между кусками ответа 300 мс), кассеты (`cassettes.ts`: `replayModel`, `recordingModel`, `fingerprint`).
+  локальный, сценарий чата с `list_accounts`, хэш-эмбеддинги, пауза 300 мс), кассеты (`cassettes.ts`).
+- `infrastructure/telemetry/langfuse-traces.ts` — `TraceDeleter`: Observations API v2 по `userId` окнами по 30 дней
+  назад → `DELETE /api/public/traces` пачками ≤ 1000.
 - `infrastructure/telemetry/langfuse-tracing.ts` (ADR-0010): `NodeTracerProvider` + `LangfuseSpanProcessor` (таймаут
   2 с) и `OpenTelemetry` из `@ai-sdk/otel` (корень `invoke_agent <задача>`, `user.id`/`session.id`) — в опции вызова
   (`telemetry.integrations`), только если задан `platform.telemetry.langfuse`; `stop` модуля досылает спаны.
@@ -50,11 +52,9 @@ OpenTelemetry закреплены точно, `@opentelemetry/api` — одна
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/llm` — домен (unit, свойство «без согласия — только локальные»), шлюз на
   Postgres (`gateway.int.test.ts`: цепочка, журнал-канарейка, транзакция, схема, кассеты, трассы); дерево спанов
-  Langfuse — `langfuse-tracing.test.ts` (экспорт в память вместо сети).
-- Кассеты сценариев — `__cassettes__/` рядом с тестом; перезапись — `make ai-record SCENARIO=<модуль>/<имя>`
-  (с тестового провайдера — без сети и ключей).
+  Langfuse — `langfuse-tracing.test.ts`; удаление трасс — `langfuse-traces.test.ts`, `trace-deletion.int.test.ts`.
+- Кассеты — `__cassettes__/` рядом с тестом; перезапись — `make ai-record SCENARIO=<модуль>/<имя>`.
 
 ## Подводные камни
-- `test/scripted` — в реестре и в боевой базе: пока других моделей нет, чат отвечает по сценарию; выключить в
-  админке, когда появятся настоящие (T-023).
+- `test/scripted` — в реестре и в боевой базе (чат отвечает по сценарию); выключить в админке, T-023.
 - Кассета повторяет паузы записи (`delays`): e2e видит поток; тесты сценариев их пропускают.

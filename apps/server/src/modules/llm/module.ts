@@ -9,10 +9,13 @@ import type { PrivacyFacade } from "../privacy/index.ts";
 import type { IdentityFacade } from "../identity/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
+import { makeTraceDeletion } from "./application/trace-deletion.ts";
 import { createProviderRegistry } from "./infrastructure/providers/providers.ts";
+import { createLangfuseTraceDeleter } from "./infrastructure/telemetry/langfuse-traces.ts";
 import { createLangfuseTracing } from "./infrastructure/telemetry/langfuse-tracing.ts";
 import { createTestProvider } from "./infrastructure/providers/test-provider.ts";
 import { LLM_CASSETTE, LLM_CASSETTE_DELAYS, LLM_MODE } from "./settings.ts";
+import { llmUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface LlmFacades {
@@ -45,10 +48,20 @@ export function createLlmModule({ platform }: ModuleDeps<LlmFacades, SystemPlatf
       };
     },
   });
+  // PRIV-06: трассы пользователя удаляются вместе с аккаунтом; Langfuse выключен — ждут в очереди повторов.
+  const traces = makeTraceDeletion({
+    platform,
+    deleter:
+      langfuse === undefined
+        ? undefined
+        : createLangfuseTraceDeleter(langfuse, { clock: platform.clock }),
+  });
   return defineModule({
     id: "llm",
     facade: gateway,
     settings: [LLM_MODE, LLM_CASSETTE, LLM_CASSETTE_DELAYS],
+    userData: llmUserData(traces),
+    schedules: [traces.retrySchedule],
     // Остановка процесса досылает накопленные спаны (не дольше таймаута экспорта, 5 с).
     ...(tracing === undefined ? {} : { stop: () => tracing.shutdown() }),
   });

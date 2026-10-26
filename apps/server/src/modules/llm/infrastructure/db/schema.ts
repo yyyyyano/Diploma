@@ -44,3 +44,15 @@ export const llmUsage = systemTable(
   },
   (t) => [index("llm_usage_created_at_idx").on(t.createdAt)],
 );
+
+/**
+ * Очередь повторов удаления трасс Langfuse (PRIV-06, OBS-05): аккаунт удалён, а Langfuse был недоступен — строка ждёт
+ * ежедневного повтора. Без домохозяйства и scope: пользователя уже нет, остался только его id (по нему Langfuse
+ * находит трассы). Удаление аккаунта этой очередью не блокируется.
+ */
+export const llmTraceDeletions = systemTable("llm_trace_deletions", {
+  userId: uuid().primaryKey(),
+  attempts: integer().notNull().default(0),
+  createdAt: timestamp({ withTimezone: true }).notNull(),
+  lastAttemptAt: timestamp({ withTimezone: true }),
+});

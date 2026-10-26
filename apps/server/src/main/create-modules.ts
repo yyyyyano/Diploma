@@ -76,7 +76,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
     facades: { mail: mailModule.facade, privacy: privacyModule.facade },
   });
   const notificationsModule = createNotificationsModule({
-    platform: ports.platform,
+    platform: ports.systemPlatform,
     facades: { identity: identityModule.facade },
   });
   const llmModule = createLlmModule({

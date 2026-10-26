@@ -95,7 +95,8 @@ export const MODULES: readonly ModuleDef[] = [
     responsibility:
       "уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram)",
     dependsOn: ["identity"],
-    tables: ["user"],
+    // NOTIF-03: уведомления администраторов — без домохозяйства (systemTable), «прочитано» — у каждого админа своё.
+    tables: ["user", "system"],
     publishes: [],
   },
   {

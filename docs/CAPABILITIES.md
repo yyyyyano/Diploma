@@ -34,7 +34,7 @@
 | `privacy` | PRIV-01/02/05/06/08, AUTH-02 | согласия с версией текста; экспорт и удаление аккаунта через реестр владельцев данных; политика ПД | — | user, system | `privacy.consent-changed` |
 | `mail` | AUTH-03/04/06, ADM-60 | SMTP, локальный почтовый ящик (только localhost), тестовое письмо | — | system | — |
 | `identity` | AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04 (вход) | Better Auth (ядро) + первый запуск, код восстановления, роли, блокировка, последний админ, демо-вход, домохозяйство | mail, privacy | system | `identity.system-initialized`, `identity.user-registered`, `identity.user-deleted` |
-| `notifications` | NOTIF-01…05, BUD-03, CAL-07 (доставка) | уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram) | identity | user | — |
+| `notifications` | NOTIF-01…05, BUD-03, CAL-07 (доставка) | уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram) | identity | user, system | — |
 | `llm` | LLM-01…10, NFR-04/05/25, PRIV-02/03/04/09, OBS-03, ADM-20/21/22/50 | реестр моделей, адаптеры, цепочки по задачам, лимитёр, маскирование, журнал расхода, Langfuse, эмбеддинги, речь, локальные модели | privacy, identity, notifications | system, user | `llm.local-models-ready` |
 | `system` | ADM-60, NFR-22/24, OBS-05/07 | обзор фоновых задач, доступ из сети, резервная копия, часовой пояс, статус Langfuse | — | system | — |
 <!-- /capabilities:tier-1 -->

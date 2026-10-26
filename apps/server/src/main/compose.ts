@@ -193,6 +193,12 @@ export async function compose(
       }
       return { undo: registered.undo, confirm: registered.confirm };
     },
+    deliveryChannels: () => {
+      if (registered === undefined) {
+        throw new Error("Каналы доставки уведомлений запрошены до конца сборки модулей.");
+      }
+      return registered.deliveryChannels;
+    },
     scoped: (scope) => createScopedDb(pool, scope),
   };
   const systemPlatform: SystemPlatform = {

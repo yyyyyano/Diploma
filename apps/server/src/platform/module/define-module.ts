@@ -54,6 +54,11 @@ export interface Platform {
    * исполняет их по имени. Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
    */
   actionHandlers(): ActionHandlers;
+  /**
+   * Каналы доставки уведомлений всех модулей (web — notifications, telegram — T-053), по имени: notifications доставляет
+   * через них, не зная модулей-владельцев. Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
+   */
+  deliveryChannels(): ReadonlyMap<string, DeliveryChannel>;
   /** ScopedDb для scope, рождённого на входе модуля (Telegram, ARCHITECTURE §6.4). */
   scoped(scope: Scope): ScopedDb;
 }
@@ -85,8 +90,9 @@ export interface ActionHandlers {
   readonly confirm: ReadonlyMap<string, ActionHandler>;
 }
 
-/** Канал доставки уведомлений (web, telegram) для реестра notifications; форму дополнит T-015. */
+/** Канал доставки уведомлений (web, telegram): получает id новых уведомлений вида, включённого в этом канале. */
 export interface DeliveryChannel {
+  /** Имя канала в настройках пользователя: `web`, `telegram`. */
   readonly name: string;
   deliver(s: ScopedDb, notificationIds: readonly string[]): Promise<void>;
 }

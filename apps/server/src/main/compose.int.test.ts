@@ -215,23 +215,32 @@ describe("подписки и очереди во всех ролях", () => {
   }, 30_000);
 });
 
-describe("ARCHITECTURE §5: обработчики «Отменить» и «Да» — модулям поздним связыванием", () => {
-  it("из фабрики модуля — ошибка; после сборки — реестры undo/confirm всех модулей", async () => {
+describe("ARCHITECTURE §5: обработчики действий и каналы уведомлений — модулям поздним связыванием", () => {
+  it("из фабрики модуля — ошибка; после сборки — реестры undo/confirm и каналы доставки всех модулей", async () => {
     const undo = async () => {};
     const confirm = async () => {};
+    const web = { name: "web", deliver: async () => {} };
     let early: unknown;
+    let earlyChannels: unknown;
     const composition = await start("bot", ({ platform }) => {
       try {
         platform.actionHandlers();
       } catch (error) {
         early = error;
       }
+      try {
+        platform.deliveryChannels();
+      } catch (error) {
+        earlyChannels = error;
+      }
       return [
-        defineModule({ id: "first", undo: { "first.add": undo } }),
+        defineModule({ id: "first", undo: { "first.add": undo }, deliveryChannels: [web] }),
         defineModule({ id: "second", confirm: { "second.delete": confirm } }),
       ];
     });
     expect(early).toBeInstanceOf(Error);
+    expect(earlyChannels).toBeInstanceOf(Error);
+    expect([...composition.platform.deliveryChannels().entries()]).toEqual([["web", web]]);
     const handlers = composition.platform.actionHandlers();
     expect([...handlers.undo.entries()]).toEqual([["first.add", undo]]);
     expect([...handlers.confirm.entries()]).toEqual([["second.delete", confirm]]);

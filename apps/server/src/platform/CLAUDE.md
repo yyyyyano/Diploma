@@ -80,6 +80,10 @@
   `graceMs` оборвать остальные). `http.listening` — `listener`, `port`. `allow-lan.ts` — `ALLOW_LAN`
   (`network.allow-lan`, `z.boolean()`, по умолчанию `false`, без env): смена этим процессом видна на следующей сверке,
   другим — не позднее 5 с (кэш настроек).
+- `link-origin.ts` — адрес ссылок в письмах (NFR-24): `linkOrigin({ listener, host }, { allowLan, lanAddress,
+  localOrigin })` — запрос через `lan` → `http://<Host>` (Host уже проверен `isAllowedHost`); иначе при `ALLOW_LAN` и
+  заданном `LAN_ADDRESS` (`network.lan-address`, пусто или http(s)-адрес, без env; поле — T-017) → он; иначе
+  `localOrigin`. `resolveLinkOrigin(settings, localOrigin, request)` — то же с настройками процесса.
 - `error-response.ts` — `httpErrorBody` / `errorResponse`: `{ defined, code, status, message: <код>, data: { requestId,
   params } }` — форма `ORPCError.toJSON()` oRPC 1.16.1, одна на все ответы об ошибке.
 

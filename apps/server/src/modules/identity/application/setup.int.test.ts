@@ -40,6 +40,7 @@ function setupWith(events: Partial<Events> = {}) {
     scoped: (scope) => createScopedDb(pool, scope),
     clock: new FakeClock("2026-10-25T09:00:00Z"),
     log: memory.log,
+    issueRecoveryCode: async () => ({ code: "TEST-CODE-0000-0000" }),
     events: {
       publish: async (tx, event: EventDef, payload) => {
         published.push({ name: event.name, payload, scope: tx.scope });
@@ -71,7 +72,7 @@ const admin = { email: "Admin@Example.test", password: "надёжный-пар�
 describe("AUTH-10: первый запуск", () => {
   it("создаёт администратора с домохозяйством, хэшем пароля и публикует два события с его id", async () => {
     const { setup, published, system, memory } = setupWith();
-    await setup(admin);
+    expect(await setup(admin)).toEqual({ recoveryCode: "TEST-CODE-0000-0000" });
     const [user, ...rest] = await users();
     expect(rest).toEqual([]);
     expect(user).toMatchObject({ email: "admin@example.test", role: "admin" });

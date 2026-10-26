@@ -12,6 +12,7 @@ import { makeAdminGuard } from "./application/admins.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
 import { makeRegister } from "./application/register.ts";
 import { makeResendVerification } from "./application/resend-verification.ts";
+import { makeRecoveryCodes } from "./application/recovery-code.ts";
 import { makeSetup } from "./application/setup.ts";
 import { makeSignIn, makeSignOut } from "./application/sign-in.ts";
 import { makeMe, makeStatus } from "./application/status.ts";
@@ -38,6 +39,7 @@ export function createIdentityModule({
     }),
   );
   const verification = makeEmailVerification({ platform, mail: facades.mail });
+  const recoveryCodes = makeRecoveryCodes({ platform, auth });
   const admins = makeAdminGuard(platform);
   return defineModule({
     id: "identity",
@@ -45,7 +47,7 @@ export function createIdentityModule({
     events: [systemInitialized, userRegistered],
     router: identityRouter({
       status: makeStatus(platform),
-      setup: makeSetup(platform),
+      setup: makeSetup({ ...platform, issueRecoveryCode: recoveryCodes.issue }),
       signIn: makeSignIn({ auth, platform }),
       signOut: makeSignOut({ auth }),
       me: makeMe(platform),

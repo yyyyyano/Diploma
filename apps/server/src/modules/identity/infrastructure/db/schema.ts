@@ -114,3 +114,15 @@ export const systemState = systemTable(
   },
   (t) => [check("system_state_singleton_check", sql`${t.id} = 1`)],
 );
+
+/**
+ * Код восстановления (AUTH-05): один на пользователя, только хэш argon2id (как пароль); после входа с кодом
+ * заменяется новым. Отдельная таблица, а не поле пользователя: Better Auth читает пользователя целиком в сессию.
+ */
+export const identityRecoveryCodes = systemTable("identity_recovery_codes", {
+  userId: uuid()
+    .primaryKey()
+    .references(() => identityUsers.id, { onDelete: "cascade" }),
+  codeHash: text().notNull(),
+  createdAt: moment().notNull(),
+});

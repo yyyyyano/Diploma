@@ -1,0 +1,127 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e2f3a7bb-1262-4f03-9b55-1892f127a84c",
+  "prevIds": ["d2374430-9bf3-45f5-af31-14afeb5a4eb4"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "identity_recovery_codes"],
+      "writes": [
+        "s|tbl|public.identity_recovery_codes",
+        "n|tbl|public.identity_recovery_codes",
+        "e|tbl|public.identity_recovery_codes",
+        "n|rel|public.identity_recovery_codes",
+        "n|type|public.identity_recovery_codes",
+        "n|rel|public.identity_recovery_codes_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "identity_recovery_codes"],
+      "writes": [
+        "s|fk|public.identity_recovery_codes.identity_recovery_codes_user_id_identity_users_id_fkey",
+        "n|fk|public.identity_recovery_codes.identity_recovery_codes_user_id_identity_users_id_fkey",
+        "e|fk|public.identity_recovery_codes.identity_recovery_codes_user_id_identity_users_id_fkey",
+        "n|con|public.identity_recovery_codes.identity_recovery_codes_user_id_identity_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.identity_recovery_codes",
+        "n|sch|public",
+        "n|tbl|public.identity_users",
+        "n|sch|public",
+        "n|col|public.identity_recovery_codes.user_id",
+        "n|col|public.identity_users.id",
+        "e|uniqueness|public.identity_users.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "identity_recovery_codes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "identity_recovery_codes",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "identity_recovery_codes",
+        "name": "code_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "identity_recovery_codes",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "identity_recovery_codes",
+        "name": "identity_recovery_codes_user_id_identity_users_id_fkey",
+        "nameExplicit": false,
+        "columns": ["user_id"],
+        "schemaTo": "public",
+        "tableTo": "identity_users",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "identity_recovery_codes",
+        "name": "identity_recovery_codes_pkey",
+        "columns": ["user_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

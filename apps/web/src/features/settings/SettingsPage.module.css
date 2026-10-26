@@ -124,3 +124,53 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--s-14);
 }
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-14) var(--s-16);
+  border-radius: var(--r-lg);
+  background: var(--brand-soft);
+  font-size: 14px;
+}
+
+.banner > svg {
+  flex: none;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.matrix th,
+.matrix td {
+  padding: var(--s-12);
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.matrix thead th {
+  border-top: 0;
+  background: var(--surface-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.matrix tbody th {
+  font-weight: 400;
+}
+
+.kindTitle {
+  display: block;
+  font-weight: 600;
+}

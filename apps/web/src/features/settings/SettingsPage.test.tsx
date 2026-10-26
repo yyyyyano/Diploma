@@ -14,9 +14,14 @@ import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
+import { SettingsSearch } from "./model/search.ts";
 import { SettingsPage } from "./SettingsPage.tsx";
 
-function renderSettings(emailVerified: boolean | "error", codeCreatedAt: string | null = null) {
+function renderSettings(
+  emailVerified: boolean | "error",
+  codeCreatedAt: string | null = null,
+  entry = "/settings",
+) {
   server.use(
     http.get("*/api/identity/me", () =>
       emailVerified === "error"
@@ -36,12 +41,18 @@ function renderSettings(emailVerified: boolean | "error", codeCreatedAt: string 
     http.get("*/api/identity/recovery-code", () => HttpResponse.json({ createdAt: codeCreatedAt })),
   );
   const root = createRootRoute();
+  const settingsRoute = createRoute({
+    getParentRoute: () => root,
+    path: "/settings",
+    validateSearch: SettingsSearch,
+    component: () => <SettingsPage search={settingsRoute.useSearch()} />,
+  });
   const router = createRouter({
     routeTree: root.addChildren([
-      createRoute({ getParentRoute: () => root, path: "/settings", component: SettingsPage }),
+      settingsRoute,
       createRoute({ getParentRoute: () => root, path: "/login", component: () => <p>Вход</p> }),
     ]),
-    history: createMemoryHistory({ initialEntries: ["/settings"] }),
+    history: createMemoryHistory({ initialEntries: [entry] }),
   });
   renderWithProviders(
     <QueryClientProvider
@@ -189,5 +200,42 @@ describe("AUTH-05: код восстановления в настройках",
     renderSettings(true, "2026-10-26T09:00:00.000Z");
     expect(await screen.findByText("Код создан 26.10.2026")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Создать новый" })).toBeInTheDocument();
+  });
+});
+
+describe("NOTIF-04: вкладка «Уведомления»", () => {
+  it("матрица всех видов: сайт — переключатель сохраняется сразу, Telegram — неактивен до подключения", async () => {
+    let saved: unknown;
+    server.use(
+      http.get("*/api/notifications/preferences", () =>
+        HttpResponse.json({
+          items: [
+            { kind: "limit", web: true, telegram: true },
+            { kind: "goal", web: false, telegram: true },
+            { kind: "deduction", web: true, telegram: true },
+            { kind: "receipt-match", web: true, telegram: true },
+            { kind: "receipt-review", web: true, telegram: true },
+            { kind: "statement-imported", web: true, telegram: true },
+            { kind: "calendar-reminder", web: true, telegram: true },
+            { kind: "weekly-summary", web: true, telegram: true },
+            { kind: "recurring-missed", web: true, telegram: true },
+          ],
+        }),
+      ),
+      http.post("*/api/notifications/preferences", async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderSettings(true, null, "/settings?tab=notifications");
+    expect(
+      await screen.findByRole("heading", { name: "Что и куда присылать" }),
+    ).toBeInTheDocument();
+    expect(await screen.findAllByRole("row")).toHaveLength(10);
+    const goalWeb = screen.getByRole("switch", { name: "Прогресс цели — На сайте" });
+    expect(goalWeb).not.toBeChecked();
+    expect(screen.getByRole("switch", { name: "Лимит: 80% и 100% — В Telegram" })).toBeDisabled();
+    await userEvent.click(screen.getByRole("switch", { name: "Лимит: 80% и 100% — На сайте" }));
+    await expect.poll(() => saved).toEqual({ kind: "limit", channel: "web", enabled: false });
   });
 });

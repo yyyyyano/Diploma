@@ -22,27 +22,41 @@ import {
 import { useState } from "react";
 import { z } from "zod";
 import { RecoveryCode } from "../../entities/recovery-code/index.ts";
+import { SETTINGS_TABS, type SettingsSearch } from "./model/search.ts";
+import { NotificationSettings } from "./NotificationSettings.tsx";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { EmptyState, PageHeader, SkeletonCard, StatusBadge } from "../../ui/index.ts";
 import classes from "./SettingsPage.module.css";
 
-export function SettingsPage() {
-  const { t } = useTranslation("settings");
+export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
+  const { t } = useTranslation(["settings", "notifications"]);
+  const navigate = useNavigate();
   return (
     <>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
+      <PageHeader title={t("settings:title")} subtitle={t("settings:subtitle")} />
       <div className={classes.body}>
-        <Tabs defaultValue="profile" keepMounted={false}>
-          <Tabs.List aria-label={t("tabs.label")}>
-            <Tabs.Tab value="profile">{t("tabs.profile")}</Tabs.Tab>
+        <Tabs
+          value={search.tab ?? "profile"}
+          onChange={(tab) => {
+            const next = SETTINGS_TABS.find((known) => known === tab);
+            if (next !== undefined) void navigate({ to: "/settings", search: { tab: next } });
+          }}
+          keepMounted={false}
+        >
+          <Tabs.List aria-label={t("settings:tabs.label")}>
+            <Tabs.Tab value="profile">{t("settings:tabs.profile")}</Tabs.Tab>
+            <Tabs.Tab value="notifications">{t("notifications:preferences.tab")}</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="profile" className={classes.panel}>
             <EmailCard />
             <PasswordCard />
             <RecoveryCodeCard />
             <SignOutCard />
+          </Tabs.Panel>
+          <Tabs.Panel value="notifications" className={classes.panel}>
+            <NotificationSettings />
           </Tabs.Panel>
         </Tabs>
       </div>

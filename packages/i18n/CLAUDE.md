@@ -14,7 +14,7 @@
 - `resources` (`{ ru: { common, errors, formulas, tools, mail, policy, shell, ui, auth, setup, accounts, assistant, mailbox, settings } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
 - Словари (`locales/ru/`): `common` (общее; множественные числа `count.operations_*`), `errors` — по одному тексту на
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
-  (`fin.freeBalance`), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная), `mail` — письма
+  (каждый ключ `TRACE_KEYS` из `@kosht/calc`; `unknown` — запасная), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная), `mail` — письма
   системы (собирает модуль `mail` на сервере), `policy` — политика ПД и тексты согласий (PRIV-01/02) и
   `CONSENT_VERSIONS` — версии этих текстов (сервер хранит версию с согласием; правка текста — новая версия); сайта: `shell` —
   каркас (меню DES-15, нижняя панель, экраны ошибки), `ui` — подписи дизайн-системы (ⓘ, «Отменить», «Закрыть»); экранов — `auth` (вход), `setup` (первый

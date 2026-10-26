@@ -1,6 +1,6 @@
 // Соответствие словарей коду (ADR-0005, P2/EXPL-01): у каждого кода ошибки из каталога контракта есть текст для
 // человека, у ключа трассы calc — подпись для «Откуда эта цифра?». calc импортируется только здесь, в тесте.
-import { freeBalance, node } from "@kosht/calc";
+import { freeBalance, node, TRACE_KEYS } from "@kosht/calc";
 import { ERROR_CODES } from "@kosht/contract";
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
@@ -70,6 +70,12 @@ describe("accounts — множественные числа счётчика с
 describe("tools — подпись шага у каждого инструмента агента", () => {
   it("list_accounts — «Смотрю ваши счета…»", () => {
     expect(t("tools:list_accounts")).toBe("Смотрю ваши счета…");
+  });
+});
+
+describe("EXPL-01: formulas — подпись у каждого ключа реестра трассы calc", () => {
+  it.each(TRACE_KEYS)("%s — есть подпись", (key) => {
+    expect(lookup(resources.ru.formulas, key)).toEqual(expect.any(String));
   });
 });
 

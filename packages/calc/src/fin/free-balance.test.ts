@@ -2,6 +2,7 @@
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { node } from "../calc.ts";
+import { TRACE_KEYS } from "../trace-keys.ts";
 import { freeBalance } from "./free-balance.ts";
 
 const byn = (key: string, minor: number) => node(key, Money.of(minor, "BYN"));
@@ -42,5 +43,15 @@ describe("FIN-20", () => {
       averageObligations: [byn("fin.obligation.loan", 120_000)],
     });
     expect(result.value.minor).toBe(-20_000);
+  });
+});
+
+describe("EXPL-01: ключ трассы свободного остатка — в общем реестре", () => {
+  it("fin.freeBalance есть в TRACE_KEYS (подпись проверяет тест словаря formulas)", () => {
+    const income = node("fin.averageIncome", Money.of(240_000, "BYN"));
+    expect(TRACE_KEYS).toContain(
+      freeBalance({ averageIncome: income, averageObligations: [] }).trace.key,
+    );
+    expect(TRACE_KEYS).toContain(income.trace.key);
   });
 });

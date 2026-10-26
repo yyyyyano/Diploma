@@ -4,9 +4,12 @@ import type { Calc } from "../calc.ts";
 import { sub } from "../money-ops.ts";
 
 export interface FreeBalanceInput {
-  /** Средний регулярный доход за последние полные месяцы (FIN-21), со своей трассой. */
+  /** Средний регулярный доход за последние полные месяцы (FIN-21), со своей трассой; ключ — `fin.averageIncome`. */
   readonly averageIncome: Calc<Money>;
-  /** Средние обязательные платежи по группам (ЖКХ, связь, кредит, подписки); каждый — слагаемое разбивки. */
+  /**
+   * Средние обязательные платежи по группам; каждый — слагаемое разбивки с ключом `fin.obligation.<группа>`
+   * (utilities, communication, loan, subscriptions — TRACE_KEYS).
+   */
   readonly averageObligations: readonly Calc<Money>[];
 }
 

@@ -12,3 +12,4 @@ export {
   type RoundingOptions,
 } from "./money-ops.ts";
 export type { RoundingMode, RoundingRule, RoundingUnit } from "./rounding.ts";
+export { TRACE_KEYS, type TraceKey } from "./trace-keys.ts";

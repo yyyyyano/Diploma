@@ -33,7 +33,8 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find new-module new-table e2e e2e-install new-feature ai-record coverage-baseline
+	test-int logs log-find new-module new-table e2e e2e-install new-feature ai-record coverage-baseline \
+	langfuse-secrets up down restart ps build db-reset backup restore confirm audit check-full
 
 help: ## Показать команды
 	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -51,10 +52,14 @@ need-node:
 install: need-node ## Установить зависимости по pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
-# Существующий .env правит программа (ADR-0020: старые умолчания владельца → роль приложения, дописать MIGRATION_*),
-# печатая только имена переменных; make и агент его не читают.
-init: install secrets/db_password secrets/db_app_password secrets/master.key ## Первый запуск: зависимости, .env из .env.example (существующий — обновить), пароли БД и мастер-ключ в secrets/, git-хуки
-	@if [ -f .env ]; then node tooling/upgrade-env.ts .env; else cp .env.example .env && echo "Создан .env из .env.example."; fi
+# Существующий .env правит программа (ADR-0020: старые умолчания владельца → роль приложения, дописать MIGRATION_*;
+# T-011: факты машины для Compose — группа render и пользователь контейнеров), печатая только имена переменных; make и
+# агент его не читают.
+RENDER_GID_HOST = $(shell getent group render 2>/dev/null | cut -d: -f3)
+
+init: install secrets/db_password secrets/db_app_password secrets/master.key langfuse-secrets ## Первый запуск: зависимости, .env из .env.example (существующий — обновить, RENDER_GID и APP_UID машины), секреты БД, мастер-ключ и Langfuse в secrets/, git-хуки
+	@if [ ! -f .env ]; then cp .env.example .env && echo "Создан .env из .env.example."; fi
+	@node tooling/upgrade-env.ts .env "RENDER_GID=$(RENDER_GID_HOST)" "APP_UID=$$(id -u)" "APP_GID=$$(id -g)"
 	$(BIN)/lefthook install
 
 # Пароль владельца БД (NFR-16): создаётся один раз, существующий не меняется; читают его Compose (secrets:),
@@ -75,10 +80,82 @@ secrets/master.key:
 	@umask 077 && mkdir -p secrets && node -e 'process.stdout.write(require("node:crypto").randomBytes(32))' > $@
 	@echo "Создан $@ — мастер-ключ секретов (вне git и вне резервной копии)."
 
+# Секреты Langfuse (ADR-0010): значения — один раз (secrets/langfuse.json), файлы для Compose пишутся заново каждый
+# запуск (программа молчит, если ничего не создано).
+langfuse-secrets: need-node
+	@node tooling/langfuse-secrets.ts secrets
+
+# ── Запуск (ADR-0015) ──────────────────────────────────────────────────────────────────────────────────────────────
+
+# Модели (llama-server, whisper.cpp) поднимаются только явно: make up WITH_MODELS=1 (загрузчик моделей — T-024).
+WITH_MODELS ?=
+MODELS_PROFILE = $(if $(filter 1,$(WITH_MODELS)),--profile models)
+# Langfuse включён по умолчанию (OBS-05, ADR-0010); первый его старт — до 2–3 минут.
+UP_TIMEOUT := 600
+SECRETS := secrets/db_password secrets/db_app_password secrets/master.key
+DATA_DIRS := data/files data/logs data/backups data/exports
+
+up: need-node $(SECRETS) langfuse-secrets ## Всё в контейнерах: сборка образа, db, api, worker, bot, Langfuse; ждёт готовности [WITH_MODELS=1]
+	@mkdir -p $(DATA_DIRS)
+	$(DC) --profile app --profile observability $(MODELS_PROFILE) up -d --build --wait --wait-timeout $(UP_TIMEOUT)
+	@echo "Кошт: http://127.0.0.1:8140 · Langfuse: http://127.0.0.1:3001 (вход — secrets/langfuse_admin_password)"
+
+down: need-node langfuse-secrets ## Остановить все контейнеры проекта (все профили); данные в томах остаются
+	$(DC) --profile '*' down
+
+restart: ## Перезапустить контейнеры: make down, затем make up
+	@$(MAKE) down
+	@$(MAKE) up
+
+ps: need-node langfuse-secrets ## Контейнеры проекта (все профили) и их состояние
+	$(DC) --profile '*' ps
+
+build: need-node ## Собрать образ приложения kosht-app:local (сайт, сервер tsdown, node_modules сервера)
+	$(DC) --profile app build
+
+# Подтверждение опасных целей: ввод yes (docker-tooling.md). Без терминала — отказ.
+confirm:
+	@printf '%s' "$${CONFIRM_TEXT:-Продолжить?} Введите yes: "; read -r answer; [ "$$answer" = yes ] || { echo "Отменено."; exit 1; }
+
 # ── База данных ────────────────────────────────────────────────────────────────────────────────────
 
 db-up: secrets/db_password ## Поднять только Postgres (сервис db) и дождаться готовности; запущенный не трогает
 	@$(DC) --progress quiet up -d --wait db
+
+db-reset: need-node $(SECRETS) ## УДАЛИТЬ базу kosht (том pgdata) и создать заново с миграциями — спросит yes
+	@CONFIRM_TEXT="База kosht и все её данные будут удалены." $(MAKE) -s confirm
+	$(DC) --profile app stop api worker bot
+	$(DC) rm --force --stop db
+	docker volume rm --force kosht_pgdata
+	@$(MAKE) db-up migrate
+
+# Резервная копия (ADR-0015): pg_dump -Fc под владельцем + файлы пользователей; мастер-ключ в копию не входит
+# (NFR-16): без него сохранённые в админке секреты в копии не прочитать — так и задумано.
+BACKUP_DIR := data/backups
+
+backup: need-node $(SECRETS) db-up ## Резервная копия: data/backups/kosht-<время>.tar (pg_dump -Fc + data/files), без мастер-ключа
+	@set -eu; stamp=$$(date +%Y%m%d-%H%M%S); tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+	mkdir -p $(BACKUP_DIR) data/files; \
+	$(DC) exec -T db pg_dump -U kosht -d kosht -Fc > "$$tmp/db.dump"; \
+	tar -C data -cf "$$tmp/files.tar" files; \
+	tar -C "$$tmp" -cf "$(BACKUP_DIR)/kosht-$$stamp.tar" db.dump files.tar; \
+	chmod 600 "$(BACKUP_DIR)/kosht-$$stamp.tar"; \
+	echo "Копия: $(BACKUP_DIR)/kosht-$$stamp.tar (без мастер-ключа)."
+
+# Восстановление поверх текущих данных: процессы приложения останавливаются, база kosht пересоздаётся пустой и
+# заполняется pg_restore (а не --clean: секции таблиц pg-boss не удаляются по одной), файлы заменяются. Роль kosht_app
+# — роль кластера, права на таблицы — в самой копии. Имя файла — из окружения рецепта, а не подстановкой в текст.
+restore: need-node $(SECRETS) db-up ## Восстановить из копии: make restore file=data/backups/kosht-….tar — ЗАМЕНИТ базу и файлы, спросит yes
+	@test -n "$${file:-}" -a -f "$${file:-}" || { echo "Укажите копию: make restore file=data/backups/kosht-….tar" >&2; exit 2; }
+	@CONFIRM_TEXT="База kosht и data/files будут заменены копией." $(MAKE) -s confirm
+	@set -eu; tmp=$$(mktemp -d); trap 'rm -rf "$$tmp"' EXIT; \
+	tar -C "$$tmp" -xf "$${file}" db.dump files.tar; \
+	$(DC) --profile app stop api worker bot; \
+	$(DC) exec -T db psql -U kosht -d postgres -v ON_ERROR_STOP=1 -q \
+		-c 'DROP DATABASE IF EXISTS kosht WITH (FORCE)' -c 'CREATE DATABASE kosht OWNER kosht'; \
+	$(DC) exec -T db pg_restore -U kosht -d kosht --exit-on-error < "$$tmp/db.dump"; \
+	rm -rf data/files && tar -C data -xf "$$tmp/files.tar"; \
+	echo "Восстановлено из $${file}. Запуск: make up или make dev."
 
 db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
@@ -155,6 +232,16 @@ static-checks: need-node ## Свои проверки (tooling/checks): изол
 	@rc=0; for c in $(STATIC_CHECKS); do node tooling/checks/$$c.mjs || { s=$$?; if [ $$s -gt $$rc ]; then rc=$$s; fi; }; done; exit $$rc
 
 check: fmt-check lint typecheck deps-check static-checks test ## Все проверки: формат, линт, типы, границы, свои проверки, тесты («готово» = зелёный)
+
+# Уязвимости боевых зависимостей (CONSTRAINTS «Уязвимости зависимостей»): pnpm audit --prod — high и выше краснит;
+# osv-scanner — вторым мнением, если установлен.
+audit: need-node ## Уязвимости боевых зависимостей: pnpm audit --prod (high и выше — ошибка) и osv-scanner, если есть
+	pnpm audit --prod --audit-level high
+	@if command -v osv-scanner >/dev/null 2>&1; then osv-scanner scan source --lockfile pnpm-lock.yaml; else echo "osv-scanner не установлен — пропущен."; fi
+
+check-full: check e2e audit ## Всё перед защитой: check + e2e + audit + бюджет JS сайта (боевая сборка)
+	cd apps/web && node node_modules/vite/bin/vite.js build --logLevel warn
+	node tooling/checks/bundle-size.mjs apps/web/dist
 
 check-quick: typecheck deps-check static-checks ## Быстрые проверки для pre-push: типы, границы, свои проверки и тесты без БД
 	$(BIN)/vitest run --project unit

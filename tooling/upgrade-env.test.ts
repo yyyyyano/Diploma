@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
-import { APPEND, NEW_DEFAULTS, upgradeEnv } from "./upgrade-env.ts";
+import { APPEND, NEW_DEFAULTS, parseFacts, upgradeEnv } from "./upgrade-env.ts";
 
 const script = fileURLToPath(new URL("upgrade-env.ts", import.meta.url));
 const dir = mkdtempSync(join(tmpdir(), "kosht-upgrade-env-"));
@@ -73,5 +73,35 @@ describe("ADR-0020: make init обновляет старый .env", () => {
     expect(execFileSync(process.execPath, [script, file], { encoding: "utf8" })).toContain(
       "уже актуален",
     );
+  });
+});
+
+describe("ADR-0015: make init пишет в .env факты машины для Compose", () => {
+  it("нет переменных — дописываются; повтор с теми же значениями ничего не меняет", () => {
+    const first = upgradeEnv("LOG_LEVEL=info\n", { RENDER_GID: "989", APP_UID: "1000" });
+    expect(first.host).toEqual(["RENDER_GID", "APP_UID"]);
+    expect(first.text).toContain("\nRENDER_GID=989\nAPP_UID=1000\n");
+    const again = upgradeEnv(first.text, { RENDER_GID: "989", APP_UID: "1000" });
+    expect(again.host).toEqual([]);
+    expect(again.text).toBe(first.text);
+  });
+
+  it("значение по умолчанию из .env.example заменяется значением этой машины, на месте", () => {
+    const upgrade = upgradeEnv("RENDER_GID=992\nAPP_GID=1000\n", { RENDER_GID: "44" });
+    expect(upgrade.text.startsWith("RENDER_GID=44\nAPP_GID=1000\n")).toBe(true);
+    expect(upgrade.host).toEqual(["RENDER_GID"]);
+  });
+
+  it("аргументы: только известные имена и целые числа; пустое значение (группы нет) пропускается", () => {
+    expect(parseFacts(["RENDER_GID=", "APP_UID=1000"])).toEqual({ APP_UID: "1000" });
+    expect(() => parseFacts(["PATH=/bin"])).toThrow(RangeError);
+    expect(() => parseFacts(["APP_UID=1000;rm"])).toThrow(RangeError);
+  });
+
+  it("переменные фактов есть в .env.example со значениями по умолчанию Compose", () => {
+    const example = readFileSync(new URL("../.env.example", import.meta.url), "utf8");
+    for (const line of ["RENDER_GID=992", "APP_UID=1000", "APP_GID=1000"]) {
+      expect(example).toContain(`\n${line}\n`);
+    }
   });
 });

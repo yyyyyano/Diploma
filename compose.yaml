@@ -1,6 +1,93 @@
-# «Кошт» — один Compose с профилями (ADR-0015, docs/ARCHITECTURE.md §14). Без профиля — только db;
-# профили app, models, observability добавляют задачи, которые дают эти сервисы.
+# «Кошт» — один Compose с профилями (ADR-0015, docs/ARCHITECTURE.md §14):
+#   без профиля — db; app — api, worker, bot из одного образа (docker/Dockerfile); observability — Langfuse
+#   (ADR-0010, включён по умолчанию в make up и make dev); models — llama-server и whisper.cpp (только WITH_MODELS=1,
+#   модели скачивает загрузчик приложения — T-024).
+# Правила (.claude/rules/docker-tooling.md): порты только с адресом, образы — точные теги, секреты — из secrets/
+# (make init), у переменных профильных сервисов — умолчания. Остановка всего — make down (--profile '*').
 name: kosht
+
+# ── Приложение: общее для api, worker, bot ─────────────────────────────────────────────────────────────────────────
+x-app: &app
+  profiles: [app]
+  image: kosht-app:local
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  # Пользователь хоста (make init пишет APP_UID/APP_GID в .env): он читает secrets/ (0600) и пишет ./data — те же
+  # файлы, что в режиме make dev.
+  user: "${APP_UID:-1000}:${APP_GID:-1000}"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  init: true
+  tmpfs: [/tmp]
+  environment:
+    # Обе роли — одна база db:5432 (ADR-0020): приложение — kosht_app, миграции и права — владелец kosht.
+    DATABASE_URL: postgres://kosht_app@db:5432/kosht
+    DB_PASSWORD_FILE: /run/secrets/db_app_password
+    MIGRATION_DATABASE_URL: postgres://kosht@db:5432/kosht
+    MIGRATION_DB_PASSWORD_FILE: /run/secrets/db_password
+    MASTER_KEY_FILE: /run/secrets/master_key
+    # В контейнере слушатели — на всех адресах контейнера; наружу их выпускают только порты ниже (8140 — 127.0.0.1).
+    LISTEN_LOCAL_HOST: 0.0.0.0
+    LISTEN_LAN_HOST: 0.0.0.0
+    TRUSTED_ORIGINS: ${TRUSTED_ORIGINS:-}
+    LOG_LEVEL: ${LOG_LEVEL:-info}
+    LANGFUSE_ENABLED: ${LANGFUSE_ENABLED:-true}
+    LANGFUSE_BASE_URL: http://langfuse-web:3000
+    LANGFUSE_PUBLIC_KEY_FILE: /run/secrets/langfuse_public_key
+    LANGFUSE_SECRET_KEY_FILE: /run/secrets/langfuse_secret_key
+  secrets: [db_password, db_app_password, master_key, langfuse_public_key, langfuse_secret_key]
+  # Те же ./data/…, что у make dev (DATA_DIR=data); папки создаёт make up от имени пользователя.
+  volumes:
+    - ./data/files:/app/data/files
+    - ./data/logs:/app/data/logs
+    - ./data/backups:/app/data/backups
+    - ./data/exports:/app/data/exports
+  depends_on:
+    db:
+      condition: service_healthy
+  logging: &logging
+    driver: local
+    options:
+      max-size: 20m
+      max-file: "3"
+  restart: unless-stopped
+
+# ── Langfuse: общее для web и worker ─────────────────────────────────────────────────────────────────────────────
+x-langfuse-env: &langfuse-env # Адрес, который видит браузер разработчика: только эта машина.
+  NEXTAUTH_URL: http://127.0.0.1:3001
+  TELEMETRY_ENABLED: "false"
+  CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+  CLICKHOUSE_MIGRATION_URL: clickhouse://langfuse-clickhouse:9000
+  CLICKHOUSE_USER: langfuse
+  CLICKHOUSE_CLUSTER_ENABLED: "false"
+  REDIS_HOST: langfuse-valkey
+  REDIS_PORT: "6379"
+  LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+  LANGFUSE_S3_EVENT_UPLOAD_REGION: us-east-1
+  LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://langfuse-s3:8333
+  LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: langfuse
+  LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_EVENT_UPLOAD_PREFIX: events/
+  LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+  LANGFUSE_S3_MEDIA_UPLOAD_REGION: us-east-1
+  LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://langfuse-s3:8333
+  LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: langfuse
+  LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+  LANGFUSE_S3_MEDIA_UPLOAD_PREFIX: media/
+  # Без этого Node берёт ~1,7 ГиБ кучи — больше лимита памяти контейнера.
+  NODE_OPTIONS: --max-old-space-size=768
+
+x-langfuse-depends: &langfuse-depends
+  langfuse-db:
+    condition: service_healthy
+  langfuse-clickhouse:
+    condition: service_healthy
+  langfuse-valkey:
+    condition: service_healthy
+  langfuse-s3:
+    condition: service_healthy
 
 services:
   # PostgreSQL 18 + pgvector (ADR-0007). Точный тег образа: обновление — отдельная задача.
@@ -25,13 +112,224 @@ services:
       timeout: 3s
       retries: 30
       start_period: 5s
-    logging:
-      driver: local
+    logging: *logging
+    restart: unless-stopped
+
+  # ── app ──
+  api:
+    <<: *app
+    command: ["node", "dist/api.mjs"]
+    ports:
+      # Локальный вход (первый запуск, почтовый ящик) — только эта машина (NFR-24, R40).
+      - "127.0.0.1:8140:8140"
+      # Сетевой вход публикуется всегда, а слушатель открывается переключателем в админке (по умолчанию закрыт).
+      - "0.0.0.0:8141:8141"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8140/readyz').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 10s
+
+  worker:
+    <<: *app
+    command: ["node", "dist/worker.mjs"]
+
+  bot:
+    <<: *app
+    command: ["node", "dist/bot.mjs"]
+
+  # ── models (T-024: загрузчик моделей; до него сервисы не запускаются — make up/dev без WITH_MODELS=1) ──
+  # Образы — по тегу сборки и digest: llama.cpp b11854 (Vulkan), whisper.cpp v1.9.5 (коммит d1be6fd, Vulkan).
+  # iGPU Intel Arc — /dev/dri и группа render хоста (RENDER_GID пишет make init).
+  llama:
+    profiles: [models]
+    image: ghcr.io/ggml-org/llama.cpp:server-vulkan-b11854@sha256:2716be5463dcecd02ace322f77fa0ea10b7168c5c8f0e45458b303541fca6632
+    command: ["--host", "0.0.0.0", "--port", "8080", "--model", "/models/llm/chat.gguf"]
+    devices: ["/dev/dri:/dev/dri"]
+    group_add: ["${RENDER_GID:-992}"]
+    volumes:
+      - models:/models:ro
+    ports:
+      - "127.0.0.1:8142:8080"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+
+  whisper:
+    profiles: [models]
+    image: ghcr.io/ggml-org/whisper.cpp:main-vulkan-d1be6fde11ac6e0407606b4e42fe72d34add8037@sha256:32b43cf553e373cc517752dd14de4a25bdd39c979393f007a56cc51776579377
+    command:
+      [
+        "whisper-server",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "--model",
+        "/models/whisper/model.bin",
+      ]
+    devices: ["/dev/dri:/dev/dri"]
+    group_add: ["${RENDER_GID:-992}"]
+    volumes:
+      - models:/models:ro
+    ports:
+      - "127.0.0.1:8143:8080"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logging
+    restart: unless-stopped
+
+  # ── observability: Langfuse v4 (ADR-0010) — свои Postgres, ClickHouse, Valkey и SeaweedFS (S3) ──
+  langfuse-web:
+    profiles: [observability]
+    image: langfuse/langfuse:4.70.0
+    environment:
+      <<: *langfuse-env
+      # Регистрация закрыта: единственный пользователь и проект создаются из LANGFUSE_INIT_* (secrets/langfuse.env).
+      AUTH_DISABLE_SIGNUP: "true"
+      LANGFUSE_DISABLE_SIGNUP_ONBOARDING: "true"
+      LANGFUSE_INIT_ORG_ID: kosht
+      LANGFUSE_INIT_ORG_NAME: Кошт
+      LANGFUSE_INIT_PROJECT_ID: kosht-ai
+      LANGFUSE_INIT_PROJECT_NAME: Кошт — ИИ
+      LANGFUSE_INIT_USER_NAME: Разработчик
+      # Next.js слушает адрес из HOSTNAME (в контейнере это id контейнера) — слушать все адреса контейнера.
+      HOSTNAME: 0.0.0.0
+    # NEXTAUTH_SECRET, SALT, ENCRYPTION_KEY, пароли хранилищ, ключи проекта — make init (вне git).
+    env_file: [./secrets/langfuse.env]
+    depends_on: *langfuse-depends
+    ports:
+      - "127.0.0.1:3001:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/public/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    mem_limit: 1g
+    logging: *logging
+    restart: unless-stopped
+
+  langfuse-worker:
+    profiles: [observability]
+    image: langfuse/langfuse-worker:4.70.0
+    environment: *langfuse-env
+    env_file: [./secrets/langfuse.env]
+    depends_on: *langfuse-depends
+    mem_limit: 1g
+    logging: *logging
+    restart: unless-stopped
+
+  langfuse-db:
+    profiles: [observability]
+    image: postgres:17.11-alpine3.24
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_DB: langfuse
+      TZ: UTC
+      PGTZ: UTC
+    env_file: [./secrets/langfuse-db.env]
+    volumes:
+      - langfuse_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U langfuse -d langfuse"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    mem_limit: 256m
+    logging: *logging
+    restart: unless-stopped
+
+  langfuse-clickhouse:
+    profiles: [observability]
+    image: clickhouse/clickhouse-server:26.4.5.143
+    user: "101:101"
+    environment:
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: langfuse
+    env_file: [./secrets/langfuse-clickhouse.env]
+    volumes:
+      - langfuse_clickhouse:/var/lib/clickhouse
+      - langfuse_clickhouse_logs:/var/log/clickhouse-server
+    healthcheck:
+      test:
+        ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    # Без предела ClickHouse стремится занять ~90 % памяти машины.
+    mem_limit: 3g
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    logging: *logging
+    restart: unless-stopped
+
+  langfuse-valkey:
+    profiles: [observability]
+    image: valkey/valkey:8.1.10-alpine3.24
+    # Пароль — из secrets/langfuse-valkey.env; noeviction обязателен для очереди Langfuse; без записи на диск.
+    command:
+      [
+        "sh",
+        "-c",
+        'exec valkey-server --requirepass "$$VALKEY_PASSWORD" --maxmemory-policy noeviction --save ""',
+      ]
+    env_file: [./secrets/langfuse-valkey.env]
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$$VALKEY_PASSWORD" valkey-cli ping | grep -q PONG']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    mem_limit: 192m
+    logging: *logging
+    restart: unless-stopped
+
+  langfuse-s3:
+    profiles: [observability]
+    image: chrislusf/seaweedfs:4.50
+    # Всё в одном (master, volume, filer, S3 на 8333); ведро langfuse создаётся при старте; учётная запись —
+    # AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY из secrets/langfuse-s3.env.
+    command: ["mini", "-dir=/data", "-bucket=langfuse"]
+    env_file: [./secrets/langfuse-s3.env]
+    volumes:
+      - langfuse_s3:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9333/cluster/status >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+    mem_limit: 512m
+    logging: *logging
     restart: unless-stopped
 
 secrets:
   db_password:
     file: ./secrets/db_password
+  db_app_password:
+    file: ./secrets/db_app_password
+  master_key:
+    file: ./secrets/master.key
+  langfuse_public_key:
+    file: ./secrets/langfuse_public_key
+  langfuse_secret_key:
+    file: ./secrets/langfuse_secret_key
 
 volumes:
   pgdata:
+  models:
+  langfuse_db:
+  langfuse_clickhouse:
+  langfuse_clickhouse_logs:
+  langfuse_s3:

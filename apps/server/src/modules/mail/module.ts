@@ -1,18 +1,39 @@
-// Модуль mail (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль mail (паспорт — CLAUDE.md): письма системы — SMTP (Nodemailer) или локальный почтовый ящик, пока SMTP не
+// настроен (AUTH-06, ADR-0016). Соседям — фасад send(to, шаблон); тексты писем — словарь mail.
 import {
   defineModule,
   type ModuleDeps,
   type NoFacades,
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
+import { makeSendMail } from "./application/send-mail.ts";
+import { createLocalMailbox } from "./infrastructure/local-mailbox.ts";
+import { createSmtpTransport } from "./infrastructure/smtp.ts";
+import {
+  MAIL_FROM,
+  SMTP_HOST,
+  SMTP_PASSWORD,
+  SMTP_PORT,
+  SMTP_SECURE,
+  SMTP_USER,
+} from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export type MailFacades = NoFacades;
 
-export function createMailModule(_deps: ModuleDeps<MailFacades, SystemPlatform>) {
-  return defineModule({ id: "mail" });
+export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPlatform>) {
+  const send = makeSendMail({
+    platform,
+    mailbox: createLocalMailbox(platform),
+    smtp: createSmtpTransport,
+  });
+  return defineModule({
+    id: "mail",
+    facade: { send },
+    settings: [SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, MAIL_FROM],
+    secrets: [SMTP_PASSWORD],
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: send(to, шаблон) — письмо по SMTP или в локальный ящик. */
 export type MailFacade = ReturnType<typeof createMailModule>["facade"];

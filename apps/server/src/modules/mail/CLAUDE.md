@@ -3,27 +3,36 @@
 Ярус 1 · таблицы: system · публикует: — (`docs/CAPABILITIES.md`; задачи — `tasks/plan.md`)
 
 ## Назначение
-SMTP, локальный почтовый ящик (только localhost), тестовое письмо. Сейчас модуль пустой, но живой (T-007): фабрика,
-описание `defineModule({ id: "mail" })` и место в корне композиции; содержимое добавляет задача модуля.
+Письма системы: SMTP (Nodemailer) или встроенный локальный почтовый ящик, пока SMTP не настроен (ADR-0016). Поля SMTP
+в админке и «Отправить тестовое письмо» — T-017.
 
 ## Требования SPEC
-AUTH-03/04/06, ADM-60.
+AUTH-03/04/06, ADM-60, NFR-24 (ящик — только локальный вход).
 
 ## Публичный API (`index.ts`)
-- Фабрика: `createMailModule({ platform, facades })` → `defineModule({ id: "mail" })`; платформа — `SystemPlatform` (с
-  `system: SystemDb`); фасады — соседей нет (`NoFacades`).
-- Фасад `MailFacade` — пока нет (`undefined`); появится с первым сценарием, нужным соседям.
-- События (`events.ts`): —; контракт, задачи, инструменты агента, отмена, владелец данных, настройки — добавляет
-  задача модуля.
+- Фабрика: `createMailModule({ platform, facades })`; платформа — `SystemPlatform`; соседей нет (`NoFacades`).
+- Фасад `MailFacade`: `send(to, template)` — письмо по шаблону (`MailTemplate`: `verify-email { link, hours }`);
+  тексты — словарь `mail` (`@kosht/i18n`), ссылка — только http(s) (иначе `RangeError`); сбой SMTP — `UNAVAILABLE`.
+- Настройки (`settings.ts`): `mail.smtp-host` (пусто — почта не настроена; env `SMTP_HOST`), `mail.smtp-port` (587,
+  `SMTP_PORT`), `mail.smtp-secure` (`SMTP_SECURE`), `mail.smtp-user` (`SMTP_USER`), `mail.from-address`
+  (`no-reply@kosht.local`, `SMTP_FROM`); секрет `mail.smtp-password` (`SMTP_PASSWORD`). Читаются на каждое письмо.
+- Таблица `mail_messages` (`systemTable`): получатель и готовые поля письма (`domain/message.ts`), без HTML.
 
 ## Зависимости
-Можно: — (`tooling/architecture/modules.ts`). Слушает: —.
+Можно: — (`tooling/architecture/modules.ts`). Слушает: —. `nodemailer` — только `infrastructure/` (правило
+`nodemailer-only-in-mail-infrastructure`); `application/` видит порт `MailTransport` (`application/ports.ts`).
 
 ## Запреты
-- В чужой модуль — только через его `index.ts` и только из «Можно»; сообщить наверх — событием, подставить реализацию
-  — реестром корня композиции (ADR-0004).
-- `SystemDb` — только для своих таблиц system/public; пользовательские таблицы через него не трогать (аудитор SQL).
-- «Чьи данные» — только `s.scope`, никогда из входа процедуры, инструмента или нагрузки задачи.
+- Адрес, тема и ссылка письма — не в логах: только `mail.sent` / `mail.send-failed` с шаблоном и транспортом.
+- HTML письма — только `renderHtml` (экранирует каждое значение); страница ящика рисует поля сама, без вставки HTML.
+- Ящик — только `localOnly`; при настроенном SMTP письма в ящик не пишутся и не показываются.
+- `SystemDb` — только для `mail_messages`; пользовательские таблицы не трогать.
 
 ## Как тестировать
-- `pnpm vitest run apps/server/src/modules/mail` — unit и int (нужен `make db-up`); общий — `make check`.
+- `pnpm vitest run apps/server/src/modules/mail`: части письма и экранирование (`domain/message.test.ts`), оба режима
+  на Postgres и поддельном SMTP на 127.0.0.1 (`application/send-mail.int.test.ts`,
+  `infrastructure/__fixtures__/fake-smtp.ts`).
+
+## Подводные камни
+- Одно письмо — одно соединение SMTP со сроками 10/10/20 с (`SMTP_TIMEOUTS`): настройки меняются в админке, писем мало.
+- Тело письма по SMTP — в base64: тест раскодирует части (`decodedParts`), а не ищет ссылку в сыром тексте.

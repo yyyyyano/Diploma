@@ -166,6 +166,7 @@ const EXPECTED: Record<string, string[]> = {
     `${M}/identity/application/sign-in.ts → better-auth`,
     `${M}/identity/application/sign-in.ts → better-auth/adapters/drizzle`,
   ],
+  "nodemailer-only-in-mail-infrastructure": [`${M}/identity/application/sign-up.ts → nodemailer`],
   "drizzle-and-pg-only-in-db": [
     `${M}/receipts/application/recognize.ts → drizzle-orm/pg-core`,
     `${P}/jobs/jobs.ts → drizzle-orm`,

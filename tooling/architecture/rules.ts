@@ -473,6 +473,13 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["better-auth", "@better-auth/*"]) },
     ),
     rule(
+      "nodemailer-only-in-mail-infrastructure",
+      "Nodemailer — только в mail/infrastructure: письма отправляет фасад mail (SMTP или локальный ящик), " +
+        "остальные модули SMTP не открывают (ADR-0016).",
+      { pathNot: `^${MOD}/mail/infrastructure/` },
+      { path: npmPattern(["nodemailer"]) },
+    ),
+    rule(
       "drizzle-and-pg-only-in-db",
       "drizzle-orm и pg — только в infrastructure/db модулей и platform/db: запросы через ScopedDb " +
         "(ADR-0006, CONSTRAINTS «Архитектурные запреты»). Исключения: @kosht/testing/db — шаблонная " +

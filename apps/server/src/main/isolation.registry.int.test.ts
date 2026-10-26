@@ -4,6 +4,7 @@
 // процедура или инструмент без фикстуры ниже — красный тест с подсказкой «добавьте фикстуру». Здесь же — полнота
 // владельцев данных: каждая userOwnedTable в defineUserData какого-то модуля (PRIV-05/06).
 import { contract } from "@kosht/contract";
+import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { makeScope, type Scope } from "@kosht/kernel";
 import {
   generate,
@@ -94,6 +95,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
+  "privacy.state": { input: () => undefined },
+  "privacy.setCloudConsent": {
+    input: () => ({ granted: false, version: CONSENT_VERSIONS.cloud }),
+  },
   "actions.undo": { input: (b) => ({ token: b.actionId }) },
   "actions.decision": { input: (b) => ({ id: b.decisionId }) },
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
@@ -295,6 +300,8 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "notifications.markRead",
       "notifications.preferences",
       "notifications.setPreference",
+      "privacy.setCloudConsent",
+      "privacy.state",
       "explain_number",
       "list_accounts",
     ]);

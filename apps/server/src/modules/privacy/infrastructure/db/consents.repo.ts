@@ -45,3 +45,24 @@ export async function latestConsent(
     .limit(1);
   return rows[0];
 }
+
+export interface ConsentRecord extends ConsentDecision {
+  readonly id: string;
+  readonly at: Date;
+}
+
+/** История решений пользователя scope, новые сверху (настройки «История согласий»); не больше limit строк. */
+export async function listConsents(s: ScopedDb, limit: number): Promise<ConsentRecord[]> {
+  return s.db
+    .select({
+      id: privacyConsents.id,
+      kind: privacyConsents.kind,
+      granted: privacyConsents.granted,
+      textVersion: privacyConsents.textVersion,
+      at: privacyConsents.createdAt,
+    })
+    .from(privacyConsents)
+    .where(and(s.own(privacyConsents), eq(privacyConsents.userId, s.scope.userId)))
+    .orderBy(desc(privacyConsents.createdAt), desc(privacyConsents.id))
+    .limit(limit);
+}

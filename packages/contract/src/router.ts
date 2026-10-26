@@ -9,6 +9,7 @@ import { filesContract } from "./files/files.contract.ts";
 import { identityContract } from "./identity/identity.contract.ts";
 import { notificationsContract } from "./notifications/notifications.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
+import { privacyContract } from "./privacy/privacy.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 
 export const contract = {
@@ -16,6 +17,7 @@ export const contract = {
   events: eventsContract,
   mail: mailContract,
   identity: identityContract,
+  privacy: privacyContract,
   actions: actionsContract,
   explain: explainContract,
   files: filesContract,

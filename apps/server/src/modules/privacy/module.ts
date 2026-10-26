@@ -6,7 +6,9 @@ import {
   type NoFacades,
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
+import { privacyRouter } from "./api/router.ts";
 import { makeCloudConsentSource } from "./application/cloud-consent.ts";
+import { makeCloudConsentSettings } from "./application/cloud-consent-settings.ts";
 import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
 import { consentChanged } from "./events.ts";
 import { privacyUserData } from "./user-data.ts";
@@ -19,6 +21,7 @@ export function createPrivacyModule({ platform }: ModuleDeps<PrivacyFacades, Sys
     id: "privacy",
     facade: { recordRegistrationConsents: makeRecordRegistrationConsents(platform) },
     events: [consentChanged],
+    router: privacyRouter(makeCloudConsentSettings(platform)),
     userData: privacyUserData,
     consentSource: makeCloudConsentSource(platform),
   });

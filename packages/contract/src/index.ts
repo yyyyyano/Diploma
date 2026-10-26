@@ -73,7 +73,15 @@ export {
   VerifyEmailInput,
 } from "./identity/identity.contract.ts";
 export { MailboxMessage, mailContract, MailNoteKind } from "./mail/mail.contract.ts";
-export { ConsentVersion, RegistrationConsents } from "./privacy/privacy.contract.ts";
+export {
+  ConsentKind,
+  ConsentRecord,
+  ConsentVersion,
+  PrivacyState,
+  privacyContract,
+  RegistrationConsents,
+  SetCloudConsentInput,
+} from "./privacy/privacy.contract.ts";
 export {
   ADMIN_NOTIFICATION_KINDS,
   AdminNotification,

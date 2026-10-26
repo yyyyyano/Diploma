@@ -4,6 +4,8 @@
 export { LoginPage } from "./LoginPage.tsx";
 export { LoginSearch } from "./model/search.ts";
 export { VerifyEmailSearch } from "./model/verify-search.ts";
+export { RecoverySearch } from "./model/recovery-search.ts";
 export { PolicyPage } from "./PolicyPage.tsx";
+export { RecoveryPage } from "./RecoveryPage.tsx";
 export { RegisterPage } from "./RegisterPage.tsx";
 export { VerifyEmailPage } from "./VerifyEmailPage.tsx";

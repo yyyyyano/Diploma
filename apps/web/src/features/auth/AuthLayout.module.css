@@ -228,3 +228,44 @@
   font-weight: 600;
   color: var(--brand);
 }
+
+/* «Забыли пароль?» и «Войти с кодом восстановления» под формой входа. */
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--s-8) var(--s-16);
+  font-size: 14px;
+}
+
+.links a {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.icon {
+  color: var(--brand);
+}
+
+/* «Нет доступа к почте?» (.au-help макета): рамка с подсказкой. */
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-12) var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  font-size: 14px;
+}
+
+.help p {
+  margin: 0;
+}
+
+.help a {
+  color: var(--brand);
+}
+
+.helpTitle {
+  font-weight: 600;
+}

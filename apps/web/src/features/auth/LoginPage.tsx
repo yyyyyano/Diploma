@@ -2,7 +2,8 @@
 // контракта (SignInInput), тексты ошибок — из словаря; ответ сервера INVALID_CREDENTIALS — «Неверный email или
 // пароль» без уточнения, что именно. После входа кэш запросов очищается целиком (данные прежнего пользователя не
 // должны мелькнуть) и стартовый маршрут ведёт в раздел. Ссылки на регистрацию и политику — всегда, «Первый запуск» —
-// только пока он доступен. «Забыли пароль?», код восстановления — T-013, демо-вход — T-054.
+// только пока он доступен; «Забыли пароль?» и «Войти с кодом восстановления» ведут на /recovery. Заблокированному и
+// при превышении частоты — заголовок и текст из словаря («попробуйте через N мин.»). Демо-вход — T-054.
 import { SignInInput } from "@kosht/contract";
 import { Button, PasswordInput, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
@@ -11,7 +12,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
-import { errorCodeOf } from "../../lib/errors.ts";
+import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { AuthLayout } from "./AuthLayout.tsx";
 import classes from "./AuthLayout.module.css";
 import type { LoginSearch } from "./model/search.ts";
@@ -52,7 +53,15 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
         {serverError !== undefined && (
           <p className={classes.error} role="alert">
             <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
-            {t(`errors:${serverError}`)}
+            <span>
+              {serverError === "ACCOUNT_BLOCKED" && (
+                <strong>{t("auth:login.blockedTitle")} </strong>
+              )}
+              {serverError === "RATE_LIMITED" && (
+                <strong>{t("auth:login.rateLimitedTitle")} </strong>
+              )}
+              {t(`errors:${serverError}`, errorParamsOf(signIn.error))}
+            </span>
           </p>
         )}
         <form
@@ -85,6 +94,12 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
             {t("auth:login.submit")}
           </Button>
         </form>
+        <nav className={classes.links} aria-label={t("auth:recovery.title")}>
+          <Link to="/recovery">{t("auth:login.forgot")}</Link>
+          <Link to="/recovery" search={{ mode: "code" }}>
+            {t("auth:login.withCode")}
+          </Link>
+        </nav>
         <p className={classes.switch}>
           {t("auth:login.noAccount")} <Link to="/register">{t("auth:login.register")}</Link>
         </p>

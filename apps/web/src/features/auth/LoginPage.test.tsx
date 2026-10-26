@@ -109,4 +109,63 @@ describe("AUTH-08: вход", () => {
       "/setup",
     );
   });
+
+  it("AUTH-04, AUTH-05: ссылки «Забыли пароль?» и «Войти с кодом восстановления» ведут на /recovery", async () => {
+    renderLogin();
+    expect(await screen.findByRole("link", { name: "Забыли пароль?" })).toHaveAttribute(
+      "href",
+      "/recovery",
+    );
+    expect(screen.getByRole("link", { name: "Войти с кодом восстановления" })).toHaveAttribute(
+      "href",
+      "/recovery?mode=code",
+    );
+  });
+
+  it("AUTH-11: заблокированный — «Аккаунт заблокирован администратором» и что делать", async () => {
+    server.use(
+      http.post("*/api/identity/sign-in", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "ACCOUNT_BLOCKED",
+            status: 403,
+            message: "ACCOUNT_BLOCKED",
+            data: { requestId: "req-00000001", params: {} },
+          },
+          { status: 403 },
+        ),
+      ),
+    );
+    renderLogin();
+    await fill("user@example.test", "верный-пароль-2026");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Аккаунт заблокирован администратором.");
+    expect(alert).toHaveTextContent("Обратитесь к администратору системы");
+  });
+
+  it("SEC-02: частота — «Слишком много попыток входа… через 7 мин.»", async () => {
+    server.use(
+      http.post("*/api/identity/sign-in", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "RATE_LIMITED",
+            status: 429,
+            message: "RATE_LIMITED",
+            data: {
+              requestId: "req-00000001",
+              params: { retryAfterSeconds: 400, retryAfterMinutes: 7 },
+            },
+          },
+          { status: 429 },
+        ),
+      ),
+    );
+    renderLogin();
+    await fill("user@example.test", "пароль");
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("Слишком много попыток входа.");
+    expect(alert).toHaveTextContent("Попробуйте через 7 мин.");
+  });
 });

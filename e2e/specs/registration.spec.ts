@@ -95,7 +95,7 @@ test("регистрация → письмо в ящике → подтверж
   await expect(page.getByText("Подтверждён", { exact: true })).toBeVisible();
 
   // Выход — и вход с тем же паролем.
-  await page.getByRole("button", { name: "Выйти" }).click();
+  await page.getByRole("button", { name: "Выйти", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByLabel("Пароль", { exact: true }).fill(password);

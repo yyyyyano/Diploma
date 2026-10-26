@@ -86,16 +86,24 @@ export async function insertUser(
   });
 }
 
-/** Домохозяйство пользователя (для сессии) или undefined. */
-export async function householdOf(
+/** Статус пользователя (AUTH-11): активен или заблокирован администратором. */
+export type UserStatus = "active" | "blocked";
+
+/** Домохозяйство и статус пользователя (для новой сессии) или undefined. */
+export async function sessionOwner(
   db: IdentityDb,
   userId: string,
-): Promise<HouseholdId | undefined> {
+): Promise<{ householdId: HouseholdId; status: UserStatus } | undefined> {
   const rows = await db
-    .select({ householdId: identityUsers.householdId })
+    .select({ householdId: identityUsers.householdId, status: identityUsers.status })
     .from(identityUsers)
     .where(eq(identityUsers.id, userId));
-  return rows[0]?.householdId as HouseholdId | undefined;
+  const row = rows[0];
+  if (row === undefined) return undefined;
+  return {
+    householdId: row.householdId as HouseholdId,
+    status: row.status === "active" ? "active" : "blocked",
+  };
 }
 
 /** Пользователь существует, активен и состоит в этом домохозяйстве (перепроверка scope задачи). */

@@ -4,6 +4,13 @@ import { z } from "zod";
 import { defineRateRule, type RateRule } from "../../platform/rate-limit/rate-limit.ts";
 import { defineSetting, type SettingDef, type Settings } from "../../platform/settings/settings.ts";
 
+/** Сколько минут действует ссылка сброса пароля (AUTH-04: по умолчанию 1 час). */
+export const RESET_LINK_MINUTES = defineSetting({
+  key: "identity.reset-link-minutes",
+  schema: z.int().min(5).max(1440),
+  default: 60,
+});
+
 /** Сколько часов действует ссылка подтверждения адреса (макет письма — 24 ч). */
 export const VERIFY_LINK_HOURS = defineSetting({
   key: "identity.verify-link-hours",
@@ -46,8 +53,30 @@ export const RESEND_VERIFICATION = rateSetting(
   { limit: 3, windowMinutes: 60 },
 );
 
+/** Попытки входа на email (SEC-02, AUTH-08): подбор пароля упирается в порог. */
+export const SIGN_IN = rateSetting("auth.login", "identity.rate-sign-in", {
+  limit: 5,
+  windowMinutes: 15,
+});
+
+/** «Забыли пароль?» на email: письма сброса не шлются потоком. */
+export const PASSWORD_RESET = rateSetting("auth.password-reset", "identity.rate-password-reset", {
+  limit: 3,
+  windowMinutes: 60,
+});
+
+/** Вход с кодом восстановления на email: перебор кода упирается в порог. */
+export const RECOVERY_CODE = rateSetting("auth.recovery-code", "identity.rate-recovery-code", {
+  limit: 5,
+  windowMinutes: 15,
+});
+
 export const IDENTITY_SETTINGS = [
   VERIFY_LINK_HOURS,
+  RESET_LINK_MINUTES,
+  SIGN_IN.setting,
+  PASSWORD_RESET.setting,
+  RECOVERY_CODE.setting,
   REGISTER_PER_EMAIL.setting,
   REGISTER_TOTAL.setting,
   RESEND_VERIFICATION.setting,

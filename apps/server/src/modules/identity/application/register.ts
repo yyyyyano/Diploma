@@ -77,7 +77,7 @@ export function makeRegister(d: RegisterDeps) {
 
     const signed = await d.auth.signIn({ email, password: input.password }, request.headers);
     const user = await userCard(platform.system, ids.userId);
-    if (signed === undefined || user === undefined) throw new AppError("INTERNAL");
+    if (signed.kind !== "ok" || user === undefined) throw new AppError("INTERNAL");
     return { user, cookies: signed.cookies };
   };
 }

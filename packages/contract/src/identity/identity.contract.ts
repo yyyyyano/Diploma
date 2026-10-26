@@ -62,7 +62,7 @@ export const identityContract = {
     .route({ method: "POST", path: "/identity/sign-in" })
     .input(SignInInput)
     .output(SessionUser)
-    .errors(pickErrors("VALIDATION", "INVALID_CREDENTIALS")),
+    .errors(pickErrors("VALIDATION", "INVALID_CREDENTIALS", "ACCOUNT_BLOCKED", "RATE_LIMITED")),
   /**
    * Регистрация: пользователь, его домохозяйство и согласия — одной транзакцией; письмо подтверждения; вход сразу
    * (Set-Cookie). Email занят — EMAIL_TAKEN; версия текста согласия устарела — CONFLICT; частота — RATE_LIMITED.

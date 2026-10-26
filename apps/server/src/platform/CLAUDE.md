@@ -60,7 +60,8 @@
   `127.0.0.1`, `[::1]`; lan — они же и IP; имена — нет), `isSameSiteRequest` (кроме GET/HEAD/OPTIONS: `Sec-Fetch-Site`
   `cross-site`/`same-site` — отказ; `Origin` = `http://<Host>` или из `TRUSTED_ORIGINS`; оба пусты — не браузер),
   `requestIdFrom` (`[A-Za-z0-9-]{8,64}`, иначе новый uuid).
-- `procedures.ts` — `HttpContext` (`requestId`, `listener` из замыкания `createApp`, `session()` лениво,
+- `procedures.ts` — `HttpContext` (`requestId`, `listener` из замыкания `createApp`, `session()` лениво; продлённая
+  источником сессия несёт `cookies` — `authed` кладёт их в `Set-Cookie` ответа,
   `shutdownSignal`, `resHeaders?` — заголовки ответа: вход и выход кладут сюда `Set-Cookie`) и четыре вида процедур над контрактом: `publicProc` (гость), `authed` (сессия → `context.s`,
   `context.role`, `uid` в лог; нет — `UNAUTHORIZED`), `localOnly` (только слушатель `local`; на `lan` — `NOT_FOUND`;
   сессии не требует), `admin` (сессия с ролью `admin`, иначе `FORBIDDEN`); middleware `requireSession`,

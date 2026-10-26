@@ -15,7 +15,8 @@ AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04. Сделано: AU
 - Фабрика: `createIdentityModule({ platform, facades })`; `SystemPlatform` (`system`, `deriveKey("auth/v1")`,
   `localOrigin`); фасады `mail` (письма), `privacy` (согласия в транзакции регистрации). Фасада `IdentityFacade` нет.
 - `contract.identity.*`: `status` (publicProc: `{ initialized, setupAvailable }`), `setup` (localOnly; повтор —
-  `CONFLICT`), `signIn` (`Set-Cookie: kosht_session`; неверно — `INVALID_CREDENTIALS`), `signOut`, `me` (authed:
+  `CONFLICT`), `signIn` (частота на email; `Set-Cookie: kosht_session`; неверно — `INVALID_CREDENTIALS`;
+  заблокирован при верном пароле — `ACCOUNT_BLOCKED` без cookie: хук создания сессии), `signOut`, `me` (authed:
   email, имя, роль, `emailVerified`), `register` (publicProc: частота на email и на всех → занятый email —
   `EMAIL_TAKEN` → пользователь, домохозяйство, согласия, ссылка и `identity.user-registered` одной транзакцией →
   письмо (сбой SMTP — только лог) → вход), `verifyEmail` (publicProc: POST со страницы `/verify-email`; ссылка
@@ -51,5 +52,5 @@ AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04. Сделано: AU
 ## Подводные камни
 - Пользователь пишется через `tx.db` ScopedDb нового пользователя: аудитор в режиме scoped проверяет только
   пользовательские таблицы, системные таблицы identity ему не мешают.
-- Сессия продлевается в БД (Better Auth, раз в сутки), а cookie — нет: вход нужен раз в 7 дней (исправит T-013).
+- Сессия продлевается в БД (Better Auth, раз в сутки) — `session()` отдаёт и новую cookie, `authed` кладёт её в ответ.
 - `name` пользователя пуст (экраны имени не спрашивают) — сайт показывает email.

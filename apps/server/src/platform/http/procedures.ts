@@ -34,10 +34,14 @@ export interface HttpContext {
 
 const base = os.$context<HttpContext>();
 
-/** Сессия обязательна: в контекст — s и role; uid — в контекст лога (OBS-01). */
+/**
+ * Сессия обязательна: в контекст — s и role; uid — в контекст лога (OBS-01). Продлённая сессия (раз в сутки) приходит
+ * с новой cookie — она уходит в ответ, иначе вход истёк бы через 7 дней при живой строке сессии.
+ */
 export const requireSession = base.middleware(async ({ context, next }) => {
   const session = await context.session();
   if (session === undefined) throw new AppError("UNAUTHORIZED");
+  for (const cookie of session.cookies ?? []) context.resHeaders?.append("set-cookie", cookie);
   return withLogContext({ uid: session.s.scope.userId }, () =>
     next({ context: { s: session.s, role: session.role } }),
   );

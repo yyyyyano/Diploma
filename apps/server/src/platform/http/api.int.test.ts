@@ -31,6 +31,10 @@ function headerSessions(): SessionRegistry {
       userId: testUserId(Number(user)),
       householdId: testHouseholdId(Number(user)),
       role: headers.get("x-test-role") === "admin" ? "admin" : "user",
+      // Источник продлил сессию — отдаёт новую cookie (identity: Better Auth раз в сутки).
+      ...(headers.get("x-test-refresh") === null
+        ? {}
+        : { cookies: ["kosht_session=renewed; Max-Age=604800; Path=/; HttpOnly; SameSite=Lax"] }),
     };
   });
   return registry;
@@ -241,6 +245,19 @@ describe("ROLE-01: authed и admin — сессия из реестра, не и
       householdId: testHouseholdId(2),
       role: "user",
     });
+  });
+
+  it("продлённая источником сессия — новая cookie в ответе authed-процедуры; без продления — без Set-Cookie", async () => {
+    const call = server();
+    const plain = await call("/api/fx/whoami", { headers: { "x-test-user": "2" } });
+    expect(plain.headers.getSetCookie()).toEqual([]);
+    const renewed = await call("/api/fx/whoami", {
+      headers: { "x-test-user": "2", "x-test-refresh": "1" },
+    });
+    expect(renewed.status).toBe(200);
+    expect(renewed.headers.getSetCookie()).toEqual([
+      "kosht_session=renewed; Max-Age=604800; Path=/; HttpOnly; SameSite=Lax",
+    ]);
   });
 
   it("второй источник сессий — ошибка при старте", () => {

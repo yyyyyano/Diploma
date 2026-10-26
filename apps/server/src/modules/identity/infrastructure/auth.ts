@@ -5,7 +5,9 @@
 // запрос проходит аудитор SQL, $client ему не нужен. Свои надстройки:
 // - пароль — argon2id из node:crypto (password.ts), длина ≥ 12 (SEC-01);
 // - cookie kosht_session (HttpOnly, SameSite=Lax, без Secure: сайт идёт по http на localhost и в LAN), cookieCache
-//   выключен — блокировка и выход действуют сразу (AUTH-11);
+//   выключен — блокировка и выход действуют сразу (AUTH-11); заблокированному сессия не создаётся (ACCOUNT_BLOCKED —
+//   только после верного пароля: по одному email не узнать, заблокирован ли он); продление сессии в БД отдаёт и новую
+//   cookie (getSession с returnHeaders) — платформа кладёт её в ответ процедуры;
 // - householdId — поле сессии: копируется из пользователя при входе, сессия сайта даёт scope без запроса за ним;
 // - ip сессии не хранится (лишние ПД), телеметрия и лимиты Better Auth выключены (лимиты — platform/rate-limit).
 import { HouseholdId, UserId } from "@kosht/kernel";
@@ -13,7 +15,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
-import { householdOf, type UserRole } from "./db/identity.repo.ts";
+import { sessionOwner, type UserRole } from "./db/identity.repo.ts";
 import {
   identityCredentials,
   identitySessions,
@@ -79,11 +81,15 @@ export function createAuth(deps: AuthDeps) {
     databaseHooks: {
       session: {
         create: {
-          // AUTH-11 и ROLE-01: сессия получает домохозяйство пользователя; пользователя нет — сессии нет.
+          // AUTH-11 и ROLE-01: сессия получает домохозяйство пользователя; пользователя нет — сессии нет;
+          // заблокирован — отказ ACCOUNT_BLOCKED (хук зовётся после проверки пароля).
           before: async (session) => {
-            const householdId = await householdOf(deps.system, session.userId);
-            if (householdId === undefined) return false;
-            return { data: { ...session, householdId } };
+            const owner = await sessionOwner(deps.system, session.userId);
+            if (owner === undefined) return false;
+            if (owner.status !== "active") {
+              throw new APIError("FORBIDDEN", { code: BLOCKED, message: BLOCKED });
+            }
+            return { data: { ...session, householdId: owner.householdId } };
           },
         },
       },
@@ -102,23 +108,42 @@ export function createAuth(deps: AuthDeps) {
 
 export type Auth = ReturnType<typeof createAuth>;
 
+/** Код отказа хука сессии для заблокированного пользователя. */
+const BLOCKED = "ACCOUNT_BLOCKED";
+
 /** Кто вошёл — по сессии Better Auth (только активный пользователь, AUTH-11). */
 export interface AuthSession {
   readonly userId: UserId;
   readonly householdId: HouseholdId;
   readonly role: UserRole;
+  /** Set-Cookie продлённой сессии (раз в сутки); иначе пусто. */
+  readonly cookies: readonly string[];
 }
+
+/** Итог входа: вошёл (cookie), неверный email или пароль, заблокирован (пароль верный). */
+export type SignInResult =
+  | { readonly kind: "ok"; readonly userId: UserId; readonly cookies: readonly string[] }
+  | { readonly kind: "invalid" }
+  | { readonly kind: "blocked" };
 
 /**
  * Узкий порт над Better Auth для сценариев identity: application не видит better-auth (правило границ). Cookie —
  * готовыми строками Set-Cookie: процедура кладёт их в ответ как есть.
  */
 export interface AuthGateway {
-  /** Вход; неверный email или пароль — undefined. */
+  /** Вход по email и паролю. */
   signIn(
     credentials: { readonly email: string; readonly password: string },
     headers: Headers,
-  ): Promise<{ readonly userId: UserId; readonly cookies: readonly string[] } | undefined>;
+  ): Promise<SignInResult>;
+  /**
+   * Смена пароля вошедшим (AUTH-08): текущий пароль неверен — undefined; иначе прочие сессии завершены, текущая
+   * заменена новой — её Set-Cookie.
+   */
+  changePassword(
+    passwords: { readonly currentPassword: string; readonly newPassword: string },
+    headers: Headers,
+  ): Promise<readonly string[] | undefined>;
   /** Выход: сессия из cookie запроса удаляется; cookie снимается (Set-Cookie). */
   signOut(headers: Headers): Promise<readonly string[]>;
   /** Сессия запроса; нет, истекла или пользователь не активен — undefined. */
@@ -134,10 +159,24 @@ export function createAuthGateway(auth: Auth): AuthGateway {
           headers,
           returnHeaders: true,
         });
-        return { userId: UserId.parse(response.user.id), cookies: out.getSetCookie() };
+        return { kind: "ok", userId: UserId.parse(response.user.id), cookies: out.getSetCookie() };
       } catch (error) {
-        // Неверный email или пароль — штатный ответ Better Auth (401), а не сбой; остальное — наружу.
-        if (error instanceof APIError && error.statusCode === 401) return undefined;
+        // Неверный email или пароль (401) и блокировка из хука сессии — штатные ответы, а не сбой; остальное — наружу.
+        if (error instanceof APIError && error.statusCode === 401) return { kind: "invalid" };
+        if (error instanceof APIError && error.body?.code === BLOCKED) return { kind: "blocked" };
+        throw error;
+      }
+    },
+    async changePassword(passwords, headers) {
+      try {
+        const { headers: out } = await auth.api.changePassword({
+          body: { ...passwords, revokeOtherSessions: true },
+          headers,
+          returnHeaders: true,
+        });
+        return out.getSetCookie();
+      } catch (error) {
+        if (error instanceof APIError && error.statusCode === 400) return undefined;
         throw error;
       }
     },
@@ -146,12 +185,16 @@ export function createAuthGateway(auth: Auth): AuthGateway {
       return out.getSetCookie();
     },
     async session(headers) {
-      const found = await auth.api.getSession({ headers });
+      const { headers: out, response: found } = await auth.api.getSession({
+        headers,
+        returnHeaders: true,
+      });
       if (found === null || found.user.status !== "active") return undefined;
       return {
         userId: UserId.parse(found.user.id),
         householdId: HouseholdId.parse(found.session.householdId),
         role: found.user.role === "admin" ? "admin" : "user",
+        cookies: out.getSetCookie(),
       };
     },
   };

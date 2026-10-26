@@ -13,6 +13,8 @@ export interface SessionIdentity {
   readonly userId: UserId;
   readonly householdId: HouseholdId;
   readonly role: SessionRole;
+  /** Set-Cookie продлённой сессии (источник продлил её в БД — cookie тоже должна продлиться). */
+  readonly cookies?: readonly string[];
 }
 
 /** Источник сессий: по заголовкам запроса (cookie kosht_session) — кто вошёл, или undefined. */
@@ -42,6 +44,8 @@ export function createSessionRegistry(): SessionRegistry {
 export interface Session {
   readonly s: ScopedDb;
   readonly role: SessionRole;
+  /** Set-Cookie продлённой сессии: authed кладёт их в ответ процедуры. */
+  readonly cookies?: readonly string[];
 }
 
 /** Пул БД (тот же тип, что принимает createScopedDb: pg напрямую сюда не импортируется). */
@@ -56,5 +60,9 @@ export async function openSession(
   const identity = await registry.resolve(headers);
   if (identity === undefined) return undefined;
   const scope = makeScope({ userId: identity.userId, householdId: identity.householdId });
-  return { s: createScopedDb(client, scope), role: identity.role };
+  return {
+    s: createScopedDb(client, scope),
+    role: identity.role,
+    cookies: identity.cookies ?? [],
+  };
 }

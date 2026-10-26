@@ -34,7 +34,7 @@
 | `VIEW`, SQL-функции и триггеры над пользовательскими таблицами; таблица с `household_id` вне реестров; `household_id` nullable | проверка схемы (интеграционный тест) |
 | Числа в `apps/web` (импорт `packages/calc`); `Date.now()`/`Math.random()` в `calc`; `float` для денег | dependency-cruiser, `calc-no-clock.mjs`, ревью |
 | Вызов модели, HTTP или чтение файла внутри `s.transaction` | `LLM_IN_TRANSACTION` во время выполнения, ревью |
-| Провайдеры `@ai-sdk/*` вне `llm`; `pg-boss` вне `platform/jobs`; `grammy` вне `telegram/infrastructure`; `better-auth` вне `identity/infrastructure`; `drizzle-orm` и `pg` вне `infrastructure/db` и `platform/db` (исключения: шаблонная БД `packages/testing/src/db`; `schema.ts` и `*.repo.ts` в `platform/{settings,secrets,rate-limit,jobs}`); `libpg-query` вне `platform/db`; внутренности `platform/db` (аудитор, `boss-db`) вне `platform/db`, `platform/jobs` и `main` | dependency-cruiser |
+| Провайдеры `@ai-sdk/*` вне `llm`; `pg-boss` вне `platform/jobs`; `ai` и `@ai-sdk/react` на сайте вне `features/assistant`; `grammy` вне `telegram/infrastructure`; `better-auth` вне `identity/infrastructure`; `drizzle-orm` и `pg` вне `infrastructure/db` и `platform/db` (исключения: шаблонная БД `packages/testing/src/db`; `schema.ts` и `*.repo.ts` в `platform/{settings,secrets,rate-limit,jobs}`); `libpg-query` вне `platform/db`; внутренности `platform/db` (аудитор, `boss-db`) вне `platform/db`, `platform/jobs` и `main` | dependency-cruiser |
 | «Сырые» цвета (`#hex`, `rgb(`, `hsl(`) и магические отступы/радиусы вне `apps/web/src/ui/theme` (значения набора — `ui/theme/kit.css`, только из `design/kit.css`) | `tooling/checks/no-raw-colors.mjs` |
 | Текст интерфейса литералом в JSX, бота, писем, уведомлений (только `t()`) | проверка литералов в `make check` |
 | Текст переписки, содержимое документов, суммы с привязкой к пользователю, ПД — в логах и нагрузке задач; данные в строке сообщения лога | тест-канарейка логов, ревью |
@@ -53,12 +53,12 @@
 | Покрытие `packages/calc` | строки ≥ 95 %, ветви ≥ 90 % | `vitest --coverage` (`coverage.thresholds` по glob) | `make check` |
 | Покрытие `packages/kernel`, `**/domain/**` | строки ≥ 90 %, ветви ≥ 85 % | то же | `make check` |
 | Покрытие `**/*.repo.ts`, `**/infrastructure/db/*.sql.ts` | строки ≥ 90 % (аудитор срабатывает только на выполненных запросах) | то же | `make check` |
-| Покрытие `**/application/**`, `apps/web/src/{ui,entities,features}/**` | не ниже записанной базы (храповик, допуск 0,5 п. п.) **[калибр.]** | то же + `tooling/coverage-baseline.json` | `make check` |
+| Покрытие `**/application/**`, `apps/web/src/{ui,entities,features}/**` | не ниже записанной базы (храповик, допуск 0,5 п. п.) **[калибр.]** | то же + `tooling/coverage-baseline.json` (поднять — `make coverage-baseline`, опускать нельзя) | `make check` |
 | Доступность | **0 нарушений axe** (`wcag2a`, `wcag2aa`, `wcag21aa`, `wcag22aa`) на каждом маршруте при 1440 и 390 px; нет горизонтальной прокрутки страницы | `make e2e` (Playwright + `@axe-core/playwright`) | задачи по экранам, `make check-full` |
 | Контраст | текст ≥ 4,5:1, графика ≥ 3:1 (NFR-20, DES-14) | axe + токены `design/tokens.css` | то же |
 | Уязвимости зависимостей | ничего уровня high и выше в боевых зависимостях | `make audit` (`pnpm audit --prod`; osv-scanner, если установлен) | `make check-full` |
 | Коммиты | Conventional Commits, заголовок 15–72 символа; размер ≤ 800 строк / 40 файлов без `Large-Commit:`; ≥ 3 строк для всех типов, кроме `docs/chore/style/fix/revert`; без подписей ИИ | commitlint + `check-commit-size.mjs` (`commit-msg`), `make check-commits` | каждый коммит |
-| Кассеты ИИ | промах кассеты в обычных тестах — ошибка, а не сеть | `ReplayModel` в режиме `replay` | `make test` |
+| Кассеты ИИ | промах кассеты в обычных тестах — ошибка, а не сеть | `ReplayModel` (`llm/infrastructure/providers/cassettes.ts`) в режиме `replay` | `make test` |
 
 ## Бюджеты производительности
 

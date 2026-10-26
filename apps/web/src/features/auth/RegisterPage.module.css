@@ -1,0 +1,188 @@
+/* .rg-* из design/screens/Register.dc.html: шкала надёжности, требования к паролю, блоки согласий, предупреждение
+   об облаке, «чего не хватает». Цвета — токены; полоса «средний» — --warn-bar (графика ≥ 3:1). */
+.passwordBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--s-4);
+}
+
+.segment {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--kit-track);
+}
+
+.segment[data-level="weak"] {
+  background: var(--danger);
+}
+
+.segment[data-level="medium"] {
+  background: var(--warn-bar);
+}
+
+.segment[data-level="strong"] {
+  background: var(--income);
+}
+
+.strength {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.strengthRow {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.strengthValue {
+  font-weight: 600;
+}
+
+.strengthValue[data-level="weak"] {
+  color: var(--danger);
+}
+
+.strengthValue[data-level="medium"] {
+  color: var(--warn);
+}
+
+.strengthValue[data-level="strong"] {
+  color: var(--income);
+}
+
+.rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-6) var(--s-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.rules li[data-done="true"] {
+  color: var(--income);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.consent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  padding-top: var(--s-16);
+  border-top: 1px solid var(--line);
+}
+
+.consent a {
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.badge {
+  text-transform: none;
+  font-weight: 600;
+}
+
+.summaryToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  align-self: flex-start;
+  margin-left: var(--s-32);
+  padding: var(--s-4) 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand);
+  cursor: pointer;
+}
+
+.summary {
+  display: grid;
+  gap: var(--s-10);
+  margin: 0 0 0 var(--s-32);
+  font-size: 13.5px;
+}
+
+.summary dt {
+  font-weight: 600;
+}
+
+.summary dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.warning {
+  display: flex;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-14) var(--s-16);
+  border-radius: var(--r-md);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.warning > svg,
+.mode > svg,
+.why > svg {
+  flex: none;
+  margin-top: var(--s-2);
+}
+
+.mode {
+  display: flex;
+  gap: var(--s-8);
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.why {
+  display: flex;
+  gap: var(--s-8);
+  margin: 0;
+  padding: var(--s-12) var(--s-14);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-md);
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.doneIcon {
+  color: var(--income);
+}
+
+.mailbox {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--brand);
+}

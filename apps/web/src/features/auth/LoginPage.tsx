@@ -1,7 +1,7 @@
 // Вход (design/screens/Login.dc.html, AUTH-08): панель бренда и форма email + пароль. Форма — на схеме входа
 // контракта (SignInInput), тексты ошибок — из словаря; ответ сервера INVALID_CREDENTIALS — «Неверный email или
 // пароль» без уточнения, что именно. После входа кэш запросов очищается целиком (данные прежнего пользователя не
-// должны мелькнуть) и стартовый маршрут ведёт в раздел. Ссылка на политику — всегда, «Первый запуск» —
+// должны мелькнуть) и стартовый маршрут ведёт в раздел. Ссылки на регистрацию и политику — всегда, «Первый запуск» —
 // только пока он доступен. «Забыли пароль?», код восстановления — T-013, демо-вход — T-054.
 import { SignInInput } from "@kosht/contract";
 import { Button, PasswordInput, TextInput } from "@mantine/core";
@@ -85,6 +85,9 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
             {t("auth:login.submit")}
           </Button>
         </form>
+        <p className={classes.switch}>
+          {t("auth:login.noAccount")} <Link to="/register">{t("auth:login.register")}</Link>
+        </p>
       </div>
       <nav className={classes.footer} aria-label={t("auth:footer.label")}>
         <Link to="/policy">{t("auth:footer.policy")}</Link>

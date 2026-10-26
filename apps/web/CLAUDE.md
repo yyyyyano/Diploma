@@ -15,16 +15,20 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `session`, `Shell`; граница ошибок `ErrorScreen`, «нет страницы» `NotFoundScreen`), `shell/AppShell` (меню из
   реестра маршрутов под роль, поток событий, выход).
 - `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/accounts`, гость → `/setup`, если `setupAvailable`, иначе
-  `/login`); `_public/login` (гость); `_local/setup` (только пока `setupAvailable`); `_app` (`beforeLoad`:
-  `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/assistant`, `_app/admin` (`requireRole(…, "admin")`
+  `/login`); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/policy` (все);
+  `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
+  (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/assistant`,
+  `_app/settings`, `_app/admin` (`requireRole(…, "admin")`
   → иначе «нет такой страницы»), `dev.gallery` (витрина; только разработка и `--mode e2e`).
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
   нет маршрута — нет пункта (DES-15).
 - `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`
-  (`useEventStream`, `runEventStream`, `progressQueryKey`), `errors` (`errorCodeOf` → код для `errors:<код>`), `i18n`,
+  (`useEventStream`, `runEventStream`, `progressQueryKey`), `errors` (`errorCodeOf` → код для `errors:<код>`,
+  `errorParamsOf` → параметры текста, `retryAfterMinutes` всегда есть), `i18n`,
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
-- `entities/account` — `AccountCard`; экраны `features/setup`, `features/auth`, `features/accounts`,
+- `entities/account` — `AccountCard`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
+  `features/accounts`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 

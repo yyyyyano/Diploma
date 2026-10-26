@@ -1,12 +1,16 @@
 // Процедуры identity (contract.identity.*): тонко — вход контрактом, сценарий, cookie в ответ. Доступ:
-// status, signIn, register, verifyEmail, signOut — publicProc (гость); setup — localOnly (R40: на сетевом входе
-// процедуры нет); me, resendVerification — authed. Адрес ссылок в письмах — по слушателю и Host запроса (NFR-24).
+// status, signIn, register, verifyEmail, requestPasswordReset, resetPassword, recoverWithCode, signOut — publicProc
+// (гость); setup — localOnly (R40: на сетевом входе процедуры нет); me, resendVerification, recoveryCodeStatus,
+// createRecoveryCode, changePassword — authed. Адрес ссылок в письмах — по слушателю и Host запроса (NFR-24).
 import { authed, localOnly, publicProc } from "../../../platform/http/procedures.ts";
 import type { HttpContext } from "../../../platform/http/procedures.ts";
 import type { LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { EmailVerification } from "../application/email-verification.ts";
 import type { makeRegister } from "../application/register.ts";
 import type { makeResendVerification } from "../application/resend-verification.ts";
+import type { makeChangePassword } from "../application/change-password.ts";
+import type { PasswordReset } from "../application/password-reset.ts";
+import type { RecoveryCodes } from "../application/recovery-code.ts";
 import type { makeSignIn, makeSignOut } from "../application/sign-in.ts";
 import type { makeSetup } from "../application/setup.ts";
 import type { makeMe, makeStatus } from "../application/status.ts";
@@ -20,6 +24,9 @@ export interface IdentityUseCases {
   readonly register: ReturnType<typeof makeRegister>;
   readonly verifyEmail: EmailVerification["verify"];
   readonly resendVerification: ReturnType<typeof makeResendVerification>;
+  readonly passwordReset: PasswordReset;
+  readonly recoveryCodes: Pick<RecoveryCodes, "create" | "status" | "recover">;
+  readonly changePassword: ReturnType<typeof makeChangePassword>;
 }
 
 /** Откуда пришёл запрос — для адреса ссылок в письмах. */
@@ -37,10 +44,10 @@ export function identityRouter(uc: IdentityUseCases) {
     status: publicProc.identity.status.handler(({ context }) =>
       uc.status(context.listener === "local"),
     ),
-    setup: localOnly.identity.setup.handler(async ({ input }) => {
-      await uc.setup(input);
-      return { ok: true as const };
-    }),
+    setup: localOnly.identity.setup.handler(async ({ input }) => ({
+      ok: true as const,
+      ...(await uc.setup(input)),
+    })),
     signIn: publicProc.identity.signIn.handler(async ({ input, context }) => {
       const { user, cookies } = await uc.signIn(input, context.reqHeaders ?? new Headers());
       setCookies(context.resHeaders, cookies);
@@ -58,6 +65,41 @@ export function identityRouter(uc: IdentityUseCases) {
     }),
     resendVerification: authed.identity.resendVerification.handler(async ({ context }) => {
       await uc.resendVerification(context.s, linkRequest(context));
+      return { ok: true as const };
+    }),
+    requestPasswordReset: publicProc.identity.requestPasswordReset.handler(
+      async ({ input, context }) => {
+        await uc.passwordReset.request(input.email, linkRequest(context));
+        return { ok: true as const };
+      },
+    ),
+    resetPassword: publicProc.identity.resetPassword.handler(async ({ input }) => {
+      await uc.passwordReset.reset(input.token, input.password);
+      return { ok: true as const };
+    }),
+    recoverWithCode: publicProc.identity.recoverWithCode.handler(async ({ input, context }) => {
+      const { user, recoveryCode, cookies } = await uc.recoveryCodes.recover(
+        input,
+        context.reqHeaders ?? new Headers(),
+      );
+      setCookies(context.resHeaders, cookies);
+      return { user, recoveryCode };
+    }),
+    recoveryCodeStatus: authed.identity.recoveryCodeStatus.handler(async ({ context }) => {
+      const createdAt = await uc.recoveryCodes.status(context.s);
+      return { createdAt: createdAt?.toISOString() ?? null };
+    }),
+    createRecoveryCode: authed.identity.createRecoveryCode.handler(async ({ context }) => {
+      const { code, createdAt } = await uc.recoveryCodes.create(context.s);
+      return { recoveryCode: code, createdAt: createdAt.toISOString() };
+    }),
+    changePassword: authed.identity.changePassword.handler(async ({ input, context }) => {
+      const cookies = await uc.changePassword(
+        context.s,
+        input,
+        context.reqHeaders ?? new Headers(),
+      );
+      setCookies(context.resHeaders, cookies);
       return { ok: true as const };
     }),
     signOut: publicProc.identity.signOut.handler(async ({ context }) => {

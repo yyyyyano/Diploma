@@ -41,6 +41,30 @@ export const RegisterInput = z.strictObject({
 export const LinkToken = z.string().regex(/^[A-Za-z0-9_-]{16,128}$/);
 export const VerifyEmailInput = z.strictObject({ token: LinkToken });
 
+/** «Забыли пароль?»: адрес аккаунта. */
+export const PasswordResetRequestInput = z.strictObject({ email: Email });
+/** Новый пароль по ссылке из письма. */
+export const PasswordResetInput = z.strictObject({ token: LinkToken, password: NewPassword });
+
+/** Код восстановления (AUTH-05) как его вводит человек: «KQ7M-4XPD-9TJC-2HWR», пробелы и регистр не важны. */
+export const RecoveryCode = z.string().min(16).max(40);
+export const RecoverWithCodeInput = z.strictObject({
+  email: Email,
+  code: RecoveryCode,
+  password: NewPassword,
+});
+
+export const ChangePasswordInput = z.strictObject({
+  currentPassword: Password,
+  newPassword: NewPassword,
+});
+
+/** Новый код восстановления — показывается один раз; момент создания — ISO UTC. */
+export const IssuedRecoveryCode = z.strictObject({
+  recoveryCode: z.string(),
+  createdAt: z.iso.datetime(),
+});
+
 const Ok = z.strictObject({ ok: z.literal(true) });
 
 export const identityContract = {
@@ -51,11 +75,14 @@ export const identityContract = {
   status: oc
     .route({ method: "GET", path: "/identity/status" })
     .output(z.strictObject({ initialized: z.boolean(), setupAvailable: z.boolean() })),
-  /** Первый запуск: администратор и его домохозяйство; повтор или параллельный второй — CONFLICT. */
+  /**
+   * Первый запуск: администратор и его домохозяйство; повтор или параллельный второй — CONFLICT. В ответе — код
+   * восстановления администратора (AUTH-05): показать один раз.
+   */
   setup: oc
     .route({ method: "POST", path: "/identity/setup" })
     .input(SetupInput)
-    .output(Ok)
+    .output(z.strictObject({ ok: z.literal(true), recoveryCode: z.string() }))
     .errors(pickErrors("VALIDATION", "CONFLICT", "EMAIL_TAKEN", "NOT_FOUND")),
   /** Вход: cookie kosht_session ставится в ответе (Set-Cookie). */
   signIn: oc
@@ -83,6 +110,40 @@ export const identityContract = {
     .route({ method: "POST", path: "/identity/resend-verification" })
     .output(Ok)
     .errors(pickErrors("UNAUTHORIZED", "RATE_LIMITED", "UNAVAILABLE")),
+  /** «Забыли пароль?» (AUTH-04): ответ одинаковый, есть такой email или нет; письмо — только активному. */
+  requestPasswordReset: oc
+    .route({ method: "POST", path: "/identity/password-reset/request" })
+    .input(PasswordResetRequestInput)
+    .output(Ok)
+    .errors(pickErrors("VALIDATION", "RATE_LIMITED")),
+  /** Новый пароль по ссылке: ссылка одноразовая, 1 час; все сессии завершаются. */
+  resetPassword: oc
+    .route({ method: "POST", path: "/identity/password-reset" })
+    .input(PasswordResetInput)
+    .output(Ok)
+    .errors(pickErrors("VALIDATION", "LINK_INVALID")),
+  /** «Войти с кодом восстановления»: новый пароль, новый код (старый не работает), вход (Set-Cookie). */
+  recoverWithCode: oc
+    .route({ method: "POST", path: "/identity/recovery-code/sign-in" })
+    .input(RecoverWithCodeInput)
+    .output(z.strictObject({ user: SessionUser, recoveryCode: z.string() }))
+    .errors(pickErrors("VALIDATION", "INVALID_CREDENTIALS", "ACCOUNT_BLOCKED", "RATE_LIMITED")),
+  /** Когда создан действующий код восстановления; кода нет — null. */
+  recoveryCodeStatus: oc
+    .route({ method: "GET", path: "/identity/recovery-code" })
+    .output(z.strictObject({ createdAt: z.iso.datetime().nullable() }))
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Создать код восстановления в настройках (прежний перестаёт действовать); показать один раз. */
+  createRecoveryCode: oc
+    .route({ method: "POST", path: "/identity/recovery-code" })
+    .output(IssuedRecoveryCode)
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Смена пароля (AUTH-08): текущий неверен — INVALID_CREDENTIALS; прочие сессии завершаются. */
+  changePassword: oc
+    .route({ method: "POST", path: "/identity/password" })
+    .input(ChangePasswordInput)
+    .output(Ok)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "INVALID_CREDENTIALS", "RATE_LIMITED")),
   /** Выход: сессия завершается, cookie снимается; без сессии — тоже успех. */
   signOut: oc.route({ method: "POST", path: "/identity/sign-out" }).output(Ok),
   /** Кто вошёл; без сессии — UNAUTHORIZED. */

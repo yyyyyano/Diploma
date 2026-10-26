@@ -15,6 +15,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
+import { AppError } from "../../../platform/errors/app-error.ts";
 import { sessionOwner, type UserRole } from "./db/identity.repo.ts";
 import {
   identityCredentials,
@@ -177,6 +178,9 @@ export function createAuthGateway(auth: Auth): AuthGateway {
         return out.getSetCookie();
       } catch (error) {
         if (error instanceof APIError && error.statusCode === 400) return undefined;
+        // Сессии в cookie запроса нет (истекла между проверкой и вызовом) — как у любой процедуры без входа.
+        if (error instanceof APIError && error.statusCode === 401)
+          throw new AppError("UNAUTHORIZED");
         throw error;
       }
     },

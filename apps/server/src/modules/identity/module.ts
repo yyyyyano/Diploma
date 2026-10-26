@@ -9,10 +9,12 @@ import type { MailFacade } from "../mail/index.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import { identityRouter } from "./api/router.ts";
 import { makeAdminGuard } from "./application/admins.ts";
+import { makeChangePassword } from "./application/change-password.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
+import { makePasswordReset } from "./application/password-reset.ts";
+import { makeRecoveryCodes } from "./application/recovery-code.ts";
 import { makeRegister } from "./application/register.ts";
 import { makeResendVerification } from "./application/resend-verification.ts";
-import { makeRecoveryCodes } from "./application/recovery-code.ts";
 import { makeSetup } from "./application/setup.ts";
 import { makeSignIn, makeSignOut } from "./application/sign-in.ts";
 import { makeMe, makeStatus } from "./application/status.ts";
@@ -54,6 +56,9 @@ export function createIdentityModule({
       register: makeRegister({ platform, auth, privacy: facades.privacy, verification }),
       verifyEmail: verification.verify,
       resendVerification: makeResendVerification({ platform, verification }),
+      passwordReset: makePasswordReset({ platform, mail: facades.mail }),
+      recoveryCodes,
+      changePassword: makeChangePassword({ auth, platform }),
     }),
     settings: IDENTITY_SETTINGS,
     sessionSource: (headers) => auth.session(headers),

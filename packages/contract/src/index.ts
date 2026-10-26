@@ -39,10 +39,16 @@ export {
 export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract.ts";
 export {
   Email,
+  ChangePasswordInput,
   identityContract,
+  IssuedRecoveryCode,
   LinkToken,
   NewPassword,
   Password,
+  PasswordResetInput,
+  PasswordResetRequestInput,
+  RecoverWithCodeInput,
+  RecoveryCode,
   RegisterInput,
   Role,
   SessionUser,

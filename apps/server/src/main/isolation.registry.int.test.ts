@@ -65,6 +65,22 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     exempt: "публичная: владельца даёт одноразовый токен из письма, id домохозяйства во входе нет",
   },
   "identity.resendVerification": { input: () => undefined },
+  "identity.requestPasswordReset": {
+    exempt:
+      "публичная: email во входе, ответ одинаковый для любого адреса, данных домохозяйства не отдаёт",
+  },
+  "identity.resetPassword": {
+    exempt: "публичная: владельца даёт одноразовый токен из письма, id домохозяйства во входе нет",
+  },
+  "identity.recoverWithCode": {
+    exempt: "публичная: email и код восстановления во входе, чужой код — INVALID_CREDENTIALS",
+  },
+  "identity.recoveryCodeStatus": { input: () => undefined },
+  "identity.createRecoveryCode": { input: () => undefined },
+  "identity.changePassword": {
+    exempt:
+      "id во входе нет: меняет пароль сессии из cookie запроса (Better Auth), чужого не коснуться",
+  },
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
@@ -205,7 +221,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "chat.history",
       "chat.send",
       "chat.stop",
+      "identity.createRecoveryCode",
       "identity.me",
+      "identity.recoveryCodeStatus",
       "identity.resendVerification",
       "list_accounts",
     ]);

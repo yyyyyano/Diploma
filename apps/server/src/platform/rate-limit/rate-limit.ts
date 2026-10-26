@@ -48,7 +48,7 @@ export function defineRateRule(rule: RateRule): RateRule {
 export interface RateLimiter {
   /** Засчитать попытку; БД недоступна — AppError UNAVAILABLE. */
   hit(rule: RateRule, subject: string): Promise<RateDecision>;
-  /** То же, но превышение — AppError RATE_LIMITED с retryAfterSeconds. */
+  /** То же, но превышение — AppError RATE_LIMITED с retryAfterSeconds и retryAfterMinutes (текст «через N мин.»). */
   enforce(rule: RateRule, subject: string): Promise<void>;
 }
 
@@ -102,8 +102,10 @@ export function createRateLimiter(deps: RateLimiterDeps): RateLimiter {
     async enforce(rule, subject) {
       const decision = await hit(rule, subject);
       if (!decision.allowed) {
+        const retryAfterSeconds = Math.ceil(decision.retryAfterMs / 1000);
         throw new AppError("RATE_LIMITED", {
-          retryAfterSeconds: Math.ceil(decision.retryAfterMs / 1000),
+          retryAfterSeconds,
+          retryAfterMinutes: Math.max(1, Math.ceil(retryAfterSeconds / 60)),
         });
       }
     },

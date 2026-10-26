@@ -95,12 +95,12 @@ describe("SEC-02: ограничение частоты", () => {
     expect(stored?.equals(createHash("sha256").update(EMAIL).digest())).toBe(false);
   });
 
-  it("enforce: превышение — RATE_LIMITED с retryAfterSeconds", async () => {
+  it("enforce: превышение — RATE_LIMITED с retryAfterSeconds и минутами для текста", async () => {
     const { limiter } = limiterOn(db.pool);
     for (let i = 0; i < 3; i += 1) await limiter.enforce(RESET, EMAIL);
     await expect(limiter.enforce(RESET, EMAIL)).rejects.toMatchObject({
       code: "RATE_LIMITED",
-      params: { retryAfterSeconds: 3600 },
+      params: { retryAfterSeconds: 3600, retryAfterMinutes: 60 },
     });
   });
 });

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { ERROR_CODES, ERRORS, ErrorData, isRetryable, pickErrors } from "./errors.ts";
 
 describe("каталог ошибок", () => {
-  it("восемь базовых кодов и INVALID_CREDENTIALS входа (AUTH-08) с HTTP-статусами", () => {
+  it("базовые коды и коды входа (AUTH-01, AUTH-03, AUTH-08) с HTTP-статусами", () => {
     expect(Object.fromEntries(ERROR_CODES.map((code) => [code, ERRORS[code].status]))).toEqual({
       VALIDATION: 400,
       UNAUTHORIZED: 401,
@@ -12,6 +12,8 @@ describe("каталог ошибок", () => {
       FORBIDDEN: 403,
       NOT_FOUND: 404,
       CONFLICT: 409,
+      EMAIL_TAKEN: 409,
+      LINK_INVALID: 410,
       RATE_LIMITED: 429,
       INTERNAL: 500,
       UNAVAILABLE: 503,

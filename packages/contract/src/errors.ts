@@ -26,6 +26,10 @@ export const ERRORS = {
   NOT_FOUND: { status: 404, retryable: false },
   /** Состояние уже изменилось: дубликат, устаревшая версия. */
   CONFLICT: { status: 409, retryable: false },
+  /** Регистрация: этот email уже занят (AUTH-01) — войти или восстановить пароль. */
+  EMAIL_TAKEN: { status: 409, retryable: false },
+  /** Ссылка из письма уже использована или устарела (AUTH-03, AUTH-04): нужно новое письмо. */
+  LINK_INVALID: { status: 410, retryable: false },
   RATE_LIMITED: { status: 429, retryable: true },
   /** Всё непредвиденное: наружу без текста исключения, стек — в лог. */
   INTERNAL: { status: 500, retryable: false },

@@ -1,0 +1,17 @@
+# Контекст сборки образа (docker/Dockerfile) — белый список: в образ не попадут .env, secrets/, samples/, data/,
+# models/ (NFR-16, NFR-18) и прочее, чего сборке не нужно.
+*
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!patches/
+!tooling/tsconfig.base.json
+!apps/server/
+!apps/web/
+!packages/
+!e2e/package.json
+**/node_modules
+**/dist
+**/dist-e2e
+**/.turbo
+apps/web/src/routeTree.gen.ts

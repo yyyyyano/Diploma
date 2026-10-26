@@ -4,6 +4,7 @@
 // таблиц здесь нет ни одной.
 import type { HouseholdId, UserId } from "@kosht/kernel";
 import { and, eq, sql } from "drizzle-orm";
+import { AppError } from "../../../../platform/errors/app-error.ts";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { identityCredentials, identityHouseholds, identityUsers, systemState } from "./schema.ts";
 
@@ -50,7 +51,10 @@ export async function claimInitialization(db: IdentityDb, at: Date): Promise<boo
   return rows.length === 1;
 }
 
-/** Домохозяйство, пользователь и его пароль (хэш argon2id) — три строки одной транзакции. */
+/**
+ * Домохозяйство, пользователь и его пароль (хэш argon2id) — три строки одной транзакции. Email уже занят (в том числе
+ * параллельной регистрацией) — EMAIL_TAKEN: вставка с ON CONFLICT DO NOTHING не обрывает транзакцию ошибкой базы.
+ */
 export async function insertUser(
   db: IdentityDb,
   user: {
@@ -62,13 +66,18 @@ export async function insertUser(
   },
 ): Promise<void> {
   await db.insert(identityHouseholds).values({ id: user.householdId });
-  await db.insert(identityUsers).values({
-    id: user.userId,
-    name: "",
-    email: user.email,
-    role: user.role,
-    householdId: user.householdId,
-  });
+  const inserted = await db
+    .insert(identityUsers)
+    .values({
+      id: user.userId,
+      name: "",
+      email: user.email,
+      role: user.role,
+      householdId: user.householdId,
+    })
+    .onConflictDoNothing({ target: identityUsers.email })
+    .returning({ id: identityUsers.id });
+  if (inserted.length === 0) throw new AppError("EMAIL_TAKEN");
   await db.insert(identityCredentials).values({
     accountId: user.userId,
     providerId: CREDENTIAL_PROVIDER,
@@ -107,16 +116,54 @@ export async function isActiveMember(
   return rows.length === 1;
 }
 
-/** Email, имя и роль пользователя — для каркаса сайта; нет пользователя — undefined. */
-export async function userCard(
-  db: IdentityDb,
-  userId: UserId,
-): Promise<{ email: string; name: string; role: UserRole } | undefined> {
+/** Карточка пользователя для каркаса сайта и настроек. */
+export interface UserCard {
+  readonly email: string;
+  readonly name: string;
+  readonly role: UserRole;
+  readonly emailVerified: boolean;
+}
+
+/** Email, имя, роль и подтверждён ли адрес — для каркаса сайта; нет пользователя — undefined. */
+export async function userCard(db: IdentityDb, userId: UserId): Promise<UserCard | undefined> {
   const rows = await db
-    .select({ email: identityUsers.email, name: identityUsers.name, role: identityUsers.role })
+    .select({
+      email: identityUsers.email,
+      name: identityUsers.name,
+      role: identityUsers.role,
+      emailVerified: identityUsers.emailVerified,
+    })
     .from(identityUsers)
     .where(eq(identityUsers.id, userId));
   const row = rows[0];
   if (row === undefined) return undefined;
-  return { email: row.email, name: row.name, role: row.role === "admin" ? "admin" : "user" };
+  return {
+    email: row.email,
+    name: row.name,
+    role: row.role === "admin" ? "admin" : "user",
+    emailVerified: row.emailVerified,
+  };
+}
+
+/** Есть ли пользователь с этим email (в нижнем регистре). */
+export async function emailTaken(db: IdentityDb, email: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: identityUsers.id })
+    .from(identityUsers)
+    .where(eq(identityUsers.email, email));
+  return rows.length > 0;
+}
+
+/** Отметить адрес подтверждённым (AUTH-03); пользователя нет — false. */
+export async function markEmailVerified(
+  db: IdentityDb,
+  userId: string,
+  at: Date,
+): Promise<boolean> {
+  const rows = await db
+    .update(identityUsers)
+    .set({ emailVerified: true, updatedAt: at })
+    .where(eq(identityUsers.id, userId))
+    .returning({ id: identityUsers.id });
+  return rows.length === 1;
 }

@@ -40,12 +40,15 @@ export { ChangedEvent, ProgressEvent, SiteEvent } from "./events/events.contract
 export {
   Email,
   identityContract,
+  LinkToken,
   NewPassword,
   Password,
+  RegisterInput,
   Role,
   SessionUser,
   SetupInput,
   SignInInput,
+  VerifyEmailInput,
 } from "./identity/identity.contract.ts";
 export { MailboxMessage, mailContract, MailNoteKind } from "./mail/mail.contract.ts";
 export { ConsentVersion, RegistrationConsents } from "./privacy/privacy.contract.ts";

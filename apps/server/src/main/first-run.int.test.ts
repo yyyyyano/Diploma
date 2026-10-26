@@ -158,7 +158,12 @@ describe("AUTH-08, STMT-01: вход, «Наличные», выход", () => {
       body: { ...admin, email: "Admin@Example.TEST" },
     });
     expect(signIn.status).toBe(200);
-    expect(await signIn.json()).toEqual({ email: admin.email, name: "", role: "admin" });
+    expect(await signIn.json()).toEqual({
+      email: admin.email,
+      name: "",
+      role: "admin",
+      emailVerified: false,
+    });
     const [header] = signIn.headers.getSetCookie();
     expect(header).toMatch(/^kosht_session=[^;]+;.*HttpOnly/i);
     expect(header).toMatch(/SameSite=Lax/i);
@@ -168,6 +173,7 @@ describe("AUTH-08, STMT-01: вход, «Наличные», выход", () => {
       email: admin.email,
       name: "",
       role: "admin",
+      emailVerified: false,
     });
     // «Наличные» создаёт подписка accounts в worker по событию identity.user-registered.
     const items = await vi.waitFor(

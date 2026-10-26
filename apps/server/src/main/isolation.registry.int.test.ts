@@ -58,6 +58,13 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     exempt: "первый запуск (localOnly): создаёт новое домохозяйство, чужих id во входе нет",
   },
   "identity.signIn": { exempt: "публичная: вход по email и паролю, id во входе нет" },
+  "identity.register": {
+    exempt: "публичная: создаёт новое домохозяйство из email и пароля, чужих id во входе нет",
+  },
+  "identity.verifyEmail": {
+    exempt: "публичная: владельца даёт одноразовый токен из письма, id домохозяйства во входе нет",
+  },
+  "identity.resendVerification": { input: () => undefined },
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
@@ -199,6 +206,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "chat.send",
       "chat.stop",
       "identity.me",
+      "identity.resendVerification",
       "list_accounts",
     ]);
     const foreign = [b.scope.userId, b.scope.householdId, b.accountId, b.email, b.conversationId];

@@ -90,6 +90,7 @@ async function start(
       LISTEN_LAN_HOST: "127.0.0.1",
       LISTEN_LAN_PORT: "0",
       LOG_LEVEL: "info",
+      LANGFUSE_ENABLED: "false",
       ...env,
     },
     stdio: ["ignore", "pipe", "pipe"],

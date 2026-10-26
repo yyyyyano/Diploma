@@ -1,0 +1,2 @@
+import "@langfuse/otel";
+export {};

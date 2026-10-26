@@ -434,6 +434,13 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["ai"]) },
     ),
     rule(
+      "otel-only-in-llm-telemetry",
+      "Трассы ИИ (@langfuse/*, @opentelemetry/*) — только в llm/infrastructure/telemetry: остальной код получает " +
+        "опции трасс от шлюза llm и порта platform/telemetry (ADR-0010).",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/llm/infrastructure/telemetry/`] },
+      { path: npmPattern(["@langfuse/*", "@opentelemetry/*"]) },
+    ),
+    rule(
       "ai-only-in-web-assistant",
       "AI SDK на сайте (ai, @ai-sdk/react) — только в features/assistant: чат с потоком ответа; остальные экраны " +
         "получают готовые данные процедурами (ADR-0009, ADR-0013).",

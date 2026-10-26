@@ -2,10 +2,17 @@
 // scope пользователя (цепочка учитывает облачное согласие, PRIV-02) или systemCaller модуля (задача без данных
 // пользователя, PRIV-09). Цепочка — из реестра моделей по возможностям задачи (domain/build-chain.ts); каждая модель
 // цепочки обёрнута журналом расхода и запретом вызова в транзакции (metered-model.ts). Режим кассет процесса: replay —
-// ответы из кассеты, record — запись шагов. Трассы — опции telemetry с functionId, userId и sessionId (Langfuse —
-// T-011).
+// ответы из кассеты, record — запись шагов. Трассы — опции telemetry с functionId, userId и sessionId и интеграцией
+// Langfuse, если он включён (infrastructure/telemetry, ADR-0010).
 import type { LanguageModelV4 } from "@ai-sdk/provider";
-import { embedMany, generateText, NoObjectGeneratedError, Output, transcribe } from "ai";
+import {
+  embedMany,
+  generateText,
+  NoObjectGeneratedError,
+  Output,
+  transcribe,
+  type Telemetry as AiTelemetry,
+} from "ai";
 import { z } from "zod";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
@@ -28,10 +35,17 @@ import { chainedModel } from "./chained-model.ts";
 import { LlmSchemaError } from "./errors.ts";
 import { assertOutsideTransaction, errorCodeOf, meteredModel } from "./metered-model.ts";
 
+/** Опции трасс вызова: порта платформы и интеграции трасс шлюза (Langfuse). */
+export interface LlmTelemetryOptions extends TelemetryCallOptions {
+  readonly telemetry: TelemetryCallOptions["telemetry"] & {
+    readonly integrations?: AiTelemetry[];
+  };
+}
+
 /** Модель чата для агента: сама модель (цепочка) и опции трасс вызова. */
 export interface ChatModel {
   readonly model: LanguageModelV4;
-  readonly telemetry: TelemetryCallOptions;
+  readonly telemetry: LlmTelemetryOptions;
 }
 
 export interface ExtractRequest<T> {
@@ -79,6 +93,8 @@ export interface GatewayDeps {
   readonly providers: ProviderRegistry;
   readonly consent: { cloudAllowed(scope: Exclude<Caller, { kind: "system" }>): Promise<boolean> };
   readonly telemetry: Telemetry;
+  /** Интеграции трасс AI SDK (Langfuse); пусто — трассы только опциями порта (выключены). */
+  readonly integrations?: readonly AiTelemetry[];
   readonly clock: Clock;
   readonly log: Logger;
   readonly cassettes: () => Promise<CassetteConfig>;
@@ -137,12 +153,19 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
     return model;
   }
 
-  function telemetryOf(caller: Caller, functionId: string, sessionId?: string) {
-    return d.telemetry.options({
+  function telemetryOf(
+    caller: Caller,
+    functionId: string,
+    sessionId?: string,
+  ): LlmTelemetryOptions {
+    const options = d.telemetry.options({
       functionId,
       ...(isSystemCaller(caller) ? {} : { userId: caller.userId }),
       ...(sessionId === undefined ? {} : { sessionId }),
     });
+    const integrations = d.integrations ?? [];
+    if (!options.telemetry.isEnabled || integrations.length === 0) return options;
+    return { ...options, telemetry: { ...options.telemetry, integrations: [...integrations] } };
   }
 
   async function extract<T>(caller: Caller, request: ExtractRequest<T>): Promise<T> {

@@ -146,6 +146,10 @@ const EXPECTED: Record<string, string[]> = {
   ],
   "ai-sdk-only-in-llm": [`${M}/agent/application/run.ts → @ai-sdk/openai-compatible`],
   "ai-only-in-llm-agent-chat": [`${M}/receipts/application/recognize.ts → ai`],
+  "otel-only-in-llm-telemetry": [
+    `${M}/agent/application/run.ts → @opentelemetry/api`,
+    `${P}/telemetry/telemetry.ts → @langfuse/otel`,
+  ],
   "ai-only-in-web-assistant": [
     `${W}/features/accounts/AccountsPage.tsx → @ai-sdk/react`,
     `${W}/features/accounts/AccountsPage.tsx → ai`,

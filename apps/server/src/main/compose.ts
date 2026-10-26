@@ -47,7 +47,7 @@ import {
 import { createSecrets } from "../platform/secrets/secrets.ts";
 import { createSettings, type Settings } from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
-import { createTelemetry } from "../platform/telemetry/telemetry.ts";
+import { createTelemetry, loadLangfuseTarget } from "../platform/telemetry/telemetry.ts";
 import { createModules, type ModulePorts } from "./create-modules.ts";
 import { migrateDatabase } from "./migrate-database.ts";
 import { buildRegistries, type Registries } from "./registries.ts";
@@ -178,8 +178,8 @@ export async function compose(
       },
     },
     realtime,
-    // Трассы ИИ выключены, пока не подключён Langfuse (T-011).
-    telemetry: createTelemetry(false),
+    // Трассы ИИ (ADR-0010): Langfuse, если включён конфигурацией и make init создал ключи.
+    telemetry: createTelemetry(await loadLangfuseTarget(config.langfuse, log)),
     consent,
     tools: () => {
       if (registered === undefined) {

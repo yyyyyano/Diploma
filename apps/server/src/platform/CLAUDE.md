@@ -8,7 +8,8 @@
 
 ## Публичный API — T-005 (NFR-15, NFR-16, NFR-23, OBS-01/02/04/06, SEC-02)
 - `config/config.ts` — `loadConfig(env?)` → `AppConfig` (`db: { app, migration }`, `listeners.local/lan`, `trustedOrigins`,
-  `webDistDir` (`WEB_DIST_DIR`, по умолчанию `apps/web/dist`) и `dataDir` абсолютные, `logLevel`, `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
+  `webDistDir` (`WEB_DIST_DIR`, по умолчанию `apps/web/dist`) и `dataDir` абсолютные, `logLevel`, `langfuse` (`LangfuseConfig |
+  undefined`: `LANGFUSE_ENABLED` — по умолчанию `true`, `LANGFUSE_BASE_URL` — `http://127.0.0.1:3001`, файлы ключей), `masterKey`, `env(name)` — чтение переменной для `defineSetting`/`defineSecret`);
   `loadDbConfig(env?)` → `DbConfigs` — только БД, без мастер-ключа (`make migrate`, globalSetup тестов): `app` —
   роль приложения `kosht_app` (`DATABASE_URL`, `DB_PASSWORD_FILE` = `secrets/db_app_password`), `migration` — владелец
   (`MIGRATION_DATABASE_URL` = `kosht`, `MIGRATION_DB_PASSWORD_FILE` = `secrets/db_password`); хост, порт и база
@@ -207,9 +208,12 @@
 - `http/procedures.ts` — `ModuleRouter`: ветка модуля в дереве процедур.
 
 ## Публичный API — `telemetry/`, `module/consent-source.ts`, `db/transaction-flag.ts` (T-010: OBS-03, PRIV-02, ADR-0009)
-- `telemetry/telemetry.ts` — `createTelemetry(enabled)` → `Telemetry.options({ functionId, userId?, sessionId? })` →
+- `telemetry/telemetry.ts` — `createTelemetry(langfuse?)` → `Telemetry` (`enabled`, `langfuse` — `LangfuseTarget { baseUrl,
+  publicKey, secretKey() }`; `options({ functionId, userId?, sessionId? })` →
   опции AI SDK `telemetry` (`isEnabled`, `functionId`, `includeRuntimeContext`) и `runtimeContext` с внутренними
-  `userId`/`sessionId`; AI SDK платформа не импортирует. Корень композиции — выключено, Langfuse — T-011.
+  `userId`/`sessionId`; AI SDK платформа не импортирует. `loadLangfuseTarget(config.langfuse, log)` — ключи из
+  файлов `LANGFUSE_*_KEY_FILE` (их создаёт `make init`); нет файла или Langfuse выключен (`LANGFUSE_ENABLED=false`) —
+  `undefined` и `telemetry.langfuse-off` в логе. Интеграцию трасс строит модуль `llm` (T-011).
 - `module/consent-source.ts` — `ConsentSource(scope)` и `createConsentRegistry()` (`register` — один источник;
   `cloudAllowed` — без источника false).
 - `db/transaction-flag.ts` — `inTransaction()` / `withTransactionFlag(fn)`: `s.transaction` поднимает флаг в

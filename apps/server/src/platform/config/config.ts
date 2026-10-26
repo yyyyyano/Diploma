@@ -44,6 +44,16 @@ export type EnvName = string;
 /** Значение переменной по имени — для defineSetting/defineSecret (приоритет «админка > env > умолчание»). */
 export type EnvLookup = (name: EnvName) => string | undefined;
 
+/**
+ * Трассы ИИ в Langfuse (ADR-0010, OBS-03): адрес и файлы ключей проекта (их создаёт make init). Ключи читает корень
+ * композиции при старте; нет файлов — трассы выключены с предупреждением в логе, приложение работает.
+ */
+export interface LangfuseConfig {
+  readonly baseUrl: string;
+  readonly publicKeyFile: string;
+  readonly secretKeyFile: string;
+}
+
 export interface AppConfig {
   readonly db: DbConfigs;
   /** Два слушателя (NFR-24, R40): local — этот компьютер, lan — сеть (открывается настройкой, T-059). */
@@ -55,6 +65,8 @@ export interface AppConfig {
   /** Корень данных запуска: data/logs, data/files… — абсолютный путь. */
   readonly dataDir: string;
   readonly logLevel: LogLevel;
+  /** Langfuse; undefined — выключен (LANGFUSE_ENABLED=false). */
+  readonly langfuse: LangfuseConfig | undefined;
   readonly masterKey: MasterKey;
   readonly env: EnvLookup;
 }
@@ -139,6 +151,28 @@ const AppEnv = DbEnv.extend({
   LOG_LEVEL: optional(
     z.enum(LOG_LEVELS, { error: `ожидается одно из: ${LOG_LEVELS.join(", ")}` }).default("info"),
   ),
+  // OBS-05, ADR-0010: Langfuse включён по умолчанию; выключить — false (приложение работает и без него).
+  LANGFUSE_ENABLED: optional(
+    z
+      .enum(["true", "false"], { error: "ожидается true или false" })
+      .default("true")
+      .transform((value) => value === "true"),
+  ),
+  LANGFUSE_BASE_URL: optional(
+    z
+      .url({
+        protocol: /^https?$/,
+        error:
+          "ожидается адрес http(s)://хост[:порт] без пути (Langfuse на этой машине — 127.0.0.1:3001)",
+      })
+      .refine((url) => !URL.canParse(url) || new URL(url).pathname === "/", {
+        error:
+          "ожидается адрес http(s)://хост[:порт] без пути (Langfuse на этой машине — 127.0.0.1:3001)",
+      })
+      .default("http://127.0.0.1:3001"),
+  ),
+  LANGFUSE_PUBLIC_KEY_FILE: path("secrets/langfuse_public_key", "файлу публичного ключа Langfuse"),
+  LANGFUSE_SECRET_KEY_FILE: path("secrets/langfuse_secret_key", "файлу секретного ключа Langfuse"),
 });
 
 /** Все переменные схемы — сверяются с .env.example (там каждая с умолчанием и комментарием). */
@@ -213,6 +247,13 @@ export function loadConfig(env: Env = process.env): AppConfig {
     webDistDir: resolve(parsed.WEB_DIST_DIR),
     dataDir: resolve(parsed.DATA_DIR),
     logLevel: parsed.LOG_LEVEL,
+    langfuse: parsed.LANGFUSE_ENABLED
+      ? {
+          baseUrl: new URL(parsed.LANGFUSE_BASE_URL).origin,
+          publicKeyFile: parsed.LANGFUSE_PUBLIC_KEY_FILE,
+          secretKeyFile: parsed.LANGFUSE_SECRET_KEY_FILE,
+        }
+      : undefined,
     masterKey: readMasterKey(parsed.MASTER_KEY_FILE),
     env: (name) => {
       if (!ENV_NAME.test(name)) {

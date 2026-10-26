@@ -47,6 +47,44 @@ describe("NFR-16, ADR-0015: конфигурация окружения", () => 
       webDistDir: resolve("apps/web/dist"),
       dataDir: resolve("data"),
       logLevel: "info",
+      langfuse: {
+        baseUrl: "http://127.0.0.1:3001",
+        publicKeyFile: "secrets/langfuse_public_key",
+        secretKeyFile: "secrets/langfuse_secret_key",
+      },
+    });
+  });
+
+  describe("OBS-05, ADR-0010: Langfuse", () => {
+    it("LANGFUSE_ENABLED=false — трассы выключены, ключи не нужны", () => {
+      expect(loadConfig(env({ LANGFUSE_ENABLED: "false" })).langfuse).toBeUndefined();
+    });
+
+    it("свой адрес и файлы ключей — из переменных; адрес без пути", () => {
+      expect(
+        loadConfig(
+          env({
+            LANGFUSE_BASE_URL: "http://langfuse-web:3000",
+            LANGFUSE_PUBLIC_KEY_FILE: "/run/secrets/langfuse_public_key",
+            LANGFUSE_SECRET_KEY_FILE: "/run/secrets/langfuse_secret_key",
+          }),
+        ).langfuse,
+      ).toEqual({
+        baseUrl: "http://langfuse-web:3000",
+        publicKeyFile: "/run/secrets/langfuse_public_key",
+        secretKeyFile: "/run/secrets/langfuse_secret_key",
+      });
+    });
+
+    it.each([
+      ["LANGFUSE_ENABLED", "yes", "ожидается true или false"],
+      ["LANGFUSE_BASE_URL", "ftp://127.0.0.1:3001", "ожидается адрес http(s)"],
+      ["LANGFUSE_BASE_URL", "http://127.0.0.1:3001/api", "без пути"],
+    ])("%s=%s → падение с именем переменной", (name, value, expected) => {
+      const message = failure(() => loadConfig(env({ [name]: value })));
+      expect(message).toContain(`${name}: `);
+      expect(message).toContain(expected);
+      expect(message).not.toContain(value);
     });
   });
 
@@ -201,16 +239,22 @@ describe("loadDbConfig: только подключение к БД (ADR-0020: �
   });
 });
 
+/**
+ * Переменные .env.example, которые читает только Compose (compose.yaml), а не приложение: порт БД на хосте, группа
+ * render для GPU моделей, пользователь контейнеров приложения (make init пишет свои значения хоста).
+ */
+const COMPOSE_ONLY = new Set(["DB_PORT", "RENDER_GID", "APP_UID", "APP_GID"]);
+
 describe(".env.example и схема конфигурации", () => {
   const example = readFileSync(new URL("../../../../../.env.example", import.meta.url), "utf8");
   const vars = Object.fromEntries(
     [...example.matchAll(/^([A-Z][A-Z0-9_]*)=(.*)$/gm)].map((m) => [m[1] ?? "", m[2] ?? ""]),
   );
 
-  it("каждая переменная схемы есть в .env.example, и лишних нет (DB_PORT — только для Compose)", () => {
+  it("каждая переменная схемы есть в .env.example, и лишних нет (кроме переменных только для Compose)", () => {
     expect(
       Object.keys(vars)
-        .filter((name) => name !== "DB_PORT")
+        .filter((name) => !COMPOSE_ONLY.has(name))
         .toSorted(),
     ).toEqual(CONFIG_VARIABLES.toSorted());
   });

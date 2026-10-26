@@ -1,0 +1,2 @@
+import "@opentelemetry/api";
+export {};

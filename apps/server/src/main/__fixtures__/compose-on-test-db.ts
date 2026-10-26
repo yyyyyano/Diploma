@@ -32,6 +32,8 @@ export async function composeOnTestDb(
       MIGRATION_DATABASE_URL: `postgres://${admin.user}@${admin.host}:${String(admin.port)}/${db.name}`,
       MIGRATION_DB_PASSWORD_FILE: join(dir, "db_password"),
       MASTER_KEY_FILE: join(dir, "master.key"),
+      // Тесты офлайн (NFR-11): трассы не уходят в Langfuse, даже если make init создал ключи.
+      LANGFUSE_ENABLED: "false",
       DATA_DIR: join(dir, "data"),
       ...env,
     }),

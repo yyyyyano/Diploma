@@ -10,6 +10,7 @@ import type { IdentityFacade } from "../identity/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
 import { createProviderRegistry } from "./infrastructure/providers/providers.ts";
+import { createLangfuseTracing } from "./infrastructure/telemetry/langfuse-tracing.ts";
 import { createTestProvider } from "./infrastructure/providers/test-provider.ts";
 import { LLM_CASSETTE, LLM_CASSETTE_DELAYS, LLM_MODE } from "./settings.ts";
 
@@ -24,11 +25,15 @@ export interface LlmFacades {
 const TEST_PROVIDER_PACE_MS = 300;
 
 export function createLlmModule({ platform }: ModuleDeps<LlmFacades, SystemPlatform>) {
+  // ADR-0010: трассы в Langfuse, если корень композиции дал адрес и ключи; иначе шлюз работает без них.
+  const { langfuse } = platform.telemetry;
+  const tracing = langfuse === undefined ? undefined : createLangfuseTracing(langfuse);
   const gateway: LlmGateway = createLlmGateway({
     system: platform.system,
     providers: createProviderRegistry([createTestProvider({ paceMs: TEST_PROVIDER_PACE_MS })]),
     consent: platform.consent,
     telemetry: platform.telemetry,
+    ...(tracing === undefined ? {} : { integrations: [tracing.integration] }),
     clock: platform.clock,
     log: platform.log,
     cassettes: async () => {
@@ -44,6 +49,8 @@ export function createLlmModule({ platform }: ModuleDeps<LlmFacades, SystemPlatf
     id: "llm",
     facade: gateway,
     settings: [LLM_MODE, LLM_CASSETTE, LLM_CASSETTE_DELAYS],
+    // Остановка процесса досылает накопленные спаны (не дольше таймаута экспорта, 5 с).
+    ...(tracing === undefined ? {} : { stop: () => tracing.shutdown() }),
   });
 }
 

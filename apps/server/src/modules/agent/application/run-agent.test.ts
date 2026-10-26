@@ -58,7 +58,7 @@ function model(toolName: string, toolTurns: number) {
 }
 
 function llm(mock: MockLanguageModelV4): LlmFacade {
-  const telemetry = createTelemetry(false);
+  const telemetry = createTelemetry();
   return {
     model: async (caller, functionId, call) => ({
       model: mock,

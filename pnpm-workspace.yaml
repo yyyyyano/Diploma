@@ -10,12 +10,22 @@ catalog:
   "@axe-core/playwright": 4.14.0
   # ИИ (ADR-0009): Vercel AI SDK 7 — точные версии одной линейки (ai и @ai-sdk/* выходят вместе); обновление —
   # отдельной задачей со сверкой документации node_modules/ai/docs.
+  "@ai-sdk/otel": 1.0.153
   "@ai-sdk/provider": 4.0.34
   "@ai-sdk/react": 4.0.157
   # Шрифты макета локально (DES-09): переменные начертания Onest и Literata.
   "@fontsource-variable/literata": 5.3.0
   "@fontsource-variable/onest": 5.3.1
   "@hono/node-server": 2.1.5
+  # Трассы Langfuse (ADR-0010, T-011): @langfuse/otel 6.0.2 ждёт OpenTelemetry 2.x / 0.2xx и @opentelemetry/api < 1.10 —
+  # с линией 3.x / 0.300 импорт @langfuse/otel падает (research 12, §3.2). Все версии — точные, обновление вместе.
+  "@langfuse/otel": 6.0.2
+  "@opentelemetry/api": 1.9.1
+  "@opentelemetry/core": 2.12.0
+  "@opentelemetry/exporter-trace-otlp-http": 0.223.0
+  "@opentelemetry/otlp-exporter-base": 0.223.0
+  "@opentelemetry/sdk-trace-base": 2.12.0
+  "@opentelemetry/sdk-trace-node": 2.12.0
   # Сайт (ADR-0013): Mantine 9 — все пакеты строго одной версии.
   "@mantine/core": 9.7.3
   "@mantine/form": 9.7.3
@@ -69,6 +79,9 @@ catalog:
   react: 19.3.1
   react-dom: 19.3.1
   react-i18next: 17.1.8
+  # Сборка сервера для образа (ADR-0015, T-011): точки входа → один .mjs на каждую, workspace-пакеты внутри,
+  # npm-зависимости — из node_modules рядом.
+  tsdown: 0.23.2
   typescript: 7.0.2
   vite: 8.3.5
   vitest: 5.0.5
@@ -87,6 +100,12 @@ packageExtensions:
   dependency-cruiser@18:
     dependencies:
       typescript: 6.0.3
+
+# Одна копия @opentelemetry/api на всё дерево (T-011): глобальный TracerProvider живёт в ней, а @ai-sdk/otel требует
+# ровно 1.9.1 — иначе Vitest и Drizzle (необязательный peer) тянут 1.10 и трассы уходят «в другой» провайдер. Снять,
+# когда @langfuse/otel и @ai-sdk/otel примут OpenTelemetry 3.x.
+overrides:
+  "@opentelemetry/api": 1.9.1
 
 patchedDependencies:
   pg-boss@12.38.0: patches/pg-boss@12.38.0.patch

@@ -19,11 +19,15 @@
 - **Тексты пишутся** (R46): запросы, ответы, шаги, инструменты; `userId` — внутренний id пользователя (не email),
   `sessionId` — id диалога. Хранение 30 дней — своя ночная задача через API удаления (Data Retention у Langfuse
   только в EE); при удалении аккаунта (PRIV-06) удаляются трассы пользователя. Глубокой криптографии нет.
-- Подключение: интеграция OpenTelemetry AI SDK 7 (`@ai-sdk/otel`, `registerTelemetry`) + `@langfuse/otel` — T-011;
-  пакета `@langfuse/vercel-ai-sdk` для AI SDK 7 нет (уточнено в T-010). Порт `platform/telemetry` (T-010) уже отдаёт
-  каждому вызову опции `telemetry` (`functionId`, `includeRuntimeContext`) и `runtimeContext` с `userId` и
-  `sessionId`; до подключения трассы выключены. Версии пакетов OpenTelemetry **закреплены** (иначе импорт
-  `@langfuse/otel` падает).
+- Подключение (T-011): интеграция OpenTelemetry AI SDK 7 (`@ai-sdk/otel`) пишет спаны в свой `NodeTracerProvider` с
+  `LangfuseSpanProcessor` (`@langfuse/otel`) — в модуле `llm` (`infrastructure/telemetry`). Интеграция передаётся
+  каждому вызову (`telemetry.integrations`), а не `registerTelemetry` глобально: выключенный Langfuse не оставляет
+  следов, тесты не зависят от общего состояния. Пакета `@langfuse/vercel-ai-sdk` для AI SDK 7 нет (уточнено в T-010).
+  Порт `platform/telemetry` отдаёт опции `telemetry` (`functionId`, `includeRuntimeContext`) и `runtimeContext` с
+  `userId` и `sessionId` — они становятся атрибутами `user.id`/`session.id`. Ключи проекта — файлы `secrets/`
+  (`make init`, `LANGFUSE_INIT_*`); нет ключей или `LANGFUSE_ENABLED=false` — трассы выключены, приложение работает.
+  Версии пакетов OpenTelemetry **закреплены** (`@opentelemetry/api` 1.9.1 — одна копия через `overrides`, иначе
+  импорт `@langfuse/otel` падает).
 - **Журнал расхода** в Postgres (модуль `llm`, LLM-06): строка на вызов — задача, провайдер, модель, токены,
   длительность, условная стоимость, ошибка, без текстов; 90 дней. Из него — лимиты (скользящие окна в памяти +
   восстановление из журнала + заголовки провайдера) и экран «Запросы к ИИ» (ADM-20) со ссылкой «Подробные трассы —

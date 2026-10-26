@@ -4,7 +4,7 @@ import type { LanguageModelV4 } from "@ai-sdk/provider";
 import type { Scope } from "@kosht/kernel";
 import { FakeClock, MockLanguageModelV4, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import { isStepCount, streamText, tool, type ToolSet } from "ai";
+import { isStepCount, streamText, tool, type Telemetry as AiTelemetry, type ToolSet } from "ai";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,7 +13,7 @@ import { z } from "zod";
 import { createScopedDb } from "../../../platform/db/scoped-db.ts";
 import { createSystemDb } from "../../../platform/db/system-db.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
-import { createTelemetry } from "../../../platform/telemetry/telemetry.ts";
+import { createTelemetry, type Telemetry } from "../../../platform/telemetry/telemetry.ts";
 import { systemCaller } from "../domain/caller.ts";
 import { CassetteError } from "../infrastructure/providers/cassettes.ts";
 import type { ProviderAdapter } from "../infrastructure/providers/provider-adapter.ts";
@@ -76,6 +76,8 @@ function gateway(
     cloud?: LanguageModelV4;
     consent?: (scope: Scope) => Promise<boolean>;
     cassettes?: CassetteConfig;
+    telemetry?: Telemetry;
+    integrations?: readonly AiTelemetry[];
   } = {},
 ) {
   const adapters = [createTestProvider()];
@@ -87,7 +89,8 @@ function gateway(
       system: createSystemDb(db.pool),
       providers: createProviderRegistry(adapters),
       consent: { cloudAllowed: options.consent ?? (async () => false) },
-      telemetry: createTelemetry(false),
+      telemetry: options.telemetry ?? createTelemetry(),
+      ...(options.integrations === undefined ? {} : { integrations: options.integrations }),
       clock: new FakeClock("2026-10-25T09:00:00Z"),
       log: memory.log,
       cassettes: async () => options.cassettes ?? { mode: "live" },
@@ -378,5 +381,21 @@ describe("OBS-03: трассы", () => {
       },
       runtimeContext: { userId: scope.userId, sessionId: "dialog-1" },
     });
+  });
+
+  // ADR-0010: интеграция Langfuse уходит в опции вызова, только когда трассы включены.
+  const integration: AiTelemetry = {};
+  const target = { baseUrl: "http://127.0.0.1:9", publicKey: "pk", secretKey: () => "sk" };
+
+  it("Langfuse включён — интеграция трасс в опциях вызова", async () => {
+    const { llm } = gateway({ telemetry: createTelemetry(target), integrations: [integration] });
+    const { telemetry } = await llm.model(scope, "chat");
+    expect(telemetry.telemetry.isEnabled).toBe(true);
+    expect(telemetry.telemetry.integrations).toEqual([integration]);
+  });
+
+  it("трассы выключены — интеграции в опциях нет, даже если она передана", async () => {
+    const { llm } = gateway({ integrations: [integration] });
+    expect((await llm.model(scope, "chat")).telemetry.telemetry).not.toHaveProperty("integrations");
   });
 });

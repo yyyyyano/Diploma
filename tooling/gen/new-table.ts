@@ -101,8 +101,10 @@ export function wireUserData(source: string, id: string): string | undefined {
   const lines = source
     .replace(fresh, `defineModule({ id: "${id}", userData: ${userData} })`)
     .split("\n");
+  // Конец последнего импорта, а не его первая строка: форматер переносит длинный импорт по строкам (находка T-012).
   const lastImport = lines.findLastIndex((line) => line.startsWith("import "));
-  lines.splice(lastImport + 1, 0, `import { ${userData} } from "./user-data.ts";`);
+  const end = lines.findIndex((line, index) => index >= lastImport && line.trimEnd().endsWith(";"));
+  lines.splice(end + 1, 0, `import { ${userData} } from "./user-data.ts";`);
   return lines.join("\n");
 }
 

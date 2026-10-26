@@ -1,6 +1,6 @@
 // make new-table (ARCHITECTURE §6.1, .claude/rules/database.md): вид таблицы — только из tables модуля в
 // modules.ts; пользовательская таблица сразу попадает в defineUserData и подключается в module.ts.
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
@@ -78,6 +78,41 @@ describe("PRIV-06: пользовательская таблица сразу у
     expect(module).toContain('import { receiptsUserData } from "./user-data.ts";');
     expect(result.messages.join("\n")).toMatch(
       /фикстуру[\s\S]*make db-generate name=receipts-receipts/,
+    );
+  });
+
+  it("импорт владельца данных встаёт после многострочного импорта module.ts, а не внутрь него", () => {
+    // Так module.ts выглядит после форматера (oxfmt переносит длинный импорт платформы по строкам).
+    writeFileSync(
+      join(root, MODULES_DIR, "receipts", "module.ts"),
+      [
+        "// Модуль receipts.",
+        "import {",
+        "  defineModule,",
+        "  type ModuleDeps,",
+        "  type NoFacades,",
+        "  type Platform,",
+        '} from "../../platform/module/define-module.ts";',
+        "",
+        "export function createReceiptsModule(_deps: ModuleDeps<NoFacades, Platform>) {",
+        '  return defineModule({ id: "receipts" });',
+        "}",
+        "",
+      ].join("\n"),
+    );
+    expect(runNewTable({ root, module: "receipts", name: "receipts", modules: MAP }).code).toBe(0);
+    const lines = read("receipts", "module.ts").split("\n");
+    expect(lines.slice(1, 8)).toEqual([
+      "import {",
+      "  defineModule,",
+      "  type ModuleDeps,",
+      "  type NoFacades,",
+      "  type Platform,",
+      '} from "../../platform/module/define-module.ts";',
+      'import { receiptsUserData } from "./user-data.ts";',
+    ]);
+    expect(lines).toContain(
+      '  return defineModule({ id: "receipts", userData: receiptsUserData });',
     );
   });
 

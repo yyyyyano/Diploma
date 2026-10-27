@@ -1,6 +1,7 @@
 // Запросы к privacy_modes (systemTable privacy): режим пользователя для админки. db — построитель транзакции
 // ScopedDb (запись вместе со строкой журнала согласий) или SystemDb; пользовательских таблиц здесь нет — аудитор
 // пускает оба.
+import { eq } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { privacyModes } from "./schema.ts";
 
@@ -18,4 +19,9 @@ export async function saveMode(
     .insert(privacyModes)
     .values({ userId, cloud, updatedAt: at })
     .onConflictDoUpdate({ target: privacyModes.userId, set: { cloud, updatedAt: at } });
+}
+
+/** Удалить режим пользователя (удаление аккаунта, PRIV-06). */
+export async function deleteMode(db: ModesDb, userId: string): Promise<void> {
+  await db.delete(privacyModes).where(eq(privacyModes.userId, userId));
 }

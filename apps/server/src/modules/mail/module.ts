@@ -7,6 +7,7 @@ import {
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
 import { mailRouter } from "./api/router.ts";
+import { makeForgetRecipient } from "./application/forget-recipient.ts";
 import { makeMailbox, makeMailboxEnabled } from "./application/mailbox.ts";
 import { makeSendMail } from "./application/send-mail.ts";
 import { createLocalMailbox } from "./infrastructure/local-mailbox.ts";
@@ -31,7 +32,7 @@ export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPla
   });
   return defineModule({
     id: "mail",
-    facade: { send },
+    facade: { send, forgetRecipient: makeForgetRecipient(platform) },
     router: mailRouter({
       mailbox: makeMailbox(platform),
       mailboxEnabled: makeMailboxEnabled(platform),
@@ -41,5 +42,5 @@ export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPla
   });
 }
 
-/** Что модуль даёт соседям: send(to, шаблон) — письмо по SMTP или в локальный ящик. */
+/** Что модуль даёт соседям: send(to, шаблон) — письмо по SMTP или в локальный ящик; forgetRecipient(email). */
 export type MailFacade = ReturnType<typeof createMailModule>["facade"];

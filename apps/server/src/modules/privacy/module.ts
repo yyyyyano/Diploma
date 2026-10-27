@@ -9,6 +9,7 @@ import {
 import { privacyRouter } from "./api/router.ts";
 import { makeCloudConsentSource } from "./application/cloud-consent.ts";
 import { makeCloudConsentSettings } from "./application/cloud-consent-settings.ts";
+import { makePurgeAccount } from "./application/purge-account.ts";
 import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
 import { consentChanged } from "./events.ts";
 import { privacyUserData } from "./user-data.ts";
@@ -19,10 +20,13 @@ export type PrivacyFacades = NoFacades;
 export function createPrivacyModule({ platform }: ModuleDeps<PrivacyFacades, SystemPlatform>) {
   return defineModule({
     id: "privacy",
-    facade: { recordRegistrationConsents: makeRecordRegistrationConsents(platform) },
+    facade: {
+      recordRegistrationConsents: makeRecordRegistrationConsents(platform),
+      purge: makePurgeAccount(platform),
+    },
     events: [consentChanged],
     router: privacyRouter(makeCloudConsentSettings(platform)),
-    userData: privacyUserData,
+    userData: privacyUserData(platform.system),
     consentSource: makeCloudConsentSource(platform),
   });
 }

@@ -1,6 +1,6 @@
 // Запросы к таблице files — только через ScopedDb владельца: s.own(files) в каждом запросе (ARCHITECTURE §6.3).
 import type { FileId } from "@kosht/kernel";
-import { and, asc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import type { FileKind } from "../../domain/file-kind.ts";
 import { files } from "./schema.ts";
@@ -22,14 +22,6 @@ const columns = {
   size: files.size,
   createdAt: files.createdAt,
 };
-
-/** Id нового файла — uuidv7() базы: файл пишется в хранилище раньше строки (путь строится из id). */
-export async function newFileId(s: ScopedDb): Promise<FileId> {
-  const rows = await s.db.execute<{ id: string }>(sql`select uuidv7() as id`);
-  const id = rows.rows[0]?.id;
-  if (id === undefined) throw new Error("uuidv7() не вернул строку.");
-  return id as FileId;
-}
 
 export async function insertFile(
   s: ScopedDb,

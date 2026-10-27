@@ -4,9 +4,11 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSystemDb, type SystemDb } from "../../../../platform/db/system-db.ts";
 import {
+  deleteUserRecords,
   insertUser,
   markEmailVerified,
   newUserIds,
+  passwordHashOf,
   sessionOwner,
   userCard,
 } from "./identity.repo.ts";
@@ -63,5 +65,44 @@ describe("identity.repo", () => {
   it("неизвестный пользователь: карточки нет, отметить адрес нельзя", async () => {
     expect(await userCard(system, unknown as never)).toBeUndefined();
     expect(await markEmailVerified(system, unknown, new Date("2026-10-26T09:00:00Z"))).toBe(false);
+  });
+});
+
+describe("PRIV-06: запись identity при удалении аккаунта", () => {
+  it("хэш пароля — у пользователя с паролем; неизвестный — undefined", async () => {
+    const ids = await newUserIds(system);
+    await insertUser(system, {
+      ...ids,
+      email: "hash@example.test",
+      role: "user",
+      passwordHash: "h1",
+    });
+    expect(await passwordHashOf(system, ids.userId)).toBe("h1");
+    expect(await passwordHashOf(system, unknown)).toBeUndefined();
+  });
+
+  it("домохозяйство с другим участником остаётся, последний участник уносит его с собой", async () => {
+    const first = await newUserIds(system);
+    await insertUser(system, {
+      ...first,
+      email: "first@example.test",
+      role: "user",
+      passwordHash: "x",
+    });
+    const second = await newUserIds(system);
+    await db.owner.query(
+      "insert into identity_users (id, name, email, household_id) values ($1, '', 'second@example.test', $2)",
+      [second.userId, first.householdId],
+    );
+    const household = async () =>
+      (await db.owner.query("select 1 from identity_households where id = $1", [first.householdId]))
+        .rows.length;
+
+    await deleteUserRecords(system, { userId: first.userId, householdId: first.householdId });
+    expect(await userCard(system, first.userId)).toBeUndefined();
+    expect(await household()).toBe(1);
+
+    await deleteUserRecords(system, { userId: second.userId, householdId: first.householdId });
+    expect(await household()).toBe(0);
   });
 });

@@ -54,6 +54,9 @@ export const RecoverWithCodeInput = z.strictObject({
   password: NewPassword,
 });
 
+/** «Удалить аккаунт» (PRIV-06): подтверждение текущим паролем. */
+export const DeleteAccountInput = z.strictObject({ password: Password });
+
 export const ChangePasswordInput = z.strictObject({
   currentPassword: Password,
   newPassword: NewPassword,
@@ -144,6 +147,17 @@ export const identityContract = {
     .input(ChangePasswordInput)
     .output(Ok)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "INVALID_CREDENTIALS", "RATE_LIMITED")),
+  /**
+   * Удалить аккаунт безвозвратно (PRIV-06): пароль неверен — INVALID_CREDENTIALS; последний администратор —
+   * LAST_ADMIN (AUTH-12). Успех — все данные пользователя удалены, cookie сессии снята.
+   */
+  deleteAccount: oc
+    .route({ method: "POST", path: "/identity/delete-account" })
+    .input(DeleteAccountInput)
+    .output(Ok)
+    .errors(
+      pickErrors("VALIDATION", "UNAUTHORIZED", "INVALID_CREDENTIALS", "LAST_ADMIN", "RATE_LIMITED"),
+    ),
   /** Выход: сессия завершается, cookie снимается; без сессии — тоже успех. */
   signOut: oc.route({ method: "POST", path: "/identity/sign-out" }).output(Ok),
   /** Кто вошёл; без сессии — UNAUTHORIZED. */

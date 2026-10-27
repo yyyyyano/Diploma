@@ -13,7 +13,8 @@ AUTH-03/04/06, ADM-60, NFR-24 (ящик — только локальный вх
 - Фабрика: `createMailModule({ platform, facades })`; платформа — `SystemPlatform`; соседей нет (`NoFacades`).
 - Фасад `MailFacade`: `send(to, template)` — письмо по шаблону (`MailTemplate`: `verify-email { link, hours }`,
   `reset-password { link, minutes }`);
-  тексты — словарь `mail` (`@kosht/i18n`), ссылка — только http(s) (иначе `RangeError`); сбой SMTP — `UNAVAILABLE`.
+  тексты — словарь `mail` (`@kosht/i18n`), ссылка — только http(s) (иначе `RangeError`); сбой SMTP — `UNAVAILABLE`;
+  `forgetRecipient(email)` — удалить письма ящика на адрес (удаление аккаунта, PRIV-06; зовёт identity).
 - Контракт `contract.mail.*`: `status` (publicProc: `{ mailboxAvailable }` — вход локальный и SMTP не настроен),
   `mailbox` (localOnly: на `lan` — `NOT_FOUND`; `{ enabled, messages }` — до 100 последних писем, новые сверху; SMTP
   настроен — `enabled: false`, писем нет).

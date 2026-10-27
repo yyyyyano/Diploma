@@ -1,9 +1,10 @@
 // Файлы домохозяйства (SEC-03, RCPT-11, STMT-10, PRIV-05/06, ARCHITECTURE §6.6): сохранить, выдать, удалить. Путь
 // строит сервер из домохозяйства scope и id (BlobStore), имя из запроса — только метаданные (очищенное). Выдача —
-// только после поиска строки через s: чужой id неотличим от несуществующего — NOT_FOUND. Порядок записи: id из
-// базы → файл в хранилище (вне транзакции) → строка; строка не записалась — файл удаляется. Приём с проверкой типа
-// по содержимому и лимитами — T-025: здесь вид, имя и тип задаёт код сервера, а не человек.
-import type { FileId, Scope } from "@kosht/kernel";
+// только после поиска строки через s: чужой id неотличим от несуществующего — NOT_FOUND. Порядок записи: id
+// (uuidv7, как у базы) → файл в хранилище (вне транзакции) → строка; строка не записалась — файл удаляется. Приём с
+// проверкой типа по содержимому и лимитами — T-025: здесь вид, имя и тип задаёт код сервера, а не человек.
+import { FileId, type Scope } from "@kosht/kernel";
+import { randomUUIDv7 } from "node:crypto";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { ExportSink } from "../../../platform/db/user-data.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
@@ -14,7 +15,6 @@ import {
   findFile,
   insertFile,
   listFiles,
-  newFileId,
   type FileRow,
 } from "../infrastructure/db/files.repo.ts";
 import type { FileKind } from "../domain/file-kind.ts";
@@ -37,7 +37,7 @@ export function makeFiles(d: Pick<Platform, "blobs" | "clock" | "log">) {
   /** Сохранить файл домохозяйства s; id и размер — для ссылок соседей (чек, выписка, архив). */
   async function save(s: ScopedDb, file: NewFile): Promise<{ id: FileId; size: number }> {
     const { householdId } = s.scope;
-    const id = await newFileId(s);
+    const id = FileId.parse(randomUUIDv7());
     let size: number;
     if (file.content instanceof Uint8Array) {
       await d.blobs.put(householdId, id, file.content);

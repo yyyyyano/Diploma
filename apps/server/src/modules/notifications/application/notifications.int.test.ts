@@ -204,3 +204,24 @@ describe("NOTIF-03: уведомления администраторов", () =
     expect(rows).toEqual([]);
   });
 });
+
+describe("PRIV-06: удаление аккаунта администратора", () => {
+  it("хук afterDelete убирает его отметки «прочитано», отметки другого администратора остаются", async () => {
+    const admins = makeAdminNotifications({
+      system: createSystemDb(db.pool),
+      clock,
+      log: memoryLogger().log,
+    });
+    const id = await admins.notifyAdmins({ kind: "ai-provider", key: "groq:429:2026-10-27" });
+    const removed = scoped(82);
+    const kept = scoped(83);
+    await admins.read(removed, [id ?? ""]);
+    await admins.read(kept, [id ?? ""]);
+    await admins.forgetAdmin(removed.scope);
+    const { rows } = await db.owner.query<{ user_id: string }>(
+      "select user_id from admin_notification_reads where notification_id = $1",
+      [id],
+    );
+    expect(rows).toEqual([{ user_id: kept.scope.userId }]);
+  });
+});

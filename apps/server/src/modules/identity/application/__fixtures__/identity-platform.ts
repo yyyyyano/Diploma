@@ -41,6 +41,9 @@ export function identityPlatform(db: TestDb, now = "2026-10-26T09:00:00Z") {
     send: async (to, template) => {
       sent.push({ to, template });
     },
+    forgetRecipient: async (email) => {
+      for (let i = sent.length - 1; i >= 0; i -= 1) if (sent[i]?.to === email) sent.splice(i, 1);
+    },
   };
   const auth = createAuthGateway(
     createAuth({ system, secret: "s".repeat(32), baseURL: platform.localOrigin }),

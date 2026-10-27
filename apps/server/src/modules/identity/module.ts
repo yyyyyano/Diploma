@@ -10,6 +10,7 @@ import type { PrivacyFacade } from "../privacy/index.ts";
 import { identityRouter } from "./api/router.ts";
 import { makeAdminGuard } from "./application/admins.ts";
 import { makeChangePassword } from "./application/change-password.ts";
+import { makeDeleteAccount } from "./application/delete-account.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
 import { makePasswordReset } from "./application/password-reset.ts";
 import { makeRecoveryCodes } from "./application/recovery-code.ts";
@@ -59,6 +60,13 @@ export function createIdentityModule({
       passwordReset: makePasswordReset({ platform, mail: facades.mail }),
       recoveryCodes,
       changePassword: makeChangePassword({ auth, platform }),
+      deleteAccount: makeDeleteAccount({
+        platform,
+        auth,
+        admins,
+        privacy: facades.privacy,
+        mail: facades.mail,
+      }),
     }),
     settings: IDENTITY_SETTINGS,
     sessionSource: (headers) => auth.session(headers),

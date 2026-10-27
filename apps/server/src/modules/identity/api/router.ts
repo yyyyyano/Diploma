@@ -1,7 +1,8 @@
 // Процедуры identity (contract.identity.*): тонко — вход контрактом, сценарий, cookie в ответ. Доступ:
 // status, signIn, register, verifyEmail, requestPasswordReset, resetPassword, recoverWithCode, signOut — publicProc
 // (гость); setup — localOnly (R40: на сетевом входе процедуры нет); me, resendVerification, recoveryCodeStatus,
-// createRecoveryCode, changePassword — authed. Адрес ссылок в письмах — по слушателю и Host запроса (NFR-24).
+// createRecoveryCode, changePassword, deleteAccount — authed. Адрес ссылок в письмах — по слушателю и Host запроса
+// (NFR-24).
 import { authed, localOnly, publicProc } from "../../../platform/http/procedures.ts";
 import type { HttpContext } from "../../../platform/http/procedures.ts";
 import type { LinkRequest } from "../../../platform/http/link-origin.ts";
@@ -9,6 +10,7 @@ import type { EmailVerification } from "../application/email-verification.ts";
 import type { makeRegister } from "../application/register.ts";
 import type { makeResendVerification } from "../application/resend-verification.ts";
 import type { makeChangePassword } from "../application/change-password.ts";
+import type { makeDeleteAccount } from "../application/delete-account.ts";
 import type { PasswordReset } from "../application/password-reset.ts";
 import type { RecoveryCodes } from "../application/recovery-code.ts";
 import type { makeSignIn, makeSignOut } from "../application/sign-in.ts";
@@ -27,6 +29,7 @@ export interface IdentityUseCases {
   readonly passwordReset: PasswordReset;
   readonly recoveryCodes: Pick<RecoveryCodes, "create" | "status" | "recover">;
   readonly changePassword: ReturnType<typeof makeChangePassword>;
+  readonly deleteAccount: ReturnType<typeof makeDeleteAccount>;
 }
 
 /** Откуда пришёл запрос — для адреса ссылок в письмах. */
@@ -100,6 +103,10 @@ export function identityRouter(uc: IdentityUseCases) {
         context.reqHeaders ?? new Headers(),
       );
       setCookies(context.resHeaders, cookies);
+      return { ok: true as const };
+    }),
+    deleteAccount: authed.identity.deleteAccount.handler(async ({ input, context }) => {
+      setCookies(context.resHeaders, await uc.deleteAccount(context.s, input.password));
       return { ok: true as const };
     }),
     signOut: publicProc.identity.signOut.handler(async ({ context }) => {

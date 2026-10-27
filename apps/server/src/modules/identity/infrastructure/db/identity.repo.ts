@@ -11,6 +11,7 @@ import {
   identityHouseholds,
   identitySessions,
   identityUsers,
+  identityVerifications,
   systemState,
 } from "./schema.ts";
 
@@ -250,4 +251,39 @@ export async function updateUserAccess(
     .where(eq(identityUsers.id, userId))
     .returning({ id: identityUsers.id });
   return rows.length === 1;
+}
+
+/** Хэш пароля пользователя (вход по email и паролю) или undefined. */
+export async function passwordHashOf(db: IdentityDb, userId: string): Promise<string | undefined> {
+  const rows = await db
+    .select({ password: identityCredentials.password })
+    .from(identityCredentials)
+    .where(
+      and(
+        eq(identityCredentials.userId, userId),
+        eq(identityCredentials.providerId, CREDENTIAL_PROVIDER),
+      ),
+    );
+  return rows[0]?.password ?? undefined;
+}
+
+/**
+ * Удалить пользователя последним шагом удаления аккаунта (PRIV-06): ссылки из писем (identity_verifications —
+ * value = id пользователя), пользователь (сессии, пароль, код восстановления — каскадом) и его домохозяйство, если в
+ * нём больше никого нет. Пользователя уже нет — ничего не делает.
+ */
+export async function deleteUserRecords(
+  db: IdentityDb,
+  user: { readonly userId: string; readonly householdId: string },
+): Promise<void> {
+  await db.delete(identityVerifications).where(eq(identityVerifications.value, user.userId));
+  await db.delete(identityUsers).where(eq(identityUsers.id, user.userId));
+  const members = await db
+    .select({ id: identityUsers.id })
+    .from(identityUsers)
+    .where(eq(identityUsers.householdId, user.householdId))
+    .limit(1);
+  if (members.length === 0) {
+    await db.delete(identityHouseholds).where(eq(identityHouseholds.id, user.householdId));
+  }
 }

@@ -56,6 +56,7 @@ export { FileRef, filesContract } from "./files/files.contract.ts";
 export {
   Email,
   ChangePasswordInput,
+  DeleteAccountInput,
   identityContract,
   IssuedRecoveryCode,
   LinkToken,

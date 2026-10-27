@@ -13,7 +13,7 @@ SEC-03, RCPT-11, STMT-10, PRIV-05/06. Сделано: хранение и выд
 ## Публичный API (`index.ts`)
 - Фабрика: `createFilesModule({ platform, facades })`; платформа — `Platform` (без `SystemDb`); соседей нет.
 - Фасад `FilesFacade` (`application/files.ts`): `save(s, { kind, name, mime, content })` → `{ id, size }` (содержимое —
-  `Uint8Array` или поток кусков `AsyncIterable`; порядок: id из `uuidv7()` → файл в хранилище → строка; строка не
+  `Uint8Array` или поток кусков `AsyncIterable`; порядок: id (`randomUUIDv7`) → файл в хранилище → строка; строка не
   записалась — файл удаляется), `open(s, id)` → метаданные + `blob` (чужой, несуществующий, потерянный на диске —
   `NOT_FOUND`), `remove(s, id)` (чужого нет — ничего). Типы `NewFile`, `OpenedFile`.
 - Контракт `contract.files.download` (authed, `GET /api/files/{id}`): сам файл, `Content-Disposition: attachment`

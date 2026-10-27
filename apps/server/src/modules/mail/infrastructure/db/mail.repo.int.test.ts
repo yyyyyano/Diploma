@@ -2,7 +2,7 @@
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSystemDb } from "../../../../platform/db/system-db.ts";
-import { insertMail, listMail } from "./mail.repo.ts";
+import { deleteMailTo, insertMail, listMail } from "./mail.repo.ts";
 
 let db: TestDb;
 beforeAll(async () => {
@@ -44,5 +44,24 @@ describe("mail_messages", () => {
       action: { label: "Открыть", url: "http://127.0.0.1:8140/x" },
       note: { kind: "warn", text: "Ссылка действует 1 ч." },
     });
+  });
+});
+
+describe("PRIV-06: письма удалённого аккаунта", () => {
+  it("deleteMailTo удаляет письма только на этот адрес", async () => {
+    const system = createSystemDb(db.pool);
+    const letter = {
+      subject: "Тема",
+      preview: "Кратко",
+      title: "Заголовок",
+      paragraphs: ["Абзац"],
+    };
+    const at = new Date("2026-10-26T10:00:00Z");
+    await insertMail(system, { ...letter, to: "gone@example.test" }, at);
+    await insertMail(system, { ...letter, to: "gone@example.test" }, at);
+    await insertMail(system, { ...letter, to: "stays@example.test" }, at);
+    expect(await deleteMailTo(system, "gone@example.test")).toBe(2);
+    expect((await listMail(system)).map((m) => m.to)).not.toContain("gone@example.test");
+    expect((await listMail(system)).map((m) => m.to)).toContain("stays@example.test");
   });
 });

@@ -4,9 +4,11 @@
 import type { AdminNotification, AdminNotificationKind } from "@kosht/contract";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
+import type { Scope } from "@kosht/kernel";
 import {
   adminFeedPage,
   countAdminUnread,
+  deleteAdminReads,
   insertAdminNotification,
   markAdminRead,
 } from "../infrastructure/db/admin-notifications.repo.ts";
@@ -51,5 +53,12 @@ export function makeAdminNotifications(d: Pick<SystemPlatform, "system" | "clock
     await markAdminRead(d.system, s.scope.userId, ids, d.clock.now());
   }
 
-  return { notifyAdmins, list, read };
+  /** PRIV-06: после удаления аккаунта — его отметки «прочитано» (systemTable, вне defineUserData). */
+  async function forgetAdmin(scope: Scope): Promise<void> {
+    await deleteAdminReads(d.system, scope.userId);
+  }
+
+  return { notifyAdmins, list, read, forgetAdmin };
 }
+
+export type AdminNotifications = ReturnType<typeof makeAdminNotifications>;

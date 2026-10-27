@@ -93,6 +93,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
       "id во входе нет: меняет пароль сессии из cookie запроса (Better Auth), чужого не коснуться",
   },
   "identity.signOut": { exempt: "завершает сессию из cookie запроса, id во входе нет" },
+  "identity.deleteAccount": {
+    exempt:
+      "удаляет аккаунт сессии по паролю, id во входе нет; B не тронут — account-deletion.int.test.ts",
+  },
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
   "privacy.state": { input: () => undefined },

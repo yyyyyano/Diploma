@@ -22,7 +22,8 @@ NOTIF-01…05, BUD-03, CAL-07 (доставка).
 - Контракт `contract.notifications.*`: authed — `list` (курсор = id последнего, uuidv7; `unread`), `markRead` (только
   свои), `markAllRead`, `preferences` (вид × web/telegram), `setPreference`; admin — `adminList`, `adminMarkRead`.
 - Таблицы: `notifications`, `notification_preferences` (`userOwnedTable`, `user-data.ts`); `admin_notifications`,
-  `admin_notification_reads` (`systemTable`: без домохозяйства, «прочитано» — строка на администратора).
+  `admin_notification_reads` (`systemTable`: без домохозяйства, «прочитано» — строка на администратора; при удалении
+  аккаунта их убирает хук `afterDelete` владельца данных — `forgetAdmin`).
 
 ## Зависимости
 Можно: identity (`tooling/architecture/modules.ts`). Слушает: —.
@@ -35,6 +36,3 @@ NOTIF-01…05, BUD-03, CAL-07 (доставка).
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/notifications` — идемпотентность, матрица вид × канал, курсор, «прочитано»,
   администраторы (`application/notifications.int.test.ts`); роли сквозь HTTP — `main/notifications.int.test.ts`.
-
-## Подводные камни
-- Строки `admin_notification_reads` при удалении аккаунта администратора удаляет T-016 (системные таблицы).

@@ -1,5 +1,5 @@
 // Запросы к локальному ящику (systemTable mail_messages) — только через SystemDb модуля mail.
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { MailMessage, StoredMail } from "../../domain/message.ts";
 import { mailMessages } from "./schema.ts";
@@ -38,4 +38,13 @@ export async function listMail(db: SystemDb): Promise<StoredMail[]> {
     ...(row.note === null ? {} : { note: row.note }),
     sentAt: row.sentAt,
   }));
+}
+
+/** Удалить письма на адрес (удаление аккаунта, PRIV-06); возвращает, сколько было. */
+export async function deleteMailTo(db: SystemDb, recipient: string): Promise<number> {
+  const rows = await db
+    .delete(mailMessages)
+    .where(eq(mailMessages.recipient, recipient))
+    .returning({ id: mailMessages.id });
+  return rows.length;
 }

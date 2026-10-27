@@ -28,7 +28,7 @@ export function createNotificationsModule({
     facade: { notify: makeNotify(platform), notifyAdmins: admins.notifyAdmins },
     router: notificationsRouter({ feed: makeFeed(platform), admin: admins }),
     deliveryChannels: [webChannel(platform)],
-    userData: notificationsUserData,
+    userData: notificationsUserData(admins),
   });
 }
 

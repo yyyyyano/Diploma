@@ -16,6 +16,9 @@ PRIV-01/02/05/06/08, AUTH-02.
   (identity): две строки журнала (ПД — дано, облако — как отмечено) с версией текста и моментом `Clock`, событие
   `privacy.consent-changed { ids }`, режим в `privacy_modes`; версия не совпала с `CONSENT_VERSIONS` словаря —
   `CONFLICT` (`reason: consent-version`), ничего не записано.
+- `purge(s)` (`application/purge-account.ts`, зовёт identity при удалении аккаунта): строки домохозяйства во всех
+  таблицах реестра владельцев (`platform.userData()`, позднее связывание) одной транзакцией — модули в порядке,
+  обратном `modules.ts`, таблицы — в порядке модуля; затем хуки `afterDelete` (файлы, системные строки, трассы).
 - Контракт `contract.privacy.*` (authed): `state` — облако разрешено ли и с какого момента, история решений (новые
   сверху, ≤ 200); `setCloudConsent({ granted, version })` — строка журнала, `privacy_modes` и событие одной
   транзакцией (`application/cloud-consent-settings.ts`); устаревшая версия — `CONFLICT`.
@@ -26,13 +29,13 @@ PRIV-01/02/05/06/08, AUTH-02.
   `created_at` — момент решения; строки только добавляются, действует последняя по виду. Владелец данных —
   `user-data.ts`.
 - Таблица `privacy_modes` (`systemTable`): `user_id` → `cloud` (текущий режим для столбца «режим» админки, T-017);
-  строки нет — локальный режим; удаляется с пользователем.
+  строки нет — локальный режим; удаляет хук `afterDelete` владельца данных (`user-data.ts`).
 
 ## Зависимости
 Можно: — (`tooling/architecture/modules.ts`). Слушает: —.
 
 ## Запреты
-- Строки журнала не правятся и не удаляются сценариями (кроме удаления аккаунта, T-016): новое решение — новая строка.
+- Строки журнала не правятся и не удаляются сценариями (кроме удаления аккаунта): новое решение — новая строка.
 - Данные домохозяйства — только через `s: ScopedDb` с `s.own(privacy_consents)`; «чьи данные» — только `s.scope`.
 - Изменили текст политики или облачного согласия в словаре `policy` — поднимите версию в `CONSENT_VERSIONS`.
 
@@ -40,4 +43,4 @@ PRIV-01/02/05/06/08, AUTH-02.
 - `pnpm vitest run apps/server/src/modules/privacy` — журнал, событие, устаревшая версия, источник облачного
   согласия и чужое домохозяйство (`application/record-registration-consents.int.test.ts`), согласие в настройках и
   режим (`application/cloud-consent-settings.int.test.ts`); отзыв сквозь HTTP и цепочку llm —
-  `main/cloud-consent.int.test.ts`.
+  `main/cloud-consent.int.test.ts`; удаление аккаунта целиком — `main/account-deletion.int.test.ts`.

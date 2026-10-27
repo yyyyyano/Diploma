@@ -149,6 +149,11 @@ export interface AuthGateway {
   signOut(headers: Headers): Promise<readonly string[]>;
   /** Сессия запроса; нет, истекла или пользователь не активен — undefined. */
   session(headers: Headers): Promise<AuthSession | undefined>;
+  /**
+   * Set-Cookie, снимающая cookie сессии (удаление аккаунта): сессий в базе уже нет, Better Auth звать не с чем —
+   * атрибуты те же, что у cookie входа (HttpOnly, SameSite=Lax, путь /), срок — в прошлом.
+   */
+  expiredSessionCookie(): string;
 }
 
 export function createAuthGateway(auth: Auth): AuthGateway {
@@ -187,6 +192,9 @@ export function createAuthGateway(auth: Auth): AuthGateway {
     async signOut(headers) {
       const { headers: out } = await auth.api.signOut({ headers, returnHeaders: true });
       return out.getSetCookie();
+    },
+    expiredSessionCookie() {
+      return `${SESSION_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`;
     },
     async session(headers) {
       const { headers: out, response: found } = await auth.api.getSession({

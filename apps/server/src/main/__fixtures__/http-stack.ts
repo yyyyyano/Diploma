@@ -31,11 +31,18 @@ export interface HttpStack {
   close(): Promise<void>;
 }
 
-export async function startHttpStack(db: TestDb): Promise<HttpStack> {
+/**
+ * worker: false — без процесса фоновых задач: поставленные задачи остаются ожидающими (удаление аккаунта убирает
+ * ожидающие задачи домохозяйства — их нужно увидеть).
+ */
+export async function startHttpStack(
+  db: TestDb,
+  options: { readonly worker?: boolean } = {},
+): Promise<HttpStack> {
   const api = await composeOnTestDb(db, "api");
-  const worker = await composeOnTestDb(db, "worker");
+  const worker = options.worker === false ? undefined : await composeOnTestDb(db, "worker");
   await api.composition.startJobs();
-  await worker.composition.startJobs();
+  await worker?.composition.startJobs();
   const log = memoryLogger().log;
   const handler = createApiHandler(api.composition.router, log);
   const apps = new Map<ListenerName, HttpApp>();
@@ -74,7 +81,7 @@ export async function startHttpStack(db: TestDb): Promise<HttpStack> {
       return await app.fetch(new Request(`http://${STACK_HOST[listener]}/api${path}`, init));
     },
     async close() {
-      await worker.close();
+      await worker?.close();
       await api.close();
     },
   };

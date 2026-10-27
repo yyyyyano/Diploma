@@ -39,6 +39,7 @@ describe("дерево процедур", () => {
       "identity.recoveryCodeStatus",
       "identity.createRecoveryCode",
       "identity.changePassword",
+      "identity.deleteAccount",
       "identity.signOut",
       "identity.me",
       "privacy.state",

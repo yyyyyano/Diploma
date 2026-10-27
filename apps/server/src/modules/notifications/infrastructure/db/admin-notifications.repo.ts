@@ -82,3 +82,8 @@ export async function markAdminRead(
     .values(known.map((row) => ({ notificationId: row.id, userId, readAt: at })))
     .onConflictDoNothing();
 }
+
+/** Удалить отметки «прочитано» администратора (удаление его аккаунта, PRIV-06). */
+export async function deleteAdminReads(db: SystemDb, userId: string): Promise<void> {
+  await db.delete(adminNotificationReads).where(eq(adminNotificationReads.userId, userId));
+}

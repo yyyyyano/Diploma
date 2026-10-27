@@ -9,7 +9,8 @@
 
 ## Требования SPEC
 AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04. Сделано: AUTH-01…05 (без Telegram и админки), AUTH-08,
-AUTH-10…12, ROLE-02, SEC-01/02. Макет: `Setup`, `Login`, `Register`, `Settings` (сайт — `features/{setup,auth,settings}`).
+AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего аккаунта). Макет: `Setup`, `Login`, `Register`,
+`Settings` (сайт — `features/{setup,auth,settings}`).
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createIdentityModule({ platform, facades })`; `SystemPlatform`; фасады `mail` (письма), `privacy` (согласия).
@@ -23,7 +24,9 @@ AUTH-10…12, ROLE-02, SEC-01/02. Макет: `Setup`, `Login`, `Register`, `Set
   активному), `resetPassword` (ссылка `/recovery?token=…`, 1 ч; новый пароль завершает сессии), `recoverWithCode`
   (новый пароль, новый код, вход; неизвестный email — ложный хэш, то же время), `signOut`; localOnly: `setup`
   (код восстановления в ответе); authed: `me` (+ `emailVerified`), `resendVerification`, `recoveryCodeStatus`,
-  `createRecoveryCode`, `changePassword` (Better Auth: прочие сессии завершены, новая cookie).
+  `createRecoveryCode`, `changePassword` (Better Auth: прочие сессии завершены, новая cookie), `deleteAccount`
+  (PRIV-06, `application/delete-account.ts`: пароль → блокировка и сессии (LAST_ADMIN под блокировкой админов) →
+  `jobs.discardHousehold` → `privacy.purge` → `mail.forgetRecipient` → последней запись identity; cookie снята).
 - Ссылки в письмах — адрес по `platform/http/link-origin.ts` (NFR-24); токен 32 байта base64url, в
   `identity_verifications` — SHA-256 (`<назначение>:<хэш>` → id пользователя), гасится `DELETE … RETURNING`, срок —
   по `Clock`; новая ссылка гасит прежнюю того же назначения.
@@ -49,7 +52,7 @@ AUTH-10…12, ROLE-02, SEC-01/02. Макет: `Setup`, `Login`, `Register`, `Set
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/identity` — пароль, код, Better Auth (блокировка, продление cookie, смена
   пароля), первый запуск, ссылки, сброс (`FakeClock`), код восстановления, последний админ и гонка (`admins.int.test.ts`).
-- Сквозь HTTP — `main/{registration,recovery,first-run}.int.test.ts` (стенд `main/__fixtures__/http-stack.ts`).
+- Сквозь HTTP — `main/{registration,recovery,first-run,account-deletion}.int.test.ts` (стенд `http-stack.ts`).
 
 ## Подводные камни
 - Пользователь пишется через `tx.db` ScopedDb нового пользователя: аудитор в scoped проверяет только пользовательские

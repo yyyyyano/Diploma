@@ -3,8 +3,8 @@
 Ярус 4 · таблицы: — · публикует: — (`docs/CAPABILITIES.md`; задачи — `tasks/plan.md`)
 
 ## Назначение
-Раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет. Сейчас модуль пустой, но живой (T-007):
-фабрика, описание `defineModule({ id: "admin" })` и место в корне композиции; содержимое добавляет задача модуля.
+Раздел «Администрирование»: процедуры `contract.admin.*` поверх admin-фасадов модулей; своих данных нет (PRIV-07).
+Сделано: «Пользователи» (ADM-30) и «Система» (ADM-60); остальные вкладки — задачи своих модулей.
 
 ## Требования SPEC
 ADM-01…60 (экраны).
@@ -13,9 +13,13 @@ ADM-01…60 (экраны).
 - Фабрика: `createAdminModule({ platform, facades })` → `defineModule({ id: "admin" })`; платформа — `Platform` (без
   `SystemDb`); фасады — `facades.identity`, `facades.privacy`, `facades.notifications`, `facades.mail`, `facades.llm`,
   `facades.legalBase`, `facades.normTables`, `facades.system`, `facades.quality`, `facades.demo`.
-- Фасад `AdminFacade` — пока нет (`undefined`); появится с первым сценарием, нужным соседям.
-- События (`events.ts`): —; контракт, задачи, инструменты агента, отмена, владелец данных, настройки — добавляет
-  задача модуля.
+- Фасад `AdminFacade` — нет (`undefined`): админку соседи не зовут.
+- Контракт `contract.admin.*` (`api/router.ts`, все — `admin`: сессия и роль, не админу — `FORBIDDEN`):
+  `users` — учётные записи identity + флаг облачного режима privacy + «вы» (`application/admin-users.ts`; Telegram —
+  `false` до T-052); `setUserStatus`, `setUserRole` (последний админ — `LAST_ADMIN`), `deleteUser({ id, email })`,
+  `resetUserPassword({ id })` — фасады identity; `system` — `system.view()` + `mail.smtp.view()`; `setMail`,
+  `sendTestMail` (на адрес вошедшего администратора), `setTimeZone`, `setLan` — отвечают обновлённой «Системой».
+  Форма ответов — только метаданные (`packages/contract/src/admin/admin.contract.test.ts`).
 
 ## Зависимости
 Можно: identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo (`tooling/architecture/modules.ts`). Слушает: —.
@@ -27,4 +31,5 @@ ADM-01…60 (экраны).
 - «Чьи данные» — только `s.scope`, никогда из входа процедуры, инструмента или нагрузки задачи.
 
 ## Как тестировать
-- `pnpm vitest run apps/server/src/modules/admin` — unit и int (нужен `make db-up`); общий — `make check`.
+- Сквозь HTTP и корень композиции — `main/admin.int.test.ts` (роли, список, блокировка и последний админ, удаление с
+  email, сброс пароля письмом и ссылкой, «Система»); форма DTO — `admin.contract.test.ts`.

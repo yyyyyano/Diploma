@@ -28,6 +28,9 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   кусков и частей строит AI SDK на сервере и проверяет AI SDK на сайте (`useChat`).
 - `identity`, `accounts` (T-009): вход, первый запуск, `accounts.list`.
 - `files` (T-016): `download` — `GET /files/{id}`, вход `FileRef { id }`, ответ — сам файл (`z.file()`).
+- `admin` (T-017): «Пользователи» (`AdminUser`, действия по `{ id }`, `AdminResetResult`) и «Система»
+  (`SystemOverview`: `JobRun`, почта без пароля, пояс, сеть, Langfuse); форму ответов сторожит `admin.contract.test.ts`
+  (PRIV-07: без данных пользователей).
 
 ## Можно зависеть от
 `zod`, `@orpc/contract` (версия — `catalog:` в `pnpm-workspace.yaml`), `@kosht/kernel` — правило

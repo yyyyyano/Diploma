@@ -25,3 +25,12 @@ export async function saveMode(
 export async function deleteMode(db: ModesDb, userId: string): Promise<void> {
   await db.delete(privacyModes).where(eq(privacyModes.userId, userId));
 }
+
+/** Пользователи в облачном режиме (столбец «Режим ИИ» админки, ADM-30); строки нет — локальный. */
+export async function cloudUsers(db: ModesDb): Promise<Set<string>> {
+  const rows = await db
+    .select({ userId: privacyModes.userId })
+    .from(privacyModes)
+    .where(eq(privacyModes.cloud, true));
+  return new Set(rows.map((row) => row.userId));
+}

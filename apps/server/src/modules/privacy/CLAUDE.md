@@ -25,18 +25,19 @@ PRIV-01/02/05/06/08, AUTH-02.
   `EXPORT_BUILD_SECONDS` — `failed`); задача пишет потоковый ZIP (`infrastructure/zip-archive.ts`, yazl, ADR-0012):
   `manifest.json`, `data/<модуль>/<таблица>.json` (страницы по 500), `files/<модуль>/<путь>` (хуки `export`) →
   `files.save` (вид `data-export`) → `ready` + `privacy.export-ready` + `realtime.changed(data-export)`; сбой — `failed`
-  без файла. Скачивание — `files.download`. Фасад `isExportReady(s, id)` — для подписчика notifications.
+  без файла. Скачивание — `files.download`. Фасад `isExportReady(s, id)` — для подписчика notifications;
+  `cloudUsers()` — id пользователей в облачном режиме (столбец «Режим ИИ» админки, ADM-30).
 - Контракт `contract.privacy.*` (authed): `dataExport` (`GET /privacy/export`) — последняя заявка
   (`none | pending | ready | failed`, файл `{ id, name, size }`); `requestExport` (`POST /privacy/export`); `state` —
-  облако разрешено ли и с какого момента, история решений (новые сверху, ≤ 200); `setCloudConsent({ granted, version })` — строка журнала, `privacy_modes` и событие одной
-  транзакцией (`application/cloud-consent-settings.ts`); устаревшая версия — `CONFLICT`.
+  облако разрешено ли и с какого момента, история решений (новые сверху, ≤ 200); `setCloudConsent({ granted,
+  version })` — строка журнала, `privacy_modes` и событие одной транзакцией (`cloud-consent-settings.ts`); устаревшая
+  версия — `CONFLICT`.
 - Источник облачного согласия (`consentSource`, порт `ConsentSource`): последнее решение вида `cloud` пользователя
   scope, без кэша — отзыв действует на следующий вызов модели; решения нет — `false`.
 - События (`events.ts`, экспорт из `index.ts`): `privacy.consent-changed { ids }` — id новых строк журнала;
   `privacy.export-ready { ids }` — готовые заявки архива.
 - Таблица `privacy_consents` (`userOwnedTable`): `kind` (`personal-data | cloud`), `granted`, `text_version`,
-  `created_at` — момент решения; строки только добавляются, действует последняя по виду. Владелец данных —
-  `user-data.ts`.
+  `created_at` — момент решения; строки только добавляются, действует последняя по виду (владелец — `user-data.ts`).
 - Таблица `privacy_exports` (`userOwnedTable`): заявка на архив — `status` (`pending | ready | failed`), `file_id`
   (файл files без внешнего ключа), `file_name`, `size`, `finished_at`; одна `pending` на домохозяйство.
 - Таблица `privacy_modes` (`systemTable`): `user_id` → `cloud` (текущий режим для столбца «режим» админки, T-017);

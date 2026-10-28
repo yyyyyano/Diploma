@@ -14,6 +14,7 @@ import { makePurgeAccount } from "./application/purge-account.ts";
 import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
 import { consentChanged, exportReady } from "./events.ts";
 import { buildExportJob } from "./jobs/build-export.job.ts";
+import { cloudUsers } from "./infrastructure/db/modes.repo.ts";
 import { privacyUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -38,6 +39,8 @@ export function createPrivacyModule({
       recordRegistrationConsents: makeRecordRegistrationConsents(platform),
       purge: makePurgeAccount(platform),
       isExportReady: dataExport.isReady,
+      /** Админка «Пользователи» (ADM-30): id пользователей в облачном режиме — только флаг, без согласий. */
+      cloudUsers: () => cloudUsers(platform.system),
     },
     events: [consentChanged, exportReady],
     jobs: [buildJob],
@@ -49,6 +52,7 @@ export function createPrivacyModule({
 
 /**
  * Что модуль даёт соседям: recordRegistrationConsents(tx, согласия) — в транзакции регистрации; purge(s) — удаление
- * данных аккаунта; isExportReady(s, id) — архив «Мои данные» готов (подписчик notifications).
+ * данных аккаунта; isExportReady(s, id) — архив «Мои данные» готов (подписчик notifications); cloudUsers() — кто в
+ * облачном режиме (админка).
  */
 export type PrivacyFacade = ReturnType<typeof createPrivacyModule>["facade"];

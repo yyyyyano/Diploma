@@ -100,6 +100,33 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.me": { input: () => undefined },
   "identity.adminResetNotice": { input: () => undefined },
   "identity.acknowledgeAdminReset": { input: () => undefined },
+  "admin.users": {
+    exempt:
+      "админка ADM-30: учётные записи всех пользователей — задача раздела; только метаданные (admin.contract.test.ts), роль — admin.int.test.ts",
+  },
+  "admin.setUserStatus": {
+    exempt:
+      "действие администратора над учётной записью по id (ADM-30); не админу — FORBIDDEN (admin.int.test.ts)",
+  },
+  "admin.setUserRole": {
+    exempt:
+      "действие администратора над учётной записью по id (ADM-30); не админу — FORBIDDEN (admin.int.test.ts)",
+  },
+  "admin.deleteUser": {
+    exempt:
+      "удаление пользователя администратором с подтверждением email (ADM-30); данные B не задеты без верного email — admin.int.test.ts",
+  },
+  "admin.resetUserPassword": {
+    exempt:
+      "ссылка сброса уходит самому пользователю по id (AUTH-05, R37); не админу — FORBIDDEN (admin.int.test.ts)",
+  },
+  "admin.system": { input: () => undefined },
+  "admin.setMail": {
+    input: () => ({ host: "", port: 587, secure: false, user: "", from: "no-reply@kosht.local" }),
+  },
+  "admin.sendTestMail": { input: () => undefined },
+  "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
+  "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
   "accounts.list": { input: () => undefined },
   "privacy.state": { input: () => undefined },
   "privacy.dataExport": { input: () => undefined },
@@ -300,6 +327,11 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "actions.answer",
       "actions.decision",
       "actions.undo",
+      "admin.sendTestMail",
+      "admin.setLan",
+      "admin.setMail",
+      "admin.setTimeZone",
+      "admin.system",
       "chat.history",
       "chat.send",
       "chat.stop",

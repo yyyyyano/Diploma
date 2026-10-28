@@ -6,4 +6,7 @@ export const tools = {
   explain_number: "Разбираю, как получилась цифра…",
   read_profile_facts: "Вспоминаю, что знаю о вас…",
   upsert_profile_fact: "Запоминаю…",
+  create_account: "Добавляю счёт…",
+  rename_account: "Переименовываю счёт…",
+  delete_account: "Готовлю удаление счёта…",
 } as const;

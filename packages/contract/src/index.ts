@@ -2,8 +2,16 @@
 export {
   AccountId,
   AccountKind,
+  AccountList,
   AccountListItem,
   accountsContract,
+  AccountTotals,
+  BalanceSource,
+  CreateAccountInput,
+  CurrencyCode,
+  ExplainSubject,
+  FxRateInfo,
+  NewAccountKind,
 } from "./accounts/accounts.contract.ts";
 export {
   AdminResetResult,

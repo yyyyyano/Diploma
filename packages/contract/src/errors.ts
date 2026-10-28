@@ -30,6 +30,8 @@ export const ERRORS = {
   CONFLICT: { status: 409, retryable: false },
   /** Последнего администратора нельзя заблокировать, лишить роли или удалить (AUTH-12). */
   LAST_ADMIN: { status: 409, retryable: false },
+  /** «Наличные» и «Карта, не указана» — служебные счета: их не удаляют (STMT-01, RCPT-10). */
+  ACCOUNT_PROTECTED: { status: 409, retryable: false },
   /** Регистрация: этот email уже занят (AUTH-01) — войти или восстановить пароль. */
   EMAIL_TAKEN: { status: 409, retryable: false },
   /** Ссылка из письма уже использована или устарела (AUTH-03, AUTH-04): нужно новое письмо. */

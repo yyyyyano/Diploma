@@ -41,6 +41,7 @@ describe("словари ru", () => {
       "settings",
       "decisions",
       "notifications",
+      "admin",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });

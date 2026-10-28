@@ -1,6 +1,7 @@
 // Словари (NFR-19): ru — единственный язык MVP, be — задел. Типы ключей i18next берёт отсюда (ResourceNamespaceMap
 // — способ i18next для пакета монорепозитория): несуществующий ключ не компилируется ни здесь, ни на сайте.
 import { accounts } from "./locales/ru/accounts.ts";
+import { admin } from "./locales/ru/admin.ts";
 import { assistant } from "./locales/ru/assistant.ts";
 import { auth } from "./locales/ru/auth.ts";
 import { common } from "./locales/ru/common.ts";
@@ -34,6 +35,7 @@ export const NAMESPACES = [
   "settings",
   "decisions",
   "notifications",
+  "admin",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -60,6 +62,7 @@ export const resources = {
     settings,
     decisions,
     notifications,
+    admin,
   },
 } as const satisfies Record<Language, Record<Namespace, object>>;
 
@@ -79,6 +82,7 @@ declare module "i18next" {
     assistant: typeof assistant;
     mailbox: typeof mailbox;
     settings: typeof settings;
+    admin: typeof admin;
     decisions: typeof decisions;
     notifications: typeof notifications;
   }

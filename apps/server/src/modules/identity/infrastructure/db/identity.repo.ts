@@ -160,6 +160,24 @@ export async function userCard(db: IdentityDb, userId: UserId): Promise<UserCard
   };
 }
 
+/**
+ * Статус пользователя под блокировкой строки (FOR UPDATE) — до конца транзакции: блокировка администратором не
+ * проскочит между проверкой и записью. Пользователя нет — undefined.
+ */
+export async function lockUserStatus(
+  db: IdentityDb,
+  userId: string,
+): Promise<UserStatus | undefined> {
+  const rows = await db
+    .select({ status: identityUsers.status })
+    .from(identityUsers)
+    .where(eq(identityUsers.id, userId))
+    .for("update");
+  const row = rows[0];
+  if (row === undefined) return undefined;
+  return row.status === "active" ? "active" : "blocked";
+}
+
 /** Есть ли пользователь с этим email (в нижнем регистре). */
 export async function emailTaken(db: IdentityDb, email: string): Promise<boolean> {
   const rows = await db

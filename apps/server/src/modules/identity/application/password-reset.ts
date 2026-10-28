@@ -1,13 +1,15 @@
 // «Забыли пароль?» (AUTH-04, SEC-02): частота — на email; ответ один и тот же, есть такой email или нет, заблокирован
 // ли он и ушло ли письмо (сбой SMTP — только в лог): по ответу не узнать, зарегистрирован ли адрес. Ссылка
 // «<адрес сайта>/recovery?token=…» одноразовая, срок — identity.reset-link-minutes (1 ч); проверка срока — по Clock.
-// Новый пароль: хэш, все сессии завершены, адрес считается подтверждённым (ссылка пришла на него).
+// Новый пароль: хэш, все сессии завершены, адрес считается подтверждённым (ссылка пришла на него). Заблокированный
+// после выдачи ссылки пароль не меняет — ACCOUNT_BLOCKED.
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { resolveLinkOrigin, type LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import {
   deleteSessions,
+  lockUserStatus,
   markEmailVerified,
   setPasswordHash,
   userByEmail,
@@ -73,6 +75,8 @@ export function makePasswordReset(d: PasswordResetDeps) {
         now,
       });
       if (userId === undefined) throw new AppError("LINK_INVALID");
+      // Заблокирован после выдачи ссылки — пароль не меняется (откат вернёт и ссылку: разблокированный ею воспользуется).
+      if ((await lockUserStatus(tx, userId)) !== "active") throw new AppError("ACCOUNT_BLOCKED");
       await setPasswordHash(tx, userId, passwordHash, now);
       await deleteSessions(tx, userId);
       await markEmailVerified(tx, userId, now);

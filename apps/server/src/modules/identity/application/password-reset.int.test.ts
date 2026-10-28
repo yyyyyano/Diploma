@@ -85,6 +85,21 @@ describe("AUTH-04: «Забыли пароль?»", () => {
     });
   });
 
+  it("заблокирован после выдачи ссылки — ACCOUNT_BLOCKED, пароль прежний", async () => {
+    const { userId } = await seedUser(db, { email: "late-block@example.test", password });
+    const { reset, sent, auth } = stack();
+    await reset.request("late-block@example.test", local);
+    const token = tokenOf(sent[0]?.template.link ?? "");
+    await db.owner.query("update identity_users set status = 'blocked' where id = $1", [userId]);
+    await expect(reset.reset(token, "новый-пароль-2026")).rejects.toMatchObject({
+      code: "ACCOUNT_BLOCKED",
+    });
+    await db.owner.query("update identity_users set status = 'active' where id = $1", [userId]);
+    expect(
+      await auth.signIn({ email: "late-block@example.test", password }, new Headers()),
+    ).toMatchObject({ kind: "ok" });
+  });
+
   it("ссылка через 61 минуту — LINK_INVALID, пароль прежний", async () => {
     await seedUser(db, { email: "late@example.test", password });
     const { reset, sent, clock, auth } = stack();

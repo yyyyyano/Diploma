@@ -124,7 +124,7 @@ export const identityContract = {
     .route({ method: "POST", path: "/identity/password-reset" })
     .input(PasswordResetInput)
     .output(Ok)
-    .errors(pickErrors("VALIDATION", "LINK_INVALID")),
+    .errors(pickErrors("VALIDATION", "LINK_INVALID", "ACCOUNT_BLOCKED")),
   /** «Войти с кодом восстановления»: новый пароль, новый код (старый не работает), вход (Set-Cookie). */
   recoverWithCode: oc
     .route({ method: "POST", path: "/identity/recovery-code/sign-in" })

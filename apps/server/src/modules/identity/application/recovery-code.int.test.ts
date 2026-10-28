@@ -98,6 +98,23 @@ describe("AUTH-05: код восстановления", () => {
     ).rejects.toMatchObject({ code: "ACCOUNT_BLOCKED" });
   });
 
+  it("два запроса разом с одним верным кодом — проходит один, второй INVALID_CREDENTIALS (код гасится атомарно)", async () => {
+    const { userId } = await seedUser(db, { email: "race-code@example.test", password });
+    const { codes, platform } = stack();
+    const { code } = await codes.issue(platform.system, userId);
+    const attempt = (next: string) =>
+      codes.recover({ email: "race-code@example.test", code, password: next }, new Headers()).then(
+        () => "ok",
+        (error: unknown) => (error as { code?: string }).code,
+      );
+    const results = await Promise.all([
+      attempt("первый-пароль-2026"),
+      attempt("второй-пароль-2026"),
+    ]);
+    expect(results).toHaveLength(2);
+    expect(results).toEqual(expect.arrayContaining(["ok", "INVALID_CREDENTIALS"]));
+  });
+
   it("SEC-02: 5 попыток на email за 15 минут, шестая — RATE_LIMITED", async () => {
     const { codes } = stack();
     for (let i = 0; i < 5; i += 1) {

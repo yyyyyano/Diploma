@@ -1,5 +1,5 @@
 // Код восстановления (AUTH-05) в identity_recovery_codes: один на пользователя, только хэш argon2id.
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { UserStatus } from "./identity.repo.ts";
 import type { IdentityDb } from "./identity.repo.ts";
 import { identityRecoveryCodes, identityUsers } from "./schema.ts";
@@ -50,4 +50,23 @@ export async function recoveryCodeCreatedAt(
     .from(identityRecoveryCodes)
     .where(eq(identityRecoveryCodes.userId, userId));
   return rows[0]?.createdAt;
+}
+
+/**
+ * Погасить код, если он всё ещё тот, что сверили (T-017, находка ревью T-013): DELETE … WHERE code_hash = … в
+ * транзакции восстановления. Второй запрос с тем же кодом ждёт строку первого и после его коммита ничего не находит —
+ * проходит ровно один. false — код уже погашен или заменён.
+ */
+export async function consumeRecoveryCode(
+  db: IdentityDb,
+  userId: string,
+  codeHash: string,
+): Promise<boolean> {
+  const rows = await db
+    .delete(identityRecoveryCodes)
+    .where(
+      and(eq(identityRecoveryCodes.userId, userId), eq(identityRecoveryCodes.codeHash, codeHash)),
+    )
+    .returning({ userId: identityRecoveryCodes.userId });
+  return rows.length > 0;
 }

@@ -2,7 +2,8 @@
 // настройках; хранится хэшем argon2id. «Войти с кодом восстановления»: частота — на email; код и email сверяются
 // постоянным по времени сравнением, а для неизвестного email или пользователя без кода всё равно считается хэш —
 // время ответа не выдаёт, есть ли такой адрес. Верный код: новый пароль, все сессии завершены, выдан новый код
-// (старый больше не работает), вход — сразу.
+// (старый больше не работает), вход — сразу. Код гасится в транзакции DELETE … WHERE code_hash = … — два запроса с
+// одним кодом не пройдут оба.
 import type { UserId } from "@kosht/kernel";
 import { randomBytes } from "node:crypto";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
@@ -17,6 +18,7 @@ import {
   type IdentityDb,
 } from "../infrastructure/db/identity.repo.ts";
 import {
+  consumeRecoveryCode,
   recoveryCodeCreatedAt,
   recoveryTarget,
   saveRecoveryCode,
@@ -80,7 +82,12 @@ export function makeRecoveryCodes(d: RecoveryCodeDeps) {
 
     const passwordHash = await hashPassword(input.password);
     const now = platform.clock.now();
+    const codeHash = target.codeHash;
     const next = await platform.system.transaction(async (tx) => {
+      // Код гасится атомарно: из двух запросов с одним кодом проходит один.
+      if (!(await consumeRecoveryCode(tx, target.userId, codeHash))) {
+        throw new AppError("INVALID_CREDENTIALS");
+      }
       await setPasswordHash(tx, target.userId, passwordHash, now);
       await deleteSessions(tx, target.userId);
       return issue(tx, target.userId);

@@ -21,8 +21,9 @@ AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего акк�
   заблокирован при верном пароле — `ACCOUNT_BLOCKED` без cookie), `register` (частота на email и на всех; занятый —
   `EMAIL_TAKEN`; пользователь, согласия, ссылка и `identity.user-registered` одной транзакцией → письмо → вход),
   `verifyEmail` (POST со страницы `/verify-email`), `requestPasswordReset` (ответ одинаковый для любого email; письмо —
-  активному), `resetPassword` (ссылка `/recovery?token=…`, 1 ч; новый пароль завершает сессии), `recoverWithCode`
-  (новый пароль, новый код, вход; неизвестный email — ложный хэш, то же время), `signOut`; localOnly: `setup`
+  активному), `resetPassword` (ссылка `/recovery?token=…`, 1 ч; новый пароль завершает сессии; заблокированный после выдачи
+  ссылки — `ACCOUNT_BLOCKED`), `recoverWithCode` (новый пароль, новый код, вход; неизвестный email — ложный хэш, то же
+  время; код гасится `DELETE … WHERE code_hash` в транзакции — из двух параллельных проходит один), `signOut`; localOnly: `setup`
   (код восстановления в ответе); authed: `me` (+ `emailVerified`), `resendVerification`, `recoveryCodeStatus`,
   `createRecoveryCode`, `changePassword` (Better Auth: прочие сессии завершены, новая cookie), `deleteAccount`
   (PRIV-06, `application/delete-account.ts`: пароль → блокировка и сессии (LAST_ADMIN под блокировкой админов) →

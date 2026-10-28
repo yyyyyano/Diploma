@@ -100,6 +100,8 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.me": { input: () => undefined },
   "accounts.list": { input: () => undefined },
   "privacy.state": { input: () => undefined },
+  "privacy.dataExport": { input: () => undefined },
+  "privacy.requestExport": { input: () => undefined },
   "privacy.setCloudConsent": {
     input: () => ({ granted: false, version: CONSENT_VERSIONS.cloud }),
   },
@@ -186,6 +188,12 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'statement', $3, 'text/csv', 10) returning id`,
     [ids.household_id, ids.user_id, `выписка ${email}.csv`],
   );
+  // Готовый архив «Мои данные» B: его файл и имя не должны попасть в ответ A (privacy.dataExport).
+  await db.owner.query(
+    `insert into privacy_exports (household_id, user_id, status, file_id, file_name, size, finished_at)
+     values ($1, $2, 'ready', $3, $4, 10, now())`,
+    [ids.household_id, ids.user_id, file.rows[0]?.id, `архив ${email}.zip`],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -221,6 +229,8 @@ beforeAll(async () => {
     "api",
     { log: memoryLogger().log },
   );
+  // Очереди созданы, как в процессе api: процедуры, ставящие задачу (privacy.requestExport), работают.
+  await api.startJobs();
   a = await seedHousehold("a@example.test");
   b = await seedHousehold("b@example.test");
 });
@@ -304,6 +314,8 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "notifications.markRead",
       "notifications.preferences",
       "notifications.setPreference",
+      "privacy.dataExport",
+      "privacy.requestExport",
       "privacy.setCloudConsent",
       "privacy.state",
       "explain_number",

@@ -65,7 +65,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
   });
   const privacyModule = createPrivacyModule({
     platform: ports.systemPlatform,
-    facades: {},
+    facades: { files: filesModule.facade },
   });
   const mailModule = createMailModule({
     platform: ports.systemPlatform,

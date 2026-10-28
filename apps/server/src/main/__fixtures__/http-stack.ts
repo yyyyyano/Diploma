@@ -1,9 +1,13 @@
 // Стенд процедур через настоящие HTTP-приложения обоих слушателей (local и lan) над корнем композиции на тестовой базе:
 // api и worker (очередь, подписки), запрос — как из браузера: Host слушателя, cookie, JSON. Для сквозных int-тестов
-// регистрации и восстановления доступа.
+// регистрации и восстановления доступа. Папка данных (файлы домохозяйств) у api и worker общая — как у процессов на
+// одной машине: архив, собранный задачей worker, скачивается через api.
 import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { HouseholdId, UserId } from "@kosht/kernel";
 import type { TestDb } from "@kosht/testing/db";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createApiHandler } from "../../platform/http/api.ts";
 import { createApp, type HttpApp } from "../../platform/http/app.ts";
 import { BODY_LIMIT } from "../../platform/http/body-limit.ts";
@@ -39,8 +43,10 @@ export async function startHttpStack(
   db: TestDb,
   options: { readonly worker?: boolean } = {},
 ): Promise<HttpStack> {
-  const api = await composeOnTestDb(db, "api");
-  const worker = options.worker === false ? undefined : await composeOnTestDb(db, "worker");
+  const dataDir = await mkdtemp(join(tmpdir(), "kosht-stack-data-"));
+  const env = { DATA_DIR: dataDir };
+  const api = await composeOnTestDb(db, "api", env);
+  const worker = options.worker === false ? undefined : await composeOnTestDb(db, "worker", env);
   await api.composition.startJobs();
   await worker?.composition.startJobs();
   const log = memoryLogger().log;
@@ -83,6 +89,7 @@ export async function startHttpStack(
     async close() {
       await worker?.close();
       await api.close();
+      await rm(dataDir, { recursive: true, force: true });
     },
   };
 }

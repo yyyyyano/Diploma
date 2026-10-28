@@ -78,6 +78,7 @@ export {
   ConsentKind,
   ConsentRecord,
   ConsentVersion,
+  DataExportState,
   PrivacyState,
   privacyContract,
   RegistrationConsents,

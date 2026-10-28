@@ -44,6 +44,8 @@ describe("дерево процедур", () => {
       "identity.me",
       "privacy.state",
       "privacy.setCloudConsent",
+      "privacy.dataExport",
+      "privacy.requestExport",
       "actions.undo",
       "actions.decision",
       "actions.answer",

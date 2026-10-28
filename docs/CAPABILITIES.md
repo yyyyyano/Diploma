@@ -31,7 +31,7 @@
 | `files` | SEC-03, RCPT-11, STMT-10, PRIV-05/06 | приём файлов (тип по содержимому, лимиты), хранение `data/files/<householdId>/`, выдача владельцу, удаление | — | user | — |
 | `explain` | EXPL-01/02, P2 | хранит трассы `{value, trace}` рядом с результатом, отдаёт объяснение по `traceId` | — | user | — |
 | `actions` | P5, AGT-05/07, TXN-03/04, TXN-10 (вопрос «одна покупка?»), TG-07 `/undo`, NOTIF-05 | журнал отменяемых действий; ожидающие решения «Да/Нет» — подтверждения удаления и массовых действий, вопрос «чек и платёж по карте — одна покупка?» (одинаково на сайте, в боте и в чате, ARCHITECTURE §5); реестры обработчиков отмены и ответов | — | user | — |
-| `privacy` | PRIV-01/02/05/06/08, AUTH-02 | согласия с версией текста; экспорт и удаление аккаунта через реестр владельцев данных; политика ПД | — | user, system | `privacy.consent-changed` |
+| `privacy` | PRIV-01/02/05/06/08, AUTH-02 | согласия с версией текста; экспорт и удаление аккаунта через реестр владельцев данных; политика ПД | files | user, system | `privacy.consent-changed`, `privacy.export-ready` |
 | `mail` | AUTH-03/04/06, ADM-60 | SMTP, локальный почтовый ящик (только localhost), тестовое письмо | — | system | — |
 | `identity` | AUTH-01…12, ROLE-01/02, SEC-01/02, ADM-01, ADM-30, DEMO-04 (вход) | Better Auth (ядро) + первый запуск, код восстановления, роли, блокировка, последний админ, демо-вход, домохозяйство | mail, privacy | system | `identity.system-initialized`, `identity.user-registered`, `identity.user-deleted` |
 | `notifications` | NOTIF-01…05, BUD-03, CAL-07 (доставка) | уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram) | identity | user, system | — |

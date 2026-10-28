@@ -21,8 +21,9 @@ SEC-03, RCPT-11, STMT-10, PRIV-05/06. Сделано: хранение и выд
 - Имя файла — только метаданные: `domain/file-name.ts` (`safeFileName`: без каталогов, управляющих и запрещённых
   знаков, ≤ 120 символов с расширением); путь строит `BlobStore` из `householdId` scope и id.
 - Таблица `files` (`userOwnedTable`): `kind` (`data-export | receipt-photo | statement`), `name`, `mime`, `size`.
-- Владелец данных (`user-data.ts`): строки `files` выгружает и удаляет privacy; хук `export` кладёт в архив исходные
-  файлы «`<id>-<имя>`» (кроме прежних архивов `data-export`), `afterDelete` удаляет весь каталог домохозяйства.
+- Владелец данных (`user-data.ts`): строки `files` выгружает и удаляет privacy; хук `export` отдаёт в архив исходные
+  файлы «`<id>-<имя>`» как `Blob` (читаются потоком при записи архива; кроме прежних архивов `data-export`),
+  `afterDelete` удаляет весь каталог домохозяйства. Архив «Мои данные» сохраняет privacy через `save` (поток кусков).
 
 ## Зависимости
 Можно: — (`tooling/architecture/modules.ts`). Слушает: —.

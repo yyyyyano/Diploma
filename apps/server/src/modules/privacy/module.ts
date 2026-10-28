@@ -1,35 +1,54 @@
 // Модуль privacy (паспорт — CLAUDE.md): журнал согласий с версией текста (PRIV-01, PRIV-02), источник облачного
-// согласия для шлюза llm; экспорт и удаление аккаунта — T-016.
+// согласия для шлюза llm; архив «Мои данные» (PRIV-05) и удаление данных аккаунта (PRIV-06) по реестру владельцев.
+import type { FilesFacade } from "../files/index.ts";
 import {
   defineModule,
   type ModuleDeps,
-  type NoFacades,
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
 import { privacyRouter } from "./api/router.ts";
 import { makeCloudConsentSource } from "./application/cloud-consent.ts";
 import { makeCloudConsentSettings } from "./application/cloud-consent-settings.ts";
+import { makeDataExport } from "./application/data-export.ts";
 import { makePurgeAccount } from "./application/purge-account.ts";
 import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
-import { consentChanged } from "./events.ts";
+import { consentChanged, exportReady } from "./events.ts";
+import { buildExportJob } from "./jobs/build-export.job.ts";
 import { privacyUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
-export type PrivacyFacades = NoFacades;
+export interface PrivacyFacades {
+  readonly files: FilesFacade;
+}
 
-export function createPrivacyModule({ platform }: ModuleDeps<PrivacyFacades, SystemPlatform>) {
+export function createPrivacyModule({
+  platform,
+  facades,
+}: ModuleDeps<PrivacyFacades, SystemPlatform>) {
+  // Сценарий ставит задачу, задача зовёт сценарий: задача берётся при вызове, когда обе уже созданы.
+  const dataExport = makeDataExport({
+    ...platform,
+    files: facades.files,
+    enqueueBuild: (tx, exportId) => platform.jobs.enqueue(tx, buildJob, { exportId }),
+  });
+  const buildJob = buildExportJob(dataExport.build);
   return defineModule({
     id: "privacy",
     facade: {
       recordRegistrationConsents: makeRecordRegistrationConsents(platform),
       purge: makePurgeAccount(platform),
+      isExportReady: dataExport.isReady,
     },
-    events: [consentChanged],
-    router: privacyRouter(makeCloudConsentSettings(platform)),
+    events: [consentChanged, exportReady],
+    jobs: [buildJob],
+    router: privacyRouter(makeCloudConsentSettings(platform), dataExport),
     userData: privacyUserData(platform.system),
     consentSource: makeCloudConsentSource(platform),
   });
 }
 
-/** Что модуль даёт соседям: recordRegistrationConsents(tx, согласия) — в транзакции регистрации. */
+/**
+ * Что модуль даёт соседям: recordRegistrationConsents(tx, согласия) — в транзакции регистрации; purge(s) — удаление
+ * данных аккаунта; isExportReady(s, id) — архив «Мои данные» готов (подписчик notifications).
+ */
 export type PrivacyFacade = ReturnType<typeof createPrivacyModule>["facade"];

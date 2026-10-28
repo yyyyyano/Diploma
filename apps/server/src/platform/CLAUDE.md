@@ -215,8 +215,8 @@
   `userId`/`householdId`/`ownerId`.
 - `db/user-data.ts` — `defineUserData({ tables, export?, afterDelete? })` → `UserDataDef`: только `userOwnedTable`,
   без повторов; порядок — порядок удаления (дети раньше родителей); таблиц может не быть, только если есть хук. Хуки —
-  данные вне таблиц домохозяйства: `export(s, sink)` дополняет архив «Мои данные» (`ExportSink.file`, исходные
-  файлы), `afterDelete(scope)` — идемпотентная уборка после удаления строк (каталог файлов, системные таблицы модуля,
+  данные вне таблиц домохозяйства: `export(s, sink)` дополняет архив «Мои данные» (`ExportSink.file(path, Blob)`:
+  исходные файлы читаются потоком, когда до них дошла запись архива), `afterDelete(scope)` — идемпотентная уборка после удаления строк (каталог файлов, системные таблицы модуля,
   трассы). `UserDataOwner { module, data }` — элемент `Platform.userData()`.
 - `http/procedures.ts` — `ModuleRouter`: ветка модуля в дереве процедур.
 

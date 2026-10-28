@@ -42,6 +42,24 @@ export const SetCloudConsentInput = z.strictObject({
   version: ConsentVersion,
 });
 
+/**
+ * Архив «Мои данные» (PRIV-05): последняя заявка. none — не просили; pending — собирается; ready — готов (файл
+ * скачивается files.download по id); failed — не удалось (можно повторить). Моменты — ISO UTC, размер — байты.
+ */
+export const DataExportState = z.strictObject({
+  status: z.enum(["none", "pending", "ready", "failed"]),
+  requestedAt: z.iso.datetime().nullable(),
+  finishedAt: z.iso.datetime().nullable(),
+  file: z
+    .strictObject({
+      id: z.uuid(),
+      name: z.string().min(1).max(120),
+      size: z.number().int().nonnegative(),
+    })
+    .nullable(),
+});
+export type DataExportState = z.infer<typeof DataExportState>;
+
 export const privacyContract = {
   /** Облачное согласие и история согласий вошедшего. */
   state: oc
@@ -54,4 +72,14 @@ export const privacyContract = {
     .input(SetCloudConsentInput)
     .output(PrivacyState)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "CONFLICT")),
+  /** Архив «Мои данные» вошедшего: готовится ли, готов ли и какой файл. */
+  dataExport: oc
+    .route({ method: "GET", path: "/privacy/export" })
+    .output(DataExportState)
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Подготовить архив (PRIV-05): собирается задачей; уже готовящийся — та же заявка; прежний архив удаляется. */
+  requestExport: oc
+    .route({ method: "POST", path: "/privacy/export" })
+    .output(DataExportState)
+    .errors(pickErrors("UNAUTHORIZED")),
 };

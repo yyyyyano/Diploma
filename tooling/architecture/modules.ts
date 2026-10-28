@@ -65,9 +65,10 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "PRIV-01/02/05/06/08, AUTH-02",
     responsibility:
       "согласия с версией текста; экспорт и удаление аккаунта через реестр владельцев данных; политика ПД",
-    dependsOn: [],
+    // PRIV-05: архив «Мои данные» сохраняется файлом домохозяйства (files.save) и выдаётся files.download.
+    dependsOn: ["files"],
     tables: ["user", "system"],
-    publishes: ["privacy.consent-changed"],
+    publishes: ["privacy.consent-changed", "privacy.export-ready"],
   },
   {
     id: "mail",

@@ -129,7 +129,8 @@ describe("NOTIF-04: вид × канал", () => {
     const s = scoped(50);
     const { feed } = setup();
     const before = await feed.preferences(s);
-    expect(before.items).toHaveLength(9);
+    // NOTIF-02: десять видов — девять из SPEC и «архив «Мои данные» готов» (R47).
+    expect(before.items).toHaveLength(10);
     expect(before.items.every((p) => p.web && p.telegram)).toBe(true);
     await feed.setPreference(s, { kind: "limit", channel: "telegram", enabled: false });
     await feed.setPreference(s, { kind: "limit", channel: "telegram", enabled: false });

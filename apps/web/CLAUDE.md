@@ -14,10 +14,10 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 - `app/`: `App` (провайдеры), `createAppRouter({ queryClient, session, history? })` (контекст роутера: `queryClient`,
   `session`, `Shell`; граница ошибок `ErrorScreen`, «нет страницы» `NotFoundScreen`), `shell/AppShell` (меню из
   реестра маршрутов под роль, поток событий, выход, колокольчик `features/notifications` в углу `AppFrame`).
-- `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/accounts`, гость → `/setup`, если `setupAvailable`, иначе
-  `/login`); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/recovery`, `_public/policy` (все);
+- `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/onboarding`, пока анкета `pending`, иначе `/accounts`;
+  гость → `/setup`, если `setupAvailable`, иначе `/login`); `onboarding` (анкета, без каркаса, AUTH-07); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/recovery`, `_public/policy` (все);
   `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
-  (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/assistant`,
+  (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/assistant`, `_app/memory`,
   `_app/settings`, `_app/admin` (`requireRole(…, "admin")`
   → иначе «нет такой страницы»; вкладки `_app/admin/users`, `_app/admin/system`, `/admin` → `/admin/users`), `dev.gallery` (витрина; только разработка и `--mode e2e`).
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
@@ -31,8 +31,9 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
   (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);
-  `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
-  `features/notifications`, `features/accounts`, `features/admin`,
+  `entities/profile-fact` — `FactEditor`, `FactValueText`, `factLabel`, `keyLabel` (факт профиля словами и форма по
+  ключу); `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
+  `features/notifications`, `features/accounts`, `features/admin`, `features/onboarding`, `features/memory`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 

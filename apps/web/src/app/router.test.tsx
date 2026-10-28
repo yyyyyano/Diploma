@@ -136,8 +136,32 @@ describe("AUTH-10, NFR-24: стартовый маршрут «/»", () => {
     expect(router.state.location.pathname).toBe("/login");
   });
 
+  it("AUTH-07: вошедший впервые — на анкету на 1 минуту", async () => {
+    server.use(
+      http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "pending" })),
+    );
+    const { router } = renderApp("/", sessionOf(admin).session);
+    expect(
+      await screen.findByRole("heading", { level: 1, name: "Как вы зарабатываете?" }),
+    ).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/onboarding");
+  });
+
+  it("AUTH-07: анкету прошли или пропустили — /onboarding ведёт дальше, в «Счета»", async () => {
+    server.use(
+      http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
+      http.get("*/api/accounts", () => HttpResponse.json({ items: [] })),
+    );
+    const { router } = renderApp("/onboarding", sessionOf(admin).session);
+    expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/accounts");
+  });
+
   it("вошедший — в раздел «Счета»", async () => {
-    server.use(http.get("*/api/accounts", () => HttpResponse.json({ items: [] })));
+    server.use(
+      http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
+      http.get("*/api/accounts", () => HttpResponse.json({ items: [] })),
+    );
     const { router } = renderApp("/", sessionOf(admin).session);
     expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe("/accounts");

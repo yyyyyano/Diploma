@@ -96,6 +96,8 @@ test("«Счета»: итог с «Откуда эта цифра?», доба�
   await page.getByRole("button", { name: "Действия со счётом «Отпуск»" }).click();
   await page.getByRole("menuitem", { name: "Удалить счёт" }).click();
   await expect(page.getByText(/Удалить счёт «Отпуск»\?/)).toBeVisible();
+  // Курсор остался там, где был пункт меню, — над кнопкой окна: axe проверяет вид без наведения.
+  await page.mouse.move(0, 0);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await expect(deposit).toBeVisible();
   await page.getByRole("button", { name: "Да, выполнить" }).click();

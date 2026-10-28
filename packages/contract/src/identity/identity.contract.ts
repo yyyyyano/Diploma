@@ -151,6 +151,19 @@ export const identityContract = {
    * Удалить аккаунт безвозвратно (PRIV-06): пароль неверен — INVALID_CREDENTIALS; последний администратор —
    * LAST_ADMIN (AUTH-12). Успех — все данные пользователя удалены, cookie сессии снята.
    */
+  /**
+   * Отметка «Пароль был сброшен администратором <дата>» (AUTH-05, R37): ссылку сброса показали администратору, потому
+   * что подтверждённой почты не было. Пока не погашена — момент (ISO UTC), иначе null.
+   */
+  adminResetNotice: oc
+    .route({ method: "GET", path: "/identity/admin-reset" })
+    .output(z.strictObject({ at: z.iso.datetime().nullable() }))
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Погасить отметку «Пароль был сброшен администратором» — человек её увидел. */
+  acknowledgeAdminReset: oc
+    .route({ method: "POST", path: "/identity/admin-reset/ack" })
+    .output(Ok)
+    .errors(pickErrors("UNAUTHORIZED")),
   deleteAccount: oc
     .route({ method: "POST", path: "/identity/delete-account" })
     .input(DeleteAccountInput)

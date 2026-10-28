@@ -20,7 +20,10 @@ export const identityHouseholds = systemTable("identity_households", {
   createdAt: moment().notNull().defaultNow(),
 });
 
-/** Пользователь Better Auth + свои поля: роль, статус (AUTH-11), демо (DEMO-04), домохозяйство. */
+/**
+ * Пользователь Better Auth + свои поля: роль, статус (AUTH-11), демо (DEMO-04), домохозяйство, отметка сброса пароля
+ * администратором (AUTH-05).
+ */
 export const identityUsers = systemTable(
   "identity_users",
   {
@@ -35,6 +38,12 @@ export const identityUsers = systemTable(
     householdId: uuid()
       .notNull()
       .references(() => identityHouseholds.id),
+    /**
+     * Когда администратор выдал себе ссылку сброса пароля этого пользователя (AUTH-05, R37: у него нет ни
+     * подтверждённой почты, ни Telegram). Пользователь видит «Пароль был сброшен администратором <дата>» и гасит
+     * отметку; null — не сбрасывался.
+     */
+    passwordResetByAdminAt: moment(),
     createdAt: moment().notNull().defaultNow(),
     updatedAt: moment().notNull().defaultNow(),
   },

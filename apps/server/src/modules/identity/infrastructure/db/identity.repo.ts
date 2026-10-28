@@ -305,3 +305,93 @@ export async function deleteUserRecords(
     await db.delete(identityHouseholds).where(eq(identityHouseholds.id, user.householdId));
   }
 }
+
+/** Строка списка «Пользователи» админки (ADM-30): только учётная запись — без данных домохозяйства (PRIV-07). */
+export interface AccountRow {
+  readonly id: UserId;
+  readonly email: string;
+  readonly registeredAt: Date;
+  readonly emailVerified: boolean;
+  readonly status: UserStatus;
+  readonly role: UserRole;
+  readonly demo: boolean;
+}
+
+/** Все пользователи по дате регистрации (старые сверху), не больше limit. */
+export async function listAccounts(db: IdentityDb, limit: number): Promise<AccountRow[]> {
+  const rows = await db
+    .select({
+      id: identityUsers.id,
+      email: identityUsers.email,
+      registeredAt: identityUsers.createdAt,
+      emailVerified: identityUsers.emailVerified,
+      status: identityUsers.status,
+      role: identityUsers.role,
+      demo: identityUsers.demo,
+    })
+    .from(identityUsers)
+    .orderBy(identityUsers.createdAt, identityUsers.id)
+    .limit(limit);
+  return rows.map((row) => ({
+    ...row,
+    id: row.id as UserId,
+    status: row.status === "active" ? "active" : "blocked",
+    role: row.role === "admin" ? "admin" : "user",
+  }));
+}
+
+/** Учётная запись по id: домохозяйство, email, подтверждён ли он, роль и статус; нет — undefined. */
+export async function accountOf(
+  db: IdentityDb,
+  userId: string,
+): Promise<
+  | {
+      readonly householdId: HouseholdId;
+      readonly email: string;
+      readonly emailVerified: boolean;
+      readonly role: UserRole;
+      readonly status: UserStatus;
+    }
+  | undefined
+> {
+  const rows = await db
+    .select({
+      householdId: identityUsers.householdId,
+      email: identityUsers.email,
+      emailVerified: identityUsers.emailVerified,
+      role: identityUsers.role,
+      status: identityUsers.status,
+    })
+    .from(identityUsers)
+    .where(eq(identityUsers.id, userId));
+  const row = rows[0];
+  if (row === undefined) return undefined;
+  return {
+    householdId: row.householdId as HouseholdId,
+    email: row.email,
+    emailVerified: row.emailVerified,
+    role: row.role === "admin" ? "admin" : "user",
+    status: row.status === "active" ? "active" : "blocked",
+  };
+}
+
+/** Когда администратор сбросил пароль пользователя (AUTH-05); не сбрасывал или отметка погашена — null. */
+export async function adminResetMarkOf(db: IdentityDb, userId: string): Promise<Date | null> {
+  const rows = await db
+    .select({ at: identityUsers.passwordResetByAdminAt })
+    .from(identityUsers)
+    .where(eq(identityUsers.id, userId));
+  return rows[0]?.at ?? null;
+}
+
+/** Отметка «пароль сброшен администратором» (AUTH-05): поставить моментом или погасить (null). */
+export async function setAdminResetMark(
+  db: IdentityDb,
+  userId: string,
+  at: Date | null,
+): Promise<void> {
+  await db
+    .update(identityUsers)
+    .set({ passwordResetByAdminAt: at })
+    .where(eq(identityUsers.id, userId));
+}

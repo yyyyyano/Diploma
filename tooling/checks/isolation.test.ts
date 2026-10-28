@@ -98,11 +98,11 @@ describe("isolation: нарушения на фикстуре", () => {
 });
 
 describe("isolation: законный код не ловится", () => {
-  it("чистая фикстура — код 0; тесты не проверяются, остальные 13 файлов — да", () => {
+  it("чистая фикстура — код 0 (и scope цели в target-user-scope.ts, T-017); тесты не проверяются, остальные 14 файлов — да", () => {
     const result = runIsolation({ baseDir: join(fixtures, "clean") });
     expect({ code: result.code, files: result.files, findings: result.findings }).toEqual({
       code: 0,
-      files: 13,
+      files: 14,
       findings: [],
     });
   });

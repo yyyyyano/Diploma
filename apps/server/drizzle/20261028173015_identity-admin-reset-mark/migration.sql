@@ -1,0 +1,1 @@
+ALTER TABLE "identity_users" ADD COLUMN "password_reset_by_admin_at" timestamp with time zone;

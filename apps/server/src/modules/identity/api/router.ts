@@ -1,7 +1,7 @@
 // Процедуры identity (contract.identity.*): тонко — вход контрактом, сценарий, cookie в ответ. Доступ:
 // status, signIn, register, verifyEmail, requestPasswordReset, resetPassword, recoverWithCode, signOut — publicProc
 // (гость); setup — localOnly (R40: на сетевом входе процедуры нет); me, resendVerification, recoveryCodeStatus,
-// createRecoveryCode, changePassword, deleteAccount — authed. Адрес ссылок в письмах — по слушателю и Host запроса
+// createRecoveryCode, changePassword, deleteAccount, adminResetNotice, acknowledgeAdminReset — authed. Адрес ссылок в письмах — по слушателю и Host запроса
 // (NFR-24).
 import { authed, localOnly, publicProc } from "../../../platform/http/procedures.ts";
 import type { HttpContext } from "../../../platform/http/procedures.ts";
@@ -16,6 +16,7 @@ import type { RecoveryCodes } from "../application/recovery-code.ts";
 import type { makeSignIn, makeSignOut } from "../application/sign-in.ts";
 import type { makeSetup } from "../application/setup.ts";
 import type { makeMe, makeStatus } from "../application/status.ts";
+import type { makeAdminResetNotice } from "../application/admin-users.ts";
 
 export interface IdentityUseCases {
   readonly status: ReturnType<typeof makeStatus>;
@@ -23,6 +24,7 @@ export interface IdentityUseCases {
   readonly signIn: ReturnType<typeof makeSignIn>;
   readonly signOut: ReturnType<typeof makeSignOut>;
   readonly me: ReturnType<typeof makeMe>;
+  readonly adminResetNotice: ReturnType<typeof makeAdminResetNotice>;
   readonly register: ReturnType<typeof makeRegister>;
   readonly verifyEmail: EmailVerification["verify"];
   readonly resendVerification: ReturnType<typeof makeResendVerification>;
@@ -114,5 +116,12 @@ export function identityRouter(uc: IdentityUseCases) {
       return { ok: true as const };
     }),
     me: authed.identity.me.handler(({ context }) => uc.me(context.s)),
+    adminResetNotice: authed.identity.adminResetNotice.handler(async ({ context }) => ({
+      at: (await uc.adminResetNotice.get(context.s.scope.userId))?.toISOString() ?? null,
+    })),
+    acknowledgeAdminReset: authed.identity.acknowledgeAdminReset.handler(async ({ context }) => {
+      await uc.adminResetNotice.acknowledge(context.s.scope.userId);
+      return { ok: true as const };
+    }),
   };
 }

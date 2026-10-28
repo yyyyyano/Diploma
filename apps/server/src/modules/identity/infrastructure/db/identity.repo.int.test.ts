@@ -4,12 +4,17 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSystemDb, type SystemDb } from "../../../../platform/db/system-db.ts";
 import {
+  accountOf,
+  adminResetMarkOf,
   deleteUserRecords,
   insertUser,
+  listAccounts,
+  lockUserStatus,
   markEmailVerified,
   newUserIds,
   passwordHashOf,
   sessionOwner,
+  setAdminResetMark,
   userCard,
 } from "./identity.repo.ts";
 
@@ -104,5 +109,51 @@ describe("PRIV-06: запись identity при удалении аккаунт�
 
     await deleteUserRecords(system, { userId: second.userId, householdId: first.householdId });
     expect(await household()).toBe(0);
+  });
+});
+
+describe("ADM-30, AUTH-05: учётные записи для админки", () => {
+  it("список и учётная запись — роль и статус как в базе; неизвестный — undefined, отметки нет", async () => {
+    const admin = await newUserIds(system);
+    await insertUser(system, {
+      ...admin,
+      email: "list-admin@example.test",
+      role: "admin",
+      passwordHash: "x",
+    });
+    await db.owner.query("update identity_users set status = 'blocked' where id = $1", [
+      admin.userId,
+    ]);
+    const accounts = await listAccounts(system, 1000);
+    expect(accounts.find((a) => a.id === admin.userId)).toMatchObject({
+      email: "list-admin@example.test",
+      role: "admin",
+      status: "blocked",
+      emailVerified: false,
+      demo: false,
+    });
+    expect(await accountOf(system, admin.userId)).toMatchObject({
+      role: "admin",
+      status: "blocked",
+      householdId: admin.householdId,
+    });
+    expect(await accountOf(system, unknown)).toBeUndefined();
+    expect(await lockUserStatus(system, unknown)).toBeUndefined();
+    expect(await adminResetMarkOf(system, unknown)).toBeNull();
+  });
+
+  it("отметка «сброшен администратором» ставится моментом и гасится", async () => {
+    const user = await newUserIds(system);
+    await insertUser(system, {
+      ...user,
+      email: "mark@example.test",
+      role: "user",
+      passwordHash: "x",
+    });
+    expect(await adminResetMarkOf(system, user.userId)).toBeNull();
+    await setAdminResetMark(system, user.userId, new Date("2026-10-28T10:14:00Z"));
+    expect(await adminResetMarkOf(system, user.userId)).toEqual(new Date("2026-10-28T10:14:00Z"));
+    await setAdminResetMark(system, user.userId, null);
+    expect(await adminResetMarkOf(system, user.userId)).toBeNull();
   });
 });

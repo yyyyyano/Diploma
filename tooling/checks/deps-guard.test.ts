@@ -73,11 +73,22 @@ describe("deps-guard: все модули карты в графе (T-007)", () 
   });
 });
 
+/**
+ * Интеграционный обход всего репозитория отдельным процессом (dependency-cruiser по ~750 файлам), а не юнит: один
+ * занимает ~1 с, а под make check, когда ядра делят десятки процессов тестов, — дольше 5 с по умолчанию. Срок — с
+ * запасом на такую нагрузку; зависший обход всё равно упадёт по нему, а не пройдёт.
+ */
+const REPO_WALK_TIMEOUT_MS = 60_000;
+
 describe("deps-guard на репозитории", () => {
-  it("make deps-check на текущем дереве зелёный и проверяет не меньше MIN_MODULES файлов", () => {
-    const run = spawnSync(process.execPath, [script], { cwd: repoRoot, encoding: "utf8" });
-    expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 0, stderr: "" });
-    const files = Number(/проверено файлов: (\d+)/.exec(run.stdout)?.[1]);
-    expect(files).toBeGreaterThanOrEqual(MIN_MODULES);
-  });
+  it(
+    "make deps-check на текущем дереве зелёный и проверяет не меньше MIN_MODULES файлов",
+    () => {
+      const run = spawnSync(process.execPath, [script], { cwd: repoRoot, encoding: "utf8" });
+      expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 0, stderr: "" });
+      const files = Number(/проверено файлов: (\d+)/.exec(run.stdout)?.[1]);
+      expect(files).toBeGreaterThanOrEqual(MIN_MODULES);
+    },
+    REPO_WALK_TIMEOUT_MS,
+  );
 });

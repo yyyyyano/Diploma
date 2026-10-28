@@ -278,22 +278,33 @@ describe("правила из карты модулей ловят своё", ()
   });
 });
 
+/**
+ * Интеграционный обход всего репозитория dependency-cruiser (как make deps-check), а не юнит на фикстуре: один
+ * занимает ~0,5 с, под make check с десятками процессов тестов — дольше 5 с по умолчанию. Срок — с запасом на такую
+ * нагрузку; зависший обход всё равно упадёт по нему.
+ */
+const REPO_WALK_TIMEOUT_MS = 60_000;
+
 describe("запрет библиотеки на настоящем пакете из node_modules (раскладка pnpm)", () => {
-  it("импорт установленного пакета остаётся в графе с путём .pnpm, и запрет по npmPattern его ловит", async () => {
-    // Тот же обход, что у make deps-check, на настоящем файле репозитория: vitest установлен через pnpm.
-    // Если настройки обхода выкинут пакеты из графа (exclude node_modules или dist/), запреты библиотек
-    // в реальном коде молча перестанут работать — этот тест покраснеет.
-    const probe: ForbiddenRule = {
-      name: "probe-vitest",
-      severity: "error",
-      comment: "проверка раскладки pnpm",
-      from: {},
-      to: { path: npmPattern(["vitest"]) },
-    };
-    const found = await violations(repoRoot, [probe]).then((list) =>
-      list.filter((v) => v.startsWith("probe-vitest: tooling/architecture/modules.test.ts → ")),
-    );
-    expect(found).toHaveLength(1);
-    expect(found[0]).toMatch(/→ node_modules\/\.pnpm\/vitest@[^/]+\/node_modules\/vitest\//);
-  });
+  it(
+    "импорт установленного пакета остаётся в графе с путём .pnpm, и запрет по npmPattern его ловит",
+    { timeout: REPO_WALK_TIMEOUT_MS },
+    async () => {
+      // Тот же обход, что у make deps-check, на настоящем файле репозитория: vitest установлен через pnpm.
+      // Если настройки обхода выкинут пакеты из графа (exclude node_modules или dist/), запреты библиотек
+      // в реальном коде молча перестанут работать — этот тест покраснеет.
+      const probe: ForbiddenRule = {
+        name: "probe-vitest",
+        severity: "error",
+        comment: "проверка раскладки pnpm",
+        from: {},
+        to: { path: npmPattern(["vitest"]) },
+      };
+      const found = await violations(repoRoot, [probe]).then((list) =>
+        list.filter((v) => v.startsWith("probe-vitest: tooling/architecture/modules.test.ts → ")),
+      );
+      expect(found).toHaveLength(1);
+      expect(found[0]).toMatch(/→ node_modules\/\.pnpm\/vitest@[^/]+\/node_modules\/vitest\//);
+    },
+  );
 });

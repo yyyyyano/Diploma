@@ -56,8 +56,9 @@ test("колокольчик со списком и настройки увед�
     );
     const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
     expect(result.violations.map((v) => ({ width: size.width, id: v.id }))).toEqual([]);
-    // Список закрывается тем же колокольчиком (Escape его сейчас не закрывает — см. итог T-016).
-    await page.getByRole("button", { name: /^Уведомления/ }).click();
+    // Escape закрывает список и возвращает фокус колокольчику.
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("button", { name: /^Уведомления/ })).toBeFocused();
     await expect(page.getByRole("heading", { level: 2, name: "Уведомления" })).toBeHidden();
   }
   await page.setViewportSize(VIEWPORTS[0]);

@@ -48,12 +48,16 @@ export function NotificationBell({ admin }: NotificationBellProps) {
   const unread = (feed.data?.pages[0]?.unread ?? 0) + (admin ? (adminFeed.data?.unread ?? 0) : 0);
 
   return (
+    // Фокус уходит в список, Escape закрывает его и возвращает фокус колокольчику (NFR-20): Mantine ловит Escape
+    // только внутри выпадающего блока.
     <Popover
       position="bottom-end"
       width="min(380px, calc(100vw - 32px))"
       shadow="md"
       radius="lg"
       withinPortal
+      trapFocus
+      returnFocus
     >
       <Popover.Target>
         <button

@@ -89,7 +89,7 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   expect((await archive.body()).subarray(0, 2).toString("latin1")).toBe("PK");
   await page.getByRole("button", { name: /^Уведомления/ }).click();
   await expect(page.getByText(/Архив со всеми вашими данными готов/)).toBeVisible();
-  await page.getByRole("button", { name: /^Уведомления/ }).click();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { level: 2, name: "Уведомления" })).toBeHidden();
 
   // PRIV-06: удаление с паролем — окно с перечнем; после — вход, тот же пароль больше не пускает.

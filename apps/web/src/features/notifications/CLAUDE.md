@@ -16,7 +16,8 @@ NOTIF-01 (колокольчик, счётчик, список, переход �
   «Отменить» — `orpc.actions.answer` / `orpc.actions.undo` прямо из `entities/notification`.
 
 ## Компоненты
-Свои: `NotificationBell`. Из `entities`: `notification` (`NotificationItem`, `objectHref`). Mantine: `Popover`, `Button`.
+Свои: `NotificationBell` (фокус — в список, Escape закрывает его и возвращает фокус колокольчику). Из `entities`:
+`notification` (`NotificationItem`, `objectHref`). Mantine: `Popover`, `Button`.
 
 ## Переходы
 «Настроить уведомления» → `/settings?tab=notifications`; «Показать» — раздел объекта (`objectHref`).

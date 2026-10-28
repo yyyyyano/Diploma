@@ -94,6 +94,21 @@ describe("NOTIF-01: колокольчик", () => {
     );
   });
 
+  it("Escape закрывает список и возвращает фокус колокольчику (NFR-20)", async () => {
+    server.use(
+      http.get("*/api/notifications", () =>
+        HttpResponse.json({ items: [], nextCursor: null, unread: 0 }),
+      ),
+    );
+    renderBell();
+    const bell = await screen.findByRole("button", { name: "Уведомления" });
+    await userEvent.click(bell);
+    expect(await screen.findByRole("heading", { name: "Уведомления" })).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await expect.poll(() => screen.queryByRole("heading", { name: "Уведомления" })).toBeNull();
+    expect(bell).toHaveFocus();
+  });
+
   it("пусто — что здесь появится; администратору — его уведомления отдельным блоком", async () => {
     server.use(
       http.get("*/api/notifications", () =>

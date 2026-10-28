@@ -21,6 +21,9 @@ export function AdminLayout() {
           <Link to="/admin/users" className={classes.tab} activeProps={{ "aria-current": "page" }}>
             {t("tabs.users")}
           </Link>
+          <Link to="/admin/system" className={classes.tab} activeProps={{ "aria-current": "page" }}>
+            {t("tabs.system")}
+          </Link>
         </nav>
         <Outlet />
       </div>

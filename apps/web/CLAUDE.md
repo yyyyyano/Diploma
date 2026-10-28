@@ -19,7 +19,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
   (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/assistant`,
   `_app/settings`, `_app/admin` (`requireRole(…, "admin")`
-  → иначе «нет такой страницы»), `dev.gallery` (витрина; только разработка и `--mode e2e`).
+  → иначе «нет такой страницы»; вкладки `_app/admin/users`, `_app/admin/system`, `/admin` → `/admin/users`), `dev.gallery` (витрина; только разработка и `--mode e2e`).
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
   нет маршрута — нет пункта (DES-15).
 - `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`
@@ -32,7 +32,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
   (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);
   `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
-  `features/notifications`, `features/accounts`,
+  `features/notifications`, `features/accounts`, `features/admin`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 

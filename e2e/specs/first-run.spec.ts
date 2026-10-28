@@ -14,11 +14,14 @@ const VIEWPORTS = [
 
 const admin = { email: "admin@example.test", password: "пароль-администратора" };
 
-/** axe и прокрутка при 1440 и 390: нарушения — с размером окна, чтобы было видно, где. */
+/** axe и прокрутка при 1440 и 390: нарушения — с размером окна, чтобы было видно, где. Перед axe — конец переходов. */
 async function accessibleAtBothWidths(page: Page) {
   const problems: unknown[] = [];
   for (const size of VIEWPORTS) {
     await page.setViewportSize(size);
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => animation.playState !== "running"),
+    );
     const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
     for (const v of result.violations) {
       problems.push({
@@ -131,6 +134,18 @@ test("первый запуск → администратор → вход → 
   // Вошедшему первый запуск и вход не нужны: «/setup» ведёт в раздел.
   await page.goto("/setup");
   await expect(page).toHaveURL(/\/accounts$/);
+
+  // ADM-30, ADM-60: администрирование — пункт меню только администратору; «/admin» открывает «Пользователи».
+  await page.getByRole("link", { name: "Администрирование" }).first().click();
+  await expect(page).toHaveURL(/\/admin\/users$/);
+  // Сценарии идут параллельно и заводят своих пользователей — их число заранее неизвестно.
+  await expect(page.getByRole("heading", { level: 2, name: /^Пользователи · \d+$/ })).toBeVisible();
+  await expect(page.getByText("вы", { exact: true })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("link", { name: "Система" }).click();
+  await expect(page).toHaveURL(/\/admin\/system$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Фоновые задачи" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
 
   // Выход — снова вход.
   await page.getByRole("button", { name: "Выйти", exact: true }).click();

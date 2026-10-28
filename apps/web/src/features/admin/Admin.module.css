@@ -61,6 +61,11 @@
   color: var(--ink);
 }
 
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--s-20);
+}
 
 .card {
   display: flex;
@@ -87,6 +92,11 @@
   font-weight: 650;
 }
 
+.subTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}
 
 .hint {
   margin: 0;
@@ -163,7 +173,18 @@
   font-weight: 600;
 }
 
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-14);
+}
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8) var(--s-16);
+}
 
 .dialogActions {
   display: flex;

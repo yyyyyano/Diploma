@@ -21,6 +21,7 @@ export interface ProfileFacades {
 
 export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFacades, Platform>) {
   const facts = makeFacts({ platform, actions: facades.actions });
+  const tools = profileTools(facts, platform.clock);
   return defineModule({
     id: "profile",
     facade: {
@@ -30,7 +31,7 @@ export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFac
     },
     router: profileRouter(facts),
     events: [factsChanged],
-    tools: profileTools(facts, platform.clock),
+    tools: [tools.readFacts, tools.upsertFact],
     undo: { [RESTORE_HANDLER]: facts.restore },
     userData: profileUserData,
   });

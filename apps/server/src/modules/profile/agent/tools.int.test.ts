@@ -19,9 +19,8 @@ describe("AGT-03: инструменты профиля", () => {
   it("upsert_profile_fact пишет факт «чат» с undoToken, read_profile_facts — оценённые на сегодня", async () => {
     const s = createScopedDb(db.pool, testScope({ user: 1, household: 1 }));
     const { facts, clock } = factsWithJournal();
-    const [read, upsert] = profileTools(facts, clock);
+    const { readFacts: read, upsertFact: upsert } = profileTools(facts, clock);
     const ctx = { s, requestId: "test", channel: "web" as const };
-    if (read?.kind !== "read" || upsert?.kind !== "write") throw new Error("инструменты");
     const saved = await upsert.execute(ctx, {
       value: {
         key: "children",

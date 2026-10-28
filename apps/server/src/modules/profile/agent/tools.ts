@@ -7,8 +7,8 @@ import { defineTool } from "../../../platform/tools/define-tool.ts";
 import type { Facts } from "../application/facts.ts";
 
 export function profileTools(facts: Facts, clock: Clock) {
-  return [
-    defineTool({
+  return {
+    readFacts: defineTool({
       name: "read_profile_facts",
       toolset: "core",
       kind: "read",
@@ -22,7 +22,7 @@ export function profileTools(facts: Facts, clock: Clock) {
         return { onDate, facts: await facts.getFacts(ctx.s, input.keys, onDate) };
       },
     }),
-    defineTool({
+    upsertFact: defineTool({
       name: "upsert_profile_fact",
       toolset: "core",
       kind: "write",
@@ -33,5 +33,5 @@ export function profileTools(facts: Facts, clock: Clock) {
       execute: (ctx, input) =>
         facts.set(ctx.s, { value: input.value, source: "chat", channel: ctx.channel }),
     }),
-  ];
+  };
 }

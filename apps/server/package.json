@@ -26,6 +26,7 @@
     "ai": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
+    "fuzzball": "catalog:",
     "hono": "catalog:",
     "libpg-query": "catalog:",
     "nodemailer": "catalog:",

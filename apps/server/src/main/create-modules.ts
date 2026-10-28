@@ -93,7 +93,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
   });
   const profileModule = createProfileModule({
     platform: ports.platform,
-    facades: { identity: identityModule.facade },
+    facades: { identity: identityModule.facade, actions: actionsModule.facade },
   });
   const fxRatesModule = createFxRatesModule({
     platform: ports.systemPlatform,

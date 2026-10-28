@@ -46,6 +46,8 @@ interface Household {
   readonly notificationId: string;
   /** Файл B (строка files; самого файла на диске нет — до него A не должен дойти). */
   readonly fileId: string;
+  /** Факт профиля B. */
+  readonly factId: string;
 }
 
 /**
@@ -150,6 +152,16 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "notifications.adminList": { input: () => ({}) },
   "notifications.adminMarkRead": { input: (b) => ({ ids: [b.notificationId] }) },
   "tool:list_accounts": { input: () => ({}) },
+  "profile.facts": { input: () => undefined },
+  "profile.onboarding": { input: () => undefined },
+  "profile.completeOnboarding": { input: () => ({ answers: {} }) },
+  "profile.setFact": {
+    input: (b) => ({ id: b.factId, value: { key: "largeFamily", value: true } }),
+  },
+  "profile.confirmFact": { input: (b) => ({ id: b.factId }) },
+  "profile.deleteFact": { input: (b) => ({ id: b.factId }) },
+  "tool:read_profile_facts": { input: () => ({}) },
+  "tool:upsert_profile_fact": { input: () => ({ value: { key: "largeFamily", value: true } }) },
   "chat.history": { input: () => undefined },
   "chat.send": {
     input: (b) => ({ conversationId: b.conversationId, text: "Какие у меня счета?" }),
@@ -223,6 +235,12 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'ready', $3, $4, 10, now())`,
     [ids.household_id, ids.user_id, file.rows[0]?.id, `архив ${email}.zip`],
   );
+  const fact = await db.owner.query<{ id: string }>(
+    `insert into profile_facts (household_id, user_id, key, topic, value, source, status, recorded_on)
+     values ($1, $2, 'largeFamily', 'family', '{"key":"largeFamily","value":true}', 'user', 'confirmed', '2026-10-28')
+     returning id`,
+    [ids.household_id, ids.user_id],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -234,6 +252,7 @@ async function seedHousehold(email: string): Promise<Household> {
     traceId: explanation.rows[0]?.id ?? "",
     notificationId: notification.rows[0]?.id ?? "",
     fileId: file.rows[0]?.id ?? "",
+    factId: fact.rows[0]?.id ?? "",
   };
 }
 
@@ -354,8 +373,16 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "privacy.requestExport",
       "privacy.setCloudConsent",
       "privacy.state",
+      "profile.completeOnboarding",
+      "profile.confirmFact",
+      "profile.deleteFact",
+      "profile.facts",
+      "profile.onboarding",
+      "profile.setFact",
       "explain_number",
       "list_accounts",
+      "read_profile_facts",
+      "upsert_profile_fact",
     ]);
     const foreign = [
       b.scope.userId,
@@ -368,6 +395,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.traceId,
       b.notificationId,
       b.fileId,
+      b.factId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

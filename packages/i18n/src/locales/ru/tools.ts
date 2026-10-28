@@ -4,4 +4,6 @@ export const tools = {
   fallback: "Выполняю шаг…",
   list_accounts: "Смотрю ваши счета…",
   explain_number: "Разбираю, как получилась цифра…",
+  read_profile_facts: "Вспоминаю, что знаю о вас…",
+  upsert_profile_fact: "Запоминаю…",
 } as const;

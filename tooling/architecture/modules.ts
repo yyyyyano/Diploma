@@ -129,7 +129,7 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "PROF-01…07, AGT-06 (факты), AUTH-07",
     responsibility:
       "факты (анкета, чат, выводы системы), статусы «подтверждён/предположение», «Что ассистент знает обо мне»",
-    dependsOn: ["identity"],
+    dependsOn: ["identity", "actions"],
     tables: ["user"],
     publishes: ["profile.facts-changed"],
   },

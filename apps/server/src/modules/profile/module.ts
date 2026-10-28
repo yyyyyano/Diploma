@@ -1,20 +1,40 @@
-// Модуль profile (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль profile (паспорт — CLAUDE.md): факты о пользователе для законов РБ (PROF-01…06), «Что ассистент знает обо
+// мне», анкета после первого входа (AUTH-07); «Отменить» у фактов — через actions.
 import {
   defineModule,
   type ModuleDeps,
   type Platform,
 } from "../../platform/module/define-module.ts";
+import type { ActionsFacade } from "../actions/index.ts";
 import type { IdentityFacade } from "../identity/index.ts";
+import { profileTools } from "./agent/tools.ts";
+import { profileRouter } from "./api/router.ts";
+import { makeFacts, RESTORE_HANDLER } from "./application/facts.ts";
+import { factsChanged } from "./events.ts";
+import { profileUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface ProfileFacades {
   readonly identity: IdentityFacade;
+  readonly actions: ActionsFacade;
 }
 
-export function createProfileModule(_deps: ModuleDeps<ProfileFacades, Platform>) {
-  return defineModule({ id: "profile" });
+export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFacades, Platform>) {
+  const facts = makeFacts({ platform, actions: facades.actions });
+  return defineModule({
+    id: "profile",
+    facade: {
+      getFacts: facts.getFacts,
+      upsertDerivedFact: facts.upsertDerivedFact,
+      recordAnswer: facts.recordAnswer,
+    },
+    router: profileRouter(facts),
+    events: [factsChanged],
+    tools: profileTools(facts, platform.clock),
+    undo: { [RESTORE_HANDLER]: facts.restore },
+    userData: profileUserData,
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: факты на дату вопроса, выводы системы, ответы на дозапрос. */
 export type ProfileFacade = ReturnType<typeof createProfileModule>["facade"];

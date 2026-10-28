@@ -95,7 +95,8 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "NOTIF-01…05, BUD-03, CAL-07 (доставка)",
     responsibility:
       "уведомления, центр, настройки по видам и каналам, реестр каналов доставки (web, telegram)",
-    dependsOn: ["identity"],
+    // privacy — событие privacy.export-ready и проверка готовности архива (уведомление «архив готов», PRIV-05).
+    dependsOn: ["identity", "privacy"],
     // NOTIF-03: уведомления администраторов — без домохозяйства (systemTable), «прочитано» — у каждого админа своё.
     tables: ["user", "system"],
     publishes: [],

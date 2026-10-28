@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Bell,
   CalendarClock,
+  Download,
   FileText,
   Link2,
   Percent,
@@ -33,6 +34,7 @@ const ICONS: Readonly<Record<UserNotification["kind"], LucideIcon>> = {
   "calendar-reminder": CalendarClock,
   "weekly-summary": TrendingUp,
   "recurring-missed": Repeat,
+  "data-export-ready": Download,
 };
 
 /** Куда ведёт «Показать»: раздел объекта; неизвестный вид объекта — кнопки нет. */
@@ -45,6 +47,7 @@ const OBJECT_HREF: Readonly<Record<string, (id: string) => string>> = {
   deduction: () => "/deductions",
   "calendar-event": () => "/calendar",
   recurring: () => "/recurring",
+  "data-export": () => "/settings?tab=my-data",
 };
 
 export function objectHref(ref: UserNotification["objectRef"]): string | undefined {

@@ -1,6 +1,6 @@
 // PRIV-05 сквозь HTTP, корень композиции и настоящий worker: «Подготовить архив» → задача privacy.build-export
 // собирает ZIP → вкладка видит «готов» → архив скачивается владельцем (files.download), другой пользователь получает
-// NOT_FOUND. Тест полноты выгрузки: в архиве есть JSON каждой userOwnedTable реестра — у каждой пользовательской
+// NOT_FOUND; подписка notifications присылает владельцу одно уведомление «архив готов». Тест полноты выгрузки: в архиве есть JSON каждой userOwnedTable реестра — у каждой пользовательской
 // таблицы есть строка экспорта (строка удаления — account-deletion.int.test.ts).
 import { readZip } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -77,6 +77,25 @@ describe("PRIV-05: архив «Мои данные» сквозь HTTP и worke
       new TextDecoder().decode(entries.get("data/privacy/privacy_consents.json")),
     ) as { userId: string }[];
     expect(consents.map((row) => row.userId)).toEqual([owner.userId, owner.userId]);
+
+    // NOTIF-02: уведомление о готовности — одно, со ссылкой на архив; у другого пользователя его нет.
+    const notices = await vi.waitFor(
+      async () => {
+        const feed = (await (
+          await stack.call("local", "/notifications", { cookie: owner.cookie })
+        ).json()) as { items: { kind: string; objectRef: unknown }[] };
+        expect(feed.items.length).toBeGreaterThan(0);
+        return feed.items;
+      },
+      { timeout: 20_000, interval: 100 },
+    );
+    expect(notices.filter((n) => n.kind === "data-export-ready")).toEqual([
+      expect.objectContaining({ objectRef: { entity: "data-export", id: expect.any(String) } }),
+    ]);
+    const strangerFeed = (await (
+      await stack.call("local", "/notifications", { cookie: stranger.cookie })
+    ).json()) as { items: unknown[] };
+    expect(strangerFeed.items).toEqual([]);
 
     const foreign = await stack.call("local", `/files/${file.id}`, { cookie: stranger.cookie });
     expect(foreign.status).toBe(404);

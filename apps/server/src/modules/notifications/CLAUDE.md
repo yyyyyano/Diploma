@@ -11,7 +11,8 @@ NOTIF-01…05, BUD-03, CAL-07 (доставка).
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createNotificationsModule({ platform, facades })`; платформа — `SystemPlatform` (таблицы user и system);
-  фасады — `facades.identity`. Каналы — `platform.deliveryChannels()` (реестр корня композиции, позднее связывание).
+  фасады — `facades.identity`, `facades.privacy`. Каналы — `platform.deliveryChannels()` (реестр корня композиции,
+  позднее связывание).
 - Фасад `NotificationsFacade`: `notify(s, { kind, key, objectRef?, decisionId?, undoToken?, params? })` → id или
   `undefined` (такой вид + ключ уже есть — идемпотентно); новое уходит в каждый канал, где вид не отключён (строки
   настройки нет — включено). `notifyAdmins({ kind, key, objectRef?, params? })` — без `ScopedDb`, идемпотентно.
@@ -26,7 +27,9 @@ NOTIF-01…05, BUD-03, CAL-07 (доставка).
   аккаунта их убирает хук `afterDelete` владельца данных — `forgetAdmin`).
 
 ## Зависимости
-Можно: identity (`tooling/architecture/modules.ts`). Слушает: —.
+Можно: identity, privacy (`tooling/architecture/modules.ts`). Слушает: `privacy.export-ready` →
+`subscriptions/on-export-ready.ts`: готовность перечитывается `privacy.isExportReady(ctx.s, id)`, затем
+`notify(data-export-ready, ключ — id заявки, объект `data-export`)` (PRIV-05).
 
 ## Запреты
 - Вопрос «Да/Нет» не хранится здесь — только `decisionId` ожидающего решения `actions`.

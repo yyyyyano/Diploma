@@ -231,7 +231,8 @@ describe("NOTIF-04: вкладка «Уведомления»", () => {
     expect(
       await screen.findByRole("heading", { name: "Что и куда присылать" }),
     ).toBeInTheDocument();
-    expect(await screen.findAllByRole("row")).toHaveLength(10);
+    // Заголовок и 10 видов NOTIF-02 (десятый — «архив «Мои данные» готов», R47).
+    expect(await screen.findAllByRole("row")).toHaveLength(11);
     const goalWeb = screen.getByRole("switch", { name: "Прогресс цели — На сайте" });
     expect(goalWeb).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Лимит: 80% и 100% — В Telegram" })).toBeDisabled();

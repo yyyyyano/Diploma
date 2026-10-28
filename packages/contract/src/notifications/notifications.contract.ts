@@ -7,7 +7,10 @@ import { DecisionId, UndoToken } from "../actions/actions.contract.ts";
 import { EntityId, EntityKind } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 
-/** NOTIF-02: виды уведомлений пользователя — весь каталог, источники появляются своими задачами. */
+/**
+ * NOTIF-02: виды уведомлений пользователя — весь каталог, источники появляются своими задачами; data-export-ready —
+ * архив «Мои данные» готов (PRIV-05).
+ */
 export const USER_NOTIFICATION_KINDS = [
   "limit",
   "goal",
@@ -18,6 +21,7 @@ export const USER_NOTIFICATION_KINDS = [
   "calendar-reminder",
   "weekly-summary",
   "recurring-missed",
+  "data-export-ready",
 ] as const;
 export const UserNotificationKind = z.enum(USER_NOTIFICATION_KINDS);
 export type UserNotificationKind = z.infer<typeof UserNotificationKind>;

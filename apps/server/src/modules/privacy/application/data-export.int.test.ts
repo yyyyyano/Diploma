@@ -2,14 +2,15 @@
 // заявка), сборка пишет потоковый ZIP по реестру владельцев: manifest, JSON каждой таблицы реестра (только своё
 // домохозяйство, длинная таблица — целиком по страницам) и исходные файлы; архив — файл домохозяйства, заявка
 // готова, событие и сигнал. Новая заявка удаляет прежний архив; оборванная сборка — «не удалось» без файла; зависшая —
-// повторяется; повтор доставки задачи ничего не делает.
+// повторяется; повтор доставки задачи ничего не делает. Модуль files здесь — простой двойник фасада поверх
+// MemoryBlobStore (чужие внутренности privacy не импортирует); настоящий files — сквозной main/data-export.int.test.ts.
 import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { FileId, type Scope } from "@kosht/kernel";
 import { FakeClock, MemoryBlobStore, readZip, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { randomUUIDv7 } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { makeFiles } from "../../files/application/files.ts";
-import { filesUserData } from "../../files/user-data.ts";
+import type { FilesFacade, NewFile } from "../../files/index.ts";
 import { createScopedDb, type ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { defineUserData, type UserDataOwner } from "../../../platform/db/user-data.ts";
 import type { EventDef } from "../../../platform/events/define-event.ts";
@@ -31,16 +32,68 @@ const privacyOwner: UserDataOwner = {
   data: defineUserData({ tables: [privacyExports, privacyConsents] }),
 };
 
+interface StoredFile {
+  readonly id: FileId;
+  readonly householdId: string;
+  readonly kind: NewFile["kind"];
+  readonly name: string;
+  readonly mime: string;
+  readonly size: number;
+}
+
+/** Двойник фасада files: файлы домохозяйства в памяти, выдача — только своему домохозяйству. */
+function fakeFiles(blobs: MemoryBlobStore) {
+  const stored = new Map<string, StoredFile>();
+  const facade: Pick<FilesFacade, "save" | "remove"> = {
+    async save(s, file) {
+      const id = FileId.parse(randomUUIDv7());
+      let size: number;
+      if (file.content instanceof Uint8Array) {
+        await blobs.put(s.scope.householdId, id, file.content);
+        size = file.content.byteLength;
+      } else {
+        size = await blobs.putStream(s.scope.householdId, id, file.content);
+      }
+      const { kind, name, mime } = file;
+      stored.set(id, { id, householdId: s.scope.householdId, kind, name, mime, size });
+      return { id, size };
+    },
+    async remove(s, id) {
+      if (stored.get(id)?.householdId !== s.scope.householdId) return;
+      stored.delete(id);
+      await blobs.delete(s.scope.householdId, id);
+    },
+  };
+  async function open(s: ScopedDb, id: string) {
+    const row = stored.get(id);
+    const blob = await blobs.open(s.scope.householdId, FileId.parse(id));
+    if (row?.householdId !== s.scope.householdId || blob === undefined)
+      throw new Error("нет файла");
+    return { ...row, blob };
+  }
+  /** Владелец данных «фото»: исходные файлы домохозяйства (кроме архивов) — в архив хуком export. */
+  const owner: UserDataOwner = {
+    module: "files",
+    data: defineUserData({
+      tables: [],
+      export: async (s, sink) => {
+        for (const row of stored.values()) {
+          if (row.householdId !== s.scope.householdId || row.kind === "data-export") continue;
+          const blob = await blobs.open(s.scope.householdId, row.id);
+          if (blob !== undefined) await sink.file(`${row.id}-${row.name}`, blob);
+        }
+      },
+    }),
+  };
+  return { facade, open, owner, stored };
+}
+
 function setup(extraOwners: readonly UserDataOwner[] = []) {
   const clock = new FakeClock("2026-10-28T09:00:00Z");
   const blobs = new MemoryBlobStore();
   const log = memoryLogger().log;
-  const files = makeFiles({ blobs, clock, log });
-  const owners: UserDataOwner[] = [
-    { module: "files", data: filesUserData(files) },
-    privacyOwner,
-    ...extraOwners,
-  ];
+  const files = fakeFiles(blobs);
+  const owners: UserDataOwner[] = [files.owner, privacyOwner, ...extraOwners];
   const published: { name: string; payload: unknown }[] = [];
   const signals: { entity: string; ids: readonly string[] }[] = [];
   const enqueued: string[] = [];
@@ -59,7 +112,7 @@ function setup(extraOwners: readonly UserDataOwner[] = []) {
       progress: async () => undefined,
     },
     userData: () => owners,
-    files,
+    files: files.facade,
     enqueueBuild: async (_tx, exportId) => {
       enqueued.push(exportId);
     },
@@ -84,12 +137,12 @@ const rowsOf = (data: Uint8Array | undefined) =>
   JSON.parse(text(data)) as Record<string, unknown>[];
 
 async function archiveOf(
-  files: ReturnType<typeof makeFiles>,
+  files: ReturnType<typeof fakeFiles>,
   s: ScopedDb,
   fileId: string | undefined,
 ) {
   if (fileId === undefined) throw new Error("у заявки нет файла");
-  const opened = await files.open(s, FileId.parse(fileId));
+  const opened = await files.open(s, fileId);
   return { opened, entries: await readZip(new Uint8Array(await opened.blob.arrayBuffer())) };
 }
 
@@ -139,13 +192,13 @@ describe("PRIV-05: сборка архива", () => {
     const b = scoped(testScope({ user: 4, household: 4 }));
     await seedConsents(a);
     await seedConsents(b);
-    const photo = await files.save(a, {
+    const photo = await files.facade.save(a, {
       kind: "receipt-photo",
       name: "чек.jpg",
       mime: "image/jpeg",
       content: new TextEncoder().encode("jpeg-байты"),
     });
-    await files.save(b, {
+    await files.facade.save(b, {
       kind: "statement",
       name: "чужая.csv",
       mime: "text/csv",
@@ -167,7 +220,6 @@ describe("PRIV-05: сборка архива", () => {
     expect(state.file?.size).toBe(opened.size);
     expect([...entries.keys()]).toEqual([
       "manifest.json",
-      "data/files/files.json",
       "data/privacy/privacy_exports.json",
       "data/privacy/privacy_consents.json",
       `files/files/${photo.id}-чек.jpg`,
@@ -176,11 +228,7 @@ describe("PRIV-05: сборка архива", () => {
       format: "kosht-my-data",
       version: 1,
       exportedAt: "2026-10-28T09:00:05.000Z",
-      tables: [
-        "data/files/files.json",
-        "data/privacy/privacy_exports.json",
-        "data/privacy/privacy_consents.json",
-      ],
+      tables: ["data/privacy/privacy_exports.json", "data/privacy/privacy_consents.json"],
     });
     const consentRows = rowsOf(entries.get("data/privacy/privacy_consents.json"));
     expect(consentRows.map((row) => [row["kind"], row["granted"], row["textVersion"]])).toEqual(
@@ -194,9 +242,6 @@ describe("PRIV-05: сборка архива", () => {
       .flatMap(([, data]) => rowsOf(data));
     expect(allRows.length).toBeGreaterThan(0);
     expect(allRows.every((row) => row["householdId"] === a.scope.householdId)).toBe(true);
-    expect(rowsOf(entries.get("data/files/files.json")).map((row) => row["name"])).toEqual([
-      "чек.jpg",
-    ]);
     expect(text(entries.get(`files/files/${photo.id}-чек.jpg`))).toBe("jpeg-байты");
     expect(published).toEqual([{ name: "privacy.export-ready", payload: { ids: [exportId] } }]);
     expect(signals.at(-1)).toEqual({ entity: "data-export", ids: [exportId] });
@@ -221,7 +266,7 @@ describe("PRIV-05: сборка архива", () => {
   });
 
   it("повтор доставки задачи после готовности ничего не делает: второго архива и события нет", async () => {
-    const { exports, enqueued, published } = setup();
+    const { exports, enqueued, published, files } = setup();
     const s = scoped(testScope({ user: 6, household: 6 }));
     await exports.request(s);
     const exportId = enqueued[0] ?? "";
@@ -230,15 +275,11 @@ describe("PRIV-05: сборка архива", () => {
     await exports.build(s, exportId);
     expect(await exports.state(s)).toEqual(ready);
     expect(published).toHaveLength(1);
-    const { rows } = await db.owner.query(
-      "select count(*)::int as n from files where household_id = $1 and kind = 'data-export'",
-      [s.scope.householdId],
-    );
-    expect(rows).toEqual([{ n: 1 }]);
+    expect([...files.stored.values()].map((file) => file.kind)).toEqual(["data-export"]);
   });
 
   it("новая заявка удаляет прежний архив — и строку, и файл", async () => {
-    const { exports, enqueued, blobs } = setup();
+    const { exports, enqueued, blobs, files } = setup();
     const s = scoped(testScope({ user: 7, household: 7 }));
     await exports.request(s);
     await exports.build(s, enqueued[0] ?? "");
@@ -246,11 +287,7 @@ describe("PRIV-05: сборка архива", () => {
     await exports.request(s);
     expect(await exports.state(s)).toMatchObject({ status: "pending", file: undefined });
     expect(await blobs.open(s.scope.householdId, FileId.parse(old))).toBeUndefined();
-    const { rows } = await db.owner.query(
-      "select count(*)::int as n from files where household_id = $1",
-      [s.scope.householdId],
-    );
-    expect(rows).toEqual([{ n: 0 }]);
+    expect(files.stored.size).toBe(0);
   });
 
   it("источник оборвался — заявка «не удалось», файла архива нет, ошибка уходит в журнал задачи", async () => {

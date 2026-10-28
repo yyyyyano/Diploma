@@ -1,0 +1,227 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "ac00cbbf-835e-40b9-be1d-e8e2224814ca",
+  "prevIds": ["420d17ea-1967-4e39-b769-719e235f74b8"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "merchant_aliases"],
+      "writes": [
+        "s|tbl|public.merchant_aliases",
+        "n|tbl|public.merchant_aliases",
+        "e|tbl|public.merchant_aliases",
+        "n|rel|public.merchant_aliases",
+        "n|type|public.merchant_aliases",
+        "n|rel|public.merchant_aliases_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "merchant_directory"],
+      "writes": [
+        "s|tbl|public.merchant_directory",
+        "n|tbl|public.merchant_directory",
+        "e|tbl|public.merchant_directory",
+        "n|rel|public.merchant_directory",
+        "n|type|public.merchant_directory",
+        "n|rel|public.merchant_directory_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "merchant_aliases", "merchant_aliases_trgm_idx"],
+      "writes": [
+        "s|idx|public.merchant_aliases_trgm_idx",
+        "n|idx|public.merchant_aliases_trgm_idx",
+        "e|idx|public.merchant_aliases_trgm_idx",
+        "n|rel|public.merchant_aliases_trgm_idx"
+      ],
+      "reads": ["n|tbl|public.merchant_aliases", "n|sch|public"]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "merchant_aliases"],
+      "writes": [
+        "s|fk|public.merchant_aliases.merchant_aliases_merchant_id_merchant_directory_id_fkey",
+        "n|fk|public.merchant_aliases.merchant_aliases_merchant_id_merchant_directory_id_fkey",
+        "e|fk|public.merchant_aliases.merchant_aliases_merchant_id_merchant_directory_id_fkey",
+        "n|con|public.merchant_aliases.merchant_aliases_merchant_id_merchant_directory_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.merchant_aliases",
+        "n|sch|public",
+        "n|tbl|public.merchant_directory",
+        "n|sch|public",
+        "n|col|public.merchant_aliases.merchant_id",
+        "n|col|public.merchant_directory.id",
+        "e|uniqueness|public.merchant_directory.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "merchant_aliases",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "merchant_directory",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_aliases",
+        "name": "alias",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_aliases",
+        "name": "merchant_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_directory",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_directory",
+        "name": "name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_directory",
+        "name": "category_code",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_aliases",
+        "name": "merchant_aliases_trgm_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "\"alias\" gin_trgm_ops",
+            "isExpression": true,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "gin",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_aliases",
+        "name": "merchant_aliases_merchant_id_merchant_directory_id_fkey",
+        "nameExplicit": false,
+        "columns": ["merchant_id"],
+        "schemaTo": "public",
+        "tableTo": "merchant_directory",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_aliases",
+        "name": "merchant_aliases_pkey",
+        "columns": ["alias"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "merchant_directory",
+        "name": "merchant_directory_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

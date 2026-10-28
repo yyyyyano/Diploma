@@ -1,7 +1,13 @@
 // Соответствие словарей коду (ADR-0005, P2/EXPL-01): у каждого кода ошибки из каталога контракта есть текст для
 // человека, у ключа трассы calc — подпись для «Откуда эта цифра?». calc импортируется только здесь, в тесте.
 import { freeBalance, node, TRACE_KEYS } from "@kosht/calc";
-import { ADMIN_NOTIFICATION_KINDS, ERROR_CODES, USER_NOTIFICATION_KINDS } from "@kosht/contract";
+import {
+  ADMIN_NOTIFICATION_KINDS,
+  CategorySource,
+  ERROR_CODES,
+  SYSTEM_CATEGORIES,
+  USER_NOTIFICATION_KINDS,
+} from "@kosht/contract";
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { createT } from "./create-t.ts";
@@ -43,6 +49,7 @@ describe("словари ru", () => {
       "notifications",
       "admin",
       "profile",
+      "categories",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
@@ -126,5 +133,15 @@ describe("PROF-01: множественные числа профиля", () => 
     [17, "17 лет"],
   ])("возраст: %i → «%s»", (count, text) => {
     expect(t("profile:value.age", { count })).toBe(text);
+  });
+});
+
+describe("CAT-01: название у каждой встроенной категории и подпись источника", () => {
+  it.each(SYSTEM_CATEGORIES.map((category) => category.code))("%s — есть название", (code) => {
+    expect(lookup(resources.ru.categories.system, code)).toEqual(expect.any(String));
+  });
+
+  it.each(CategorySource.options)("источник %s — есть подпись", (source) => {
+    expect(lookup(resources.ru.categories.source, source)).toEqual(expect.any(String));
   });
 });

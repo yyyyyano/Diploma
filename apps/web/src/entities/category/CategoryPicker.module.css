@@ -1,0 +1,24 @@
+/* Поле «Категория» (design/screens/Operations.dc.html, .op-cat): значок цвета категории у вариантов и выбранного. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.picker > :first-child {
+  width: 100%;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}

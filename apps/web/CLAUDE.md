@@ -32,6 +32,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
   (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);
+  `entities/category` — `CategoryPicker` (встроенные и свои нужного типа, «Новая категория»), `categoryName`, `refKey`;
   `entities/profile-fact` — `FactEditor`, `FactValueText`, `factLabel`, `keyLabel` (факт профиля словами и форма по
   ключу); `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
   `features/notifications`, `features/accounts`, `features/admin`, `features/onboarding`, `features/memory`,

@@ -27,6 +27,8 @@ import {
   Brain,
   Sparkles,
 } from "lucide-react";
+import { SYSTEM_CATEGORIES, type CategoryRef } from "@kosht/contract";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import {
   ConfirmDialog,
@@ -43,9 +45,12 @@ import {
   StatusBadge,
   UndoToast,
   WhyButton,
+  CategoryIcon,
 } from "../../ui/index.ts";
 import { BottomNav, SideNav, type ShellNavGroup, type ShellNavItem } from "../../ui/shell/index.ts";
+import { CategoryPicker } from "../../entities/category/index.ts";
 import { ExplanationView } from "../../entities/explanation/index.ts";
+import { orpc } from "../../lib/api.ts";
 import classes from "./GalleryPage.module.css";
 
 const byn = (minor: number) => M.of(minor, "BYN");
@@ -155,6 +160,28 @@ const FREE_BALANCE: Explanation = {
   period: { from: LocalDate.parse("2026-07-01"), to: LocalDate.parse("2026-09-30") },
   createdAt: "2026-10-21T09:00:00.000Z",
 };
+
+/** Выбор категории на демо-справочнике: данные кладутся в кэш запросов — витрина без входа и без сервера. */
+function GalleryCategoryPicker() {
+  const queryClient = useQueryClient();
+  const [ready] = useState(() => {
+    // Без сервера: справочник не перезапрашивается — иначе витрина показала бы ошибку загрузки вместо поля.
+    queryClient.setQueryDefaults(orpc.categories.list.queryKey(), { staleTime: Infinity });
+    queryClient.setQueryData(orpc.categories.list.queryKey(), {
+      items: SYSTEM_CATEGORIES.filter((c) => c.kind === "expense").map((c) => ({
+        ref: { type: "system" as const, code: c.code },
+        kind: c.kind,
+        name: null,
+        icon: c.icon,
+        color: c.color,
+        hidden: false,
+      })),
+    });
+    return true;
+  });
+  const [value, setValue] = useState<CategoryRef | null>({ type: "system", code: "groceries" });
+  return ready ? <CategoryPicker kind="expense" value={value} onChange={setValue} /> : null;
+}
 
 export function GalleryPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -282,6 +309,17 @@ export function GalleryPage() {
               Счёт · 5530
             </StatusBadge>
           </div>
+        </Section>
+
+        <Section id="categories" title="CategoryIcon и выбор категории (DES-14, CAT-02)">
+          <div className={classes.row}>
+            <CategoryIcon icon="shopping-cart" color="groceries" label="Продукты" />
+            <CategoryIcon icon="car-taxi-front" color="taxi" label="Такси" />
+            <CategoryIcon icon="landmark" color="loans" label="Кредиты и займы" />
+            <CategoryIcon icon="briefcase" color="salary" label="Зарплата" />
+            <CategoryIcon icon="circle-ellipsis" color="other" size="sm" />
+          </div>
+          <GalleryCategoryPicker />
         </Section>
 
         <Section id="logo" title="Logo — знак и название">

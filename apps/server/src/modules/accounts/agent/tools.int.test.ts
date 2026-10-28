@@ -1,5 +1,6 @@
 // AGT-03 «счета», AGT-05, AGT-07, ROLE-01: инструменты счетов без модели — список своего домохозяйства с итогами,
 // создать и переименовать — сразу с undoToken, удалить — только ожидающее решение (счёт на месте до «Да»).
+import { AccountId } from "@kosht/contract";
 import { testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -58,9 +59,12 @@ describe("AGT-03: инструменты счетов", () => {
       account: { kind: "deposit", name: "Вклад" },
       undoToken: expect.any(String),
     });
-    const renamed = await rename.execute(ctx, { id: created.account.id, name: "Вклад на год" });
+    const renamed = await rename.execute(ctx, {
+      id: AccountId.parse(created.account.id),
+      name: "Вклад на год",
+    });
     expect(renamed.account.name).toBe("Вклад на год");
-    const draft = await remove.propose(ctx, { id: created.account.id });
+    const draft = await remove.propose(ctx, { id: AccountId.parse(created.account.id) });
     expect(draft).toEqual({
       action: "accounts.delete",
       payload: { decisionId: expect.any(String) },

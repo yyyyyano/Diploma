@@ -2,8 +2,8 @@
   "type": "diff",
   "version": "9",
   "dialect": "postgres",
-  "id": "83b49537-f994-4848-b01a-6c3bc12d67ed",
-  "prevIds": ["b0f94dfa-d064-430d-9b9f-01176dbbe779"],
+  "id": "420d17ea-1967-4e39-b769-719e235f74b8",
+  "prevIds": ["3eb1fedb-7f08-4cfd-b231-27c8405ab667"],
   "footprints": [
     {
       "statementType": "create_table",
@@ -15,6 +15,19 @@
         "n|rel|public.account_revisions",
         "n|type|public.account_revisions",
         "n|rel|public.account_revisions_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "currency_rates"],
+      "writes": [
+        "s|tbl|public.currency_rates",
+        "n|tbl|public.currency_rates",
+        "e|tbl|public.currency_rates",
+        "n|rel|public.currency_rates",
+        "n|type|public.currency_rates",
+        "n|rel|public.currency_rates_pkey"
       ],
       "reads": ["n|sch|public"]
     },
@@ -136,6 +149,22 @@
       ]
     },
     {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "currency_rates", "currency_rates_currency_day_idx"],
+      "writes": [
+        "s|idx|public.currency_rates_currency_day_idx",
+        "n|idx|public.currency_rates_currency_day_idx",
+        "e|idx|public.currency_rates_currency_day_idx",
+        "n|rel|public.currency_rates_currency_day_idx"
+      ],
+      "reads": [
+        "n|tbl|public.currency_rates",
+        "n|sch|public",
+        "n|col|public.currency_rates.currency",
+        "n|col|public.currency_rates.on_date"
+      ]
+    },
+    {
       "statementType": "create_fk",
       "statementTarget": ["table", "public", "account_revisions"],
       "writes": [
@@ -197,6 +226,15 @@
       "row": {
         "schema": "public",
         "name": "account_revisions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "currency_rates",
         "isRlsEnabled": false,
         "entityType": "tables"
       }
@@ -429,6 +467,118 @@
       "op": "create",
       "row": {
         "schema": "public",
+        "table": "currency_rates",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "currency",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "on_date",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "rate_date",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "rate_e4",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "scale",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "fetched_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
         "table": "account_revisions",
         "name": "account_revisions_account_id_fk_idx",
         "nameExplicit": true,
@@ -529,6 +679,37 @@
       "op": "create",
       "row": {
         "schema": "public",
+        "table": "currency_rates",
+        "name": "currency_rates_currency_day_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "currency",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "on_date",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
         "table": "account_revisions",
         "name": "account_revisions_account_id_fk",
         "nameExplicit": true,
@@ -556,6 +737,17 @@
       "op": "create",
       "row": {
         "schema": "public",
+        "table": "currency_rates",
+        "name": "currency_rates_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
         "table": "accounts",
         "name": "accounts_mask_check",
         "value": "\"mask\" is null or \"mask\" ~ '^[0-9]{4}$'",
@@ -569,6 +761,26 @@
         "table": "accounts",
         "name": "accounts_balance_source_check",
         "value": "\"balance_source\" in ('manual', 'statement', 'operations')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "currency_rates_currency_check",
+        "value": "\"currency\" ~ '^[A-Z]{3}$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "currency_rates",
+        "name": "currency_rates_positive_check",
+        "value": "\"rate_e4\" > 0 and \"scale\" > 0",
         "entityType": "checks"
       }
     },

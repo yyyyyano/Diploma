@@ -12,7 +12,19 @@ import { AssistantPage } from "./AssistantPage.tsx";
 const RUN = "0190f0a0-0000-7000-8000-0000000000a1";
 const DIALOG = "0190f0a0-0000-7000-8000-0000000000d1";
 const ACCOUNT = "0190f0a0-0000-7000-8000-0000000000c1";
-const cash = { id: ACCOUNT, kind: "cash", name: null, balance: { minor: 0, currency: "BYN" } };
+const cash = {
+  id: ACCOUNT,
+  kind: "cash",
+  name: null,
+  bank: null,
+  mask: null,
+  balance: { minor: 0, currency: "BYN" },
+  balanceOn: "2026-10-28",
+  balanceSource: "manual",
+  initialBalance: { minor: 0, currency: "BYN" },
+  balanceInByn: null,
+  rate: null,
+};
 
 function sseText(chunks: readonly unknown[]): string {
   return `${chunks.map((chunk) => `event: message\ndata: ${JSON.stringify(chunk)}\n\n`).join("")}event: done\n\n`;

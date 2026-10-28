@@ -2,6 +2,7 @@
 // начальный остаток — сразу и с «Отменить» через настоящий журнал actions; удалить — только «Да» на ожидающее решение,
 // служебные не удаляются; итоги в BYN по курсу НБРБ с курсом в трассе (explain); нет курса — итог не показан;
 // фасад для transactions и statements; «Карта, не указана» — по первому обращению.
+import { AccountId } from "@kosht/contract";
 import { LocalDate, Money } from "@kosht/kernel";
 import { testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -241,7 +242,7 @@ describe("STMT-09: итоги в BYN по курсу НБРБ", () => {
     expect((await explain.get(s, available)).trace.key).toBe("accounts.available");
     await accounts.create(s, { ...card, mask: "0002" }, "web");
     const byn = (await accounts.list(s)).items.find((item) => item.mask === "0002");
-    const bynTrace = await accounts.explain(s, { kind: "account", id: byn?.id ?? "" });
+    const bynTrace = await accounts.explain(s, { kind: "account", id: AccountId.parse(byn?.id) });
     expect((await explain.get(s, bynTrace)).trace).toMatchObject({
       key: "accounts.balance",
       value: { minor: 15_000, currency: "BYN" },

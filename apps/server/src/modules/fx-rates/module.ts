@@ -1,4 +1,4 @@
-// Модуль fx-rates (паспорт — CLAUDE.md): курсы НБРБ по ISO-коду с кэшем в fx_rates и эквивалент в BYN с курсом в
+// Модуль fx-rates (паспорт — CLAUDE.md): курсы НБРБ по ISO-коду с кэшем в currency_rates и эквивалент в BYN с курсом в
 // трассе (STMT-09). Источник — адаптер НБРБ (порт FxRatesSource); вызывать — вне транзакций.
 import {
   defineModule,

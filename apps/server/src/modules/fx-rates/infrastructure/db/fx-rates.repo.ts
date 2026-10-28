@@ -1,8 +1,8 @@
-// Кэш курсов НБРБ (publicTable fx_rates) — только через SystemDb модуля fx-rates.
+// Кэш курсов НБРБ (publicTable currency_rates) — только через SystemDb модуля fx-rates.
 import { and, eq } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { FxRate } from "../../domain/fx-rate.ts";
-import { fxRates } from "./schema.ts";
+import { currencyRates } from "./schema.ts";
 
 export async function findCachedRate(
   db: SystemDb,
@@ -11,14 +11,14 @@ export async function findCachedRate(
 ): Promise<FxRate | undefined> {
   const rows = await db
     .select({
-      id: fxRates.id,
-      currency: fxRates.currency,
-      rateDate: fxRates.rateDate,
-      rateE4: fxRates.rateE4,
-      scale: fxRates.scale,
+      id: currencyRates.id,
+      currency: currencyRates.currency,
+      rateDate: currencyRates.rateDate,
+      rateE4: currencyRates.rateE4,
+      scale: currencyRates.scale,
     })
-    .from(fxRates)
-    .where(and(eq(fxRates.currency, currency), eq(fxRates.onDate, onDate)));
+    .from(currencyRates)
+    .where(and(eq(currencyRates.currency, currency), eq(currencyRates.onDate, onDate)));
   return rows[0];
 }
 
@@ -30,10 +30,10 @@ export async function saveRate(
   at: Date,
 ): Promise<FxRate> {
   await db
-    .insert(fxRates)
+    .insert(currencyRates)
     .values({ ...rate, onDate, fetchedAt: at })
-    .onConflictDoNothing({ target: [fxRates.currency, fxRates.onDate] });
+    .onConflictDoNothing({ target: [currencyRates.currency, currencyRates.onDate] });
   const saved = await findCachedRate(db, rate.currency, onDate);
-  if (saved === undefined) throw new Error("fx_rates: курс не сохранился.");
+  if (saved === undefined) throw new Error("currency_rates: курс не сохранился.");
   return saved;
 }

@@ -1,14 +1,21 @@
-/* .ac-card, .ac-head, .ac-ic, .ac-name, .ac-sub, .ac-bal из design/screens/Accounts.dc.html. */
+/* .ac-card, .ac-head, .ac-ic, .ac-name, .ac-sub, .ac-bal, .ac-asof, .ac-fx из design/screens/Accounts.dc.html;
+   служебная «Карта, не указана» — пунктирная рамка без тени. */
 .card {
   display: flex;
   flex-direction: column;
-  gap: var(--s-14);
+  gap: var(--s-12);
   padding: var(--s-20);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
   box-shadow: var(--kit-shadow-card);
   min-width: 0;
+}
+
+.service {
+  border-style: dashed;
+  box-shadow: none;
+  background: transparent;
 }
 
 .head {
@@ -24,11 +31,28 @@
   width: 40px;
   height: 40px;
   border-radius: var(--r-md);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.cash {
   background: var(--income-soft);
   color: var(--income);
 }
 
+.savings,
+.deposit {
+  background: var(--amber-soft);
+  color: var(--amber-ink);
+}
+
+.unknown-card {
+  background: var(--surface-2);
+  color: var(--ink-2);
+}
+
 .titles {
+  flex: 1;
   min-width: 0;
 }
 
@@ -37,6 +61,7 @@
   font-size: 16px;
   font-weight: 650;
   line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .note {
@@ -45,7 +70,36 @@
   color: var(--ink-2);
 }
 
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
 .balance {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
   margin: 0;
   color: var(--ink);
+}
+
+.inByn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.asOf {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
 }

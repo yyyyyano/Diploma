@@ -1,0 +1,18 @@
+/* .cat-ic из design/kit.css: квадрат цвета категории с белым значком. */
+.icon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--r-sm);
+  color: var(--kit-on-dark);
+}
+
+.sm {
+  width: 24px;
+  height: 24px;
+}
+
+.md {
+  width: 32px;
+  height: 32px;
+}

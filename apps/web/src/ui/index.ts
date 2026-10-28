@@ -1,4 +1,10 @@
 // Дизайн-система «Пуща и янтарь» (ADR-0014, паспорт — ui/CLAUDE.md): только представление, без запросов.
+export {
+  CATEGORY_ICONS,
+  CategoryIcon,
+  type CategoryIconName,
+  type CategoryIconProps,
+} from "./components/CategoryIcon.tsx";
 export { ConfirmDialog, type ConfirmDialogProps } from "./components/ConfirmDialog.tsx";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState.tsx";
 export { Formula, type FormulaProps, type FormulaRow } from "./components/Formula.tsx";

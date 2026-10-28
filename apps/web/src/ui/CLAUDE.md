@@ -14,7 +14,8 @@
   страницы; `PageHeader` оставляет под него место по `--k-corner`).
 - Числа и статусы: `Money` (DES-17: `formatMoneyParts`, валюта мельче; `kind` доход «+» / расход «−» / перевод ⇄;
   `tabular` — табличные цифры, DES-07; `size="kpi"`), `WhyButton` (ⓘ, `aria-label` с названием числа), `Formula`
-  (`dl`: строки и итог), `StatusBadge` (иконка обязательна — без неё не компилируется), `StatCard` (`tone`: free,
+  (`dl`: строки и итог), `StatusBadge` (иконка обязательна — без неё не компилируется), `CategoryIcon` (`icon` — ключ `CATEGORY_ICONS`,
+  `color` — ключ `CATEGORY_COLORS`; без `label` — декоративный, с `label` — `img` с именем), `StatCard` (`tone`: free,
   benefit).
 - Состояния экрана (DES-16): `EmptyState` (пусто и ошибка: `tone="error"`, `headingLevel`), `Skeleton`, `Loading`,
   `SkeletonCard`, `SkeletonList`, `SkeletonText` (`<output aria-busy>` + «Загрузка…»).

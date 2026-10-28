@@ -15,11 +15,13 @@ STMT-01/02/09, EXPL-01, AGT-03 («счета»), AGT-05/07, RCPT-10. Макет:
 - Фасад `AccountsFacade` (для `transactions`, `statements`, `receipts`; все в транзакции вызывающего — `tx`):
   `findOrCreate(tx, { bank, mask, currency })` → карта (банк без учёта регистра; нет — создаётся, «по операциям»);
   `applyBalanceChange(tx, { accountId, delta: Money, on })` (валюта счёта; день остатка не уходит назад; событие);
+  `currencyOf(s, id)` — валюта своего счёта (чужой или нет — `NOT_FOUND`; операция пишется в валюте счёта);
   `cash(tx)` — «Наличные» в BYN; `unknownCard(tx)` — «Карта, не указана» (создаётся при первом обращении, RCPT-10).
 - Контракт `contract.accounts.*` (все authed, канал отмены — web): `list` → `{ onDate, items, totals }` (остаток в валюте
   счёта, день и источник остатка, эквивалент в BYN и курс НБРБ на сегодня; итоги `total`/`available` в BYN или `null`
   при `missingRates`); `create`, `rename`, `setInitialBalance` → `{ account, undoToken }`; `requestDelete` → `{ decisionId }`
-  (служебные — `ACCOUNT_PROTECTED`); `explain({ subject: total | available | account })` → `{ traceId }` — расчёт
+  (служебные — `ACCOUNT_PROTECTED`; «Да» на счёт с операциями — `CONFLICT { reason: "account-has-transactions" }`: FK
+  `RESTRICT` из миграции `transactions`, счёт на месте); `explain({ subject: total | available | account })` → `{ traceId }` — расчёт
   сохраняется по нажатию ⓘ, курса нет — `UNAVAILABLE`.
 - Событие `accounts.balances-changed { ids }`: начальный остаток, изменение по операциям, создание, удаление.
 - Подписка `identity.user-registered` → `ensureCash(ctx.s)` (идемпотентно, сигнал `account` только при создании).
@@ -39,7 +41,8 @@ STMT-01/02/09, EXPL-01, AGT-03 («счета»), AGT-05/07, RCPT-10. Макет:
 - Данные домохозяйства — только через `s: ScopedDb` с `s.own(...)` на каждое обращение; «чьи» — только `s.scope`.
 - Курс НБРБ — до `s.transaction` (HTTP вне транзакции); нет курса — эквивалент и итог `null`, не 0.
 - Числа (эквивалент, итоги, сдвиг остатка) — только `@kosht/calc` (`domain/accounts.ts`).
-- «Наличные» в BYN и «Карта, не указана» не удаляются; удаление — только через решение «Да/Нет» (AGT-07).
+- «Наличные» в BYN и «Карта, не указана» не удаляются; удаление — только через решение «Да/Нет» (AGT-07); счёт с
+  операциями не удаляется (и «Отменить» созданного счёта с операциями — `CONFLICT`).
 
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/accounts` — правила (`domain/accounts.test.ts`), сценарии с настоящими

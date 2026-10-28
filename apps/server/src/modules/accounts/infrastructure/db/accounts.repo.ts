@@ -153,8 +153,23 @@ export async function updateAccount(
   await s.update(accounts, eq(accounts.id, id)).set({ ...patch, updatedAt: at });
 }
 
-export async function deleteAccount(s: ScopedDb, id: string): Promise<void> {
-  await s.delete(accounts, eq(accounts.id, id));
+/** Удалить счёт; false — на него ссылаются операции (FK RESTRICT: 23001, NO ACTION: 23503) — счёт на месте. */
+export async function deleteAccount(s: ScopedDb, id: string): Promise<boolean> {
+  try {
+    await s.delete(accounts, eq(accounts.id, id));
+    return true;
+  } catch (error) {
+    if (isForeignKeyViolation(error)) return false;
+    throw error;
+  }
+}
+
+function isForeignKeyViolation(error: unknown): boolean {
+  for (let cause: unknown = error; cause instanceof Error; cause = cause.cause) {
+    const code = (cause as { code?: unknown }).code;
+    if (code === "23001" || code === "23503") return true;
+  }
+  return false;
 }
 
 export interface Revision {

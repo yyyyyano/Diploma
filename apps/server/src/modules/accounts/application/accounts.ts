@@ -304,7 +304,10 @@ export function makeAccounts(d: AccountsDeps) {
     const row = await lockAccount(tx, accountId);
     if (row === undefined) return;
     if (isProtected(row)) throw new AppError("ACCOUNT_PROTECTED");
-    await deleteAccount(tx, row.id);
+    // STMT-01: счёт с операциями не удаляется — их FK RESTRICT (миграция transactions).
+    if (!(await deleteAccount(tx, row.id))) {
+      throw new AppError("CONFLICT", { reason: "account-has-transactions" });
+    }
     await changed(tx, [row.id], true);
     log.info({ accountId: row.id }, "accounts.deleted");
   }
@@ -318,7 +321,8 @@ export function makeAccounts(d: AccountsDeps) {
     const row = await lockAccount(tx, revision.accountId);
     if (row === undefined) return;
     if (!revision.existed) {
-      await deleteAccount(tx, row.id);
+      // Созданный счёт уже с операциями — «Отменить» его не удаляет (STMT-01).
+      if (!(await deleteAccount(tx, row.id))) throw new AppError("CONFLICT");
     } else {
       await updateAccount(tx, row.id, { name: revision.name }, clock.now());
       await applyInitial(tx, row, revision.initialBalanceMinor);
@@ -381,6 +385,11 @@ export function makeAccounts(d: AccountsDeps) {
     await changed(tx, [row.id], true);
   }
 
+  /** Фасад (transactions): валюта своего счёта — операция пишется в валюте счёта; чужой или нет — NOT_FOUND. */
+  async function currencyOf(s: ScopedDb, id: string): Promise<string> {
+    return (await itemRow(s, id)).currency;
+  }
+
   /** Фасад: «Наличные» в BYN пользователя (STMT-01) — есть всегда, создаются, если подписка ещё не успела. */
   async function cash(tx: ScopedDb): Promise<AccountId> {
     const created = await createCashIfMissing(tx, clock.today());
@@ -411,6 +420,7 @@ export function makeAccounts(d: AccountsDeps) {
     restore,
     findOrCreate,
     applyBalanceChange,
+    currencyOf,
     cash,
     unknownCard,
   };

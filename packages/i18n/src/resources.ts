@@ -17,6 +17,7 @@ import { tools } from "./locales/ru/tools.ts";
 import { ui } from "./locales/ru/ui.ts";
 import { mailbox } from "./locales/ru/mailbox.ts";
 import { settings } from "./locales/ru/settings.ts";
+import { profile } from "./locales/ru/profile.ts";
 
 export const NAMESPACES = [
   "common",
@@ -36,6 +37,7 @@ export const NAMESPACES = [
   "decisions",
   "notifications",
   "admin",
+  "profile",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -63,6 +65,7 @@ export const resources = {
     decisions,
     notifications,
     admin,
+    profile,
   },
 } as const satisfies Record<Language, Record<Namespace, object>>;
 
@@ -83,6 +86,7 @@ declare module "i18next" {
     mailbox: typeof mailbox;
     settings: typeof settings;
     admin: typeof admin;
+    profile: typeof profile;
     decisions: typeof decisions;
     notifications: typeof notifications;
   }

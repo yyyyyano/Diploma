@@ -42,6 +42,7 @@ describe("словари ru", () => {
       "decisions",
       "notifications",
       "admin",
+      "profile",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });
@@ -107,5 +108,23 @@ describe("NOTIF-02, NOTIF-03: текст у каждого вида уведом
 
   it.each(ADMIN_NOTIFICATION_KINDS)("%s — текст администратору", (kind) => {
     expect(resources.ru.notifications.adminKinds[kind].length).toBeGreaterThan(0);
+  });
+});
+
+describe("PROF-01: множественные числа профиля", () => {
+  it.each([
+    [1, "1 ребёнок"],
+    [2, "2 ребёнка"],
+    [5, "5 детей"],
+  ])("дети: %i → «%s»", (count, text) => {
+    expect(t("profile:value.children", { count })).toBe(text);
+  });
+
+  it.each([
+    [1, "1 год"],
+    [3, "3 года"],
+    [17, "17 лет"],
+  ])("возраст: %i → «%s»", (count, text) => {
+    expect(t("profile:value.age", { count })).toBe(text);
   });
 });

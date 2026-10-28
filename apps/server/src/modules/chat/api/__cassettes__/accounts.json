@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "d8350c32d9c1a428",
+      "fingerprint": "245db990ad119fe1",
       "parts": [
         {
           "delayMs": 0,
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 4,
+          "delayMs": 3,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -68,7 +68,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "736495298f023ebd",
+      "fingerprint": "143299dc07692b75",
       "parts": [
         {
           "delayMs": 0,
@@ -78,7 +78,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "text-start",
             "id": "text-1"
@@ -93,7 +93,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 302,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -101,7 +101,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -109,7 +109,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -117,7 +117,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -133,7 +133,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 306,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -141,7 +141,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -149,7 +149,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",

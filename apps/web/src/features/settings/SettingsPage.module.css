@@ -174,3 +174,103 @@
   display: block;
   font-weight: 600;
 }
+
+/* «Конфиденциальность» и «Мои данные» (.set-* макета): заголовок с бейджем, шапка карточки со ссылкой, пример
+   маскирования в две колонки (на телефоне — одна), кнопки окна справа, опасная карточка удаления. */
+.titleLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-8) var(--s-16);
+}
+
+.maskGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-12);
+}
+
+.maskBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  padding: var(--s-12) var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+  overflow-wrap: anywhere;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-8);
+}
+
+.danger {
+  border-color: var(--danger-soft);
+}
+
+.dangerIcon {
+  border-color: var(--danger-soft);
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.fileRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-10) var(--s-14);
+  padding: var(--s-12) var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.fileName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.list {
+  margin: 0;
+  padding-left: var(--s-20);
+  font-size: 14px;
+}
+
+.dangerButton {
+  color: var(--danger);
+  border-color: var(--danger-soft);
+}
+
+/* История согласий: на телефоне ячейки уже, длинные слова переносятся — таблица без своей прокрутки. */
+.history th[scope="row"] {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .history th,
+  .history td {
+    padding: var(--s-8);
+  }
+}

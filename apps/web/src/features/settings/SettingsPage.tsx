@@ -1,7 +1,8 @@
 // Настройки пользователя (design/screens/Settings.dc.html): вкладка «Профиль и вход» — почта (AUTH-03: «Подтверждён» /
 // «Не подтверждён», «Отправить письмо ещё раз», ссылка на локальный ящик), смена пароля (AUTH-08: другие сеансы
-// завершаются), код восстановления (AUTH-05: создать, показать один раз) и выход. Остальные вкладки
-// («Конфиденциальность», «Уведомления», «Мои данные», Telegram) появятся с задачами своих модулей.
+// завершаются), код восстановления (AUTH-05: создать, показать один раз) и выход; «Конфиденциальность»
+// (`PrivacySettings`, PRIV-02), «Уведомления» (`NotificationSettings`, NOTIF-04). Вкладка Telegram — задача бота
+// (T-052).
 import { ChangePasswordInput } from "@kosht/contract";
 import { formatDate } from "@kosht/i18n";
 import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
@@ -24,6 +25,7 @@ import { z } from "zod";
 import { RecoveryCode } from "../../entities/recovery-code/index.ts";
 import { SETTINGS_TABS, type SettingsSearch } from "./model/search.ts";
 import { NotificationSettings } from "./NotificationSettings.tsx";
+import { PrivacySettings } from "./PrivacySettings.tsx";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
@@ -47,6 +49,7 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
         >
           <Tabs.List aria-label={t("settings:tabs.label")}>
             <Tabs.Tab value="profile">{t("settings:tabs.profile")}</Tabs.Tab>
+            <Tabs.Tab value="privacy">{t("settings:tabs.privacy")}</Tabs.Tab>
             <Tabs.Tab value="notifications">{t("notifications:preferences.tab")}</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="profile" className={classes.panel}>
@@ -54,6 +57,9 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
             <PasswordCard />
             <RecoveryCodeCard />
             <SignOutCard />
+          </Tabs.Panel>
+          <Tabs.Panel value="privacy" className={classes.panel}>
+            <PrivacySettings />
           </Tabs.Panel>
           <Tabs.Panel value="notifications" className={classes.panel}>
             <NotificationSettings />

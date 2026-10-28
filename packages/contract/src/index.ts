@@ -30,6 +30,22 @@ export {
   UndoToken,
 } from "./actions/actions.contract.ts";
 export {
+  CATEGORY_COLOR_KEYS,
+  CATEGORY_ICON_KEYS,
+  categoriesContract,
+  CategoryColorKey,
+  CategoryIconKey,
+  CategoryId,
+  CategoryItem,
+  CategoryKind,
+  CategoryRef,
+  CategorySource,
+  FALLBACK_CATEGORY,
+  NewCategoryInput,
+  SYSTEM_CATEGORIES,
+  SystemCategoryCode,
+} from "./categories/categories.contract.ts";
+export {
   ChatMessage,
   chatContract,
   ConversationId,

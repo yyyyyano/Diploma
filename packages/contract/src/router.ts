@@ -3,6 +3,7 @@
 import { accountsContract } from "./accounts/accounts.contract.ts";
 import { adminContract } from "./admin/admin.contract.ts";
 import { actionsContract } from "./actions/actions.contract.ts";
+import { categoriesContract } from "./categories/categories.contract.ts";
 import { chatContract } from "./chat/chat.contract.ts";
 import { eventsContract } from "./events/events.contract.ts";
 import { explainContract } from "./explain/explain.contract.ts";
@@ -26,6 +27,7 @@ export const contract = {
   notifications: notificationsContract,
   profile: profileContract,
   accounts: accountsContract,
+  categories: categoriesContract,
   chat: chatContract,
   admin: adminContract,
 };

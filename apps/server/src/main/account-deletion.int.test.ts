@@ -49,7 +49,7 @@ interface Seeded {
 
 /**
  * Пользователь с данными во всех пользовательских таблицах: регистрация (согласия, письмо, ссылка, задачи), настройка
- * уведомлений по HTTP, файл через фасад; остальные таблицы — строками владельца базы (их сценарии — задачи модулей).
+ * уведомлений по HTTP, файл через фасад (и заявка архива на него); остальные таблицы — строками владельца базы (их сценарии — задачи модулей).
  */
 async function seedUser(email: string): Promise<Seeded> {
   const user = await registerUser(stack, db, email, { cloud: true });
@@ -99,6 +99,11 @@ async function seedUser(email: string): Promise<Seeded> {
     mime: "image/jpeg",
     content: new TextEncoder().encode("jpeg"),
   });
+  await db.owner.query(
+    `insert into privacy_exports (household_id, user_id, status, file_id, file_name, size, finished_at)
+     values ($1, $2, 'ready', $3, 'kosht-my-data-2026-10-28.zip', 4, now())`,
+    [...ids, file.id],
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

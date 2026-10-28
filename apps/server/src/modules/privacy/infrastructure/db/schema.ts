@@ -2,7 +2,16 @@
 // Строки только добавляются: каждое решение (дал, отказался, отозвал) — новая строка с видом, ответом, версией текста
 // и моментом (created_at); действует последняя строка вида. Так хранится факт и время согласия (99-З).
 import { sql } from "drizzle-orm";
-import { boolean, check, index, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  check,
+  index,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { systemTable, userOwnedTable } from "../../../../platform/db/tables.ts";
 
 /** Вид согласия: обработка ПД (PRIV-01) или облачные модели (PRIV-02). */
@@ -33,3 +42,30 @@ export const privacyModes = systemTable("privacy_modes", {
   cloud: boolean().notNull(),
   updatedAt: timestamp({ withTimezone: true }).notNull(),
 });
+
+/** Состояние архива «Мои данные»: собирается задачей, готов, не удался. */
+export const EXPORT_STATUSES = ["pending", "ready", "failed"] as const;
+export type ExportStatus = (typeof EXPORT_STATUSES)[number];
+
+/**
+ * Архив «Мои данные» (PRIV-05): заявка и её итог. Сам архив — файл модуля files (вид data-export); ссылка — id файла
+ * без внешнего ключа (таблицы чужого модуля privacy не видит), архив удаляется вместе со строкой, когда человек
+ * просит новый. Строка нужна, чтобы вкладка показала «готовится», «готов: имя, размер» или «не удалось». Готовится
+ * не больше одного архива на домохозяйство (частичный уникальный индекс): две заявки разом — одна задача сборки.
+ */
+export const privacyExports = userOwnedTable(
+  "privacy_exports",
+  {
+    status: text().$type<ExportStatus>().notNull(),
+    fileId: uuid(),
+    fileName: text(),
+    size: bigint({ mode: "number" }),
+    finishedAt: timestamp({ withTimezone: true }),
+  },
+  (t) => [
+    check("privacy_exports_status_check", sql`${t.status} in ('pending', 'ready', 'failed')`),
+    uniqueIndex("privacy_exports_one_pending_idx")
+      .on(t.householdId)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+);

@@ -14,6 +14,7 @@ export const TRACE_KEYS = [
   "fx.scale",
   // STMT-01/02, STMT-09: остатки счетов и итоги экрана «Счета».
   "accounts.balance",
+  "accounts.initialBalance",
   "accounts.balanceInByn",
   "accounts.total",
   "accounts.available",

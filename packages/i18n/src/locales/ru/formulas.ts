@@ -19,6 +19,7 @@ export const formulas = {
   },
   accounts: {
     balance: "Остаток в валюте счёта",
+    initialBalance: "Начальный остаток",
     balanceInByn: "Остаток в BYN по курсу НБРБ",
     total: "Всего на счетах",
     available: "Доступно без накопительного",

@@ -150,7 +150,13 @@ describe("AUTH-10, NFR-24: стартовый маршрут «/»", () => {
   it("AUTH-07: анкету прошли или пропустили — /onboarding ведёт дальше, в «Счета»", async () => {
     server.use(
       http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
-      http.get("*/api/accounts", () => HttpResponse.json({ items: [] })),
+      http.get("*/api/accounts", () =>
+        HttpResponse.json({
+          onDate: "2026-10-28",
+          items: [],
+          totals: { total: null, available: null, missingRates: [] },
+        }),
+      ),
     );
     const { router } = renderApp("/onboarding", sessionOf(admin).session);
     expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
@@ -160,7 +166,13 @@ describe("AUTH-10, NFR-24: стартовый маршрут «/»", () => {
   it("вошедший — в раздел «Счета»", async () => {
     server.use(
       http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
-      http.get("*/api/accounts", () => HttpResponse.json({ items: [] })),
+      http.get("*/api/accounts", () =>
+        HttpResponse.json({
+          onDate: "2026-10-28",
+          items: [],
+          totals: { total: null, available: null, missingRates: [] },
+        }),
+      ),
     );
     const { router } = renderApp("/", sessionOf(admin).session);
     expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();

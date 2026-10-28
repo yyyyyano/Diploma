@@ -20,3 +20,105 @@
     padding-right: var(--s-16);
   }
 }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--s-16);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.menuButton {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: var(--kit-hover);
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid var(--brand);
+}
+
+.muted {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.label {
+  margin: 0 0 var(--s-6);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.kinds {
+  overflow-x: auto;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-12);
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-8);
+}
+
+.how {
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.howTitle {
+  margin: 0 0 var(--s-16);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.howList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-20);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.howItem {
+  display: flex;
+  gap: var(--s-12);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.howItem p {
+  margin: 0;
+}
+
+.howIcon {
+  flex: none;
+  color: var(--brand);
+}

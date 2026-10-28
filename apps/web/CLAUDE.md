@@ -27,7 +27,8 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `errorParamsOf` → параметры текста, `retryAfterMinutes` всегда есть), `i18n`,
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
-- `entities/account` — `AccountCard`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
+- `entities/account` — `AccountCard` (вид, остаток и день остатка, эквивалент в BYN; ⓘ и меню — слотами страницы),
+  `useAccountName`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
   (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);

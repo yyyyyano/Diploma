@@ -71,3 +71,30 @@ describe("защита по префиксу test_", () => {
     await expect(dropTestRole(context.admin, context.app.user)).rejects.toThrow(/только test_/);
   });
 });
+
+describe("drop() — сеансы удаляемой базы", () => {
+  const shutdown = () =>
+    Object.assign(new Error("terminating connection due to administrator command"), {
+      code: "57P01",
+    });
+
+  it("57P01 до drop() — ошибка теста, а не тишина", async () => {
+    const db = await createTestDb();
+    try {
+      expect(() => db.pool.emit("error", shutdown())).toThrow("administrator command");
+    } finally {
+      await db.drop();
+    }
+  });
+
+  it("во время drop() 57P01 от закрывающегося соединения ожидаем; любая другая ошибка пула — по-прежнему ошибка", async () => {
+    const db = await createTestDb();
+    await db.pool.query("select 1");
+    await db.owner.query("select 1");
+    await db.drop();
+    expect(() => db.pool.emit("error", shutdown())).not.toThrow();
+    expect(() => db.owner.emit("error", shutdown())).not.toThrow();
+    const other = Object.assign(new Error("другая ошибка"), { code: "08006" });
+    expect(() => db.pool.emit("error", other)).toThrow("другая ошибка");
+  });
+});

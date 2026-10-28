@@ -52,6 +52,22 @@ const TEMPLATE_PREFIX = "test_tpl_";
 
 let created = 0;
 
+/** «Соединение прервано администратором»: так Postgres закрывает сеансы удаляемой базы (`drop database … with (force)`). */
+const ADMIN_SHUTDOWN = "57P01";
+
+/**
+ * Ошибка простаивающего соединения пула. pool.end() отпускает простаивающие соединения, не дожидаясь их закрытия,
+ * а `drop database … with (force)` следом обрывает ещё закрывающиеся сеансы — пул получает 57P01 и без обработчика
+ * это необработанная ошибка теста. Во время drop() ожидаема только она; любая другая ошибка (и 57P01 до drop())
+ * пробрасывается — тест падает, как и без обработчика.
+ */
+function watchTeardown(pool: pg.Pool, teardown: { readonly dropping: boolean }): void {
+  pool.on("error", (error: Error & { code?: string }) => {
+    if (teardown.dropping && error.code === ADMIN_SHUTDOWN) return;
+    throw error;
+  });
+}
+
 /** Своя база для тестового файла: beforeAll — createTestDb(), afterAll — drop(). */
 export async function createTestDb(context: TestDbContext = inject("testDb")): Promise<TestDb> {
   created += 1;
@@ -63,11 +79,15 @@ export async function createTestDb(context: TestDbContext = inject("testDb")): P
   );
   const pool = new pg.Pool({ ...context.app, database: name, max: 4 });
   const owner = new pg.Pool({ ...context.admin, database: name, max: 4 });
+  const teardown = { dropping: false };
+  watchTeardown(pool, teardown);
+  watchTeardown(owner, teardown);
   return {
     name,
     pool,
     owner,
     drop: async () => {
+      teardown.dropping = true;
       await pool.end();
       await owner.end();
       await dropDatabase(context.admin, name);

@@ -33,12 +33,14 @@
     "pg-boss": "catalog:",
     "pino": "catalog:",
     "pino-roll": "catalog:",
+    "yazl": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@kosht/testing": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
+    "@types/yazl": "catalog:",
     "drizzle-kit": "catalog:",
     "fast-check": "catalog:",
     "gpt-tokenizer": "catalog:",

@@ -13,11 +13,13 @@
     "@ai-sdk/provider": "catalog:",
     "@kosht/kernel": "workspace:*",
     "ai": "catalog:",
-    "pg": "catalog:"
+    "pg": "catalog:",
+    "yauzl": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
+    "@types/yauzl": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

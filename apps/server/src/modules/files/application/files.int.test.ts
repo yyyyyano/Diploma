@@ -131,8 +131,8 @@ describe("PRIV-05, PRIV-06: файлы в «Мои данные» и при уд
     });
     const added: [string, string][] = [];
     await files.exportFiles(s, {
-      file: async (path, data) => {
-        added.push([path, new TextDecoder().decode(data)]);
+      file: async (path, content) => {
+        added.push([path, await content.text()]);
       },
     });
     expect(added).toEqual([[`${photo.id}-чек.jpg`, "jpeg"]]);

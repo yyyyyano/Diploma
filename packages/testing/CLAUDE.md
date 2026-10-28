@@ -13,12 +13,13 @@
   `today()` — `LocalDate.fromInstant` по поясу (по умолчанию `Europe/Minsk`, NFR-23), `set(instant)`, `advance(ms)`.
 - Фабрики примитивов: `byn(minor)` — деньги BYN в копейках, `day("2026-10-21")`, `testUserId(n)`,
   `testHouseholdId(n)`, `testTraceId(n)` — валидные uuidv7 по номеру, `testScope({ user, household })`.
-- `MemoryBlobStore` — хранилище файлов в памяти с поведением `platform/blob-store` сервера (`put`, `get`, `delete`,
-  `deleteHousehold`; id — uuid-бренды, иначе `RangeError`; копии массивов), `size`. Форму сверяет
+- `MemoryBlobStore` — хранилище файлов в памяти с поведением `platform/blob-store` сервера (`put`, `putStream`, `get`,
+  `open` → `Blob`, `delete`, `deleteHousehold`; id — uuid-бренды, иначе `RangeError`; копии массивов), `size`. Форму сверяет
   `apps/server/src/platform/blob-store/blob-store.test.ts`: один набор проверок для обоих хранилищ.
 - `InlineJobs<Tx>(find)` — очередь задач без pg-boss для тестов сценариев: `enqueue(tx, job, payload)` находит
   обработчик функцией `find(name)` и выполняет его сразу в той же транзакции; нет обработчика — ошибка; `enqueued` —
-  поставленные по порядку. Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
+  поставленные по порядку; `discardHousehold` — 0 (ожидающих задач у неё не бывает). Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
+- `readZip(bytes)` — записи ZIP-архива (путь → содержимое) через `yauzl`: проверка архива «Мои данные» (PRIV-05).
 - `readSse(body)` — события Server-Sent Events из тела ответа `fetch` по порядку: `{ event, data }` и комментарии
   keepalive (`{ comment: true }`); для тестов `events.stream` (T-061): клиента oRPC на сервере нет.
 - Генератор тестов изоляции (`isolation.ts`, ROLE-01, замок 5): `generate({ contract, procedures, tools, fixtures })`
@@ -38,7 +39,8 @@
   globalSetup проекта `int` (он в `apps/server/src/platform/db/__fixtures__/`).
 
 ## Можно зависеть от
-`@kosht/kernel`; `pg` — только в `src/db.ts` (исключение правила `drizzle-and-pg-only-in-db`); `vitest` (`inject`).
+`@kosht/kernel`; `pg` — только в `src/db.ts` (исключение правила `drizzle-and-pg-only-in-db`); `vitest` (`inject`);
+`yauzl` — только `src/zip.ts`.
 
 ## Запреты
 - Импорт из боевого кода (`testing-not-in-prod` в `.dependency-cruiser.mjs`) и из `apps/server`: миграции в шаблон

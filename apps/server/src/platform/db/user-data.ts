@@ -11,8 +11,11 @@ import { registeredTables, type OwnedTable } from "./tables.ts";
 
 /** Куда модуль кладёт своё в архив «Мои данные»: пути — относительно папки модуля в архиве. */
 export interface ExportSink {
-  /** Файл как есть (фото чека, выписка). */
-  file(path: string, data: Uint8Array): Promise<void>;
+  /**
+   * Файл как есть (фото чека, выписка). Blob читается, когда до него дойдёт запись архива: в памяти — не все файлы
+   * сразу, а только текущий кусок.
+   */
+  file(path: string, content: Blob): Promise<void>;
 }
 
 export interface UserDataHooks {

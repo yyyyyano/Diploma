@@ -79,12 +79,12 @@ export function makeFiles(d: Pick<Platform, "blobs" | "clock" | "log">) {
   /** PRIV-05: исходные файлы в архив — «<id>-<имя>», кроме прежних архивов «Мои данные». */
   async function exportFiles(s: ScopedDb, sink: ExportSink): Promise<void> {
     for (const row of await listFiles(s, "data-export")) {
-      const data = await d.blobs.get(s.scope.householdId, row.id);
-      if (data === undefined) {
+      const blob = await d.blobs.open(s.scope.householdId, row.id);
+      if (blob === undefined) {
         d.log.warn({ fileId: row.id }, "files.blob-missing");
         continue;
       }
-      await sink.file(`${row.id}-${row.name}`, data);
+      await sink.file(`${row.id}-${row.name}`, blob);
     }
   }
 

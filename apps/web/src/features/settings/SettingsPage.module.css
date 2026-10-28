@@ -274,3 +274,18 @@
     padding: var(--s-8);
   }
 }
+
+/* «Пароль был сброшен администратором» (AUTH-05): предупреждение над карточками профиля. */
+.warnNote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s-12) var(--s-14);
+  padding: var(--s-14) var(--s-16);
+  border-radius: var(--r-lg);
+  background: var(--danger-soft);
+}
+
+.warnNote > svg {
+  flex: none;
+}

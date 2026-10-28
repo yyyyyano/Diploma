@@ -39,6 +39,7 @@ function renderSettings(
     ),
     http.get("*/api/mail/status", () => HttpResponse.json({ mailboxAvailable: true })),
     http.get("*/api/identity/recovery-code", () => HttpResponse.json({ createdAt: codeCreatedAt })),
+    http.get("*/api/identity/admin-reset", () => HttpResponse.json({ at: null })),
   );
   const root = createRootRoute();
   const settingsRoute = createRoute({
@@ -175,6 +176,36 @@ describe("AUTH-08: смена пароля и выход", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Выйти из аккаунта" }));
     expect(await screen.findByText("Вход")).toBeInTheDocument();
     expect(signedOut).toBe(true);
+  });
+});
+
+describe("AUTH-05, R37: «Пароль был сброшен администратором»", () => {
+  it("отметка есть — дата и пояснение; «Понятно» гасит её на сервере и прячет плашку", async () => {
+    let at: string | null = "2026-10-21T07:14:00.000Z";
+    let acknowledged = 0;
+    renderSettings(true);
+    server.use(
+      http.get("*/api/identity/admin-reset", () => HttpResponse.json({ at })),
+      http.post("*/api/identity/admin-reset/ack", () => {
+        acknowledged += 1;
+        at = null;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    expect(
+      await screen.findByText("Пароль был сброшен администратором 21.10.2026"),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Понятно" }));
+    await expect
+      .poll(() => screen.queryByText("Пароль был сброшен администратором 21.10.2026"))
+      .toBeNull();
+    expect(acknowledged).toBe(1);
+  });
+
+  it("отметки нет — плашки нет", async () => {
+    renderSettings(true);
+    expect(await screen.findByText("Подтверждён")).toBeInTheDocument();
+    expect(screen.queryByText(/сброшен администратором/)).toBeNull();
   });
 });
 

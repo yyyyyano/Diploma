@@ -55,6 +55,7 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
             <Tabs.Tab value="my-data">{t("settings:tabs.myData")}</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="profile" className={classes.panel}>
+            <AdminResetNotice />
             <EmailCard />
             <PasswordCard />
             <RecoveryCodeCard />
@@ -72,6 +73,40 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
         </Tabs>
       </div>
     </>
+  );
+}
+
+/**
+ * AUTH-05, R37: «Пароль был сброшен администратором <дата>» — ссылку показали администратору, потому что почта не
+ * подтверждена. Видна, пока человек не нажмёт «Понятно» (отметка гасится на сервере).
+ */
+function AdminResetNotice() {
+  const { t } = useTranslation("settings");
+  const queryClient = useQueryClient();
+  const notice = useQuery(orpc.identity.adminResetNotice.queryOptions());
+  const dismiss = useMutation(
+    orpc.identity.acknowledgeAdminReset.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries({ queryKey: orpc.identity.adminResetNotice.key() }),
+    }),
+  );
+  const at = notice.data?.at ?? null;
+  if (at === null) return null;
+  return (
+    <div className={classes.warnNote}>
+      <KeyRound size={20} strokeWidth={1.8} aria-hidden />
+      <div className={classes.rowText}>
+        <p className={classes.address}>
+          {t("adminReset.title", {
+            date: formatDate(LocalDate.fromInstant(new Date(at), DEFAULT_TIME_ZONE)),
+          })}
+        </p>
+        <p className={classes.text}>{t("adminReset.text")}</p>
+      </div>
+      <Button variant="default" loading={dismiss.isPending} onClick={() => dismiss.mutate({})}>
+        {t("adminReset.dismiss")}
+      </Button>
+    </div>
   );
 }
 

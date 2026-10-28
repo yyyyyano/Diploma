@@ -8,3 +8,9 @@ export const consentChanged = defineEvent({
   name: "privacy.consent-changed",
   payload: z.object({ ids: z.array(z.uuid()).min(1) }),
 });
+
+/** Архив «Мои данные» собран (PRIV-05): ids — готовые заявки privacy_exports; уведомление о готовности шлёт подписчик. */
+export const exportReady = defineEvent({
+  name: "privacy.export-ready",
+  payload: z.object({ ids: z.array(z.uuid()).min(1) }),
+});

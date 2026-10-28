@@ -1,0 +1,24 @@
+/* Форма факта (design/screens/Memory.dc.html, .mem-edit): ребёнок — рамка с подписью, поля в две колонки, на телефоне —
+   в одну. */
+.form {
+  min-width: 0;
+}
+
+.child {
+  margin: 0;
+  padding: var(--s-12) var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.legend {
+  padding: 0 var(--s-4);
+  font-weight: 600;
+}
+
+.childGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-10) var(--s-12);
+}

@@ -9,6 +9,14 @@ export const TRACE_KEYS = [
   "fin.obligation.communication",
   "fin.obligation.loan",
   "fin.obligation.subscriptions",
+  // STMT-09: эквивалент в BYN — курс НБРБ (в десятитысячных) и масштаб (за сколько единиц валюты).
+  "fx.rate",
+  "fx.scale",
+  // STMT-01/02, STMT-09: остатки счетов и итоги экрана «Счета».
+  "accounts.balance",
+  "accounts.balanceInByn",
+  "accounts.total",
+  "accounts.available",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

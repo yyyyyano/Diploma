@@ -13,4 +13,14 @@ export const formulas = {
       subscriptions: "Подписки и онлайн-сервисы",
     },
   },
+  fx: {
+    rate: "Курс НБРБ, BYN",
+    scale: "За сколько единиц валюты",
+  },
+  accounts: {
+    balance: "Остаток в валюте счёта",
+    balanceInByn: "Остаток в BYN по курсу НБРБ",
+    total: "Всего на счетах",
+    available: "Доступно без накопительного",
+  },
 } as const;

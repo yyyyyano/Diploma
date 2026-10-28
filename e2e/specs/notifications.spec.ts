@@ -49,9 +49,16 @@ test("колокольчик со списком и настройки увед�
     await page.getByRole("button", { name: /^Уведомления/ }).click();
     await expect(page.getByRole("heading", { level: 2, name: "Уведомления" })).toBeVisible();
     await expect(page.getByText(/Уведомлений пока нет/)).toBeVisible();
+    // Список появляется с переходом прозрачности: axe посреди перехода видит бледный текст (под нагрузкой
+    // параллельных сценариев переход дольше) — ждём конца переходов, а после — закрытия списка.
+    await page.waitForFunction(() =>
+      document.getAnimations().every((animation) => animation.playState !== "running"),
+    );
     const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
     expect(result.violations.map((v) => ({ width: size.width, id: v.id }))).toEqual([]);
-    await page.keyboard.press("Escape");
+    // Список закрывается тем же колокольчиком (Escape его сейчас не закрывает — см. итог T-016).
+    await page.getByRole("button", { name: /^Уведомления/ }).click();
+    await expect(page.getByRole("heading", { level: 2, name: "Уведомления" })).toBeHidden();
   }
   await page.setViewportSize(VIEWPORTS[0]);
 

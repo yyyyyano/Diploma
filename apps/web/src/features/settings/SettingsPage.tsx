@@ -1,8 +1,8 @@
 // Настройки пользователя (design/screens/Settings.dc.html): вкладка «Профиль и вход» — почта (AUTH-03: «Подтверждён» /
 // «Не подтверждён», «Отправить письмо ещё раз», ссылка на локальный ящик), смена пароля (AUTH-08: другие сеансы
 // завершаются), код восстановления (AUTH-05: создать, показать один раз) и выход; «Конфиденциальность»
-// (`PrivacySettings`, PRIV-02), «Уведомления» (`NotificationSettings`, NOTIF-04). Вкладка Telegram — задача бота
-// (T-052).
+// (`PrivacySettings`, PRIV-02), «Уведомления» (`NotificationSettings`, NOTIF-04), «Мои данные» (`MyDataSettings`,
+// PRIV-05/06). Вкладка Telegram — задача бота (T-052).
 import { ChangePasswordInput } from "@kosht/contract";
 import { formatDate } from "@kosht/i18n";
 import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
@@ -24,6 +24,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { RecoveryCode } from "../../entities/recovery-code/index.ts";
 import { SETTINGS_TABS, type SettingsSearch } from "./model/search.ts";
+import { MyDataSettings } from "./MyDataSettings.tsx";
 import { NotificationSettings } from "./NotificationSettings.tsx";
 import { PrivacySettings } from "./PrivacySettings.tsx";
 import { useTranslation } from "react-i18next";
@@ -51,6 +52,7 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
             <Tabs.Tab value="profile">{t("settings:tabs.profile")}</Tabs.Tab>
             <Tabs.Tab value="privacy">{t("settings:tabs.privacy")}</Tabs.Tab>
             <Tabs.Tab value="notifications">{t("notifications:preferences.tab")}</Tabs.Tab>
+            <Tabs.Tab value="my-data">{t("settings:tabs.myData")}</Tabs.Tab>
           </Tabs.List>
           <Tabs.Panel value="profile" className={classes.panel}>
             <EmailCard />
@@ -63,6 +65,9 @@ export function SettingsPage({ search }: { readonly search: SettingsSearch }) {
           </Tabs.Panel>
           <Tabs.Panel value="notifications" className={classes.panel}>
             <NotificationSettings />
+          </Tabs.Panel>
+          <Tabs.Panel value="my-data" className={classes.panel}>
+            <MyDataSettings />
           </Tabs.Panel>
         </Tabs>
       </div>

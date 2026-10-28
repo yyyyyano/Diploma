@@ -1,0 +1,590 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "83b49537-f994-4848-b01a-6c3bc12d67ed",
+  "prevIds": ["b0f94dfa-d064-430d-9b9f-01176dbbe779"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "account_revisions"],
+      "writes": [
+        "s|tbl|public.account_revisions",
+        "n|tbl|public.account_revisions",
+        "e|tbl|public.account_revisions",
+        "n|rel|public.account_revisions",
+        "n|type|public.account_revisions",
+        "n|rel|public.account_revisions_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "accounts", "bank"],
+      "writes": [
+        "s|col|public.accounts.bank",
+        "n|col|public.accounts.bank",
+        "e|col|public.accounts.bank"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "accounts", "mask"],
+      "writes": [
+        "s|col|public.accounts.mask",
+        "n|col|public.accounts.mask",
+        "e|col|public.accounts.mask"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "accounts", "balance_minor"],
+      "writes": [
+        "s|col|public.accounts.balance_minor",
+        "n|col|public.accounts.balance_minor",
+        "e|col|public.accounts.balance_minor"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "accounts", "balance_on"],
+      "writes": [
+        "s|col|public.accounts.balance_on",
+        "n|col|public.accounts.balance_on",
+        "e|col|public.accounts.balance_on"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "accounts", "balance_source"],
+      "writes": [
+        "s|col|public.accounts.balance_source",
+        "n|col|public.accounts.balance_source",
+        "e|col|public.accounts.balance_source"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public"]
+    },
+    {
+      "statementType": "recreate_index",
+      "statementTarget": ["index", "public", "accounts", "accounts_cash_per_user_idx"],
+      "writes": [
+        "s|idx|public.accounts_cash_per_user_idx",
+        "n|idx|public.accounts_cash_per_user_idx",
+        "e|idx|public.accounts_cash_per_user_idx",
+        "n|rel|public.accounts_cash_per_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|col|public.accounts.household_id",
+        "n|col|public.accounts.user_id"
+      ],
+      "sharedWrites": [],
+      "sqlHash": "970e23004c84fe41"
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "account_revisions",
+        "account_revisions_account_id_fk_idx"
+      ],
+      "writes": [
+        "s|idx|public.account_revisions_account_id_fk_idx",
+        "n|idx|public.account_revisions_account_id_fk_idx",
+        "e|idx|public.account_revisions_account_id_fk_idx",
+        "n|rel|public.account_revisions_account_id_fk_idx"
+      ],
+      "reads": [
+        "n|tbl|public.account_revisions",
+        "n|sch|public",
+        "n|col|public.account_revisions.household_id",
+        "n|col|public.account_revisions.account_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "accounts", "accounts_unknown_card_idx"],
+      "writes": [
+        "s|idx|public.accounts_unknown_card_idx",
+        "n|idx|public.accounts_unknown_card_idx",
+        "e|idx|public.accounts_unknown_card_idx",
+        "n|rel|public.accounts_unknown_card_idx"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public", "n|col|public.accounts.household_id"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "accounts", "accounts_bank_mask_idx"],
+      "writes": [
+        "s|idx|public.accounts_bank_mask_idx",
+        "n|idx|public.accounts_bank_mask_idx",
+        "e|idx|public.accounts_bank_mask_idx",
+        "n|rel|public.accounts_bank_mask_idx"
+      ],
+      "reads": [
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|col|public.accounts.household_id",
+        "n|col|public.accounts.mask",
+        "n|col|public.accounts.currency"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "account_revisions"],
+      "writes": [
+        "s|fk|public.account_revisions.account_revisions_account_id_fk",
+        "n|fk|public.account_revisions.account_revisions_account_id_fk",
+        "e|fk|public.account_revisions.account_revisions_account_id_fk",
+        "n|con|public.account_revisions.account_revisions_account_id_fk"
+      ],
+      "reads": [
+        "n|tbl|public.account_revisions",
+        "n|sch|public",
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|col|public.account_revisions.household_id",
+        "n|col|public.account_revisions.account_id",
+        "n|col|public.accounts.household_id",
+        "n|col|public.accounts.id",
+        "e|uniqueness|public.accounts.household_id.id"
+      ]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "accounts"],
+      "writes": [
+        "s|ck|public.accounts.accounts_mask_check",
+        "n|ck|public.accounts.accounts_mask_check",
+        "e|ck|public.accounts.accounts_mask_check",
+        "n|con|public.accounts.accounts_mask_check"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public", "n|col|public.accounts.mask"]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "accounts"],
+      "writes": [
+        "s|ck|public.accounts.accounts_balance_source_check",
+        "n|ck|public.accounts.accounts_balance_source_check",
+        "e|ck|public.accounts.accounts_balance_source_check",
+        "n|con|public.accounts.accounts_balance_source_check"
+      ],
+      "reads": ["n|tbl|public.accounts", "n|sch|public", "n|col|public.accounts.balance_source"]
+    },
+    {
+      "statementType": "alter_check",
+      "statementTarget": ["table", "public", "accounts"],
+      "writes": ["s|ck|public.accounts.accounts_kind_check"],
+      "reads": [
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|col|public.accounts.kind",
+        "e|col|public.accounts.kind"
+      ],
+      "sqlHash": "0b9b8bd44b2cae83"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "account_revisions",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "household_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "account_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "existed",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "name",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "initial_balance_minor",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "bank",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "mask",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "balance_minor",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "0",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "balance_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "current_date",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "balance_source",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'manual'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "account_revisions_account_id_fk_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "account_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "accounts_unknown_card_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"kind\" = 'unknown-card'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "accounts_bank_mask_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "lower(\"bank\")",
+            "isExpression": true,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "mask",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "currency",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"mask\" is not null",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "account_revisions_account_id_fk",
+        "nameExplicit": true,
+        "columns": ["household_id", "account_id"],
+        "schemaTo": "public",
+        "tableTo": "accounts",
+        "columnsTo": ["household_id", "id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "CASCADE",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "account_revisions",
+        "name": "account_revisions_pkey",
+        "columns": ["household_id", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "accounts_mask_check",
+        "value": "\"mask\" is null or \"mask\" ~ '^[0-9]{4}$'",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "accounts_balance_source_check",
+        "value": "\"balance_source\" in ('manual', 'statement', 'operations')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "indexes\u0000[\"public\",\"accounts_cash_per_user_idx\"]",
+      "set": {
+        "where": "\"kind\" = 'cash' and \"currency\" = 'BYN'"
+      }
+    },
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"accounts\",\"accounts_kind_check\"]",
+      "set": {
+        "value": "\"kind\" in ('cash', 'card', 'current', 'savings', 'deposit', 'unknown-card')"
+      }
+    }
+  ]
+}

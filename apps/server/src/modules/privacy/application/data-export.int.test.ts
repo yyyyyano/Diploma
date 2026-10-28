@@ -9,7 +9,7 @@ import { FileId, type Scope } from "@kosht/kernel";
 import { FakeClock, MemoryBlobStore, readZip, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { randomUUIDv7 } from "node:crypto";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { FilesFacade, NewFile } from "../../files/index.ts";
 import { createScopedDb, type ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { defineUserData, type UserDataOwner } from "../../../platform/db/user-data.ts";
@@ -88,7 +88,10 @@ function fakeFiles(blobs: MemoryBlobStore) {
   return { facade, open, owner, stored };
 }
 
-function setup(extraOwners: readonly UserDataOwner[] = []) {
+function setup(
+  extraOwners: readonly UserDataOwner[] = [],
+  beforeEnqueue: () => Promise<void> = async () => undefined,
+) {
   const clock = new FakeClock("2026-10-28T09:00:00Z");
   const blobs = new MemoryBlobStore();
   const log = memoryLogger().log;
@@ -114,6 +117,7 @@ function setup(extraOwners: readonly UserDataOwner[] = []) {
     userData: () => owners,
     files: files.facade,
     enqueueBuild: async (_tx, exportId) => {
+      await beforeEnqueue();
       enqueued.push(exportId);
     },
   });
@@ -182,6 +186,53 @@ describe("PRIV-05: заявка на архив «Мои данные»", () => 
       [s.scope.householdId],
     );
     expect(rows).toEqual([{ status: "pending" }]);
+  });
+  it("чужая заявка «готовится» ещё не закоммичена — вставка ждёт её и отдаёт её же, второй задачи нет", async () => {
+    const { exports, enqueued } = setup();
+    const s = scoped(testScope({ user: 10, household: 10 }));
+    // Детерминированная гонка: другая транзакция уже вставила готовящуюся заявку, но не закоммитила её.
+    const other = await db.owner.connect();
+    try {
+      await other.query("begin");
+      const inserted = await other.query<{ id: string }>(
+        "insert into privacy_exports (household_id, user_id, status) values ($1, $2, 'pending') returning id",
+        [s.scope.householdId, s.scope.userId],
+      );
+      const requesting = exports.request(s);
+      // Заявка встала на уникальном индексе — ждёт исхода чужой транзакции.
+      await vi.waitFor(
+        async () => {
+          const { rows } = await db.owner.query<{ n: number }>(
+            "select count(*)::int as n from pg_stat_activity where wait_event_type = 'Lock' and datname = current_database()",
+          );
+          expect(rows[0]?.n).toBeGreaterThan(0);
+        },
+        { timeout: 5_000, interval: 20 },
+      );
+      await other.query("commit");
+      const result = await requesting;
+      expect(result.status).toBe("pending");
+      expect(await exports.state(s)).toEqual(result);
+      expect(inserted.rows[0]?.id).toBeDefined();
+      // Отменённая вставка не дошла до постановки — задачу поставила бы только своя заявка.
+      expect(enqueued).toEqual([]);
+    } finally {
+      other.release();
+    }
+  });
+
+  it("задача не поставилась — заявки нет, ошибка уходит наружу, прежний архив на месте", async () => {
+    let fail = false;
+    const { exports, enqueued } = setup([], async () => {
+      if (fail) throw new Error("очередь недоступна");
+    });
+    const s = scoped(testScope({ user: 11, household: 11 }));
+    await exports.request(s);
+    await exports.build(s, enqueued[0] ?? "");
+    const ready = await exports.state(s);
+    fail = true;
+    await expect(exports.request(s)).rejects.toThrow("очередь недоступна");
+    expect(await exports.state(s)).toEqual(ready);
   });
 });
 

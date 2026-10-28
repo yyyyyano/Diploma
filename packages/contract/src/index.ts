@@ -105,4 +105,24 @@ export {
   UserNotification,
   UserNotificationKind,
 } from "./notifications/notifications.contract.ts";
+export {
+  Child,
+  ChildInput,
+  EmploymentType,
+  FACT_KEYS,
+  FACT_TOPICS,
+  FactEvaluation,
+  FactId,
+  FactKey,
+  FactSource,
+  FactStatus,
+  FactTopic,
+  FactValue,
+  FactValueInput,
+  FamilyStatus,
+  HousingQueueStatus,
+  OnboardingAnswers,
+  ProfileFact,
+  profileContract,
+} from "./profile/profile.contract.ts";
 export { contract } from "./router.ts";

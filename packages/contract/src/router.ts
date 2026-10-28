@@ -11,6 +11,7 @@ import { identityContract } from "./identity/identity.contract.ts";
 import { notificationsContract } from "./notifications/notifications.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
 import { privacyContract } from "./privacy/privacy.contract.ts";
+import { profileContract } from "./profile/profile.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 
 export const contract = {
@@ -23,6 +24,7 @@ export const contract = {
   explain: explainContract,
   files: filesContract,
   notifications: notificationsContract,
+  profile: profileContract,
   accounts: accountsContract,
   chat: chatContract,
   admin: adminContract,

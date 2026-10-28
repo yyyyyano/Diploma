@@ -21,7 +21,7 @@ function procedures(router: AnyContractRouter, path = ""): [string, AnyContractP
 const all = procedures(contract);
 
 describe("дерево процедур", () => {
-  it("процедуры: платформа, почта, вход, согласия, действия, объяснения, файлы, уведомления, счета, чат и админка", () => {
+  it("процедуры: платформа, почта, вход, согласия, действия, объяснения, файлы, уведомления, профиль, счета, чат и админка", () => {
     expect(all.map(([path]) => path)).toEqual([
       "system.health",
       "events.stream",
@@ -60,6 +60,12 @@ describe("дерево процедур", () => {
       "notifications.setPreference",
       "notifications.adminList",
       "notifications.adminMarkRead",
+      "profile.facts",
+      "profile.onboarding",
+      "profile.completeOnboarding",
+      "profile.setFact",
+      "profile.confirmFact",
+      "profile.deleteFact",
       "accounts.list",
       "chat.history",
       "chat.send",

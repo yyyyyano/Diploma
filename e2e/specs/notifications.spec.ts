@@ -41,6 +41,9 @@ test("колокольчик со списком и настройки увед�
   await page.getByRole("checkbox", { name: /согласен/ }).check();
   await page.getByRole("button", { name: "Создать аккаунт" }).click();
   await page.getByRole("button", { name: "Продолжить" }).click();
+  // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("button", { name: "Пропустить анкету" }).click();
   await expect(page).toHaveURL(/\/accounts$/);
 
   // NOTIF-01: колокольчик в каркасе; список открывается.

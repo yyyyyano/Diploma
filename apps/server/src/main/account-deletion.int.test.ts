@@ -88,6 +88,17 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, 'goal', 'g-1', '{}', true)`,
     ids,
   );
+  // Профиль: анкета (признак и факт) и правка факта — строка ревизии для «Отменить».
+  const onboarding = await stack.call("local", "/profile/onboarding", {
+    cookie: user.cookie,
+    body: { answers: { benefitCategory: false } },
+  });
+  expect(onboarding.status).toBe(200);
+  const fact = await stack.call("local", "/profile/facts", {
+    cookie: user.cookie,
+    body: { value: { key: "benefitCategory", value: true } },
+  });
+  expect(fact.status).toBe(200);
   const preference = await stack.call("local", "/notifications/preferences", {
     cookie: user.cookie,
     body: { kind: "goal", channel: "web", enabled: false },

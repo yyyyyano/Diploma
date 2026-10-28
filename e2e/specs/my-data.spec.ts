@@ -52,6 +52,9 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   await page.getByRole("checkbox", { name: /согласен/ }).check();
   await page.getByRole("button", { name: "Создать аккаунт" }).click();
   await page.getByRole("button", { name: "Продолжить" }).click();
+  // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("button", { name: "Пропустить анкету" }).click();
   await expect(page).toHaveURL(/\/accounts$/);
 
   // PRIV-02: облачное согласие — окно с текстом, «Дать согласие» после отметки; отзыв — сразу.

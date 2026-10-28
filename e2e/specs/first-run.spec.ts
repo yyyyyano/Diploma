@@ -85,6 +85,26 @@ test("первый запуск → администратор → вход → 
   await page.getByLabel("Пароль", { exact: true }).fill(admin.password);
   await page.getByRole("button", { name: "Войти" }).click();
 
+  // AUTH-07, PROF-02: после первого входа — анкета на 1 минуту: ответ на первый вопрос, остальные пропущены, итог
+  // «Вот что я запомнил»; axe на вопросе и на итоге.
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Как вы зарабатываете?" }),
+  ).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByText("Наёмный работник", { exact: true }).click();
+  await page.getByRole("button", { name: "Далее" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Сколько у вас детей?" })).toBeVisible();
+  await page.getByRole("button", { name: "Больше детей" }).click();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  for (let question = 2; question <= 6; question += 1) {
+    await page.getByRole("button", { name: "Пропустить вопрос" }).click();
+  }
+  await expect(page.getByRole("heading", { level: 1, name: "Вот что я запомнил" })).toBeVisible();
+  await expect(page.getByText("Наёмный работник")).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("link", { name: "Перейти на главную" }).click();
+
   // STMT-01: «Наличные» с самого начала — их создаёт worker, список обновляется без перезагрузки.
   await expect(page).toHaveURL(/\/accounts$/);
   const cash = page.getByRole("article", { name: "Наличные" });

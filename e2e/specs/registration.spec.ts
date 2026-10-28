@@ -100,6 +100,9 @@ test("регистрация → письмо в ящике → подтверж
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByLabel("Пароль", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Войти" }).click();
+  // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
+  await expect(page).toHaveURL(/\/onboarding$/);
+  await page.getByRole("button", { name: "Пропустить анкету" }).click();
   await expect(page).toHaveURL(/\/accounts$/);
   expect(foreign).toEqual([]);
 });

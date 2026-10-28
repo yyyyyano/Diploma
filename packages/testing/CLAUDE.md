@@ -18,7 +18,7 @@
   `apps/server/src/platform/blob-store/blob-store.test.ts`: один набор проверок для обоих хранилищ.
 - `InlineJobs<Tx>(find)` — очередь задач без pg-boss для тестов сценариев: `enqueue(tx, job, payload)` находит
   обработчик функцией `find(name)` и выполняет его сразу в той же транзакции; нет обработчика — ошибка; `enqueued` —
-  поставленные по порядку; `discardHousehold` — 0 (ожидающих задач у неё не бывает). Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
+  поставленные по порядку; `discardHousehold` — 0 (ожидающих задач у неё не бывает); `overview()` — пустой обзор. Форму с портом `Jobs` сверяет `apps/server/src/platform/jobs/inline-jobs.test.ts`.
 - `readZip(bytes)` — записи ZIP-архива (путь → содержимое) через `yauzl`: проверка архива «Мои данные» (PRIV-05).
 - `readSse(body)` — события Server-Sent Events из тела ответа `fetch` по порядку: `{ event, data }` и комментарии
   keepalive (`{ comment: true }`); для тестов `events.stream` (T-061): клиента oRPC на сервере нет.

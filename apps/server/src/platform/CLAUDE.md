@@ -150,7 +150,9 @@
 - `scope-verifier.ts` — порт `ScopeVerifier(candidate) → boolean` и `createScopeVerifierRegistry()` (`register` — один
   источник на процесс, его даёт identity, T-009; пусто — не проходит никто).
 - `jobs.ts` — порт `Jobs` (`enqueue(tx, job, payload)`, `discardHousehold(householdId)` — удалить ещё не начатые
-  задачи домохозяйства во всех очередях через `findJobs` + `deleteJob` pg-boss, PRIV-06; у `InlineJobs` — всегда 0) и `createJobs({ pool, role, log, clock, scopes,
+  задачи домохозяйства во всех очередях через `findJobs` + `deleteJob` pg-boss, PRIV-06; у `InlineJobs` — всегда 0;
+  `overview()` — экран «Система» (ADM-60, OBS-07): выполняются, последние `failed`/`dropped` и расписания и обходы
+  процесса с последним запуском — до `OVERVIEW_LIMIT` (20) строк, только журнал; у `InlineJobs` — пусто) и `createJobs({ pool, role, log, clock, scopes,
   pollingIntervalSeconds? })` → `JobsRuntime`: `start({ jobs })` — очереди (`createQueue`, все роли) и в `worker` —
   `work` (`perJobResults`); `enqueue` — `send` через `fromDrizzle` на соединении tx (аудитор), `requestId` — из
   контекста лога; `stop()`. Выполнение: конверт → `scopes.verify` → `makeScope` (единственное место для задач) →

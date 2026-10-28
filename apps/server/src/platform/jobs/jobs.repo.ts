@@ -3,7 +3,7 @@
 // rate_limits); строка с текущим водяным знаком расписания не удаляется, сколько бы ей ни было лет, иначе после
 // долгого простоя догон начался бы заново. Время приходит из Clock вызывающего, а не из now() базы.
 import type { LocalDate } from "@kosht/kernel";
-import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { SystemDb } from "../db/system-db.ts";
 import { backgroundJobRun, type RunStatus } from "./schema.ts";
 
@@ -107,4 +107,54 @@ async function purgeOld(db: SystemDb, now: Date): Promise<void> {
           where w.schedule_key = r.schedule_key and w.status = 'completed'))
       limit ${PURGE_BATCH} for update of r skip locked))`,
   );
+}
+
+/** Запуск для экрана «Система» (ADM-60, OBS-07): вид, состояние, прогресс, код ошибки — без данных пользователей. */
+export interface RunView {
+  readonly kind: string;
+  readonly status: RunStatus;
+  readonly progress: number | null;
+  readonly errorCode: string | null;
+  readonly startedAt: Date;
+  readonly finishedAt: Date | null;
+}
+
+const runColumns = {
+  kind: backgroundJobRun.kind,
+  status: backgroundJobRun.status,
+  progress: backgroundJobRun.progress,
+  errorCode: backgroundJobRun.errorCode,
+  startedAt: backgroundJobRun.startedAt,
+  finishedAt: backgroundJobRun.finishedAt,
+};
+
+/** Выполняются сейчас — новые сверху. */
+export async function runningRuns(db: SystemDb, limit: number): Promise<RunView[]> {
+  return db
+    .select(runColumns)
+    .from(backgroundJobRun)
+    .where(eq(backgroundJobRun.status, "running"))
+    .orderBy(desc(backgroundJobRun.startedAt))
+    .limit(limit);
+}
+
+/** Последние неудачи (failed и dropped) — новые сверху. */
+export async function recentFailures(db: SystemDb, limit: number): Promise<RunView[]> {
+  return db
+    .select(runColumns)
+    .from(backgroundJobRun)
+    .where(inArray(backgroundJobRun.status, ["failed", "dropped"]))
+    .orderBy(desc(backgroundJobRun.startedAt))
+    .limit(limit);
+}
+
+/** Последний запуск очереди kind (расписания и обхода) или undefined. */
+export async function lastRunOf(db: SystemDb, kind: string): Promise<RunView | undefined> {
+  const rows = await db
+    .select(runColumns)
+    .from(backgroundJobRun)
+    .where(eq(backgroundJobRun.kind, kind))
+    .orderBy(desc(backgroundJobRun.startedAt))
+    .limit(1);
+  return rows[0];
 }

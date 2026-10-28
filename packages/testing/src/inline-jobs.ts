@@ -34,6 +34,15 @@ export class InlineJobs<Tx> {
     return 0;
   }
 
+  /** Журнала запусков и расписаний у InlineJobs нет: обзор пуст (экран «Система», ADM-60). */
+  async overview(): Promise<{
+    readonly running: readonly never[];
+    readonly failures: readonly never[];
+    readonly schedules: readonly never[];
+  }> {
+    return { running: [], failures: [], schedules: [] };
+  }
+
   /** Поставленные задачи по порядку (для утверждений теста). */
   get enqueued(): readonly { readonly name: string; readonly payload: unknown }[] {
     return [...this.#enqueued];

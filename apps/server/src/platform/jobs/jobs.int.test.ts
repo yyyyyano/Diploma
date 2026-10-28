@@ -456,3 +456,54 @@ describe("NFR-22, NFR-23: расписания и обходы ведёт worker
     expect(await count("from background_job_run where kind = $1", ["test.stuck-receipts"])).toBe(1);
   });
 });
+
+describe("OBS-07, ADM-60: обзор фоновых задач для админки", () => {
+  it("выполняются, последние ошибки и расписания с последним запуском — в любой роли, без данных пользователей", async () => {
+    await db.owner.query("delete from background_job_run");
+    const at = (iso: string) => new Date(iso);
+    await db.owner.query(
+      `insert into background_job_run (kind, schedule_key, status, progress, error_code, started_at, finished_at) values
+       ('privacy.build-export', null, 'running', 40, null, $1, null),
+       ('receipts.recognize', null, 'failed', null, 'UNAVAILABLE', $2, $2),
+       ('receipts.recognize', null, 'dropped', null, 'FORBIDDEN', $3, $3),
+       ('receipts.recognize', null, 'completed', null, null, $4, $4),
+       ('test.overview-nightly', 'test.overview-nightly', 'completed', null, null, $2, $3),
+       ('test.overview-nightly', 'test.overview-nightly', 'completed', null, null, $4, $4)`,
+      [
+        at("2026-10-21T08:59:00Z"),
+        at("2026-10-21T07:00:00Z"),
+        at("2026-10-21T08:00:00Z"),
+        at("2026-10-21T08:30:00Z"),
+      ],
+    );
+    const schedule = defineSchedule({
+      name: "test.overview-nightly",
+      cron: "0 3 * * *",
+      stepDays: 1,
+      handle: async () => {},
+    });
+    const { runtime } = await startJobs(
+      "api",
+      { jobs: [], schedules: [schedule] },
+      async () => true,
+    );
+    const overview = await runtime.overview();
+    expect(overview.running).toEqual([
+      expect.objectContaining({ kind: "privacy.build-export", status: "running", progress: 40 }),
+    ]);
+    expect(overview.failures.map((run) => [run.status, run.errorCode])).toEqual([
+      ["dropped", "FORBIDDEN"],
+      ["failed", "UNAVAILABLE"],
+    ]);
+    expect(overview.schedules).toEqual([
+      {
+        name: "test.overview-nightly",
+        cron: "0 3 * * *",
+        lastRun: expect.objectContaining({
+          status: "completed",
+          startedAt: at("2026-10-21T08:30:00Z"),
+        }),
+      },
+    ]);
+  });
+});

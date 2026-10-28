@@ -15,7 +15,16 @@ import { currentLogContext, withLogContext } from "../logging/context.ts";
 import type { Logger } from "../logging/logger.ts";
 import { createBoss, stopBoss, type BossRole } from "./boss.ts";
 import { JobEnvelope, queuePolicy, type JobDef } from "./define-job.ts";
-import { finishRun, recordDropped, setProgress, startRun } from "./jobs.repo.ts";
+import {
+  finishRun,
+  lastRunOf,
+  recentFailures,
+  recordDropped,
+  runningRuns,
+  setProgress,
+  startRun,
+  type RunView,
+} from "./jobs.repo.ts";
 import { runSchedule, type ScheduleDef, type ScheduleOutcome } from "./schedule.ts";
 import type { ScopeVerifierRegistry } from "./scope-verifier.ts";
 import { runSweep, type SweepDef } from "./sweep.ts";
@@ -29,7 +38,26 @@ export interface Jobs {
    * сколько удалено. Уже выполняемую задачу доведёт или отбросит перепроверка владельца (ScopeVerifier).
    */
   discardHousehold(householdId: HouseholdId): Promise<number>;
+  /**
+   * Обзор для экрана «Система» (ADM-60, OBS-07): что выполняется, последние ошибки и расписания процесса с последним
+   * запуском. Только журнал запусков — ни владельцев, ни нагрузок задач.
+   */
+  overview(): Promise<JobsOverview>;
 }
+
+/** Обзор фоновых задач: до OVERVIEW_LIMIT строк в каждом списке. */
+export interface JobsOverview {
+  readonly running: readonly RunView[];
+  readonly failures: readonly RunView[];
+  readonly schedules: readonly {
+    readonly name: string;
+    readonly cron: string;
+    readonly lastRun: RunView | null;
+  }[];
+}
+
+/** Сколько строк в списках обзора. */
+export const OVERVIEW_LIMIT = 20;
 
 /** Пул роли приложения: тот же, что принимает bossDb (pg напрямую сюда не импортируется). */
 export type JobsPool = Parameters<typeof bossDb>[0];
@@ -72,6 +100,8 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
   const { pool, role, log, clock, scopes } = deps;
   const system = createSystemDb(pool);
   const queues = new Map<string, JobDef>();
+  /** Расписания и обходы процесса — имена и cron, для обзора (во всех ролях). */
+  let timed: readonly { readonly name: string; readonly cron: string }[] = [];
   let boss: PgBoss | undefined;
 
   async function send(
@@ -137,9 +167,23 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
       return discarded;
     },
 
+    async overview() {
+      return {
+        running: await runningRuns(system, OVERVIEW_LIMIT),
+        failures: await recentFailures(system, OVERVIEW_LIMIT),
+        schedules: await Promise.all(
+          timed.map(async (timer) => ({
+            ...timer,
+            lastRun: (await lastRunOf(system, timer.name)) ?? null,
+          })),
+        ),
+      };
+    },
+
     async start(registry) {
       if (boss !== undefined) throw new Error("Очередь задач уже запущена.");
       const timers = [...(registry.schedules ?? []), ...(registry.sweeps ?? [])];
+      timed = timers.map((timer) => ({ name: timer.name, cron: timer.cron }));
       const sweepJobs = (registry.sweeps ?? []).map((sweep) => sweep.job);
       for (const job of [...registry.jobs, ...sweepJobs]) {
         const known = queues.get(job.name);

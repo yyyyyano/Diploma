@@ -44,8 +44,12 @@ import {
   createRealtimeStreams,
   type Realtime,
 } from "../platform/realtime/realtime.ts";
-import { createSecrets } from "../platform/secrets/secrets.ts";
-import { createSettings, type Settings } from "../platform/settings/settings.ts";
+import { createSecrets, registeredSecrets } from "../platform/secrets/secrets.ts";
+import {
+  createSettings,
+  registeredSettings,
+  type Settings,
+} from "../platform/settings/settings.ts";
 import { TIME_ZONE } from "../platform/settings/time-zone.ts";
 import { createTelemetry, loadLangfuseTarget } from "../platform/telemetry/telemetry.ts";
 import { createModules, type ModulePorts } from "./create-modules.ts";
@@ -140,7 +144,7 @@ export async function compose(
   const sessions = createSessionRegistry();
   const scopes = createScopeVerifierRegistry();
   const consent = createConsentRegistry();
-  // pg-boss — на том же пуле роли приложения (своего пула нет); пояс расписаний — настройка system.time-zone.
+  // pg-boss — на том же пуле роли приложения (своего пула нет); пояс расписаний — настройка clock.time-zone.
   const jobs = createJobs({
     pool,
     role,
@@ -225,9 +229,11 @@ export async function compose(
   let registries: Registries;
   let router: Router;
   try {
-    // Повторное имя в реестре или процедура платформы в ветке модуля — ошибка старта.
+    // Повторное имя в реестре, ключ настройки не с тем префиксом или процедура платформы в ветке модуля — ошибка
+    // старта.
     registries = buildRegistries(
       (deps.createModules ?? createModules)({ platform, systemPlatform }),
+      { settings: registeredSettings(), secrets: registeredSecrets() },
     );
     // Вход в систему (сессии сайта и владельцы задач) даёт модуль identity; без него не входит никто.
     if (registries.sessionSource !== undefined) sessions.register(registries.sessionSource);

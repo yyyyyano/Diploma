@@ -41,7 +41,7 @@ export interface JobsDeps {
   readonly clock: Clock;
   readonly scopes: ScopeVerifierRegistry;
   /**
-   * Пояс расписаний — настройка system.time-zone (NFR-23); worker читает её при старте, поэтому смена пояса
+   * Пояс расписаний — настройка clock.time-zone (NFR-23); worker читает её при старте, поэтому смена пояса
    * действует после перезапуска worker.
    */
   timeZone(): Promise<TimeZone>;

@@ -5,7 +5,7 @@ import { TimeZoneSchema } from "../clock/clock.ts";
 import { defineSetting } from "./settings.ts";
 
 export const TIME_ZONE = defineSetting({
-  key: "system.time-zone",
+  key: "clock.time-zone",
   schema: TimeZoneSchema,
   default: DEFAULT_TIME_ZONE,
   env: "TIME_ZONE",

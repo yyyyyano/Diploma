@@ -4,7 +4,7 @@ import { jsonb, text, timestamp } from "drizzle-orm/pg-core";
 import { systemTable } from "../db/tables.ts";
 
 export const settings = systemTable("settings", {
-  /** Ключ настройки: `system.time-zone` (defineSetting). */
+  /** Ключ настройки: `clock.time-zone` (defineSetting). */
   key: text().primaryKey(),
   /** Значение из админки; проверяется схемой настройки при записи и при чтении. */
   value: jsonb().notNull(),

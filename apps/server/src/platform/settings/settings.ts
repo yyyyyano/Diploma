@@ -12,8 +12,8 @@ import { AppError } from "../errors/app-error.ts";
 import type { Logger } from "../logging/logger.ts";
 import { deleteStored, readStored, writeStored } from "./settings.repo.ts";
 
-/** Ключ настройки — как ключ события: `system.time-zone`. */
-const SETTING_KEY = /^[a-z]+(\.[a-z0-9-]+)+$/;
+/** Ключ настройки — как ключ события: `clock.time-zone`. */
+const SETTING_KEY = /^[a-z][a-z0-9-]*(\.[a-z0-9-]+)+$/;
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
 /** Не дольше этого значение берётся из кэша (ARCHITECTURE §9). */
@@ -37,7 +37,7 @@ const registry = new Map<string, SettingDef<unknown>>();
 /** Зарегистрировать настройку; ключ уникален, умолчание обязано пройти схему. */
 export function defineSetting<T>(def: SettingDef<T>): SettingDef<T> {
   if (!SETTING_KEY.test(def.key)) {
-    throw new RangeError(`Ключ настройки «${def.key}»: ожидается вида system.time-zone.`);
+    throw new RangeError(`Ключ настройки «${def.key}»: ожидается вида clock.time-zone.`);
   }
   if (def.env !== undefined && !ENV_NAME.test(def.env)) {
     throw new RangeError(`Переменная настройки ${def.key}: только A–Z, 0–9 и _.`);

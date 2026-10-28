@@ -13,7 +13,7 @@ import { AppError } from "../errors/app-error.ts";
 import type { Logger } from "../logging/logger.ts";
 import { deleteSealed, readSealed, writeSealed, type SealedSecret } from "./secrets.repo.ts";
 
-const SECRET_NAME = /^[a-z]+(\.[a-z0-9-]+)+$/;
+const SECRET_NAME = /^[a-z][a-z0-9-]*(\.[a-z0-9-]+)+$/;
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 const IV_BYTES = 12;
 /** Тег GCM — только полный: короткий подбирается перебором. Node 26 сам отвергает тег ≠ 16 байт, параметр — явно. */

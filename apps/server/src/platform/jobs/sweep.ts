@@ -15,7 +15,7 @@ export type SweepFind = Parameters<typeof crossTenant>[2];
 export interface SweepDef<P = unknown> {
   /** Имя очереди обхода и метка crossTenant в журнале: `<модуль>.<что>`. */
   readonly name: string;
-  /** cron по поясу настройки system.time-zone. */
+  /** cron по поясу настройки clock.time-zone. */
   readonly cron: string;
   readonly find: SweepFind;
   /** Задача, которая ставится каждому найденному владельцу. */

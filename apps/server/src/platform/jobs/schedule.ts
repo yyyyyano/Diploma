@@ -20,7 +20,7 @@ export interface ScheduleContext {
 export interface ScheduleDef {
   /** Имя очереди и ключ водяного знака: `<модуль>.<что>`. */
   readonly name: string;
-  /** cron по поясу настройки system.time-zone (NFR-23). */
+  /** cron по поясу настройки clock.time-zone (NFR-23). */
   readonly cron: string;
   /** Длина периода в днях: 1 — сутки, 7 — неделя. */
   readonly stepDays: number;

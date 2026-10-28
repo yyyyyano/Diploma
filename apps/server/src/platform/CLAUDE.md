@@ -38,7 +38,8 @@
 - `settings/settings.ts` — `defineSetting({ key, schema, default, env?, fromEnv? })` (реестр; `defineModule({ settings })` кладёт их ещё и в реестр
   корня композиции), `registeredSettings()`, `createSettings({ db, clock, env, log })` → `get` (кэш ≤ 5 с),
   `peek` (синхронно, для часов), `source`, `set` (не по схеме — `VALIDATION`), `reset`. `settings/time-zone.ts` —
-  `TIME_ZONE` (`system.time-zone`, env `TIME_ZONE`, по умолчанию `Europe/Minsk`); в корне композиции:
+  `TIME_ZONE` (`clock.time-zone` — до T-017 `system.time-zone`, перенесён миграцией; env `TIME_ZONE`, по умолчанию
+  `Europe/Minsk`); в корне композиции:
   `createClock(() => settings.peek(TIME_ZONE))`.
 - `secrets/secrets.ts` — `defineSecret({ name, env? })`, `registeredSecrets()`, `createSecrets({ db, masterKey, env,
   clock, log })` → `status` (`set | unset | unreadable`), `reveal` (только коду), `set`, `clear`.
@@ -100,7 +101,8 @@
   `<DATA_DIR>/files`, `scoped(scope)`; `events` — с поздним связыванием: публикация из фабрики модуля — ошибка) и
   `SystemPlatform` (+ `system`) → модули (`main/create-modules.ts`, сгенерирован `make new-module`: топологический
   порядок `modules.ts`, фасады — ровно `dependsOn`) → `buildRegistries` (`main/registries.ts`; повтор имени —
-  `RegistryError`) → `sessions.register` / `scopes.register` частями модуля входа → `createEvents` с подписками модулей → `createRouter({ streams, modules: registries.routers })`
+  `RegistryError`; ключ настройки или секрета модуля — с префиксом его id, платформенный — с префиксом, которого нет
+  среди модулей: `clock.`, `network.`, `http.`; иначе тоже `RegistryError`) → `sessions.register` / `scopes.register` частями модуля входа → `createEvents` с подписками модулей → `createRouter({ streams, modules: registries.routers })`
   (у `worker`/`bot` — пустой хаб) → в `api` — `createRealtimeStreams` с LISTEN `kosht-api-listen` (неудача —
   `RealtimeStartError`); любая ошибка этой части закрывает пул. `startJobs()` — `jobs.start` с задачами, подписками,
   расписаниями и обходами модулей **во всех ролях** (ставят задачи и `api`, и `bot`); `platform`, `modules`,
@@ -155,7 +157,7 @@
   `ctx.s` → обработчик → `background_job_run`. Не прошёл конверт, владелец или нагрузка — `dropped` (`VALIDATION`,
   `FORBIDDEN`), `jobs.scope-rejected` в логе, без повтора; ошибка — `failed` с кодом, повтор только для `retryable`.
   Реестр `start({ jobs, schedules?, sweeps? })`: в `worker` расписания и обходы — очереди `short` с
-  `schedule(имя, cron, null, { tz: deps.timeZone(), missed: "once" })`; пояс — настройка `system.time-zone`,
+  `schedule(имя, cron, null, { tz: deps.timeZone(), missed: "once" })`; пояс — настройка `clock.time-zone`,
   читается при старте (смена — после перезапуска `worker`).
 - В тестах сценариев вместо `createJobs` — `InlineJobs` из `@kosht/testing` (выполняет сразу; форму сверяет
   `inline-jobs.test.ts`).

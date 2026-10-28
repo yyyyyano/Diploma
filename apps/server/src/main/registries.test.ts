@@ -10,6 +10,8 @@ import { defineJob } from "../platform/jobs/define-job.ts";
 import { defineSweep } from "../platform/jobs/sweep.ts";
 import { defineModule } from "../platform/module/define-module.ts";
 import { defineRateRule } from "../platform/rate-limit/rate-limit.ts";
+import type { SecretDef } from "../platform/secrets/secrets.ts";
+import type { SettingDef } from "../platform/settings/settings.ts";
 import { defineTool } from "../platform/tools/define-tool.ts";
 import { buildRegistries, RegistryError } from "./registries.ts";
 
@@ -205,5 +207,54 @@ describe("PRIV-02, ADR-0009: облачное согласие и останов
       defineModule({ id: "chat", stop: second }),
     ]);
     expect(stops).toEqual([second, first]);
+  });
+});
+
+describe("T-007 находка: ключи настроек и секретов — с префиксом владельца", () => {
+  const setting = (key: string) =>
+    ({ key, schema: z.string(), default: "" }) as unknown as SettingDef<unknown>;
+  const secret = (name: string): SecretDef => ({ name });
+
+  it("настройка и секрет модуля — с префиксом его id, платформенные — с чужим всем модулям префиксом", () => {
+    const own = setting("mail.smtp-host");
+    const registries = buildRegistries(
+      [
+        defineModule({ id: "mail", settings: [own], secrets: [secret("mail.smtp-password")] }),
+        defineModule({ id: "system" }),
+      ],
+      { settings: [own, setting("clock.time-zone")], secrets: [secret("mail.smtp-password")] },
+    );
+    expect([...registries.settings.keys()]).toEqual(["mail.smtp-host"]);
+  });
+
+  it("настройка модуля с чужим префиксом — ошибка старта", () => {
+    expect(() =>
+      buildRegistries([defineModule({ id: "mail", settings: [setting("identity.x")] })]),
+    ).toThrow(/настройка «identity\.x» модуля mail.*префикс «mail\.»/);
+  });
+
+  it("секрет модуля с чужим префиксом — ошибка старта", () => {
+    expect(() =>
+      buildRegistries([defineModule({ id: "llm", secrets: [secret("mail.key")] })]),
+    ).toThrow(/секрет «mail\.key» модуля llm/);
+  });
+
+  it("платформенная настройка с префиксом модуля (system.time-zone при модуле system) — ошибка старта", () => {
+    expect(() =>
+      buildRegistries([defineModule({ id: "system" })], {
+        settings: [setting("system.time-zone")],
+        secrets: [],
+      }),
+    ).toThrow(/«system\.time-zone» платформы.*совпадает с модулем system/);
+  });
+
+  it("модуль с дефисом в id — префикс с дефисом допустим", () => {
+    const own = setting("legal-base.crawl-delay-seconds");
+    expect(() =>
+      buildRegistries([defineModule({ id: "legal-base", settings: [own] })], {
+        settings: [own],
+        secrets: [],
+      }),
+    ).not.toThrow();
   });
 });

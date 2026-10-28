@@ -86,7 +86,52 @@ class Registry<T> {
   }
 }
 
-export function buildRegistries(modules: readonly ModuleDescriptor[]): Registries {
+/** Все объявленные в процессе настройки и секреты (defineSetting/defineSecret) — модульные и платформенные. */
+export interface DefinedKeys {
+  readonly settings: readonly SettingDef<unknown>[];
+  readonly secrets: readonly SecretDef[];
+}
+
+const prefixOf = (key: string) => key.slice(0, key.indexOf("."));
+
+/**
+ * Находка T-007: ключ настройки и имя секрета модуля начинаются с его id, а у платформы — с префикса, который не
+ * совпадает ни с одним модулем. Иначе ключ платформы `system.time-zone` выглядел бы настройкой модуля `system`, и
+ * два владельца могли бы разойтись по одному ключу. Платформенные — объявленные, но не отданные ни одним модулем.
+ */
+function checkKeyPrefixes(modules: readonly ModuleDescriptor[], defined: DefinedKeys): void {
+  const ids = new Set(modules.map((m) => m.id));
+  const owned = new Set<string>();
+  for (const m of modules) {
+    for (const [kind, key] of [
+      ...m.settings.map((def) => ["настройка", def.key] as const),
+      ...m.secrets.map((def) => ["секрет", def.name] as const),
+    ]) {
+      if (prefixOf(key) !== m.id) {
+        throw new RegistryError(
+          `${kind} «${key}» модуля ${m.id}: ключ модуля начинается с его id — префикс «${m.id}.».`,
+        );
+      }
+      owned.add(key);
+    }
+  }
+  for (const key of [
+    ...defined.settings.map((d) => d.key),
+    ...defined.secrets.map((d) => d.name),
+  ]) {
+    if (!owned.has(key) && ids.has(prefixOf(key))) {
+      throw new RegistryError(
+        `«${key}» платформы: префикс совпадает с модулем ${prefixOf(key)} — возьмите префикс, которого нет среди модулей, или объявите ключ в defineModule этого модуля.`,
+      );
+    }
+  }
+}
+
+export function buildRegistries(
+  modules: readonly ModuleDescriptor[],
+  defined: DefinedKeys = { settings: [], secrets: [] },
+): Registries {
+  checkKeyPrefixes(modules, defined);
   const ids = new Registry<string>("модули");
   const routers: Record<string, ModuleRouter> = {};
   const events = new Registry<EventDef>("события");

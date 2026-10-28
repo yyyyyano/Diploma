@@ -1,4 +1,7 @@
 import { FakeClock } from "@kosht/testing";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -156,5 +159,22 @@ describe("defineSetting", () => {
     expect(() =>
       defineSetting({ key: "test.bad-env", schema: z.string(), default: "", env: "lower" }),
     ).toThrow(RangeError);
+  });
+});
+
+describe("находка T-007: ключ часового пояса — clock.time-zone", () => {
+  it("миграция переносит пояс, заданный в админке под старым ключом system.time-zone", async () => {
+    await db.owner.query(
+      `insert into settings (key, value, updated_at) values ('system.time-zone', '"Europe/Vilnius"', now())`,
+    );
+    const dir = fileURLToPath(new URL("../../../drizzle/", import.meta.url));
+    const migration = readdirSync(dir).find((name) => name.endsWith("_clock-time-zone-key"));
+    if (migration === undefined) throw new Error("нет миграции clock-time-zone-key");
+    await db.owner.query(readFileSync(join(dir, migration, "migration.sql"), "utf8"));
+    const { settings } = startProcess();
+    expect(TIME_ZONE.key).toBe("clock.time-zone");
+    expect(await settings.get(TIME_ZONE)).toBe("Europe/Vilnius");
+    const { rows } = await db.owner.query("select key from settings order by key");
+    expect(rows).toEqual([{ key: "clock.time-zone" }]);
   });
 });

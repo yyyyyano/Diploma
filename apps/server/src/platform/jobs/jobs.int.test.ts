@@ -396,7 +396,7 @@ describe("ADR-0008: повтор — только для retryable-ошибок 
 });
 
 describe("NFR-22, NFR-23: расписания и обходы ведёт worker", () => {
-  it("расписание ставится по поясу настройки system.time-zone с missed: once", async () => {
+  it("расписание ставится по поясу настройки clock.time-zone с missed: once", async () => {
     const schedule = defineSchedule({
       name: "test.nightly",
       cron: "0 3 * * *",

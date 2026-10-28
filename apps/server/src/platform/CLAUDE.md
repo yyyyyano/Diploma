@@ -247,6 +247,12 @@
   через `jobs.enqueue(tx, …)` в той же транзакции; подписок нет — ничего; нагрузка не по схеме — `RangeError`;
   модуль подписан на событие дважды — ошибка при создании.
 
+## Публичный API — `cache/` (T-020: ARCHITECTURE §6.6, LLM-05)
+- `cache/scoped-cache.ts` — `createScopedCache<V>({ max, ttlMs, clock })` → `scopedCache(s)` → `{ get(key), set(key,
+  value) }`: ключ всегда с `householdId` из `s.scope` (чужое домохозяйство с тем же ключом записи не видит), срок
+  жизни — по `Clock`, сверх `max` вытесняется давняя по использованию; в памяти процесса. Кэш пользовательских данных —
+  только так (опция `cache` Drizzle выключена).
+
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило

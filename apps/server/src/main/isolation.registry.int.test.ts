@@ -48,6 +48,8 @@ interface Household {
   readonly fileId: string;
   /** Факт профиля B. */
   readonly factId: string;
+  /** Своя категория B. */
+  readonly categoryId: string;
 }
 
 /**
@@ -159,6 +161,12 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "notifications.adminList": { input: () => ({}) },
   "notifications.adminMarkRead": { input: (b) => ({ ids: [b.notificationId] }) },
   "tool:list_accounts": { input: () => ({}) },
+  "categories.list": { input: () => undefined },
+  "categories.create": { input: () => ({ name: "Своя A", kind: "expense" }) },
+  "categories.rename": { input: (b) => ({ id: b.categoryId, name: "чужая" }) },
+  "categories.setHidden": {
+    input: (b) => ({ ref: { type: "custom", id: b.categoryId }, hidden: true }),
+  },
   "tool:create_account": {
     input: () => ({
       account: {
@@ -262,6 +270,11 @@ async function seedHousehold(email: string): Promise<Household> {
      returning id`,
     [ids.household_id, ids.user_id],
   );
+  const category = await db.owner.query<{ id: string }>(
+    `insert into categories (household_id, user_id, name, kind, icon, color)
+     values ($1, $2, $3, 'expense', 'ticket', 'kids') returning id`,
+    [ids.household_id, ids.user_id, `категория ${email}`],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -274,6 +287,7 @@ async function seedHousehold(email: string): Promise<Household> {
     notificationId: notification.rows[0]?.id ?? "",
     fileId: file.rows[0]?.id ?? "",
     factId: fact.rows[0]?.id ?? "",
+    categoryId: category.rows[0]?.id ?? "",
   };
 }
 
@@ -377,6 +391,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.setMail",
       "admin.setTimeZone",
       "admin.system",
+      "categories.create",
+      "categories.list",
+      "categories.rename",
+      "categories.setHidden",
       "chat.history",
       "chat.send",
       "chat.stop",
@@ -425,6 +443,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.notificationId,
       b.fileId,
       b.factId,
+      b.categoryId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

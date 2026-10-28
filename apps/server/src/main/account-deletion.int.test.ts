@@ -6,6 +6,7 @@
 import { FileId, makeScope, type Scope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { CategoriesFacade } from "../modules/categories/index.ts";
 import type { FilesFacade } from "../modules/files/index.ts";
 import type { IdentityFacade } from "../modules/identity/index.ts";
 import type { NotificationsFacade } from "../modules/notifications/index.ts";
@@ -111,6 +112,22 @@ async function seedUser(email: string): Promise<Seeded> {
     body: { id: created.account.id, name: "Вклад на год" },
   });
   expect(renamed.status).toBe(200);
+  // Категории: своя, скрытая встроенная и правило пользователя (CAT-02, CAT-05).
+  const category = await stack.call("local", "/categories", {
+    cookie: user.cookie,
+    body: { name: "Кружки", kind: "expense" },
+  });
+  expect(category.status).toBe(200);
+  const hidden = await stack.call("local", "/categories/hidden", {
+    cookie: user.cookie,
+    body: { ref: { type: "system", code: "taxi" }, hidden: true },
+  });
+  expect(hidden.status).toBe(200);
+  await facade<CategoriesFacade>("categories").setUserRule(stack.api.platform.scoped(scope), {
+    matcher: "merchant",
+    pattern: "ТАКСИ",
+    category: { type: "system", code: "transport" },
+  });
   const preference = await stack.call("local", "/notifications/preferences", {
     cookie: user.cookie,
     body: { kind: "goal", channel: "web", enabled: false },

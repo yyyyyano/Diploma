@@ -1039,7 +1039,7 @@
 - Зависимости: T-016, T-013, T-015
 
 ### T-018 · Профиль и память ассистента: анкета на 1 минуту и «Что ассистент знает обо мне»
-- Статус: in-progress
+- Статус: done · c08545b..a54ca1b
 - Модули: `profile`, `features/onboarding`, `features/memory`
 - SPEC: PROF-01, PROF-02, PROF-03, PROF-04, PROF-05, PROF-06, AUTH-07, AGT-03
 - Экран: Onboarding — design/screens/Onboarding.dc.html (`Onboarding--question-2`); Memory — design/screens/Memory.dc.html
@@ -1065,7 +1065,7 @@
 - Зависимости: T-014, T-012
 
 ### T-019 · Счета и курсы НБРБ: экран «Счета», остатки с датой, валюты с трассой
-- Статус: in-progress
+- Статус: done · fd5e6d6..1e18a6f
 - Модули: `fx-rates`, `accounts`, `features/accounts`, `entities/account`
 - SPEC: STMT-01, STMT-02, STMT-09, EXPL-01, AGT-03, AGT-07
 - Экран: Accounts — design/screens/Accounts.dc.html (+ `Accounts--add-account`)
@@ -1093,7 +1093,7 @@
 - Зависимости: T-018, T-014
 
 ### T-020 · Контрагенты и категории: очистка названий, справочник и гибридная категоризация
-- Статус: in-progress
+- Статус: done · 56ff8db..b2b37c3
 - Модули: `merchants`, `categories`, `entities/category`
 - SPEC: STMT-06, CAT-01, CAT-02, CAT-03, CAT-04, CAT-06, CAT-07, RCPT-15, LLM-05
 - Экран: выбор категории с «Новая категория» (по design/screens/Operations.dc.html) — компонент в `entities/category`

@@ -130,6 +130,13 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
   "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
   "accounts.list": { input: () => undefined },
+  "accounts.create": { input: () => ({ kind: "deposit", currency: "BYN" }) },
+  "accounts.rename": { input: (b) => ({ id: b.accountId, name: "чужой" }) },
+  "accounts.setInitialBalance": {
+    input: (b) => ({ id: b.accountId, initialBalance: { minor: 100, currency: "BYN" } }),
+  },
+  "accounts.requestDelete": { input: (b) => ({ id: b.accountId }) },
+  "accounts.explain": { input: (b) => ({ subject: { kind: "account", id: b.accountId } }) },
   "privacy.state": { input: () => undefined },
   "privacy.dataExport": { input: () => undefined },
   "privacy.requestExport": { input: () => undefined },
@@ -152,6 +159,20 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "notifications.adminList": { input: () => ({}) },
   "notifications.adminMarkRead": { input: (b) => ({ ids: [b.notificationId] }) },
   "tool:list_accounts": { input: () => ({}) },
+  "tool:create_account": {
+    input: () => ({
+      account: {
+        kind: "deposit",
+        name: null,
+        bank: null,
+        mask: null,
+        currency: "BYN",
+        initialBalance: null,
+      },
+    }),
+  },
+  "tool:rename_account": { input: (b) => ({ id: b.accountId, name: "чужой" }) },
+  "tool:delete_account": { input: (b) => ({ id: b.accountId }) },
   "profile.facts": { input: () => undefined },
   "profile.onboarding": { input: () => undefined },
   "profile.completeOnboarding": { input: () => ({ answers: {} }) },
@@ -342,7 +363,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
   it("каждый случай: ответ — NOT_FOUND или в нём нет ни id, ни email домохозяйства B", async () => {
     const { cases } = plan();
     expect(cases.map((c) => c.name)).toEqual([
+      "accounts.create",
+      "accounts.explain",
       "accounts.list",
+      "accounts.rename",
+      "accounts.requestDelete",
+      "accounts.setInitialBalance",
       "actions.answer",
       "actions.decision",
       "actions.undo",
@@ -379,9 +405,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "profile.facts",
       "profile.onboarding",
       "profile.setFact",
+      "create_account",
+      "delete_account",
       "explain_number",
       "list_accounts",
       "read_profile_facts",
+      "rename_account",
       "upsert_profile_fact",
     ]);
     const foreign = [
@@ -417,9 +446,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
   });
 
   it("положительный контроль: A видит свои «Наличные» и свой email", async () => {
-    expect(await callAsA("accounts.list", undefined, "user")).toMatchObject({
-      items: [{ id: a.accountId }],
-    });
+    // Случаи выше могли создать A свои счета (accounts.create, create_account) — «Наличные» A среди них.
+    const list = (await callAsA("accounts.list", undefined, "user")) as { items: { id: string }[] };
+    expect(list.items.map((item) => item.id)).toContain(a.accountId);
     expect(await callAsA("identity.me", undefined, "user")).toMatchObject({ email: a.email });
   });
 });

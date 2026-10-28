@@ -99,6 +99,18 @@ async function seedUser(email: string): Promise<Seeded> {
     body: { value: { key: "benefitCategory", value: true } },
   });
   expect(fact.status).toBe(200);
+  // Счёт с ревизией «до действия» (для «Отменить»): создан и переименован через процедуры.
+  const account = await stack.call("local", "/accounts", {
+    cookie: user.cookie,
+    body: { kind: "deposit", name: "Вклад", currency: "BYN" },
+  });
+  expect(account.status).toBe(200);
+  const created = (await account.json()) as { account: { id: string } };
+  const renamed = await stack.call("local", "/accounts/rename", {
+    cookie: user.cookie,
+    body: { id: created.account.id, name: "Вклад на год" },
+  });
+  expect(renamed.status).toBe(200);
   const preference = await stack.call("local", "/notifications/preferences", {
     cookie: user.cookie,
     body: { kind: "goal", channel: "web", enabled: false },

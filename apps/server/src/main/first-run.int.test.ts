@@ -186,8 +186,14 @@ describe("AUTH-08, STMT-01: вход, «Наличные», выход", () => {
       },
       { timeout: 15_000, interval: 200 },
     );
-    expect(items).toEqual([
-      { id: expect.any(String), kind: "cash", name: null, balance: { minor: 0, currency: "BYN" } },
+    expect(items).toMatchObject([
+      {
+        id: expect.any(String),
+        kind: "cash",
+        name: null,
+        balance: { minor: 0, currency: "BYN" },
+        balanceSource: "manual",
+      },
     ]);
 
     const out = await call("local", "/identity/sign-out", { cookie });

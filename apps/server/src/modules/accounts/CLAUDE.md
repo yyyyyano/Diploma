@@ -3,37 +3,45 @@
 Ярус 2 · таблицы: user · публикует: `accounts.balances-changed` (`docs/CAPABILITIES.md`; задачи — `tasks/plan.md`)
 
 ## Назначение
-Счета, «Наличные», «Карта, не указана», остатки и дата остатка; пересчёт остатка по операциям (STMT-02) выполняет по
-вызову `transactions` — сам от `transactions` не зависит. Сейчас (T-009): «Наличные» у каждого пользователя с самого
-начала и список счетов; виды счетов, остатки и курсы — T-019.
+Счета, «Наличные», «Карта, не указана», остатки и дата остатка, итоги в BYN по курсу НБРБ (T-019); пересчёт остатка по
+операциям (STMT-02) выполняет по вызову `transactions` — сам от `transactions` не зависит.
 
 ## Требования SPEC
-STMT-01/02. Макет: `Accounts.dc.html` (сайт — `features/accounts`, `entities/account`).
+STMT-01/02/09, EXPL-01, AGT-03 («счета»), AGT-05/07, RCPT-10. Макет: `Accounts.dc.html` (`features/accounts`).
 
 ## Публичный API (`index.ts`)
-- Фабрика: `createAccountsModule({ platform, facades })`; платформа — `Platform` (без `SystemDb`); фасады —
-  `facades.identity`, `facades.fxRates`, `facades.explain` (пока не используются). Фасад `AccountsFacade` — нет.
-- Контракт `contract.accounts.list` (authed): `{ items: [{ id, kind: "cash", name | null, balance: Money }] }` —
-  «Наличные» первыми, затем по времени создания и id; `name: null` — подпись по виду даёт сайт.
-- Подписка `identity.user-registered` (`subscriptions/on-user-registered.ts`) → `ensureCash(ctx.s)`: «Наличные»
-  идемпотентно (частичный уникальный индекс, `ON CONFLICT DO NOTHING`), сигнал `realtime.changed(tx, { entity:
-  "account" })` при коммите — только если счёт создан.
-- Инструмент агента (`agent/tools.ts`): `list_accounts` (`read`, набор `core`) — счета домохозяйства запуска с
-  остатками (`{ items: AccountListItem[] }`); сайт рисует их карточками счёта, подпись шага — словарь `tools`.
-- Владелец данных (`user-data.ts`): таблица `accounts`.
+- Фабрика: `createAccountsModule({ platform, facades })`; платформа — `Platform`; фасады — `fxRates` (курс на сегодня,
+  до транзакций), `explain` (трасса «Откуда эта цифра?»), `actions` («Отменить», решение об удалении), `identity`.
+- Фасад `AccountsFacade` (для `transactions`, `statements`, `receipts`; все в транзакции вызывающего — `tx`):
+  `findOrCreate(tx, { bank, mask, currency })` → карта (банк без учёта регистра; нет — создаётся, «по операциям»);
+  `applyBalanceChange(tx, { accountId, delta: Money, on })` (валюта счёта; день остатка не уходит назад; событие);
+  `cash(tx)` — «Наличные» в BYN; `unknownCard(tx)` — «Карта, не указана» (создаётся при первом обращении, RCPT-10).
+- Контракт `contract.accounts.*` (все authed, канал отмены — web): `list` → `{ onDate, items, totals }` (остаток в валюте
+  счёта, день и источник остатка, эквивалент в BYN и курс НБРБ на сегодня; итоги `total`/`available` в BYN или `null`
+  при `missingRates`); `create`, `rename`, `setInitialBalance` → `{ account, undoToken }`; `requestDelete` → `{ decisionId }`
+  (служебные — `ACCOUNT_PROTECTED`); `explain({ subject: total | available | account })` → `{ traceId }` — расчёт
+  сохраняется по нажатию ⓘ, курса нет — `UNAVAILABLE`.
+- Событие `accounts.balances-changed { ids }`: начальный остаток, изменение по операциям, создание, удаление.
+- Подписка `identity.user-registered` → `ensureCash(ctx.s)` (идемпотентно, сигнал `account` только при создании).
+- Инструменты (`agent/tools.ts`): `list_accounts` (`read`, `core`), `create_account`, `rename_account` (`write`,
+  `planning`, `undoToken`), `delete_account` (`destructive`, `planning`: только решение «Да/Нет»).
+- Отмена `accounts.restore { revisionId }` (созданный — удаляется, иначе название и начальный остаток прежние);
+  подтверждение `accounts.delete { accountId }`.
+- Таблицы (`userOwnedTable`): `accounts` (вид, банк, маска, валюта, название, начальный остаток, остаток, день и
+  источник остатка; уникальны «Наличные» в BYN пользователя, «Карта, не указана», карта банк+маска+валюта),
+  `account_revisions` (состояние до действия, `ownedFk` на счёт). Владелец данных — `user-data.ts`.
 
 ## Зависимости
-Можно: identity, fx-rates, explain (`tooling/architecture/modules.ts`). Слушает: `identity.user-registered`.
+Можно: identity, fx-rates, explain, actions (`tooling/architecture/modules.ts`). Слушает: `identity.user-registered`.
 
 ## Запреты
 - В чужой модуль — только через его `index.ts` и только из «Можно»; сообщить наверх — событием (ADR-0004).
-- Данные домохозяйства — только через `s: ScopedDb` с `s.own(accounts)` на каждое обращение; новая таблица —
-  `make new-table`, её строки — в `defineUserData` (`user-data.ts`).
-- «Чьи данные» — только `s.scope`, никогда из входа процедуры, инструмента или нагрузки задачи (нагрузке события не
-  верим — счёт создаётся для владельца задачи).
-- Остаток — число: считает `@kosht/calc` с трассой (T-019); здесь — только начальный остаток в копейках.
+- Данные домохозяйства — только через `s: ScopedDb` с `s.own(...)` на каждое обращение; «чьи» — только `s.scope`.
+- Курс НБРБ — до `s.transaction` (HTTP вне транзакции); нет курса — эквивалент и итог `null`, не 0.
+- Числа (эквивалент, итоги, сдвиг остатка) — только `@kosht/calc` (`domain/accounts.ts`).
+- «Наличные» в BYN и «Карта, не указана» не удаляются; удаление — только через решение «Да/Нет» (AGT-07).
 
 ## Как тестировать
-- `pnpm vitest run apps/server/src/modules/accounts` — `ensure-cash.int.test.ts` (повтор и параллельная доставка —
-  один счёт, сигнал только при создании, список своего домохозяйства); изоляция по реестру —
-  `main/isolation.registry.int.test.ts`.
+- `pnpm vitest run apps/server/src/modules/accounts` — правила (`domain/accounts.test.ts`), сценарии с настоящими
+  actions и explain (`application/accounts.int.test.ts`), «Наличные» по событию (`ensure-cash.int.test.ts`),
+  инструменты (`agent/tools.int.test.ts`); изоляция — `main/isolation.registry.int.test.ts`.

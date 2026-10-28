@@ -168,7 +168,7 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "STMT-01/02",
     responsibility:
       "счета, «Наличные», «Карта, не указана», остатки и дата остатка; пересчёт остатка по операциям (STMT-02) выполняет по вызову `transactions` — сам от `transactions` не зависит",
-    dependsOn: ["identity", "fx-rates", "explain"],
+    dependsOn: ["identity", "fx-rates", "explain", "actions"],
     tables: ["user"],
     publishes: ["accounts.balances-changed"],
   },

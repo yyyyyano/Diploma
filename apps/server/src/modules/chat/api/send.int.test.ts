@@ -112,7 +112,9 @@ describe("CHAT-02: поток ответа на кассете", () => {
     expect(chunks).toContainEqual(
       expect.objectContaining({
         type: "tool-output-available",
-        output: { items: [expect.objectContaining({ id: a.accountId, kind: "cash" })] },
+        output: expect.objectContaining({
+          items: [expect.objectContaining({ id: a.accountId, kind: "cash" })],
+        }),
       }),
     );
     expect(

@@ -160,7 +160,16 @@ describe("ADR-0005: ветки модулей из реестра", () => {
   it("ветка модуля встаёт под свой ключ, пустая ветка допустима", () => {
     const tree = createRouter({ streams: hub, modules: { accounts: accountsBranch, fxRates: {} } });
     expect(Object.keys(tree).toSorted()).toEqual(["accounts", "events", "fxRates", "system"]);
-    expect(routerPaths(tree)).toEqual(["accounts.list", "events.stream", "system.health"]);
+    expect(routerPaths(tree)).toEqual([
+      "accounts.create",
+      "accounts.explain",
+      "accounts.list",
+      "accounts.rename",
+      "accounts.requestDelete",
+      "accounts.setInitialBalance",
+      "events.stream",
+      "system.health",
+    ]);
   });
 
   it("ветка модуля system дополняет общую ветку контракта, health остаётся платформенным", async () => {

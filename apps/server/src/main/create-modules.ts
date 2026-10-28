@@ -113,6 +113,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       identity: identityModule.facade,
       fxRates: fxRatesModule.facade,
       explain: explainModule.facade,
+      actions: actionsModule.facade,
     },
   });
   const transactionsModule = createTransactionsModule({

@@ -24,8 +24,8 @@ export function actionsRouter(uc: ActionsUseCases) {
         createdAt: decision.createdAt.toISOString(),
       };
     }),
-    answer: authed.actions.answer.handler(async ({ input, context }) => ({
-      status: await uc.decisions.answer(context.s, input.id, input.answer, "web"),
-    })),
+    answer: authed.actions.answer.handler(({ input, context }) =>
+      uc.decisions.answer(context.s, input.id, input.answer, "web"),
+    ),
   };
 }

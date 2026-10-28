@@ -38,28 +38,33 @@ export function makeDecisions(d: Pick<Platform, "clock" | "log" | "actionHandler
     return decision;
   }
 
-  /** Ответ человека; итог — состояние решения после ответа (повтор — прежнее). */
+  /**
+   * Ответ человека; итог — состояние решения после ответа (повтор — прежнее) и undoToken, если обработчик «Да» записал
+   * своё действие в журнал отмены (удаление операций можно «Отменить» сразу после).
+   */
   async function answer(
     s: ScopedDb,
     id: string,
     reply: "yes" | "no",
     channel: ActionChannel,
-  ): Promise<"yes" | "no"> {
-    const status = await s.transaction(async (tx) => {
+  ): Promise<{ status: "yes" | "no"; undoToken: string | null }> {
+    const result = await s.transaction(async (tx) => {
       const decision = await findDecision(tx, id, true);
       if (decision === undefined) throw new AppError("NOT_FOUND");
-      if (decision.status !== "pending") return decision.status;
+      if (decision.status !== "pending") return { status: decision.status, undoToken: null };
+      let undoToken: string | null = null;
       if (reply === "yes") {
         const handler = d.actionHandlers().confirm.get(decision.handler);
         if (handler === undefined)
           throw new Error(`Нет обработчика подтверждения ${decision.handler}.`);
-        await handler(tx, decision.payload);
+        undoToken = (await handler(tx, decision.payload)) ?? null;
       }
       await answerDecision(tx, id, { status: reply, channel }, d.clock.now());
-      return reply;
+      return { status: reply, undoToken };
     });
+    const { status } = result;
     d.log.info({ decisionId: id, status, reason: channel }, "actions.answered");
-    return status;
+    return result;
   }
 
   return { propose, get, answer };

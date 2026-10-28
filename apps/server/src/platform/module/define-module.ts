@@ -86,8 +86,11 @@ export interface ModuleDeps<F extends object = NoFacades, P extends Platform = P
   readonly facades: F;
 }
 
-/** Обработчик отмены («Отменить», P5) или подтверждения («Да», AGT-07): нагрузку проверяет сам модуль. */
-export type ActionHandler = (s: ScopedDb, payload: unknown) => Promise<void>;
+/**
+ * Обработчик отмены («Отменить», P5) или подтверждения («Да», AGT-07): нагрузку проверяет сам модуль. Обработчик «Да»
+ * может вернуть undoToken своего действия (удаление операций — «Отменить» сразу после, TXN-03).
+ */
+export type ActionHandler = (s: ScopedDb, payload: unknown) => Promise<string | undefined | void>;
 
 /** Реестры обработчиков действий по имени `<модуль>.<действие>`. */
 export interface ActionHandlers {

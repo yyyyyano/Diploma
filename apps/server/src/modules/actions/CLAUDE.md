@@ -16,8 +16,9 @@ P5, AGT-05/07, TXN-03/04, TXN-10 (вопрос «одна покупка?»), TG
   владельца; неизвестный обработчик — ошибка программы); `undo(s, token)` → `undone | already-undone` (обработчик и
   отметка — одна транзакция, строка `FOR UPDATE`; чужой — `NOT_FOUND`; после действия объект `subject` правили —
   `CONFLICT`, обработчик не вызван); `propose(s, { handler, payload, summary })` → id решения (`summary` — ключ
-  словаря и параметры); `answer(s, id, yes|no, channel)` → итог (повтор — прежний; «Да» — обработчик в той же
-  транзакции; «Нет» — без него); `decision(s, id)`.
+  словаря и параметры); `answer(s, id, yes|no, channel)` → `{ status, undoToken }` (повтор — прежний итог и `null`; «Да» —
+  обработчик в той же транзакции, его возвращённый undoToken — наружу: «Отменить» сразу после удаления операций;
+  «Нет» — без него); `decision(s, id)`.
 - `parseShortAnswer(text)` (`domain/short-answer.ts`) — «да / нет» текстом (русский, белорусский) для чата и бота.
 - Контракт `contract.actions.*` (все authed, канал — web): `undo`, `decision`, `answer`.
 - Таблицы (`userOwnedTable`): `action_journal` (handler, payload, subject `<вид>:<id>`, channel, status done|undone),

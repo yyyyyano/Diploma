@@ -191,8 +191,11 @@ describe("AGT-07, NOTIF-05: ожидающие решения «Да/Нет»", 
       summary,
     });
     expect(await decisions.get(s, id)).toMatchObject({ status: "pending", summary });
-    expect(await decisions.answer(s, id, "yes", "telegram")).toBe("yes");
-    expect(await decisions.answer(s, id, "no", "web")).toBe("yes");
+    expect(await decisions.answer(s, id, "yes", "telegram")).toEqual({
+      status: "yes",
+      undoToken: null,
+    });
+    expect(await decisions.answer(s, id, "no", "web")).toEqual({ status: "yes", undoToken: null });
     expect(calls).toEqual([
       { handler: "test.delete", household: s.scope.householdId, payload: { ids: ["a"] } },
     ]);
@@ -211,8 +214,19 @@ describe("AGT-07, NOTIF-05: ожидающие решения «Да/Нет»", 
       code: "NOT_FOUND",
     });
     await expect(decisions.get(scoped(10), id)).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect(await decisions.answer(s, id, "no", "web")).toBe("no");
+    expect(await decisions.answer(s, id, "no", "web")).toEqual({ status: "no", undoToken: null });
     expect(calls).toEqual([]);
+  });
+
+  it("«Да» обработчика, который записал своё действие, возвращает его undoToken — «Отменить» сразу после", async () => {
+    const s = scoped(13);
+    const { decisions } = setup({ confirm: { "test.remove": async () => "token-from-owner" } });
+    const id = await decisions.propose(s, { handler: "test.remove", payload: {}, summary });
+    expect(await decisions.answer(s, id, "yes", "web")).toEqual({
+      status: "yes",
+      undoToken: "token-from-owner",
+    });
+    expect(await decisions.answer(s, id, "yes", "web")).toEqual({ status: "yes", undoToken: null });
   });
 
   it("два «Да» одновременно — обработчик один раз", async () => {

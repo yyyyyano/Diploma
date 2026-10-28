@@ -40,10 +40,13 @@ export const actionsContract = {
     .input(z.strictObject({ id: DecisionId }))
     .output(Decision)
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
-  /** «Да» / «Нет»: итог — состояние решения; повторный ответ ничего не меняет. */
+  /**
+   * «Да» / «Нет»: итог — состояние решения; повторный ответ ничего не меняет. undoToken — «Отменить» сразу после «Да»
+   * (удаление операций, TXN-03); у действия без отмены и у повтора — null.
+   */
   answer: oc
     .route({ method: "POST", path: "/actions/answer" })
     .input(z.strictObject({ id: DecisionId, answer: DecisionAnswer }))
-    .output(z.strictObject({ status: DecisionAnswer }))
+    .output(z.strictObject({ status: DecisionAnswer, undoToken: UndoToken.nullable() }))
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
 };

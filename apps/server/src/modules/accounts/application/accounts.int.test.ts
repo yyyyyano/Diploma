@@ -128,8 +128,14 @@ describe("AGT-07: удалить — только после «Да»", () => {
       summary: { key: "decisions.accountDelete", params: { name: "Беларусбанк •• 4821" } },
     });
     expect((await accounts.list(s)).items).toHaveLength(1);
-    expect(await actions.answer(s, decisionId, "yes", "web")).toBe("yes");
-    expect(await actions.answer(s, decisionId, "yes", "web")).toBe("yes");
+    expect(await actions.answer(s, decisionId, "yes", "web")).toEqual({
+      status: "yes",
+      undoToken: null,
+    });
+    expect(await actions.answer(s, decisionId, "yes", "web")).toEqual({
+      status: "yes",
+      undoToken: null,
+    });
     expect((await accounts.list(s)).items).toEqual([]);
     expect(published.at(-1)).toEqual({ name: "accounts.balances-changed", ids: [account.id] });
   });

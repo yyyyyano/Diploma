@@ -1,5 +1,6 @@
-// Шаблоны писем (AUTH-03, AUTH-04): тексты — из словаря mail (@kosht/i18n), ссылка — параметром. Ссылку строит
-// модуль-отправитель (адрес по NFR-24), здесь проверяется только, что это http(s).
+// Шаблоны писем (AUTH-03, AUTH-04, ADM-60): тексты — из словаря mail (@kosht/i18n), ссылка — параметром. Ссылку
+// строит модуль-отправитель (адрес по NFR-24), здесь проверяется только, что это http(s). Тестовое письмо админки —
+// без ссылки.
 import type { T } from "@kosht/i18n";
 import { isSafeLink, type MailMessage } from "../domain/message.ts";
 
@@ -16,9 +17,19 @@ export type MailTemplate =
       readonly link: string;
       /** Сколько минут действует ссылка. */
       readonly minutes: number;
-    };
+    }
+  | { readonly kind: "test" };
 
 export function composeMessage(t: T, to: string, template: MailTemplate): MailMessage {
+  if (template.kind === "test") {
+    return {
+      to,
+      subject: t("mail:test.subject"),
+      preview: t("mail:test.preview"),
+      title: t("mail:test.title"),
+      paragraphs: [t("mail:test.greeting"), t("mail:test.body")],
+    };
+  }
   if (!isSafeLink(template.link)) throw new RangeError("Ссылка письма — только http или https.");
   if (template.kind === "reset-password") {
     const { minutes } = template;

@@ -10,6 +10,7 @@ import { mailRouter } from "./api/router.ts";
 import { makeForgetRecipient } from "./application/forget-recipient.ts";
 import { makeMailbox, makeMailboxEnabled } from "./application/mailbox.ts";
 import { makeSendMail } from "./application/send-mail.ts";
+import { makeSmtpSettings } from "./application/smtp-settings.ts";
 import { createLocalMailbox } from "./infrastructure/local-mailbox.ts";
 import { createSmtpTransport } from "./infrastructure/smtp.ts";
 import {
@@ -32,7 +33,12 @@ export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPla
   });
   return defineModule({
     id: "mail",
-    facade: { send, forgetRecipient: makeForgetRecipient(platform) },
+    facade: {
+      send,
+      forgetRecipient: makeForgetRecipient(platform),
+      /** Админка «Система» (ADM-60): SMTP — посмотреть, сохранить, тестовое письмо. */
+      smtp: makeSmtpSettings({ ...platform, send }),
+    },
     router: mailRouter({
       mailbox: makeMailbox(platform),
       mailboxEnabled: makeMailboxEnabled(platform),
@@ -42,5 +48,8 @@ export function createMailModule({ platform }: ModuleDeps<MailFacades, SystemPla
   });
 }
 
-/** Что модуль даёт соседям: send(to, шаблон) — письмо по SMTP или в локальный ящик; forgetRecipient(email). */
+/**
+ * Что модуль даёт соседям: send(to, шаблон) — письмо по SMTP или в локальный ящик; forgetRecipient(email); smtp —
+ * настройки почты для админки (view, save, sendTest).
+ */
 export type MailFacade = ReturnType<typeof createMailModule>["facade"];

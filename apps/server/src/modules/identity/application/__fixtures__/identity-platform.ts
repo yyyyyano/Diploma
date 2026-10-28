@@ -15,7 +15,8 @@ import { hashPassword } from "../../infrastructure/password.ts";
 
 export interface SentMail {
   readonly to: string;
-  readonly template: MailTemplate;
+  /** Шаблон; у тестового письма ссылки нет — link необязателен для удобства проверок. */
+  readonly template: MailTemplate & { readonly link?: string };
 }
 
 export function identityPlatform(db: TestDb, now = "2026-10-26T09:00:00Z") {
@@ -37,7 +38,7 @@ export function identityPlatform(db: TestDb, now = "2026-10-26T09:00:00Z") {
     }),
   };
   const sent: SentMail[] = [];
-  const mail: MailFacade = {
+  const mail: Pick<MailFacade, "send" | "forgetRecipient"> = {
     send: async (to, template) => {
       sent.push({ to, template });
     },

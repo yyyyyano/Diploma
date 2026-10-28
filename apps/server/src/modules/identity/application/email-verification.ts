@@ -13,7 +13,7 @@ import { VERIFY_LINK_HOURS } from "../settings.ts";
 
 export interface EmailVerificationDeps {
   readonly platform: Pick<SystemPlatform, "system" | "settings" | "clock" | "log" | "localOrigin">;
-  readonly mail: MailFacade;
+  readonly mail: Pick<MailFacade, "send">;
 }
 
 export function makeEmailVerification(d: EmailVerificationDeps) {

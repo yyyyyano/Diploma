@@ -24,24 +24,26 @@ export interface PasswordResetDeps {
     SystemPlatform,
     "system" | "settings" | "clock" | "log" | "localOrigin" | "rateLimiter"
   >;
-  readonly mail: MailFacade;
+  readonly mail: Pick<MailFacade, "send">;
 }
 
 export function makePasswordReset(d: PasswordResetDeps) {
   const { platform } = d;
 
-  /** Запрос ссылки: письмо — только активному пользователю; ответ одинаковый во всех случаях. */
-  async function request(rawEmail: string, from: LinkRequest): Promise<void> {
-    const email = rawEmail.toLowerCase();
-    await platform.rateLimiter.enforce(await rateRuleOf(platform.settings, PASSWORD_RESET), email);
-    const user = await userByEmail(platform.system, email);
-    if (user === undefined || user.status !== "active") return;
+  /**
+   * Новая одноразовая ссылка сброса пользователя (прежняя гаснет): адрес — по NFR-24, срок —
+   * identity.reset-link-minutes. Её отправляет письмом «Забыли пароль?» и администратор (AUTH-05, R37).
+   */
+  async function issueLink(
+    userId: string,
+    from: LinkRequest,
+  ): Promise<{ readonly link: string; readonly minutes: number }> {
     const token = newLinkToken();
     const now = platform.clock.now();
     const minutes = await platform.settings.get(RESET_LINK_MINUTES);
     await saveLinkToken(platform.system, {
       purpose: "reset-password",
-      userId: user.userId,
+      userId,
       tokenHash: linkTokenHash(token),
       expiresAt: new Date(now.getTime() + minutes * 60_000),
       now,
@@ -51,8 +53,18 @@ export function makePasswordReset(d: PasswordResetDeps) {
       await resolveLinkOrigin(platform.settings, platform.localOrigin, from),
     );
     link.searchParams.set("token", token);
+    return { link: link.href, minutes };
+  }
+
+  /** Запрос ссылки: письмо — только активному пользователю; ответ одинаковый во всех случаях. */
+  async function request(rawEmail: string, from: LinkRequest): Promise<void> {
+    const email = rawEmail.toLowerCase();
+    await platform.rateLimiter.enforce(await rateRuleOf(platform.settings, PASSWORD_RESET), email);
+    const user = await userByEmail(platform.system, email);
+    if (user === undefined || user.status !== "active") return;
+    const { link, minutes } = await issueLink(user.userId, from);
     try {
-      await d.mail.send(email, { kind: "reset-password", link: link.href, minutes });
+      await d.mail.send(email, { kind: "reset-password", link, minutes });
       platform.log.info({ userId: user.userId }, "identity.password-reset-requested");
     } catch (error) {
       // Ответ не меняется: иначе сбой почты выдал бы, что такой адрес есть.
@@ -84,7 +96,7 @@ export function makePasswordReset(d: PasswordResetDeps) {
     });
   }
 
-  return { request, reset };
+  return { issueLink, request, reset };
 }
 
 export type PasswordReset = ReturnType<typeof makePasswordReset>;

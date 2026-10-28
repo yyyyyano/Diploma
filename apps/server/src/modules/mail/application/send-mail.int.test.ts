@@ -17,6 +17,7 @@ import { createLocalMailbox } from "../infrastructure/local-mailbox.ts";
 import { createSmtpTransport } from "../infrastructure/smtp.ts";
 import { makeMailbox } from "./mailbox.ts";
 import { makeSendMail } from "./send-mail.ts";
+import { makeSmtpSettings } from "./smtp-settings.ts";
 
 let db: TestDb;
 let smtp: FakeSmtp;
@@ -56,14 +57,16 @@ function mailWith(env: Record<string, string> = {}) {
     }),
     log: memory.log,
   };
+  const send = makeSendMail({
+    platform,
+    mailbox: createLocalMailbox({ system, clock }),
+    smtp: createSmtpTransport,
+  });
   return {
-    send: makeSendMail({
-      platform,
-      mailbox: createLocalMailbox({ system, clock }),
-      smtp: createSmtpTransport,
-    }),
+    send,
     mailbox: makeMailbox(platform),
     memory,
+    smtpSettings: makeSmtpSettings({ ...platform, send }),
   };
 }
 
@@ -162,5 +165,55 @@ describe("ссылка письма", () => {
       send("irina@example.test", { ...verify, link: "javascript:alert(1)" }),
     ).rejects.toThrow(RangeError);
     expect((await mailbox()).messages).toEqual([]);
+  });
+});
+
+describe("ADM-60, NFR-16: почта в админке", () => {
+  beforeEach(async () => {
+    await db.owner.query("delete from settings where key like 'mail.%'");
+    await db.owner.query("delete from secrets where name like 'mail.%'");
+  });
+
+  const fields = { host: "", port: 587, secure: false, user: "", from: "no-reply@kosht.local" };
+
+  it("сохранить SMTP с паролем — почта настроена, пароль «задан», но наружу не отдаётся; тестовое письмо уходит по SMTP", async () => {
+    const { smtpSettings } = mailWith();
+    expect(await smtpSettings.view()).toMatchObject({ configured: false, passwordSet: false });
+    await smtpSettings.save({
+      ...fields,
+      host: "127.0.0.1",
+      port: smtp.port,
+      user: "kosht",
+      password: "пароль-приложения",
+    });
+    const view = await smtpSettings.view();
+    expect(view).toEqual({
+      configured: true,
+      host: "127.0.0.1",
+      port: smtp.port,
+      secure: false,
+      user: "kosht",
+      from: "no-reply@kosht.local",
+      passwordSet: true,
+    });
+    expect(JSON.stringify(view)).not.toContain("пароль-приложения");
+    await smtpSettings.sendTest("admin@example.test");
+    expect(smtp.received).toHaveLength(1);
+    expect(decodedParts(smtp.received[0] ?? "")).toContain("Почта работает");
+  });
+
+  it("одно поле не по схеме — VALIDATION, и ни одно поле не записано", async () => {
+    const { smtpSettings } = mailWith();
+    await expect(
+      smtpSettings.save({ ...fields, host: "smtp.example.test", from: "не-адрес" }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    expect(await smtpSettings.view()).toMatchObject({ configured: false, host: "" });
+  });
+
+  it("пароль не передан — прежний остаётся", async () => {
+    const { smtpSettings } = mailWith();
+    await smtpSettings.save({ ...fields, host: "127.0.0.1", password: "первый" });
+    await smtpSettings.save({ ...fields, host: "127.0.0.1" });
+    expect((await smtpSettings.view()).passwordSet).toBe(true);
   });
 });

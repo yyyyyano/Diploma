@@ -1,0 +1,213 @@
+/* .adm-* из design/screens/Admin.dc.html: плашка PRIV-07, вкладки-ссылки, карточки, таблица пользователей (на телефоне —
+   строки карточками, без прокрутки страницы), меню действий. ≤ 860 px — поля 16. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-20);
+  width: 100%;
+  max-width: 1160px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+.banner,
+.note,
+.warn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-14) var(--s-16);
+  border-radius: var(--r-lg);
+  font-size: 14px;
+}
+
+.banner > svg,
+.note > svg,
+.warn > svg {
+  flex: none;
+  margin-top: var(--s-2);
+}
+
+.banner,
+.note {
+  background: var(--brand-soft);
+}
+
+.warn {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-8);
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--s-14);
+  border-bottom: 2px solid transparent;
+  color: var(--ink-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tab[aria-current="page"] {
+  border-bottom-color: var(--brand);
+  color: var(--ink);
+}
+
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14);
+  min-width: 0;
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-8) var(--s-16);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+}
+
+
+.hint {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.ok,
+.error {
+  display: flex;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-12) var(--s-14);
+  border-radius: var(--r-md);
+  font-size: 14px;
+}
+
+.ok {
+  background: var(--income-soft);
+  color: var(--income);
+}
+
+.error {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: var(--s-12);
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table thead th {
+  border-top: 0;
+  background: var(--surface-2);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.table tbody th {
+  font-weight: 400;
+}
+
+.mono {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.tag {
+  padding: 0 var(--s-8);
+  border-radius: var(--r-pill);
+  background: var(--brand-soft);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s-8);
+}
+
+.link {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+
+  /* Таблица — строками-карточками: заголовок столбца — подписью перед значением. */
+  .stack thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .stack tr {
+    display: grid;
+    gap: var(--s-6);
+    padding: var(--s-12) 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .stack th,
+  .stack td {
+    display: block;
+    padding: 0;
+    border-top: 0;
+  }
+
+  .stack td[data-label]::before {
+    content: attr(data-label) ": ";
+    color: var(--ink-2);
+    font-size: 13px;
+  }
+}

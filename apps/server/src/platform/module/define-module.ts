@@ -78,6 +78,8 @@ export interface SystemPlatform extends Platform {
   deriveKey(purpose: ModuleKeyPurpose): Buffer;
   /** Адрес локального входа (`http://127.0.0.1:8140`): ссылки в письмах и Better Auth (NFR-24). */
   readonly localOrigin: string;
+  /** Папка локальных моделей (`<DATA_DIR>/models`, NFR-25): сюда скачивает загрузчик llm, отсюда читают llama и whisper. */
+  readonly modelsDir: string;
 }
 
 /** Фасады соседей модуля без зависимостей. */

@@ -28,6 +28,7 @@ export function identityPlatform(db: TestDb, now = "2026-10-26T09:00:00Z") {
     clock,
     log: memory.log,
     localOrigin: "http://127.0.0.1:8140",
+    modelsDir: "/tmp/kosht-test-models",
     scoped: (scope: Parameters<typeof createScopedDb>[1]) => createScopedDb(db.pool, scope),
     settings: createSettings({ db: system, clock, env: () => undefined, log: memory.log }),
     rateLimiter: createRateLimiter({

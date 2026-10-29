@@ -96,3 +96,30 @@ export const llmTraceDeletions = systemTable("llm_trace_deletions", {
   createdAt: timestamp({ withTimezone: true }).notNull(),
   lastAttemptAt: timestamp({ withTimezone: true }),
 });
+
+/** Состояние файла локальной модели (NFR-25): скачивание и проверка идут в worker, видны в api через эту таблицу. */
+export const LOCAL_MODEL_STATUSES = [
+  "pending",
+  "downloading",
+  "verifying",
+  "ready",
+  "failed",
+] as const;
+export type LocalModelStatus = (typeof LOCAL_MODEL_STATUSES)[number];
+
+/**
+ * Файл локальной модели: путь относительно `<DATA_DIR>/models`, модель каталога, состояние, байты и код ошибки (без
+ * текста). Строка `selftest` — итог самотеста при старте (ok или код проблемы). Хранит только служебное (OBS-04).
+ */
+export const llmLocalModels = systemTable("llm_local_models", {
+  id: uuid()
+    .primaryKey()
+    .default(sql`uuidv7()`),
+  file: text().notNull().unique(),
+  model: text().notNull(),
+  status: text().$type<LocalModelStatus>().notNull(),
+  bytesDone: bigint({ mode: "number" }).notNull().default(0),
+  bytesTotal: bigint({ mode: "number" }).notNull().default(0),
+  errorCode: text(),
+  updatedAt: timestamp({ withTimezone: true }).notNull(),
+});

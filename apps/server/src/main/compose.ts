@@ -219,6 +219,7 @@ export async function compose(
     system,
     deriveKey: (purpose) => config.masterKey.derive(purpose),
     localOrigin: `http://${config.listeners.local.host}:${String(config.listeners.local.port)}`,
+    modelsDir: join(config.dataDir, "models"),
   };
   // Слушает канал только api (ADR-0008): одно соединение на процесс. Без него сайт не узнаёт об изменениях —
   // неудача первого подключения есть ошибка старта (RealtimeStartError).

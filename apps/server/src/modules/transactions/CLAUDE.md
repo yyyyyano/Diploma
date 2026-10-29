@@ -35,7 +35,9 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
   `realtime.changed` сущности `transaction`; `transactions.merged` — T-029.
 - Инструменты (`agent/tools.ts`, набор `core`): `search_transactions` (`read`, ≤ 50 строк + `total`), `add_transaction`,
   `update_transaction` (`write` + `undoToken`, источник «ассистент»), `delete_transaction` (`destructive`: только
-  решение). Агрегации (`aggregate_transactions`) — T-031.
+  решение). Входы — плоские и лёгкие (id — строка 36 знаков, день «ГГГГ-ММ-ДД», сумма — число копеек): префикс агента
+  ≤ 3 000 токенов (`agent-prefix.int.test.ts`, с операциями — 2 649), строгий разбор — в `execute` (неверное — `VALIDATION`);
+  категорию при добавлении подбирает сервер. Агрегации (`aggregate_transactions`) — T-031.
 - Отмена `transactions.restore { batchId }` (создание — удаляет, правка — возвращает «до», удаление — воссоздаёт с тем же
   `id`); подтверждение `transactions.delete { ids, channel }` — возвращает undoToken «Отменить» сразу после «Да».
 - Задачи (`jobs/`): `transactions.fill-rates { ids }` (повторяемая `UNAVAILABLE`, пока НБРБ молчит),

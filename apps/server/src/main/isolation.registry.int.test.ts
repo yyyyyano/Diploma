@@ -204,20 +204,14 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   },
   "tool:add_transaction": {
     input: (b) => ({
-      transaction: {
-        accountId: b.accountId,
-        type: "expense",
-        occurredOn: "2026-10-28",
-        amount: { minor: 100, currency: "BYN" },
-        occurredTime: null,
-        merchant: null,
-        note: null,
-        category: null,
-      },
+      type: "expense",
+      amountMinor: 100,
+      date: "2026-10-28",
+      accountId: b.accountId,
     }),
   },
   "tool:update_transaction": {
-    input: (b) => ({ id: b.transactionId, patch: { note: "чужая" } }),
+    input: (b) => ({ id: b.transactionId, amountMinor: 100, note: "чужая" }),
   },
   "tool:delete_transaction": { input: (b) => ({ ids: [b.transactionId] }) },
   "profile.facts": { input: () => undefined },

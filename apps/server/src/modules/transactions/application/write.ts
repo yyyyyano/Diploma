@@ -238,5 +238,10 @@ export function makeWrite(d: Deps, parts: Parts) {
     return { transaction: toDto(result.row), undoToken: result.undoToken };
   }
 
-  return { create, update };
+  /** Валюта своего счёта — для инструмента агента: «потратил 15 с карты» без валюты в запросе (чужой — NOT_FOUND). */
+  async function accountCurrency(s: ScopedDb, accountId: string): Promise<string> {
+    return d.accounts.currencyOf(s, accountId);
+  }
+
+  return { create, update, accountCurrency };
 }

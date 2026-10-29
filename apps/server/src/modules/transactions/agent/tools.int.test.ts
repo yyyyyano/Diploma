@@ -26,13 +26,10 @@ async function setup() {
 }
 
 const ADD = {
-  transaction: {
-    type: "expense",
-    occurredOn: "2026-10-21",
-    amount: { minor: 1500, currency: "BYN" },
-    merchant: "Кофейня «Зерно»",
-    category: { type: "system", code: "cafes" },
-  },
+  type: "expense",
+  amountMinor: 1500,
+  date: "2026-10-21",
+  merchant: "Кофейня «Зерно»",
 };
 
 describe("AGT-05: add_transaction и update_transaction — сразу, с «Отменить»", () => {
@@ -43,7 +40,8 @@ describe("AGT-05: add_transaction и update_transaction — сразу, с «О�
       transaction: {
         source: "assistant",
         amount: { minor: 1500, currency: "BYN" },
-        category: { type: "system", code: "cafes" },
+        merchantName: "Кофейня «Зерно»",
+        occurredOn: "2026-10-21",
       },
     });
     expect(await t.actions.undo(s, result.undoToken)).toBe("undone");
@@ -61,16 +59,48 @@ describe("AGT-05: add_transaction и update_transaction — сразу, с «О�
     const { transaction } = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
     const edited = await tools.update.execute(
       ctx(),
-      tools.update.input.parse({
-        id: transaction.id,
-        patch: { amount: { minor: 1800, currency: "BYN" } },
-      }),
+      tools.update.input.parse({ id: transaction.id, amountMinor: 1800, categoryCode: "taxi" }),
     );
-    expect(edited.transaction.amount.minor).toBe(1800);
+    expect(edited.transaction).toMatchObject({
+      amount: { minor: 1800, currency: "BYN" },
+      category: { type: "system", code: "taxi" },
+      categorySource: "user",
+    });
     expect(await t.actions.undo(s, edited.undoToken)).toBe("undone");
-    expect(
-      tools.update.input.safeParse({ id: transaction.id, patch: {}, householdId: "чужое" }).success,
-    ).toBe(false);
+    expect(tools.update.input.safeParse({ id: transaction.id, householdId: "чужое" }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("AGT-05: аргументы модели проверяются — неверное это VALIDATION, а не сбой", () => {
+  it("несуществующий день, сумма 0 и дробная сумма — VALIDATION, операций не появилось", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const bad = [
+      { ...ADD, date: "2026-02-31" },
+      { ...ADD, amountMinor: 0 },
+      { ...ADD, amountMinor: 15.5 },
+    ];
+    for (const input of bad) {
+      await expect(tools.add.execute(ctx(), tools.add.input.parse(input))).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
+    }
+    expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(0);
+  });
+
+  it("счёт в долларах без валюты в запросе — сумма пишется в валюте счёта", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const usd = await t.accounts.create(
+      s,
+      { kind: "card", name: "USD", bank: null, mask: null, currency: "USD", initialBalance: null },
+      "web",
+    );
+    const { transaction } = await tools.add.execute(
+      ctx(),
+      tools.add.input.parse({ ...ADD, accountId: usd.account.id }),
+    );
+    expect(transaction.amount).toEqual({ minor: 1500, currency: "USD" });
   });
 });
 

@@ -161,6 +161,12 @@ async function seedUser(email: string): Promise<Seeded> {
     "insert into llm_preferences (household_id, user_id, model_id) values ($1, $2, 'groq/openai/gpt-oss-120b')",
     ids,
   );
+  // Запомненный формат выписки (STMT-05): строка владельца, уходит вместе с аккаунтом.
+  await db.owner.query(
+    `insert into statement_formats (household_id, user_id, fingerprint, source_kind, bank, bank_key, schema, last_used_at)
+     values ($1, $2, repeat('a', 64), 'csv', 'Лесбанк', 'лесбанк', '{"columns":[],"dateOrder":"dmy"}', now())`,
+    ids,
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

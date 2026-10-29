@@ -24,3 +24,4 @@ export { InlineJobs, type InlineHandler, type InlineJob } from "./inline-jobs.ts
 export { MemoryBlobStore } from "./memory-blob-store.ts";
 export { readSse, type SseEvent } from "./sse.ts";
 export { readZip } from "./zip.ts";
+export { hashEmbedder, type HashEmbedder } from "./hash-embedder.ts";

@@ -109,6 +109,23 @@ describe("QA-01, STMT-04: набор datasets/statements — ожидаемые 
   });
 });
 
+describe("PRIV-02, R50: модель зовут от имени пользователя", () => {
+  it("скан и колонки уходят с scope пользователя: облако — только по его согласию, иначе локальная модель", async () => {
+    const scan = loadCase("scan-png");
+    const columns = loadCase("csv-unknown-headers");
+    const s = scoped();
+    const { parse, calls } = setup({ ...answersOf(scan.expected), ...answersOf(columns.expected) });
+    await parse.parseBytes(s, { type: scan.type, bytes: scan.bytes });
+    await parse.parseBytes(s, { type: columns.type, bytes: columns.bytes });
+    expect(calls.map((call) => [call.task, call.caller])).toEqual([
+      ["statement.scan", s.scope],
+      ["statement.columns", s.scope],
+    ]);
+    // Скан уходит изображением, а не текстом.
+    expect(calls[0]?.images).toBeGreaterThan(0);
+  });
+});
+
 describe("STMT-04: ответ модели по колонкам — только смысл, строки разбирает программа", () => {
   it("модели уходит шапка и не больше 8 строк (настройка), а не вся выписка", async () => {
     const item = loadCase("csv-unknown-headers");

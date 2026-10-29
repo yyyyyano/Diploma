@@ -5,6 +5,8 @@ import type { Settings, SettingDef } from "../../../../platform/settings/setting
 import type { LlmFacade } from "../../../llm/index.ts";
 
 export interface ScriptedCall {
+  /** Кто звал: scope пользователя (цепочка учитывает облачное согласие) или вызов системы. */
+  readonly caller: unknown;
   readonly task: string;
   readonly instructions: string;
   readonly document: string;
@@ -22,8 +24,9 @@ export function scriptedLlm(answers: Readonly<Record<string, unknown>>): Scripte
   return {
     calls,
     llm: {
-      extract: async (_caller, request) => {
+      extract: async (caller, request) => {
         calls.push({
+          caller,
           task: request.task,
           instructions: request.instructions,
           document: request.document,

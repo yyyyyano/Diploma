@@ -3,7 +3,7 @@ name: reviewer
 description: Ревьюер «Кошта» — один лёгкий проход по результату задачи — критерии приёмки доказаны тестами, нет дыр в безопасности и изоляции, планка не занижена. Только чтение, возвращает вердикт и короткий список блокирующих находок. Вызывается командой /task-cycle.
 tools: Read, Grep, Glob, Bash, Skill, mcp__context7__*
 disallowedTools: Agent
-model: sonnet
+model: opus
 effort: medium
 maxTurns: 30
 color: purple

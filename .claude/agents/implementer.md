@@ -2,7 +2,7 @@
 name: implementer
 description: Имплементатор «Кошта» — реализует ровно одну задачу плана тонкими срезами по TDD (тест рядом с файлом), с коммитами по Conventional Commits, и возвращает короткий итог. Вызывается командой /task-cycle (критик — один раз на фазу, ревью — одно лёгкое).
 disallowedTools: Agent
-model: opus
+model: sonnet
 effort: high
 maxTurns: 300
 permissionMode: acceptEdits

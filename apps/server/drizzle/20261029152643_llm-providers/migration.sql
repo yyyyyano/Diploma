@@ -51,3 +51,7 @@ INSERT INTO "llm_task_chains" ("task", "model_id", "position") VALUES
 -- Тестовая модель (T-010) в боевой базе выключена: чат отвечает настоящими моделями. Тесты и стенд e2e включают её
 -- фикстурой шаблонной базы (platform/db/__fixtures__/test-template.ts).
 UPDATE "llm_models" SET "enabled" = false WHERE "id" = 'test/scripted';
+--> statement-breakpoint
+-- Версия текста облачного согласия поднята до 2026-10-29 (сканы выписок, условия бесплатных тарифов): согласия по
+-- прежнему тексту больше не действуют (источник согласия сверяет версию), режим «облачный» для админки — тоже.
+UPDATE "privacy_modes" SET "cloud" = false;

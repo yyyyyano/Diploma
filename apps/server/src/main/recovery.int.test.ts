@@ -2,6 +2,7 @@
 // восстановления администратора в ответе первого запуска; «Забыли пароль?» отвечает одинаково на любой email;
 // ссылка из ящика задаёт пароль один раз; вход с кодом выдаёт новый код; частота входа на email; заблокированный не
 // получает cookie; смена пароля завершает другие сессии.
+import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { IdentityFacade } from "../modules/identity/index.ts";
@@ -57,7 +58,7 @@ async function register(email: string, password: string): Promise<Response> {
       password,
       consents: {
         personalData: { accepted: true, version: "2026-10-26" },
-        cloud: { accepted: false, version: "2026-10-26" },
+        cloud: { accepted: false, version: CONSENT_VERSIONS.cloud },
       },
     },
   });

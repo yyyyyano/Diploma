@@ -1,5 +1,6 @@
 // NOTIF-03 сквозь HTTP и корень композиции: уведомления администраторов видит только роль admin (обычный
 // пользователь — FORBIDDEN), лента пользователя — своя; фасад notifications доступен соседям из корня композиции.
+import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { NotificationsFacade } from "../modules/notifications/index.ts";
@@ -36,7 +37,7 @@ describe("NOTIF-03: роли", () => {
           password: "пароль-пользователя",
           consents: {
             personalData: { accepted: true, version: "2026-10-26" },
-            cloud: { accepted: false, version: "2026-10-26" },
+            cloud: { accepted: false, version: CONSENT_VERSIONS.cloud },
           },
         },
       }),

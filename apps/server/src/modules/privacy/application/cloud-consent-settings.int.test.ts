@@ -56,11 +56,19 @@ describe("PRIV-02: облачное согласие в настройках", (
     expect(await modeRow(scope.userId)).toEqual([
       { cloud: false, updated_at: new Date("2026-10-26T09:00:00Z") },
     ]);
-    expect((await settings.state(s)).cloud).toEqual({ granted: false, since: undefined });
+    expect((await settings.state(s)).cloud).toEqual({
+      granted: false,
+      since: undefined,
+      outdated: false,
+    });
 
     clock.set("2026-10-27T12:30:00Z");
     const state = await settings.setCloudConsent(s, { granted: true, version });
-    expect(state.cloud).toEqual({ granted: true, since: new Date("2026-10-27T12:30:00Z") });
+    expect(state.cloud).toEqual({
+      granted: true,
+      since: new Date("2026-10-27T12:30:00Z"),
+      outdated: false,
+    });
     expect(state.history.map((r) => [r.kind, r.granted])).toEqual([
       ["cloud", true],
       ["cloud", false],
@@ -85,6 +93,40 @@ describe("PRIV-02: облачное согласие в настройках", (
     await settings.setCloudConsent(s, { granted: false, version });
     expect(await source(scope)).toBe(false);
     expect((await modeRow(scope.userId)).map((r) => r.cloud)).toEqual([false]);
+  });
+
+  it("T-023: согласие по прежнему тексту не действует — условия обновились, облако выключено до повторного", async () => {
+    const { settings } = setup();
+    const scope = testScope({ user: 6, household: 6 });
+    const s = createScopedDb(db.pool, scope);
+    const source = makeCloudConsentSource({ scoped: (sc) => createScopedDb(db.pool, sc) });
+    await db.owner.query(
+      `insert into privacy_consents (household_id, user_id, kind, granted, text_version, created_at)
+       values ($1, $2, 'cloud', true, '2026-10-26', '2026-10-20T09:00:00Z')`,
+      [scope.householdId, scope.userId],
+    );
+    expect(await source(scope)).toBe(false);
+    expect((await settings.state(s)).cloud).toEqual({
+      granted: false,
+      since: undefined,
+      outdated: true,
+    });
+    // Повторное согласие по новому тексту возвращает облако.
+    await settings.setCloudConsent(s, { granted: true, version });
+    expect(await source(scope)).toBe(true);
+    expect((await settings.state(s)).cloud).toMatchObject({ granted: true, outdated: false });
+  });
+
+  it("T-023: отозванное согласие по прежнему тексту — не «условия обновились»: облако и не включалось", async () => {
+    const { settings } = setup();
+    const scope = testScope({ user: 7, household: 7 });
+    const s = createScopedDb(db.pool, scope);
+    await db.owner.query(
+      `insert into privacy_consents (household_id, user_id, kind, granted, text_version, created_at)
+       values ($1, $2, 'cloud', false, '2026-10-26', '2026-10-20T09:00:00Z')`,
+      [scope.householdId, scope.userId],
+    );
+    expect((await settings.state(s)).cloud.outdated).toBe(false);
   });
 
   it("версия текста устарела — CONFLICT, журнал, режим и события не тронуты", async () => {

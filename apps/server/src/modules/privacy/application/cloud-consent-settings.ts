@@ -18,7 +18,12 @@ import { saveMode } from "../infrastructure/db/modes.repo.ts";
 export const HISTORY_LIMIT = 200;
 
 export interface PrivacyStateView {
-  readonly cloud: { readonly granted: boolean; readonly since: Date | undefined };
+  readonly cloud: {
+    readonly granted: boolean;
+    readonly since: Date | undefined;
+    /** Согласие по прежнему тексту: «условия обновились», облако выключено до повторного согласия. */
+    readonly outdated: boolean;
+  };
   readonly history: readonly ConsentRecord[];
 }
 
@@ -27,8 +32,13 @@ export function makeCloudConsentSettings(d: Pick<Platform, "clock" | "events" | 
   async function state(s: ScopedDb): Promise<PrivacyStateView> {
     const history = await listConsents(s, HISTORY_LIMIT);
     const cloud = history.find((record) => record.kind === "cloud");
-    const granted = cloud?.granted === true;
-    return { cloud: { granted, since: granted ? cloud?.at : undefined }, history };
+    // Действует только согласие по текущему тексту (как у источника для шлюза llm): старое — «условия обновились».
+    const given = cloud?.granted === true;
+    const granted = given && cloud?.textVersion === CONSENT_VERSIONS.cloud;
+    return {
+      cloud: { granted, since: granted ? cloud?.at : undefined, outdated: given && !granted },
+      history,
+    };
   }
 
   /** Дать (granted) или отозвать облачное согласие. */

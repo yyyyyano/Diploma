@@ -61,14 +61,14 @@ describe("PRIV-02: вкладка «Конфиденциальность»", () 
     server.use(
       http.get("*/api/privacy", () =>
         HttpResponse.json({
-          cloud: { granted: false, since: null },
+          cloud: { granted: false, since: null, outdated: false },
           history: [consentRecord(1, "cloud", false), consentRecord(2, "personal-data", true)],
         }),
       ),
       http.post("*/api/privacy/cloud-consent", async ({ request }) => {
         sent.push(await request.json());
         return HttpResponse.json({
-          cloud: { granted: true, since: "2026-10-28T09:00:00.000Z" },
+          cloud: { granted: true, since: "2026-10-28T09:00:00.000Z", outdated: false },
           history: [
             { ...consentRecord(3, "cloud", true), at: "2026-10-28T09:00:00.000Z" },
             consentRecord(1, "cloud", false),
@@ -94,19 +94,39 @@ describe("PRIV-02: вкладка «Конфиденциальность»", () 
     expect(screen.getAllByRole("row")).toHaveLength(4);
   });
 
+  it("T-023: условия обновились — «Нужно подтвердить», облако выключено, повторное согласие — через окно с новым текстом", async () => {
+    server.use(
+      http.get("*/api/privacy", () =>
+        HttpResponse.json({
+          cloud: { granted: false, since: null, outdated: true },
+          history: [consentRecord(1, "cloud", true)],
+        }),
+      ),
+    );
+    renderTab("privacy");
+    expect(
+      await screen.findByRole("heading", { name: "Условия обновились — облако выключено" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Нужно подтвердить")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Разрешить облачные ИИ-модели" })).not.toBeChecked();
+    await userEvent.click(screen.getByRole("switch", { name: "Разрешить облачные ИИ-модели" }));
+    const dialog = await screen.findByRole("dialog", { name: "Согласие на облачную обработку" });
+    expect(within(dialog).getByText(/сканы выписок/)).toBeInTheDocument();
+  });
+
   it("отзыв — сразу, без окна: уходит granted: false, локальный режим включён", async () => {
     const sent: unknown[] = [];
     server.use(
       http.get("*/api/privacy", () =>
         HttpResponse.json({
-          cloud: { granted: true, since: "2026-10-26T09:00:00.000Z" },
+          cloud: { granted: true, since: "2026-10-26T09:00:00.000Z", outdated: false },
           history: [consentRecord(1, "cloud", true)],
         }),
       ),
       http.post("*/api/privacy/cloud-consent", async ({ request }) => {
         sent.push(await request.json());
         return HttpResponse.json({
-          cloud: { granted: false, since: null },
+          cloud: { granted: false, since: null, outdated: false },
           history: [consentRecord(2, "cloud", false), consentRecord(1, "cloud", true)],
         });
       }),
@@ -127,7 +147,7 @@ describe("PRIV-02: вкладка «Конфиденциальность»", () 
     server.use(
       http.get("*/api/privacy", () =>
         HttpResponse.json({
-          cloud: { granted: false, since: null },
+          cloud: { granted: false, since: null, outdated: false },
           history: [consentRecord(1, "cloud", false), consentRecord(2, "personal-data", true)],
         }),
       ),

@@ -31,7 +31,13 @@ export type ConsentRecord = z.infer<typeof ConsentRecord>;
 
 /** Вкладка «Конфиденциальность»: облако разрешено ли и с какого момента; история решений, новые сверху. */
 export const PrivacyState = z.strictObject({
-  cloud: z.strictObject({ granted: z.boolean(), since: z.iso.datetime().nullable() }),
+  cloud: z.strictObject({
+    /** Облако разрешено сейчас: согласие дано и дано по действующему тексту. */
+    granted: z.boolean(),
+    since: z.iso.datetime().nullable(),
+    /** Согласие давалось по прежнему тексту: «условия обновились», до повторного согласия облако выключено. */
+    outdated: z.boolean(),
+  }),
   history: z.array(ConsentRecord).max(200),
 });
 export type PrivacyState = z.infer<typeof PrivacyState>;

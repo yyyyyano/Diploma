@@ -11,7 +11,11 @@ import type {
 /** Состояние на проводе: моменты — ISO UTC. */
 export function toPrivacyStateDto(view: PrivacyStateView): PrivacyState {
   return {
-    cloud: { granted: view.cloud.granted, since: view.cloud.since?.toISOString() ?? null },
+    cloud: {
+      granted: view.cloud.granted,
+      since: view.cloud.since?.toISOString() ?? null,
+      outdated: view.cloud.outdated,
+    },
     history: view.history.map((record) => ({
       id: record.id,
       kind: record.kind,

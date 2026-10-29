@@ -60,7 +60,7 @@ function CloudCard({ state }: { readonly state: PrivacyState }) {
       },
     }),
   );
-  const { granted, since } = state.cloud;
+  const { granted, since, outdated } = state.cloud;
   const Icon: LucideIcon = granted ? Cpu : Lock;
   return (
     <section className={classes.card} aria-labelledby="settings-cloud">
@@ -73,14 +73,27 @@ function CloudCard({ state }: { readonly state: PrivacyState }) {
             <h2 id="settings-cloud" className={classes.cardTitle}>
               {granted && since !== null
                 ? t("settings:privacy.cloud.onTitle", { date: dayOf(since) })
-                : t("settings:privacy.cloud.offTitle")}
+                : outdated
+                  ? t("settings:privacy.cloud.outdatedTitle")
+                  : t("settings:privacy.cloud.offTitle")}
             </h2>
-            <StatusBadge tone={granted ? "brand" : "neutral"} icon={granted ? Cpu : Lock}>
-              {granted ? t("settings:privacy.cloud.onBadge") : t("settings:privacy.cloud.offBadge")}
+            <StatusBadge
+              tone={granted ? "brand" : outdated ? "warn" : "neutral"}
+              icon={granted ? Cpu : outdated ? AlertCircle : Lock}
+            >
+              {granted
+                ? t("settings:privacy.cloud.onBadge")
+                : outdated
+                  ? t("settings:privacy.cloud.outdatedBadge")
+                  : t("settings:privacy.cloud.offBadge")}
             </StatusBadge>
           </div>
           <p className={classes.hint}>
-            {granted ? t("settings:privacy.cloud.onText") : t("settings:privacy.cloud.offText")}
+            {granted
+              ? t("settings:privacy.cloud.onText")
+              : outdated
+                ? t("settings:privacy.cloud.outdatedText")
+                : t("settings:privacy.cloud.offText")}
           </p>
         </div>
         <Switch

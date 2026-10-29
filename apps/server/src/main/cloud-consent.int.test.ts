@@ -52,7 +52,9 @@ describe("PRIV-02: отзыв облачного согласия действу
       body: { granted: false, version: CONSENT_VERSIONS.cloud },
     });
     expect(revoked.status).toBe(200);
-    expect(await revoked.json()).toMatchObject({ cloud: { granted: false, since: null } });
+    expect(await revoked.json()).toMatchObject({
+      cloud: { granted: false, since: null, outdated: false },
+    });
 
     expect(await callChat(scope)).toBe("scripted");
     expect(await callChat(scope)).toBe("scripted");

@@ -147,3 +147,31 @@
     justify-content: center;
   }
 }
+
+.check {
+  width: 44px;
+  padding-right: 0 !important;
+}
+
+.selected {
+  background: var(--brand-soft);
+}
+
+.selected:hover {
+  background: var(--brand-soft);
+}
+
+.cardRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+.cardCheck {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  min-height: 44px;
+  padding-top: var(--s-14);
+  padding-left: var(--s-8);
+}

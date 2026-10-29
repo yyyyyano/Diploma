@@ -1,0 +1,13 @@
+/* Окно выбора категории для массовой смены: подсказка, выбор, кнопки справа. */
+.hint {
+  margin: 0 0 var(--s-12);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-12);
+  margin-top: var(--s-16);
+}

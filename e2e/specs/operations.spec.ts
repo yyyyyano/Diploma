@@ -139,6 +139,30 @@ test("«Операции»: ввод, карточка, правка, удале
   await page.getByRole("button", { name: "Отменить" }).click();
   await expect(open).toBeVisible();
 
+  // TXN-04: вторая операция, выбор обеих, смена категории — окно выбора, вопрос с числом, «Да», «Отменить».
+  await page.getByRole("button", { name: "Добавить операцию" }).first().click();
+  const second = page.getByRole("dialog", { name: "Новая операция" });
+  await second.getByLabel("Сумма, BYN").fill("9,80");
+  await second.getByLabel("Контрагент").fill("Яндекс Go");
+  await second.getByRole("button", { name: "Сохранить" }).click();
+  await expect(page.getByText(/Записал: Яндекс Go/)).toBeVisible();
+  await page.getByRole("checkbox", { name: "Выбрать все показанные" }).check();
+  await expect(page.getByText("Выбрано: 2")).toBeVisible();
+  await page.mouse.move(0, 0);
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("button", { name: "Сменить категорию" }).click();
+  const pick = page.getByRole("dialog", { name: "Сменить категорию" });
+  await pick.getByPlaceholder("Выберите категорию").click();
+  await page.getByRole("option", { name: "Общественный транспорт" }).click();
+  await pick.getByRole("button", { name: "Продолжить" }).click();
+  await expect(page.getByText(/в «Общественный транспорт»\?/)).toBeVisible();
+  await page.mouse.move(0, 0);
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("button", { name: "Да, перенести 2" }).click();
+  await expect(page.getByText("Перенёс операций: 2.")).toBeVisible();
+  await page.getByRole("button", { name: "Отменить" }).click();
+  await expect(page.getByText("Перенёс операций: 2.")).toHaveCount(0);
+
   // TXN-02: фильтр без результата — «Ничего не нашлось», «Сбросить фильтры» возвращает список.
   await page.goto("/operations?type=income");
   await expect(page.getByRole("heading", { name: "Ничего не нашлось" })).toBeVisible();

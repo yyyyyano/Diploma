@@ -30,12 +30,20 @@ import { OperationForm, type FormResult } from "./OperationForm.tsx";
 import { OperationPanel } from "./OperationPanel.tsx";
 import { OperationsCards, OperationsTable } from "./OperationsList.tsx";
 import { OperationsToolbar } from "./OperationsToolbar.tsx";
+import { BulkBar } from "./BulkBar.tsx";
+import { BulkCategoryDialog } from "./BulkCategoryDialog.tsx";
 import classes from "./OperationsPage.module.css";
 
 type Dialog =
   | { readonly kind: "add" }
   | { readonly kind: "edit"; readonly transaction: Transaction };
 type Toast = { readonly token: string; readonly message: string };
+/** Вопрос «Да/Нет» на экране: id решения, кнопка-глагол с числом и что сказать после «Да» (с «Отменить»). */
+type Question = {
+  readonly id: string;
+  readonly confirmLabel?: string;
+  readonly done: string;
+};
 
 const PHONE_QUERY = "(max-width: 860px)";
 
@@ -49,9 +57,18 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [decisionId, setDecisionId] = useState<string | null>(null);
-  const [deleted, setDeleted] = useState<string | null>(null);
+  const [question, setQuestion] = useState<Question | null>(null);
+  const [pickCategory, setPickCategory] = useState(false);
   const [traceId, setTraceId] = useState<TraceId | null>(null);
+  // Выбранные строки (TXN-04): сбрасываются, когда меняются фильтры или страница.
+  const scopeKey = JSON.stringify({ ...search, op: undefined });
+  const [picked, setPicked] = useState<{ readonly key: string; readonly ids: ReadonlySet<string> }>(
+    {
+      key: scopeKey,
+      ids: new Set(),
+    },
+  );
+  const selected: ReadonlySet<string> = picked.key === scopeKey ? picked.ids : new Set();
 
   const accounts = useQuery(orpc.accounts.list.queryOptions());
   const accountItems = accounts.data?.items ?? [];
@@ -101,11 +118,16 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
 
   const create = useMutation(orpc.transactions.create.mutationOptions({ onError: fail }));
   const update = useMutation(orpc.transactions.update.mutationOptions({ onError: fail }));
+  const ask = (confirmLabel: string, doneText: string) => (result: { decisionId: string }) =>
+    setQuestion({ id: result.decisionId, confirmLabel, done: doneText });
   const requestDelete = useMutation(
-    orpc.transactions.requestDelete.mutationOptions({
-      onSuccess: ({ decisionId: id }) => setDecisionId(id),
-      onError: fail,
-    }),
+    orpc.transactions.requestDelete.mutationOptions({ onError: fail }),
+  );
+  const requestCategory = useMutation(
+    orpc.transactions.requestChangeCategory.mutationOptions({ onError: fail }),
+  );
+  const requestTransfer = useMutation(
+    orpc.transactions.requestMarkTransfer.mutationOptions({ onError: fail }),
   );
   const explainRate = useMutation(
     orpc.transactions.explainRate.mutationOptions({
@@ -113,6 +135,33 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
       onError: () => setNotice(t("operations:panel.whyError")),
     }),
   );
+
+  const toggle = (id: string) => {
+    const ids = new Set(selected);
+    if (ids.has(id)) ids.delete(id);
+    else ids.add(id);
+    setPicked({ key: scopeKey, ids });
+  };
+  const toggleAll = () => {
+    const shown = items.map((item) => item.id);
+    const all = shown.every((id) => selected.has(id));
+    setPicked({ key: scopeKey, ids: new Set(all ? [] : shown) });
+  };
+  const clearSelection = () => setPicked({ key: scopeKey, ids: new Set() });
+  const chosen = items.filter((item) => selected.has(item.id));
+  const chosenIds = chosen.map((item) => item.id);
+  const count = chosen.length;
+
+  /** Исправление категории создало правило контрагента — спросить про прошлые операции (CAT-05). */
+  const afterUpdate = (updated: { applyToPast: { decisionId: string; count: number } | null }) => {
+    if (updated.applyToPast === null) return;
+    const past = updated.applyToPast;
+    setQuestion({
+      id: past.decisionId,
+      confirmLabel: t("operations:bulk.confirmRule", { count: past.count }),
+      done: t("operations:done.ruleApplied", { count: past.count }),
+    });
+  };
 
   const submit = (result: FormResult) => {
     if (result.kind === "create") {
@@ -132,8 +181,10 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
     update.mutate(
       { id: transaction.id, expectedVersion: transaction.version, patch: result.patch },
       {
-        onSuccess: (updated) =>
-          void done(t("operations:done.updated", { name: titleOf(updated.transaction) }))(updated),
+        onSuccess: (updated) => {
+          void done(t("operations:done.updated", { name: titleOf(updated.transaction) }))(updated);
+          afterUpdate(updated);
+        },
       },
     );
   };
@@ -179,6 +230,35 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             accounts={accountItems}
             onChange={setSearch}
             onReset={reset}
+          />
+        )}
+        {count > 0 && (
+          <BulkBar
+            count={count}
+            onChangeCategory={() => setPickCategory(true)}
+            onMarkTransfer={() =>
+              requestTransfer.mutate(
+                { ids: chosenIds },
+                {
+                  onSuccess: ask(
+                    t("operations:bulk.confirmTransfer", { count }),
+                    t("operations:done.markedTransfer", { count }),
+                  ),
+                },
+              )
+            }
+            onDelete={() =>
+              requestDelete.mutate(
+                { ids: chosenIds },
+                {
+                  onSuccess: ask(
+                    t("operations:bulk.confirmDelete", { count }),
+                    t("operations:done.deletedMany", { count }),
+                  ),
+                },
+              )
+            }
+            onClear={clearSelection}
           />
         )}
         {notice !== null && (
@@ -229,6 +309,9 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             pageSize={PAGE_SIZE}
             onPage={(page) => setSearch({ page })}
             onOpen={(id) => setSearch({ op: OperationsSearch.shape.op.parse(id) })}
+            selected={selected}
+            onToggle={toggle}
+            onToggleAll={toggleAll}
           />
         )}
         {!failed && loaded && !empty && isPhone && (
@@ -240,6 +323,8 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             loadingMore={moreQuery.isFetchingNextPage}
             onMore={() => void moreQuery.fetchNextPage()}
             onOpen={(id) => setSearch({ op: OperationsSearch.shape.op.parse(id) })}
+            selected={selected}
+            onToggle={toggle}
           />
         )}
       </div>
@@ -280,10 +365,17 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             id={search.op}
             accounts={accountItems}
             onEdit={(transaction) => setDialog({ kind: "edit", transaction })}
-            onDelete={(transaction) => {
-              setDeleted(titleOf(transaction));
-              requestDelete.mutate({ ids: [transaction.id] });
-            }}
+            onDelete={(transaction) =>
+              requestDelete.mutate(
+                { ids: [transaction.id] },
+                {
+                  onSuccess: ask(
+                    t("common:decision.yes"),
+                    t("operations:done.deleted", { name: titleOf(transaction) }),
+                  ),
+                },
+              )
+            }
             onCategory={(transaction, category) =>
               update.mutate(
                 {
@@ -292,10 +384,12 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
                   patch: { category },
                 },
                 {
-                  onSuccess: (updated) =>
+                  onSuccess: (updated) => {
                     void done(t("operations:done.updated", { name: titleOf(updated.transaction) }))(
                       updated,
-                    ),
+                    );
+                    afterUpdate(updated);
+                  },
                 },
               )
             }
@@ -304,20 +398,43 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
         )}
       </Sheet>
 
-      {decisionId !== null && (
+      {pickCategory && (
+        <BulkCategoryDialog
+          count={count}
+          kind={
+            chosen.length > 0 && chosen.every((item) => item.type === "income")
+              ? "income"
+              : "expense"
+          }
+          pending={requestCategory.isPending}
+          onClose={() => setPickCategory(false)}
+          onNext={(category) =>
+            requestCategory.mutate(
+              { ids: chosenIds, category },
+              {
+                onSuccess: (result) => {
+                  setPickCategory(false);
+                  ask(
+                    t("operations:bulk.confirmCategory", { count }),
+                    t("operations:done.categoryChanged", { count }),
+                  )(result);
+                },
+              },
+            )
+          }
+        />
+      )}
+      {question !== null && (
         <DecisionDialog
-          decisionId={decisionId}
+          decisionId={question.id}
           opened
-          onClose={() => setDecisionId(null)}
+          {...(question.confirmLabel === undefined ? {} : { confirmLabel: question.confirmLabel })}
+          onClose={() => setQuestion(null)}
           onAnswered={(status, undoToken) => {
             if (status === "yes") {
               setSearch({ op: undefined });
-              if (undoToken !== null) {
-                setToast({
-                  token: undoToken,
-                  message: t("operations:done.deleted", { name: deleted ?? "" }),
-                });
-              }
+              clearSelection();
+              if (undoToken !== null) setToast({ token: undoToken, message: question.done });
             }
             void refresh();
           }}

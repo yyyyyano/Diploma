@@ -4,11 +4,12 @@
 // Показывает уже загруженное: запросы — у страницы.
 import type { AccountListItem, Transaction } from "@kosht/contract";
 import { formatDate, formatTime } from "@kosht/i18n";
-import { Button, Pagination } from "@mantine/core";
+import { Button, Checkbox, Pagination } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useAccountName } from "../../entities/account/index.ts";
 import { CategoryBadge } from "../../entities/category/index.ts";
 import { TransactionAmount } from "../../entities/transaction/index.ts";
+import { cx } from "../../ui/cx.ts";
 import { StatusBadge } from "../../ui/index.ts";
 import { ArrowLeftRight, Undo2 } from "lucide-react";
 import classes from "./OperationsList.module.css";
@@ -18,6 +19,9 @@ export interface OperationsListProps {
   readonly total: number;
   readonly accounts: readonly AccountListItem[];
   readonly onOpen: (id: string) => void;
+  /** Выбранные строки (TXN-04): галочки; выбор переживает смену страницы только на телефоне («Показать ещё»). */
+  readonly selected: ReadonlySet<string>;
+  readonly onToggle: (id: string) => void;
 }
 
 function useRowParts(accounts: readonly AccountListItem[]) {
@@ -68,10 +72,14 @@ export function OperationsTable({
   pageSize,
   onPage,
   onOpen,
+  selected,
+  onToggle,
+  onToggleAll,
 }: OperationsListProps & {
   readonly page: number;
   readonly pageSize: number;
   readonly onPage: (page: number) => void;
+  readonly onToggleAll: () => void;
 }) {
   const { t } = useTranslation("operations");
   const parts = useRowParts(accounts);
@@ -80,6 +88,17 @@ export function OperationsTable({
       <table className={classes.table} aria-label={t("table.label")}>
         <thead>
           <tr>
+            <th scope="col" className={classes.check}>
+              <Checkbox
+                aria-label={t("bulk.selectAll")}
+                checked={items.length > 0 && items.every((item) => selected.has(item.id))}
+                indeterminate={
+                  items.some((item) => selected.has(item.id)) &&
+                  !items.every((item) => selected.has(item.id))
+                }
+                onChange={onToggleAll}
+              />
+            </th>
             <th scope="col">{t("table.date")}</th>
             <th scope="col">{t("table.merchant")}</th>
             <th scope="col">{t("table.category")}</th>
@@ -91,7 +110,18 @@ export function OperationsTable({
         </thead>
         <tbody>
           {items.map((item) => (
-            <tr key={item.id} className={classes.row} onClick={() => onOpen(item.id)}>
+            <tr
+              key={item.id}
+              className={cx(classes.row, selected.has(item.id) && classes.selected)}
+              onClick={() => onOpen(item.id)}
+            >
+              <td className={classes.check} onClick={(event) => event.stopPropagation()}>
+                <Checkbox
+                  aria-label={t("bulk.selectOne", { name: parts.title(item) })}
+                  checked={selected.has(item.id)}
+                  onChange={() => onToggle(item.id)}
+                />
+              </td>
               <td className={classes.date}>{parts.when(item)}</td>
               <td className={classes.merchant}>
                 <button
@@ -152,6 +182,8 @@ export function OperationsCards({
   loadingMore,
   onMore,
   onOpen,
+  selected,
+  onToggle,
 }: OperationsListProps & {
   readonly hasMore: boolean;
   readonly loadingMore: boolean;
@@ -163,7 +195,17 @@ export function OperationsCards({
     <div className={classes.card}>
       <ul className={classes.cards} aria-label={t("table.label")}>
         {items.map((item) => (
-          <li key={item.id}>
+          <li
+            key={item.id}
+            className={cx(classes.cardRow, selected.has(item.id) && classes.selected)}
+          >
+            <span className={classes.cardCheck}>
+              <Checkbox
+                aria-label={t("bulk.selectOne", { name: parts.title(item) })}
+                checked={selected.has(item.id)}
+                onChange={() => onToggle(item.id)}
+              />
+            </span>
             <button
               type="button"
               className={classes.cardButton}

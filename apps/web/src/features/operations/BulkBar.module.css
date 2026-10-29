@@ -1,0 +1,32 @@
+/* .ops-bulk из design/screens/Operations.dc.html: тёмная панель с действиями над выбранными; на узком — в несколько строк. */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  padding: var(--s-8) var(--s-10) var(--s-8) var(--s-16);
+  background: var(--brand-ink);
+  color: var(--kit-on-dark);
+  border-radius: var(--r-md);
+  box-shadow: var(--kit-shadow-pop);
+}
+
+.count {
+  margin-right: var(--s-8);
+}
+
+.action,
+.clear {
+  min-height: 44px;
+  color: var(--kit-on-dark);
+}
+
+.action:hover,
+.clear:hover {
+  background: var(--kit-on-dark-line);
+  color: var(--kit-on-dark);
+}
+
+.clear {
+  margin-left: auto;
+}

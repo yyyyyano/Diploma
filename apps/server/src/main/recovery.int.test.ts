@@ -5,6 +5,8 @@
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { IdentityFacade } from "../modules/identity/index.ts";
+import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
+import { LAN_ADDRESS } from "../platform/http/link-origin.ts";
 import { sessionCookie, startHttpStack, type HttpStack } from "./__fixtures__/http-stack.ts";
 
 let db: TestDb;
@@ -86,6 +88,38 @@ describe("AUTH-05: код восстановления администрато�
 
     const status = await json(await stack.call("local", "/identity/recovery-code", { cookie }));
     expect(status["createdAt"]).toEqual(expect.any(String));
+  });
+});
+
+describe("NFR-24: адрес ссылки сброса не берётся из заголовка Host", () => {
+  // Подмена Host (OWASP): чужой в сети шлёт «Забыли пароль?» с email жертвы и Host своего компьютера — ссылка в
+  // настоящем письме вела бы к нему, и токен утёк бы по одному клику.
+  it("сетевой вход с чужим Host — ссылка по сетевому адресу из настройки", async () => {
+    await register("victim-lan@example.test", "старый-пароль-2026");
+    await stack.api.settings.set(ALLOW_LAN, true);
+    await stack.api.settings.set(LAN_ADDRESS, "http://192.168.1.5:8141");
+    try {
+      const response = await stack.call("lan", "/identity/password-reset/request", {
+        body: { email: "victim-lan@example.test" },
+        host: "10.6.6.6:80",
+      });
+      expect(response.status).toBe(200);
+      const link = await lastLink("victim-lan@example.test");
+      expect(link.href).not.toMatch(/^http:\/\/10\.6\.6\.6/);
+      expect(link.origin).toBe("http://192.168.1.5:8141");
+    } finally {
+      await stack.api.settings.set(ALLOW_LAN, false);
+      await stack.api.settings.set(LAN_ADDRESS, "");
+    }
+  });
+
+  it("сетевой адрес не задан — ссылка по локальному входу, а не по Host запроса", async () => {
+    await register("victim-local@example.test", "старый-пароль-2026");
+    await stack.call("lan", "/identity/password-reset/request", {
+      body: { email: "victim-local@example.test" },
+      host: "10.6.6.6:80",
+    });
+    expect((await lastLink("victim-local@example.test")).origin).toBe("http://127.0.0.1:8140");
   });
 });
 

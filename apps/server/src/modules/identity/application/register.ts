@@ -4,7 +4,6 @@
 // Хэш пароля — до транзакции, письмо и вход — после: сбой SMTP не отменяет регистрацию (адрес подтверждается позже
 // кнопкой «Отправить письмо ещё раз»), пользоваться системой можно сразу.
 import { AppError } from "../../../platform/errors/app-error.ts";
-import type { LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { RegistrationConsents } from "@kosht/contract";
 import type { PrivacyFacade } from "../../privacy/index.ts";
@@ -42,10 +41,7 @@ const ALL = "all";
 
 export function makeRegister(d: RegisterDeps) {
   const { platform } = d;
-  return async function register(
-    input: RegisterInput,
-    request: LinkRequest & { readonly headers: Headers },
-  ) {
+  return async function register(input: RegisterInput, request: { readonly headers: Headers }) {
     const email = input.email.toLowerCase();
     await platform.rateLimiter.enforce(
       await rateRuleOf(platform.settings, REGISTER_PER_EMAIL),
@@ -65,7 +61,7 @@ export function makeRegister(d: RegisterDeps) {
     platform.log.info({ userId: ids.userId, role: "user" }, "identity.user-registered");
 
     try {
-      await d.verification.deliver(email, token, request);
+      await d.verification.deliver(email, token);
     } catch (error) {
       // Письмо не ушло (SMTP недоступен): аккаунт уже создан, повторить можно из настроек.
       if (!(error instanceof AppError && error.code === "UNAVAILABLE")) throw error;

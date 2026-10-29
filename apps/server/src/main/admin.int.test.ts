@@ -224,6 +224,21 @@ describe("AUTH-05, R37: сброс пароля из админки", () => {
     expect(letters[0]?.action?.url).toMatch(/\/recovery\?token=/);
   });
 
+  it("NFR-24: сброс через сетевой вход с чужим Host — ссылка в письме не по Host, а по адресу из настроек", async () => {
+    const user = await registerUser(stack, db, "spoofed-host@example.test");
+    await db.owner.query("update identity_users set email_verified = true where id = $1", [
+      user.userId,
+    ]);
+    const response = await stack.call("lan", "/admin/users/reset-password", {
+      cookie: root,
+      body: { id: user.userId },
+      host: "10.6.6.6:80",
+    });
+    expect(await response.json()).toEqual({ delivery: "email" });
+    const url = new URL((await mailboxTo("spoofed-host@example.test"))[0]?.action?.url ?? "");
+    expect(url.origin).toBe("http://127.0.0.1:8140");
+  });
+
   it("почты нет — ссылка показана администратору; пользователь видит отметку, гасит её, ссылка работает", async () => {
     const user = await registerUser(stack, db, "unverified@example.test");
     const response = await stack.call("local", "/admin/users/reset-password", {

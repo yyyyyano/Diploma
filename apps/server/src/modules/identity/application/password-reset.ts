@@ -4,7 +4,7 @@
 // Новый пароль: хэш, все сессии завершены, адрес считается подтверждённым (ссылка пришла на него). Заблокированный
 // после выдачи ссылки пароль не меняет — ACCOUNT_BLOCKED.
 import { AppError } from "../../../platform/errors/app-error.ts";
-import { resolveLinkOrigin, type LinkRequest } from "../../../platform/http/link-origin.ts";
+import { resolveLinkOrigin } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import {
@@ -36,7 +36,6 @@ export function makePasswordReset(d: PasswordResetDeps) {
    */
   async function issueLink(
     userId: string,
-    from: LinkRequest,
   ): Promise<{ readonly link: string; readonly minutes: number }> {
     const token = newLinkToken();
     const now = platform.clock.now();
@@ -50,19 +49,19 @@ export function makePasswordReset(d: PasswordResetDeps) {
     });
     const link = new URL(
       "/recovery",
-      await resolveLinkOrigin(platform.settings, platform.localOrigin, from),
+      await resolveLinkOrigin(platform.settings, platform.localOrigin),
     );
     link.searchParams.set("token", token);
     return { link: link.href, minutes };
   }
 
   /** Запрос ссылки: письмо — только активному пользователю; ответ одинаковый во всех случаях. */
-  async function request(rawEmail: string, from: LinkRequest): Promise<void> {
+  async function request(rawEmail: string): Promise<void> {
     const email = rawEmail.toLowerCase();
     await platform.rateLimiter.enforce(await rateRuleOf(platform.settings, PASSWORD_RESET), email);
     const user = await userByEmail(platform.system, email);
     if (user === undefined || user.status !== "active") return;
-    const { link, minutes } = await issueLink(user.userId, from);
+    const { link, minutes } = await issueLink(user.userId);
     try {
       await d.mail.send(email, { kind: "reset-password", link, minutes });
       platform.log.info({ userId: user.userId }, "identity.password-reset-requested");

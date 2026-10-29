@@ -14,7 +14,6 @@ afterAll(async () => {
   await db.drop();
 });
 
-const local = { listener: "local", host: "127.0.0.1:8140" } as const;
 const password = "старый-пароль-2026";
 
 function stack() {
@@ -31,8 +30,8 @@ describe("AUTH-04: «Забыли пароль?»", () => {
   it("известный email — письмо со ссылкой на /recovery и сроком 60 мин; неизвестный — тот же ответ без письма", async () => {
     await seedUser(db, { email: "known@example.test", password });
     const { reset, sent, memory } = stack();
-    await expect(reset.request("Known@Example.test", local)).resolves.toBeUndefined();
-    await expect(reset.request("nobody@example.test", local)).resolves.toBeUndefined();
+    await expect(reset.request("Known@Example.test")).resolves.toBeUndefined();
+    await expect(reset.request("nobody@example.test")).resolves.toBeUndefined();
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({
       to: "known@example.test",
@@ -48,7 +47,7 @@ describe("AUTH-04: «Забыли пароль?»", () => {
     const { userId } = await seedUser(db, { email: "blocked-reset@example.test", password });
     await db.owner.query("update identity_users set status = 'blocked' where id = $1", [userId]);
     const { reset, sent } = stack();
-    await expect(reset.request("blocked-reset@example.test", local)).resolves.toBeUndefined();
+    await expect(reset.request("blocked-reset@example.test")).resolves.toBeUndefined();
     expect(sent).toEqual([]);
   });
 
@@ -57,7 +56,7 @@ describe("AUTH-04: «Забыли пароль?»", () => {
     const { reset, sent, auth } = stack();
     const signed = await auth.signIn({ email: "once@example.test", password }, new Headers());
     expect(signed.kind).toBe("ok");
-    await reset.request("once@example.test", local);
+    await reset.request("once@example.test");
     const token = tokenOf(sent[0]?.template.link ?? "");
 
     await reset.reset(token, "новый-пароль-2026");
@@ -88,7 +87,7 @@ describe("AUTH-04: «Забыли пароль?»", () => {
   it("заблокирован после выдачи ссылки — ACCOUNT_BLOCKED, пароль прежний", async () => {
     const { userId } = await seedUser(db, { email: "late-block@example.test", password });
     const { reset, sent, auth } = stack();
-    await reset.request("late-block@example.test", local);
+    await reset.request("late-block@example.test");
     const token = tokenOf(sent[0]?.template.link ?? "");
     await db.owner.query("update identity_users set status = 'blocked' where id = $1", [userId]);
     await expect(reset.reset(token, "новый-пароль-2026")).rejects.toMatchObject({
@@ -103,7 +102,7 @@ describe("AUTH-04: «Забыли пароль?»", () => {
   it("ссылка через 61 минуту — LINK_INVALID, пароль прежний", async () => {
     await seedUser(db, { email: "late@example.test", password });
     const { reset, sent, clock, auth } = stack();
-    await reset.request("late@example.test", local);
+    await reset.request("late@example.test");
     clock.advance(61 * 60_000);
     await expect(
       reset.reset(tokenOf(sent[0]?.template.link ?? ""), "новый-пароль-2026"),
@@ -117,8 +116,8 @@ describe("AUTH-04: «Забыли пароль?»", () => {
 
   it("SEC-02: на один email — 3 запроса в час, четвёртый — RATE_LIMITED", async () => {
     const { reset } = stack();
-    for (let i = 0; i < 3; i += 1) await reset.request("flood@example.test", local);
-    await expect(reset.request("flood@example.test", local)).rejects.toMatchObject({
+    for (let i = 0; i < 3; i += 1) await reset.request("flood@example.test");
+    await expect(reset.request("flood@example.test")).rejects.toMatchObject({
       code: "RATE_LIMITED",
     });
   });

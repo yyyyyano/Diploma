@@ -3,7 +3,6 @@
 import type { UserId } from "@kosht/kernel";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
-import type { LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import { userCard } from "../infrastructure/db/identity.repo.ts";
 import { RESEND_VERIFICATION, rateRuleOf } from "../settings.ts";
@@ -16,7 +15,7 @@ export interface ResendVerificationDeps {
 
 export function makeResendVerification(d: ResendVerificationDeps) {
   const { platform } = d;
-  return async function resendVerification(s: ScopedDb, request: LinkRequest): Promise<void> {
+  return async function resendVerification(s: ScopedDb): Promise<void> {
     const userId: UserId = s.scope.userId;
     await platform.rateLimiter.enforce(
       await rateRuleOf(platform.settings, RESEND_VERIFICATION),
@@ -26,7 +25,7 @@ export function makeResendVerification(d: ResendVerificationDeps) {
     if (user === undefined) throw new AppError("UNAUTHORIZED");
     if (user.emailVerified) return;
     const token = await d.verification.issue(platform.system, userId);
-    await d.verification.deliver(user.email, token, request);
+    await d.verification.deliver(user.email, token);
     platform.log.info({ userId }, "identity.verification-resent");
   };
 }

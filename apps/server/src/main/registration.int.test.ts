@@ -1,10 +1,12 @@
 // Регистрация сквозь HTTP, корень композиции и очередь (AUTH-01…03, AUTH-06, PRIV-01, PRIV-02, SEC-02, STMT-01, NFR-24):
-// пользователь с согласиями → письмо в локальном ящике со ссылкой по адресу входа → вход сразу → «Наличные» от
+// пользователь с согласиями → письмо в локальном ящике со ссылкой по адресу из настроек (не по Host) → вход сразу → «Наличные» от
 // worker → подтверждение по ссылке один раз; «Отправить ещё раз» и регистрация ограничены по частоте.
 import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { makeScope, type Scope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
+import { LAN_ADDRESS } from "../platform/http/link-origin.ts";
 import { sessionCookie, startHttpStack, type HttpStack } from "./__fixtures__/http-stack.ts";
 
 let db: TestDb;
@@ -119,13 +121,21 @@ describe("AUTH-01…03, PRIV-01/02: регистрация", () => {
     expect(await lettersTo("taken@example.test")).toHaveLength(1);
   });
 
-  it("регистрация через сетевой вход — ссылка в письме по адресу этого входа (NFR-24)", async () => {
-    const response = await stack.call("lan", "/identity/register", {
-      body: registration("lan@example.test"),
-    });
-    expect(response.status).toBe(200);
-    const { url } = await lastToken("lan@example.test");
-    expect(url.origin).toBe("http://192.168.1.5:8141");
+  it("регистрация через сетевой вход с чужим Host — ссылка по сетевому адресу из настройки (NFR-24)", async () => {
+    await stack.api.settings.set(ALLOW_LAN, true);
+    await stack.api.settings.set(LAN_ADDRESS, "http://192.168.1.5:8141");
+    try {
+      const response = await stack.call("lan", "/identity/register", {
+        body: registration("lan@example.test"),
+        host: "10.6.6.6:80",
+      });
+      expect(response.status).toBe(200);
+      const { url } = await lastToken("lan@example.test");
+      expect(url.origin).toBe("http://192.168.1.5:8141");
+    } finally {
+      await stack.api.settings.set(ALLOW_LAN, false);
+      await stack.api.settings.set(LAN_ADDRESS, "");
+    }
   });
 
   it("SEC-02: на один email — не больше 3 попыток в час, четвёртая — RATE_LIMITED с минутами", async () => {

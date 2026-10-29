@@ -70,10 +70,7 @@ export function adminRouter(d: {
       return { ok: true as const };
     }),
     resetUserPassword: admin.admin.resetUserPassword.handler(({ input, context }) =>
-      d.identity.resetUserPassword(context.s.scope, input.id, {
-        listener: context.listener,
-        host: context.reqHeaders?.get("host") ?? undefined,
-      }),
+      d.identity.resetUserPassword(context.s.scope, input.id),
     ),
     system: admin.admin.system.handler(() => overview()),
     setMail: admin.admin.setMail.handler(async ({ input }) => {

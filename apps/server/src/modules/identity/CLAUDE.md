@@ -18,7 +18,7 @@ AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего акк�
   `assertRemovable(db, userId)` — последнего активного админа `LAST_ADMIN` под `FOR UPDATE` (`application/admins.ts`);
   админке (`application/admin-users.ts`, ADM-30, R37): `listAccounts()` — только учётные записи; `removeUser(actor,
   id, email)` — email не совпал — `VALIDATION`, иначе `eraseUser` под scope цели из `target-user-scope.ts` (просящий —
-  активный админ, перепроверка в базе); `resetUserPassword(actor, id, from)` — подтверждён адрес — письмо `{ email }`,
+  активный админ, перепроверка в базе); `resetUserPassword(actor, id)` (адрес ссылки — по настройкам, NFR-24) — подтверждён адрес — письмо `{ email }`,
   иначе ссылка админу `{ shown, link }`, лог и отметка `password_reset_by_admin_at`; `emailOf(s)`.
 - `contract.identity.*` — publicProc: `status`, `signIn` (частота на email; `INVALID_CREDENTIALS`; заблокирован —
   `ACCOUNT_BLOCKED` без cookie), `register` (частота на email и на всех; `EMAIL_TAKEN`; всё одной транзакцией → письмо

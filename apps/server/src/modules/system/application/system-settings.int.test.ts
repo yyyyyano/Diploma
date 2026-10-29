@@ -1,6 +1,6 @@
 // ADM-60, NFR-23, NFR-24, OBS-05 на Postgres: часовой пояс из админки меняет «сегодня» сразу (часы — FakeClock по
 // настройке clock.time-zone, как createClock в корне композиции); неизвестный пояс — VALIDATION; доступ из сети
-// переключается вместе с адресом, неверный адрес — VALIDATION, доступ не тронут; Langfuse — включён ли и где.
+// переключается вместе с адресом, неверный или пустой при включении адрес — VALIDATION, доступ не тронут; Langfuse — включён ли и где.
 import { LocalDate } from "@kosht/kernel";
 import { FakeClock, InlineJobs } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -73,6 +73,15 @@ describe("NFR-24: доступ с других устройств", () => {
       address: "http://192.168.1.5:8141",
     });
     await system.setLan({ allowed: false, address: "" });
+    expect(await settings.get(ALLOW_LAN)).toBe(false);
+  });
+
+  it("включить доступ без адреса — VALIDATION, доступ не открыт: ссылкам в письмах не на что опираться", async () => {
+    const { system, settings } = setup();
+    await expect(system.setLan({ allowed: true, address: "" })).rejects.toMatchObject({
+      code: "VALIDATION",
+      params: { setting: "network.lan-address" },
+    });
     expect(await settings.get(ALLOW_LAN)).toBe(false);
   });
 

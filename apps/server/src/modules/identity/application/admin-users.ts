@@ -7,7 +7,6 @@
 //   «Пароль был сброшен администратором <дата>» и погасит её.
 import type { Scope } from "@kosht/kernel";
 import { AppError } from "../../../platform/errors/app-error.ts";
-import type { LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import {
@@ -54,15 +53,11 @@ export function makeAdminUsers(d: AdminUsersDeps) {
     platform.log.info({ userId: actor.userId, targetId }, "identity.user-deleted-by-admin");
   }
 
-  async function resetPassword(
-    actor: Scope,
-    targetId: string,
-    from: LinkRequest,
-  ): Promise<AdminResetResult> {
+  async function resetPassword(actor: Scope, targetId: string): Promise<AdminResetResult> {
     const target = await accountOf(platform.system, targetId);
     if (target === undefined) throw new AppError("NOT_FOUND");
     if (target.status !== "active") throw new AppError("ACCOUNT_BLOCKED");
-    const { link, minutes } = await d.passwordReset.issueLink(targetId, from);
+    const { link, minutes } = await d.passwordReset.issueLink(targetId);
     if (target.emailVerified) {
       await d.mail.send(target.email, { kind: "reset-password", link, minutes });
       platform.log.info({ userId: actor.userId, targetId }, "identity.admin-reset-mailed");

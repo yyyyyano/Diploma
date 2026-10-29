@@ -144,7 +144,7 @@ export const adminContract = {
     .input(z.strictObject({ timeZone: z.string().min(1).max(64) }))
     .output(SystemOverview)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
-  /** Открыть или закрыть вход из сети без перезапуска; адрес — для ссылок в письмах (пусто — по Host запроса). */
+  /** Открыть или закрыть вход из сети без перезапуска; адрес — для ссылок в письмах, при включении обязателен (NFR-24). */
   setLan: oc
     .route({ method: "POST", path: "/admin/system/lan" })
     .input(

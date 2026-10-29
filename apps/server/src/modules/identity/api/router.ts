@@ -1,11 +1,9 @@
 // Процедуры identity (contract.identity.*): тонко — вход контрактом, сценарий, cookie в ответ. Доступ:
 // status, signIn, register, verifyEmail, requestPasswordReset, resetPassword, recoverWithCode, signOut — publicProc
 // (гость); setup — localOnly (R40: на сетевом входе процедуры нет); me, resendVerification, recoveryCodeStatus,
-// createRecoveryCode, changePassword, deleteAccount, adminResetNotice, acknowledgeAdminReset — authed. Адрес ссылок в письмах — по слушателю и Host запроса
-// (NFR-24).
+// createRecoveryCode, changePassword, deleteAccount, adminResetNotice, acknowledgeAdminReset — authed. Адрес ссылок в письмах — по настройкам,
+// не по Host запроса (NFR-24, link-origin.ts).
 import { authed, localOnly, publicProc } from "../../../platform/http/procedures.ts";
-import type { HttpContext } from "../../../platform/http/procedures.ts";
-import type { LinkRequest } from "../../../platform/http/link-origin.ts";
 import type { EmailVerification } from "../application/email-verification.ts";
 import type { makeRegister } from "../application/register.ts";
 import type { makeResendVerification } from "../application/resend-verification.ts";
@@ -34,11 +32,6 @@ export interface IdentityUseCases {
   readonly deleteAccount: ReturnType<typeof makeDeleteAccount>;
 }
 
-/** Откуда пришёл запрос — для адреса ссылок в письмах. */
-function linkRequest(context: HttpContext): LinkRequest {
-  return { listener: context.listener, host: context.reqHeaders?.get("host") ?? undefined };
-}
-
 /** Set-Cookie сессии — в заголовки ответа процедуры (ResponseHeadersPlugin). */
 function setCookies(resHeaders: Headers | undefined, cookies: readonly string[]): void {
   for (const cookie of cookies) resHeaders?.append("set-cookie", cookie);
@@ -60,7 +53,7 @@ export function identityRouter(uc: IdentityUseCases) {
     }),
     register: publicProc.identity.register.handler(async ({ input, context }) => {
       const headers = context.reqHeaders ?? new Headers();
-      const { user, cookies } = await uc.register(input, { ...linkRequest(context), headers });
+      const { user, cookies } = await uc.register(input, { headers });
       setCookies(context.resHeaders, cookies);
       return user;
     }),
@@ -69,15 +62,13 @@ export function identityRouter(uc: IdentityUseCases) {
       return { ok: true as const };
     }),
     resendVerification: authed.identity.resendVerification.handler(async ({ context }) => {
-      await uc.resendVerification(context.s, linkRequest(context));
+      await uc.resendVerification(context.s);
       return { ok: true as const };
     }),
-    requestPasswordReset: publicProc.identity.requestPasswordReset.handler(
-      async ({ input, context }) => {
-        await uc.passwordReset.request(input.email, linkRequest(context));
-        return { ok: true as const };
-      },
-    ),
+    requestPasswordReset: publicProc.identity.requestPasswordReset.handler(async ({ input }) => {
+      await uc.passwordReset.request(input.email);
+      return { ok: true as const };
+    }),
     resetPassword: publicProc.identity.resetPassword.handler(async ({ input }) => {
       await uc.passwordReset.reset(input.token, input.password);
       return { ok: true as const };

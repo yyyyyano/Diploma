@@ -27,6 +27,8 @@ export interface CallOptions {
   readonly cookie?: string;
   /** POST без тела (выход, «отправить ещё раз»). */
   readonly post?: boolean;
+  /** Свой заголовок Host вместо адреса слушателя — как у запроса curl с подменой Host (NFR-24). */
+  readonly host?: string;
 }
 
 export interface HttpStack {
@@ -74,7 +76,8 @@ export async function startHttpStack(
     async call(listener, path, options = {}) {
       const app = apps.get(listener);
       if (app === undefined) throw new Error("нет приложения");
-      const headers = new Headers({ host: STACK_HOST[listener] });
+      const host = options.host ?? STACK_HOST[listener];
+      const headers = new Headers({ host });
       if (options.cookie !== undefined) headers.set("cookie", options.cookie);
       const init: RequestInit = { headers };
       if (options.body !== undefined) {
@@ -84,7 +87,7 @@ export async function startHttpStack(
       } else if (options.post === true) {
         init.method = "POST";
       }
-      return await app.fetch(new Request(`http://${STACK_HOST[listener]}/api${path}`, init));
+      return await app.fetch(new Request(`http://${host}/api${path}`, init));
     },
     async close() {
       await worker?.close();

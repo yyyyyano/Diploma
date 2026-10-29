@@ -4,6 +4,7 @@
 // остальные процессы увидят её в пределах кэша настроек); расписания worker берут пояс при старте — экран говорит, что
 // они сменятся после перезапуска worker. Доступ из сети открывает и закрывает слушатель lan без перезапуска: он
 // сверяется с настройкой network.allow-lan раз в секунду (platform/http/listeners.ts).
+import { AppError } from "../../../platform/errors/app-error.ts";
 import type { JobsOverview } from "../../../platform/jobs/jobs.ts";
 import { ALLOW_LAN } from "../../../platform/http/allow-lan.ts";
 import { LAN_ADDRESS } from "../../../platform/http/link-origin.ts";
@@ -37,8 +38,15 @@ export function makeSystemSettings(d: Pick<Platform, "settings" | "jobs" | "tele
     await d.settings.get(TIME_ZONE);
   }
 
-  /** Открыть или закрыть вход из сети и задать адрес компьютера для ссылок; адрес не по схеме — VALIDATION. */
+  /**
+   * Открыть или закрыть вход из сети и задать адрес компьютера для ссылок; адрес не по схеме — VALIDATION.
+   * Открыть без адреса — тоже VALIDATION (NFR-24): ссылки в письмах строятся только по настройке, не по Host запроса,
+   * и без адреса телефон получил бы ссылку на 127.0.0.1.
+   */
   async function setLan(input: { readonly allowed: boolean; readonly address: string }) {
+    if (input.allowed && input.address === "") {
+      throw new AppError("VALIDATION", { setting: LAN_ADDRESS.key });
+    }
     // Адрес — первым: не прошёл схему — VALIDATION, и доступ не переключён.
     await d.settings.set(LAN_ADDRESS, input.address);
     await d.settings.set(ALLOW_LAN, input.allowed);

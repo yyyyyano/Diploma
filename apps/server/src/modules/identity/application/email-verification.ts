@@ -1,9 +1,9 @@
 // Подтверждение адреса (AUTH-03): ссылка «<адрес сайта>/verify-email?token=…» ведёт на страницу сайта, а та шлёт
 // POST identity.verifyEmail — GET со сменой состояния сработал бы от предпросмотра ссылки почтовиком. Ссылка
-// одноразовая, срок — настройка identity.verify-link-hours; адрес сайта — по входу запроса (NFR-24).
+// одноразовая, срок — настройка identity.verify-link-hours; адрес сайта — по настройкам, не по запросу (NFR-24).
 import type { UserId } from "@kosht/kernel";
 import { AppError } from "../../../platform/errors/app-error.ts";
-import { resolveLinkOrigin, type LinkRequest } from "../../../platform/http/link-origin.ts";
+import { resolveLinkOrigin } from "../../../platform/http/link-origin.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import { markEmailVerified, type IdentityDb } from "../infrastructure/db/identity.repo.ts";
@@ -34,9 +34,9 @@ export function makeEmailVerification(d: EmailVerificationDeps) {
     return token;
   }
 
-  /** Письмо со ссылкой; адрес сайта — по входу запроса. Сбой SMTP — UNAVAILABLE (из mail). */
-  async function deliver(email: string, token: string, request: LinkRequest): Promise<void> {
-    const origin = await resolveLinkOrigin(platform.settings, platform.localOrigin, request);
+  /** Письмо со ссылкой; адрес сайта — по NFR-24 (настройки, не Host запроса). Сбой SMTP — UNAVAILABLE (из mail). */
+  async function deliver(email: string, token: string): Promise<void> {
+    const origin = await resolveLinkOrigin(platform.settings, platform.localOrigin);
     const link = new URL("/verify-email", origin);
     link.searchParams.set("token", token);
     await d.mail.send(email, {

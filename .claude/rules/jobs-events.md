@@ -25,7 +25,8 @@ paths:
 - Долгое — показывай прогресс: `platform.realtime.progress(s.scope, {...})`; «данные изменились» —
   `realtime.changed(s, { entity, ids })` с `ScopedDb` (внутри `s.transaction` — `tx`: NOTIFY уходит при коммите, при
   откате его нет). В сигнале — вид и id, без данных.
-- Тяжёлое (PDF, XLSX, HEIC, QR, эмбеддинги) — только в задачах `worker` с таймаутом, не в обработчике HTTP.
+- Тяжёлое (PDF, XLSX, HEIC, QR, эмбеддинги) — только в задачах `worker` с таймаутом, не в обработчике HTTP; недоверенные
+  файлы читаются ещё и в изолированном потоке (`platform/sandbox` → `runIsolated`, ADR-0022).
 - Подписаться можно только на события модуля из своего `dependsOn`; файл — `subscriptions/on-<событие>.ts`.
 
 Правильно:

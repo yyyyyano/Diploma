@@ -37,9 +37,11 @@ const unauthorized = () =>
 /** Запросы с данными и признаком «устарели» — чтобы видеть инвалидацию по состоянию кэша. */
 function cacheWithData(): QueryClient {
   const queryClient = new QueryClient();
-  queryClient.setQueryData(orpc.accounts.list.queryKey(), []);
-  queryClient.setQueryData(orpc.transactions.list.queryKey({ input: { page: 1 } }), []);
-  queryClient.setQueryData(orpc.categories.list.queryKey(), []);
+  // Ключи — настоящие (orpc), данные — любые: важно только, какие запросы пометит инвалидация.
+  const seed = (key: readonly unknown[]) => queryClient.setQueryData<unknown>([...key], []);
+  seed(orpc.accounts.list.queryKey());
+  seed(orpc.transactions.list.queryKey({ input: { page: 1 } }));
+  seed(orpc.categories.list.queryKey());
   return queryClient;
 }
 

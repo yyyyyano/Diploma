@@ -40,6 +40,7 @@ export const categories = {
     expense: "Расходы",
     income: "Доходы",
   },
+  none: "Без категории",
   source: {
     user: "выбрана вами",
     "user-rule": "по вашему правилу",

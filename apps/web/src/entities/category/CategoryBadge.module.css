@@ -1,0 +1,16 @@
+/* .cat из design/screens/Operations.dc.html: значок цвета категории и название; длинное название переносится. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  min-width: 0;
+}
+
+.name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.none {
+  color: var(--ink-3);
+}

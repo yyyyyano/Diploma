@@ -1,0 +1,25 @@
+/* .k-body экрана «Операции»: колонка до 1260 px; ≤ 860 px — поля 16 (как у «Счетов»). */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+  width: 100%;
+  max-width: 1260px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}

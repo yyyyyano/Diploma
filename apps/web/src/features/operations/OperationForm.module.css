@@ -1,0 +1,33 @@
+/* Форма «Новая операция» (design/screens/Operations.dc.html): пары полей в две колонки, на узком — в одну. */
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-12);
+}
+
+.label {
+  margin: 0 0 var(--s-6);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.types {
+  overflow-x: auto;
+}
+
+.hint {
+  margin: var(--s-6) 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.optional {
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s-12);
+}

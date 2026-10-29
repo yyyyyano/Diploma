@@ -1,0 +1,94 @@
+/* Карточка операции (.sheet из design/screens/Operations.dc.html): поля «метка — значение», история списком. */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+}
+
+.toolbar {
+  display: flex;
+  gap: var(--s-8);
+  flex-wrap: wrap;
+}
+
+.kind {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+}
+
+.merchant {
+  margin: 0;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  margin: 0;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--s-12);
+}
+
+.row dt {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.row dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.note {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.category {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.historyTitle {
+  margin: var(--s-8) 0 0;
+  font-size: 14px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.when {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 480px) {
+  .row {
+    grid-template-columns: 1fr;
+    gap: var(--s-2);
+  }
+}

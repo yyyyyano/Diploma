@@ -90,7 +90,7 @@ export const operations = {
     timeHint: "необязательно",
     account: "Счёт",
     category: "Категория",
-    categoryAuto: "Подберём сами",
+    categoryAuto: "Не выберете — подберём сами.",
     merchant: "Контрагент",
     merchantPlaceholder: "Например, кофейня «Зерно»",
     note: "Комментарий",

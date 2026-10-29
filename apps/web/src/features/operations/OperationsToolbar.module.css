@@ -1,0 +1,38 @@
+/* Панель поиска и фильтров (.filters из design/screens/Operations.dc.html): строки полей, на узком — в одну колонку. */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding: var(--s-16);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+}
+
+.search {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.types {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--s-12);
+}
+
+.reset {
+  align-self: flex-start;
+}

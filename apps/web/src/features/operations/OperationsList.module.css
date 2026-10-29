@@ -1,0 +1,149 @@
+/* Таблица .ops и строки из design/screens/Operations.dc.html; на телефоне — карточки без горизонтальной прокрутки. */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: var(--s-14) var(--s-16);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.table td {
+  padding: var(--s-12) var(--s-16);
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: middle;
+}
+
+.right {
+  text-align: right !important;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--kit-hover-soft);
+}
+
+.date {
+  white-space: nowrap;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.merchant {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 200px;
+}
+
+.open {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.open:focus-visible,
+.cardButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.description {
+  color: var(--ink-2);
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.category {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+  padding: var(--s-14) var(--s-16);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cards li + li {
+  border-top: 1px solid var(--line-2);
+}
+
+.cardButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-6);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--s-14) var(--s-16);
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-12);
+  width: 100%;
+}
+
+.cardTitle {
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.cardMeta {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .footer {
+    justify-content: center;
+  }
+}

@@ -8,6 +8,7 @@ import { z } from "zod";
 export const AI_TASKS = [
   "chat",
   "receipt.extract",
+  "statement.scan",
   "statement.columns",
   "classify.category",
   "classify.off-topic",

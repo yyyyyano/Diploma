@@ -145,6 +145,7 @@ export const admin = {
     tasks: {
       chat: { title: "Чат и агент", hint: "с вызовом инструментов" },
       "receipt.extract": { title: "Чеки", hint: "нужна модель, понимающая фото" },
+      "statement.scan": { title: "Сканы выписок", hint: "нужна модель, понимающая фото" },
       "statement.columns": { title: "Выписки", hint: "строгий JSON по схеме" },
       "classify.category": { title: "Категоризация", hint: "пакетами, после правил" },
       "classify.off-topic": { title: "Защитный фильтр", hint: "«вне темы» перед ответом" },

@@ -17,6 +17,7 @@ export type Capability = (typeof CAPABILITIES)[number];
 export const TASKS = {
   chat: ["text", "tools"],
   "receipt.extract": ["images", "structured"],
+  "statement.scan": ["images", "structured"],
   "statement.columns": ["structured"],
   "classify.category": ["structured"],
   "classify.off-topic": ["structured"],
@@ -29,6 +30,7 @@ export type LlmTask = keyof typeof TASKS;
 /** Задачи извлечения и классификации — ответ строго по схеме (LLM-04). */
 export type StructuredTask =
   | "receipt.extract"
+  | "statement.scan"
   | "statement.columns"
   | "classify.category"
   | "classify.off-topic"

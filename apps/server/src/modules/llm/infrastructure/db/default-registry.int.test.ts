@@ -12,11 +12,15 @@ import { listChains, listModels } from "./llm.repo.ts";
 
 const MIGRATIONS = join(import.meta.dirname, "../../../../../drizzle");
 
-/** SQL «руками» миграции llm-providers: всё после создания таблиц (вставки и выключение тестовой модели). */
+/** SQL «руками» миграций llm (providers, statement-scan): вставки и выключение тестовой модели — по порядку. */
 function seedStatements(): string[] {
-  const dir = readdirSync(MIGRATIONS).find((name) => name.endsWith("_llm-providers"));
-  if (dir === undefined) throw new Error("нет миграции llm-providers");
-  const sql = readFileSync(join(MIGRATIONS, dir, "migration.sql"), "utf8");
+  const dirs = readdirSync(MIGRATIONS)
+    .filter((name) => name.endsWith("_llm-providers") || name.endsWith("_llm-statement-scan"))
+    .toSorted();
+  if (dirs.length < 2) throw new Error("нет миграций llm-providers и llm-statement-scan");
+  const sql = dirs
+    .map((dir) => readFileSync(join(MIGRATIONS, dir, "migration.sql"), "utf8"))
+    .join("--> statement-breakpoint");
   return sql
     .split("--> statement-breakpoint")
     .map((part) => part.replace(/^\s*(--[^\n]*\n)+/gm, "").trim())
@@ -50,6 +54,7 @@ describe("LLM-02: цепочка по умолчанию — Groq, затем Z.
   it.each([
     "chat",
     "receipt.extract",
+    "statement.scan",
     "statement.columns",
     "classify.category",
     "classify.off-topic",

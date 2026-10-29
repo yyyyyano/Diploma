@@ -87,6 +87,7 @@ describe("дерево процедур", () => {
       "chat.history",
       "chat.send",
       "chat.stop",
+      "llm.localModelsProgress",
       "llm.models",
       "llm.setPreferredModel",
       "admin.users",
@@ -106,6 +107,9 @@ describe("дерево процедур", () => {
       "admin.testAiProvider",
       "admin.setAiKey",
       "admin.aiUsage",
+      "admin.localModels",
+      "admin.downloadLocalModels",
+      "admin.selfTestLocalModels",
       "admin.setAiPrice",
     ]);
   });

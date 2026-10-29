@@ -10,6 +10,7 @@ import { Email, Role } from "../identity/identity.contract.ts";
 import {
   AiConnectionResult,
   AiPeriod,
+  LocalModelsOverview,
   AiProviders,
   AiUsage,
   SaveAiModelInput,
@@ -207,6 +208,21 @@ export const adminContract = {
     .input(z.strictObject({ period: AiPeriod.default("day") }))
     .output(AiUsage)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** Локальные модели (ADM-50, NFR-25): состояние набора, файлы с прогрессом, итог самотеста. */
+  localModels: oc
+    .route({ method: "GET", path: "/admin/ai/local-models" })
+    .output(LocalModelsOverview)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** «Скачать» (и докачать): ставит задачу в worker; уже идёт — та же задача. Ответ — состояние. */
+  downloadLocalModels: oc
+    .route({ method: "POST", path: "/admin/ai/local-models/download" })
+    .output(LocalModelsOverview)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** «Проверить модели»: самотест («2+2», векторы); «мусор» включает запасной режим на процессоре. */
+  selfTestLocalModels: oc
+    .route({ method: "POST", path: "/admin/ai/local-models/self-test" })
+    .output(LocalModelsOverview)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
   /** Прайс-лист условной стоимости (ADM-21): цена записи за миллион токенов. */
   setAiPrice: oc
     .route({ method: "POST", path: "/admin/ai/price" })

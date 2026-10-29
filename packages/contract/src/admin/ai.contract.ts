@@ -126,6 +126,64 @@ export const SetAiPriceInput = z.strictObject({
   outputMicrosPerMillion: Count,
 });
 
+/** Состояние файла и модели при скачивании (NFR-25): нет, ждёт, скачивается, проверяется, готово, ошибка. */
+export const LocalModelState = z.enum([
+  "absent",
+  "pending",
+  "downloading",
+  "verifying",
+  "ready",
+  "failed",
+]);
+export type LocalModelState = z.infer<typeof LocalModelState>;
+
+/** Общее состояние набора: код ошибки — машинный (`HTTP_404`, `NO_SPACE`…), текст подставляет сайт. */
+const LocalModelsTotals = {
+  state: z.enum(["absent", "downloading", "ready", "failed"]),
+  bytesDone: Count,
+  bytesTotal: Count,
+};
+
+/** Прогресс скачивания для экрана первого запуска: без списка файлов, опрос раз в 2 с (NFR-25). */
+export const LocalModelsProgress = z.strictObject(LocalModelsTotals);
+export type LocalModelsProgress = z.infer<typeof LocalModelsProgress>;
+
+/** Локальные модели в админке (ADM-50, NFR-25): модели каталога с файлами, прогресс и итог самотеста. */
+export const LocalModelsOverview = z.strictObject({
+  ...LocalModelsTotals,
+  models: z
+    .array(
+      z.strictObject({
+        id: z.string().max(64),
+        kind: z.enum(["chat", "embedding", "speech", "ner"]),
+        state: LocalModelState,
+        bytesDone: Count,
+        bytesTotal: Count,
+        errorCode: z.string().max(40).nullable(),
+        files: z
+          .array(
+            z.strictObject({
+              path: z.string().max(200),
+              size: Count,
+              state: LocalModelState,
+              bytesDone: Count,
+              errorCode: z.string().max(40).nullable(),
+            }),
+          )
+          .max(20),
+      }),
+    )
+    .max(20),
+  /** Самотест при старте: unknown — не запускался; down — сервис моделей не запущен; ok; failed. */
+  selfTest: z.strictObject({
+    state: z.enum(["unknown", "ok", "down", "failed"]),
+    problem: z.string().max(40).nullable(),
+    /** Запасной режим «всё на процессоре» после «мусора» на видеоядре. */
+    cpuFallback: z.boolean(),
+  }),
+});
+export type LocalModelsOverview = z.infer<typeof LocalModelsOverview>;
+
 /** Периоды «Запросов к ИИ»: скользящие сутки, 7 и 30 суток. */
 export const AiPeriod = z.enum(["day", "week", "month"]);
 export type AiPeriod = z.infer<typeof AiPeriod>;

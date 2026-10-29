@@ -3,6 +3,7 @@
 // (llm_preferences), id пользователя во входе нет. Экран выбора в чате — T-043.
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { LocalModelsProgress } from "../admin/ai.contract.ts";
 import { pickErrors } from "../errors.ts";
 
 /** Модель, которую пользователь может выбрать: запись реестра без цен и лимитов (это служебное). */
@@ -23,6 +24,14 @@ export const LlmModels = z.strictObject({
 export type LlmModels = z.infer<typeof LlmModels>;
 
 export const llmContract = {
+  /**
+   * Прогресс скачивания локальных моделей для экрана первого запуска (NFR-25, AUTH-10): только этот компьютер, без
+   * сессии; байты и состояние, имён файлов нет. У системной задачи нет домохозяйства — опрос раз в 2 с.
+   */
+  localModelsProgress: oc
+    .route({ method: "GET", path: "/llm/local-models-progress" })
+    .output(LocalModelsProgress)
+    .errors(pickErrors("NOT_FOUND")),
   /** Модели для выбора в чате и текущий выбор вошедшего. */
   models: oc
     .route({ method: "GET", path: "/llm/models" })

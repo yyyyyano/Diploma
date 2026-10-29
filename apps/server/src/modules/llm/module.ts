@@ -24,6 +24,7 @@ import {
   createZaiAdapter,
 } from "./infrastructure/providers/openai-compatible.ts";
 import { createProviderRegistry } from "./infrastructure/providers/providers.ts";
+import { createNerRecognizer, loadTransformersClassifier } from "./infrastructure/masking/ner.ts";
 import { createLangfuseTraceDeleter } from "./infrastructure/telemetry/langfuse-traces.ts";
 import { createLangfuseTracing } from "./infrastructure/telemetry/langfuse-tracing.ts";
 import { createTestProvider } from "./infrastructure/providers/test-provider.ts";
@@ -56,7 +57,13 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
   const { langfuse } = platform.telemetry;
   // PRIV-03: имена пользователя — из словаря profile (platform.knownNames); замены помнятся для трасс Langfuse (OBS-03).
   const redactions = createRedactions(() => platform.clock.now().getTime());
-  const masker = createMasker({ names: platform.knownNames, redactions });
+  // NER (имена и адреса в свободном тексте) — файлы в <DATA_DIR>/models/ner; нет модели — правила и словарь (деградация).
+  const ner = createNerRecognizer({
+    load: () => loadTransformersClassifier(platform.modelsDir),
+    log: platform.log,
+    now: () => platform.clock.now().getTime(),
+  });
+  const masker = createMasker({ names: platform.knownNames, redactions, recognizer: ner });
   // КП: в Langfuse текст замаскирован — маска применяется процессором перед выгрузкой каждого спана.
   const tracing =
     langfuse === undefined

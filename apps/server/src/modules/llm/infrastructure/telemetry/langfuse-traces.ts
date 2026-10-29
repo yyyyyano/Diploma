@@ -2,7 +2,8 @@
 // трассы пользователя ищутся через Observations API v2 (`GET /api/public/v2/observations?userId=…`; старый
 // `GET /api/public/traces` в v4 отвечает 404), каждый запрос ограничен окном fromStartTime/toStartTime — так требует
 // API. Окна по 30 дней идут назад от «сейчас»; первое пустое окно после текущего — конец истории (трассы старше 30
-// дней удаляет ночная задача Langfuse, OBS-05), но не дальше 24 окон. Уникальные traceId уходят в
+// дней удаляет ночная задача llm.trace-retention через deleteTracesBefore — те же окна без фильтра по пользователю),
+// но не дальше 24 окон. Уникальные traceId уходят в
 // `DELETE /api/public/traces` пачками до 1000 (удаление в Langfuse асинхронное). Ответ не 2xx или сеть — ошибка:
 // вызывающий ставит пользователя в очередь повторов. Документация: langfuse.com/docs/administration/data-deletion.
 import type { Clock } from "@kosht/kernel";
@@ -60,49 +61,56 @@ export function createLangfuseTraceDeleter(
     });
   }
 
+  /**
+   * Трассы по окнам назад от newest: наблюдения окна (с фильтром filter) → уникальные traceId → удаление пачками.
+   * Первое пустое окно после первого — конец истории, но не дальше MAX_WINDOWS окон.
+   */
+  async function deleteBackFrom(newest: number, filter: Record<string, string>): Promise<number> {
+    const seen = new Set<string>();
+    let pending: string[] = [];
+    let deleted = 0;
+    const flush = async () => {
+      if (pending.length === 0) return;
+      await deleteBatch(pending);
+      deleted += pending.length;
+      pending = [];
+    };
+    let to = newest;
+    for (let window = 0; window < MAX_WINDOWS; window += 1) {
+      const from = to - WINDOW_DAYS * DAY_MS;
+      let found = 0;
+      let cursor: string | undefined;
+      do {
+        const query = new URLSearchParams({
+          ...filter,
+          fromStartTime: new Date(from).toISOString(),
+          toStartTime: new Date(to).toISOString(),
+          fields: "core",
+          limit: String(PAGE_LIMIT),
+        });
+        if (cursor !== undefined) query.set("cursor", cursor);
+        const page = ObservationsPage.parse(
+          await (await request(`/api/public/v2/observations?${query.toString()}`)).json(),
+        );
+        found += page.data.length;
+        for (const { traceId } of page.data) {
+          if (traceId === undefined || traceId === null || seen.has(traceId)) continue;
+          seen.add(traceId);
+          pending.push(traceId);
+          if (pending.length === DELETE_BATCH) await flush();
+        }
+        cursor = page.meta?.cursor ?? undefined;
+      } while (cursor !== undefined && cursor !== "");
+      if (found === 0 && window > 0) break;
+      to = from;
+    }
+    await flush();
+    return deleted;
+  }
+
   return {
-    async deleteUserTraces(userId) {
-      const seen = new Set<string>();
-      let pending: string[] = [];
-      let deleted = 0;
-      const flush = async () => {
-        if (pending.length === 0) return;
-        await deleteBatch(pending);
-        deleted += pending.length;
-        pending = [];
-      };
-      // Конец окна — с запасом в минуту: спаны, досланные прямо сейчас, тоже попадают.
-      let to = deps.clock.now().getTime() + 60_000;
-      for (let window = 0; window < MAX_WINDOWS; window += 1) {
-        const from = to - WINDOW_DAYS * DAY_MS;
-        let found = 0;
-        let cursor: string | undefined;
-        do {
-          const query = new URLSearchParams({
-            userId,
-            fromStartTime: new Date(from).toISOString(),
-            toStartTime: new Date(to).toISOString(),
-            fields: "core",
-            limit: String(PAGE_LIMIT),
-          });
-          if (cursor !== undefined) query.set("cursor", cursor);
-          const page = ObservationsPage.parse(
-            await (await request(`/api/public/v2/observations?${query.toString()}`)).json(),
-          );
-          found += page.data.length;
-          for (const { traceId } of page.data) {
-            if (traceId === undefined || traceId === null || seen.has(traceId)) continue;
-            seen.add(traceId);
-            pending.push(traceId);
-            if (pending.length === DELETE_BATCH) await flush();
-          }
-          cursor = page.meta?.cursor ?? undefined;
-        } while (cursor !== undefined && cursor !== "");
-        if (found === 0 && window > 0) break;
-        to = from;
-      }
-      await flush();
-      return deleted;
-    },
+    // Конец окна — с запасом в минуту: спаны, досланные прямо сейчас, тоже попадают.
+    deleteUserTraces: (userId) => deleteBackFrom(deps.clock.now().getTime() + 60_000, { userId }),
+    deleteTracesBefore: (before) => deleteBackFrom(before.getTime(), {}),
   };
 }

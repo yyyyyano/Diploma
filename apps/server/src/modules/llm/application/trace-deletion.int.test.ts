@@ -25,6 +25,7 @@ function switchableLangfuse() {
       state.deletedFor.push(userId);
       return 3;
     },
+    deleteTracesBefore: async () => 0,
   };
   return { state, deleter };
 }

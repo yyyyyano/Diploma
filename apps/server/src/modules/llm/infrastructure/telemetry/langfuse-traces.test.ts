@@ -43,7 +43,10 @@ function fakeLangfuse(observations: readonly Observation[], status = 200) {
     const limit = Number(url.searchParams.get("limit"));
     const offset = Number(url.searchParams.get("cursor") ?? "0");
     const matching = observations.filter(
-      (o) => o.userId === url.searchParams.get("userId") && o.startTime >= from && o.startTime < to,
+      (o) =>
+        (url.searchParams.get("userId") === null || o.userId === url.searchParams.get("userId")) &&
+        o.startTime >= from &&
+        o.startTime < to,
     );
     const page = matching.slice(offset, offset + limit);
     const next = offset + limit < matching.length ? String(offset + limit) : null;
@@ -120,5 +123,48 @@ describe("PRIV-06, OBS-05: удаление трасс пользователя 
     const error = await deleter.deleteUserTraces("user-a").catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(LangfuseApiError);
     expect(String(error)).not.toMatch(/sk-lf|user-a/);
+  });
+});
+
+describe("OBS-05: трассы старше срока хранения", () => {
+  it("удаляются трассы всех пользователей старше момента, свежие остаются", async () => {
+    const cutoff = now - 30 * DAY;
+    const langfuse = fakeLangfuse([
+      { traceId: "старая-1", startTime: cutoff - 2 * DAY, userId: "u1" },
+      { traceId: "старая-2", startTime: cutoff - 3 * DAY, userId: "u2" },
+      { traceId: "свежая", startTime: cutoff + DAY, userId: "u1" },
+    ]);
+    const deleter = createLangfuseTraceDeleter(target, {
+      clock: new FakeClock(NOW),
+      fetch: langfuse.fetch,
+    });
+    expect(await deleter.deleteTracesBefore(new Date(cutoff))).toBe(2);
+    expect(langfuse.deleted.flat().toSorted()).toEqual(["старая-1", "старая-2"]);
+  });
+
+  it("пачки удаления не больше 1000 трасс", async () => {
+    const cutoff = now - 30 * DAY;
+    const many = Array.from({ length: 2300 }, (_, i) => ({
+      traceId: `t${String(i)}`,
+      startTime: cutoff - DAY,
+      userId: "u1",
+    }));
+    const langfuse = fakeLangfuse(many);
+    const deleter = createLangfuseTraceDeleter(target, {
+      clock: new FakeClock(NOW),
+      fetch: langfuse.fetch,
+    });
+    expect(await deleter.deleteTracesBefore(new Date(cutoff))).toBe(2300);
+    expect(langfuse.deleted.map((batch) => batch.length)).toEqual([1000, 1000, 300]);
+  });
+
+  it("Langfuse не ответил — ошибка наружу (ночная задача повторит завтра)", async () => {
+    const deleter = createLangfuseTraceDeleter(target, {
+      clock: new FakeClock(NOW),
+      fetch: fakeLangfuse([], 500).fetch,
+    });
+    await expect(deleter.deleteTracesBefore(new Date(now))).rejects.toBeInstanceOf(
+      LangfuseApiError,
+    );
   });
 });

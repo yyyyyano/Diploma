@@ -10,6 +10,7 @@ import { explainContract } from "./explain/explain.contract.ts";
 import { filesContract } from "./files/files.contract.ts";
 import { identityContract } from "./identity/identity.contract.ts";
 import { notificationsContract } from "./notifications/notifications.contract.ts";
+import { llmContract } from "./llm/llm.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
 import { privacyContract } from "./privacy/privacy.contract.ts";
 import { profileContract } from "./profile/profile.contract.ts";
@@ -31,5 +32,6 @@ export const contract = {
   categories: categoriesContract,
   transactions: transactionsContract,
   chat: chatContract,
+  llm: llmContract,
   admin: adminContract,
 };

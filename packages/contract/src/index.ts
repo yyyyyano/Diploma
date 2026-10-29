@@ -13,6 +13,7 @@ export {
   FxRateInfo,
   NewAccountKind,
 } from "./accounts/accounts.contract.ts";
+export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
   AdminResetResult,
   AdminUser,

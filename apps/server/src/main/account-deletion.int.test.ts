@@ -157,6 +157,10 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, 'ready', $3, 'kosht-my-data-2026-10-28.zip', 4, now())`,
     [...ids, file.id],
   );
+  await db.owner.query(
+    "insert into llm_preferences (household_id, user_id, model_id) values ($1, $2, 'groq/openai/gpt-oss-120b')",
+    ids,
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

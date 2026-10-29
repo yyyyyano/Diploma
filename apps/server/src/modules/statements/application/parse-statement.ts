@@ -113,20 +113,19 @@ export function makeParseStatement(d: ParseDeps) {
     const preamble = readPreamble(preambleLines(table, header));
     const bankKey = preamble.bank === undefined ? undefined : normalizeHeader(preamble.bank);
 
+    /** Применить схему: валюта (из шапки, колонки или по умолчанию), строки и годность схемы для этих данных. */
     const attempt = (schema: ColumnSchema) => {
       const picked = pickCurrency(preamble.currency, grid, header.dataStart, schema);
       const currency = picked ?? DEFAULT_CURRENCY;
+      const extracted = extractRows(grid, header.dataStart, schema, currency);
       return {
         schema,
         currency,
         assumed: picked === undefined,
-        ...pack(extractRows(grid, header.dataStart, schema, currency)),
+        extracted,
+        usable: isUsable(extracted),
       };
     };
-    const pack = (extracted: ReturnType<typeof extractRows>) => ({
-      extracted,
-      usable: isUsable(extracted),
-    });
 
     let formatChanged = false;
     let done: (ReturnType<typeof attempt> & { method: ParsedStatement["method"] }) | undefined;

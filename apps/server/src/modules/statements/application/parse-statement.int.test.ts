@@ -8,7 +8,7 @@ import { createScopedDb, type ScopedDb } from "../../../platform/db/scoped-db.ts
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import { readDocument } from "../infrastructure/parsing/read-document.ts";
 import type { ParsedStatement } from "../domain/types.ts";
-import { caseIds, loadCase, type DatasetCase, type Expected } from "./__fixtures__/datasets.ts";
+import { caseIds, loadCase, type Expected } from "./__fixtures__/datasets.ts";
 import { defaultSettings, scriptedLlm } from "./__fixtures__/scripted-llm.ts";
 import { makeParseStatement } from "./parse-statement.ts";
 import { makeRememberFormat } from "./remember-format.ts";
@@ -320,5 +320,3 @@ describe("SEC-03: нечитаемый файл", () => {
     ).rejects.toMatchObject({ code: "STATEMENT_UNREADABLE" });
   });
 });
-
-export type { DatasetCase };

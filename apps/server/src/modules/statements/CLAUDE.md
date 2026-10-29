@@ -36,7 +36,7 @@ STMT-03…12, SEC-03, SEC-10/11 (документы). Сделано: STMT-04, S
   скан — `statement.scan` (суммы и даты разбирает код, ошибки ловит сверка остатков). Подсказки — `*-extraction.ts`.
 
 ## Зависимости
-Можно: files, accounts, transactions, categories, merchants, fx-rates, llm, actions, notifications. Слушает: —.
+Можно: files, accounts, transactions, categories, merchants, fx-rates, llm, actions, notifications (`tooling/architecture/modules.ts`). Слушает: —.
 Библиотеки `unpdf`, `xlsx`, `papaparse` — только `infrastructure` (правило `document-parsers-only-in-statements-infrastructure`).
 
 ## Запреты

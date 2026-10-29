@@ -12,6 +12,7 @@ import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
 import { makeLlmAdmin, type LlmAdmin } from "./application/admin.ts";
 import { createMasker } from "./application/masking/masker.ts";
 import { createRedactions } from "./application/masking/redactions.ts";
+import { createTraceMask } from "./application/masking/trace-mask.ts";
 import { makePreferences } from "./application/preferences.ts";
 import { makeProviderAlerts } from "./application/provider-alerts.ts";
 import { makeRetention } from "./application/retention.ts";
@@ -53,7 +54,14 @@ const TEST_PROVIDER_PACE_MS = 300;
 export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, SystemPlatform>) {
   // ADR-0010: трассы в Langfuse, если корень композиции дал адрес и ключи; иначе шлюз работает без них.
   const { langfuse } = platform.telemetry;
-  const tracing = langfuse === undefined ? undefined : createLangfuseTracing(langfuse);
+  // PRIV-03: имена пользователя — из словаря profile (platform.knownNames); замены помнятся для трасс Langfuse (OBS-03).
+  const redactions = createRedactions(() => platform.clock.now().getTime());
+  const masker = createMasker({ names: platform.knownNames, redactions });
+  // КП: в Langfuse текст замаскирован — маска применяется процессором перед выгрузкой каждого спана.
+  const tracing =
+    langfuse === undefined
+      ? undefined
+      : createLangfuseTracing(langfuse, { mask: createTraceMask(redactions) });
   const preferences = makePreferences(platform);
   const alerts = makeProviderAlerts({
     clock: platform.clock,
@@ -66,9 +74,6 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
     createZaiAdapter({ key: async () => platform.secrets.reveal(ZAI_API_KEY) }),
     createLlamaAdapter({ baseUrl: async () => platform.settings.get(LLM_LLAMA_BASE_URL) }),
   ]);
-  // PRIV-03: имена пользователя — из словаря profile (platform.knownNames); замены помнятся для трасс Langfuse (OBS-03).
-  const redactions = createRedactions(() => platform.clock.now().getTime());
-  const masker = createMasker({ names: platform.knownNames, redactions });
   const gateway: LlmGateway = createLlmGateway({
     system: platform.system,
     providers,

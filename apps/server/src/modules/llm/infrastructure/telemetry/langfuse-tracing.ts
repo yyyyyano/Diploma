@@ -11,6 +11,7 @@ import type { SpanExporter } from "@opentelemetry/sdk-trace-base";
 import { NodeTracerProvider } from "@opentelemetry/sdk-trace-node";
 import type { Telemetry as AiTelemetry } from "ai";
 import type { LangfuseTarget } from "../../../../platform/telemetry/telemetry.ts";
+import { maskingSpanProcessor } from "./masking-span-processor.ts";
 
 export interface LangfuseTracing {
   /** Интеграция для опций вызова AI SDK (telemetry.integrations). */
@@ -22,6 +23,11 @@ export interface LangfuseTracing {
 export interface LangfuseTracingOptions {
   /** Свой экспортёр вместо OTLP в Langfuse — тесты (InMemorySpanExporter). */
   readonly exporter?: SpanExporter;
+  /**
+   * Маска значений спанов (PRIV-03): синхронная, по одному атрибуту; в Langfuse уходит замаскированное. Без неё тексты
+   * запросов попали бы в трассы открытым текстом — модуль llm всегда передаёт маску.
+   */
+  readonly mask?: (params: { data: unknown }) => unknown;
 }
 
 /** Атрибуты пользователя и диалога из runtimeContext вызова (его наполняет порт platform/telemetry). */
@@ -47,9 +53,16 @@ export function createLangfuseTracing(
     timeout: 2,
     // Картинки чеков в трассы не выгружаются отдельными файлами: Langfuse хранит их только как часть запроса.
     mediaUploadEnabled: false,
+    ...(options.mask === undefined ? {} : { mask: options.mask }),
     ...(options.exporter === undefined ? {} : { exporter: options.exporter }),
   });
-  const provider = new NodeTracerProvider({ spanProcessors: [processor] });
+  // Маскирующий процессор — первым: к Langfuse спан доходит уже без личных данных (PRIV-03).
+  const provider = new NodeTracerProvider({
+    spanProcessors: [
+      ...(options.mask === undefined ? [] : [maskingSpanProcessor(options.mask)]),
+      processor,
+    ],
+  });
   // register() ставит менеджер контекста на AsyncLocalStorage: без него спаны шагов и инструментов не вкладываются в
   // спан операции. Глобальный провайдер больше никто не читает — интеграция получает свой tracer явно.
   provider.register();

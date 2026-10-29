@@ -444,10 +444,21 @@ function libraryRules(): ForbiddenRule[] {
     ),
     rule(
       "sharp-only-in-llm-images",
-      "Обработка изображений (sharp) — только в llm/infrastructure/images: перед облаком изображение перекодируется " +
-        "без метаданных (EXIF, геометки), остальной код получает готовые байты от шлюза llm (PRIV-04).",
-      { path: `^${SERVER}/`, pathNot: [`^${MOD}/llm/infrastructure/images/`] },
+      "Обработка изображений (sharp) — только в llm/infrastructure/images (перед облаком изображение перекодируется " +
+        "без метаданных, PRIV-04) и в statements/infrastructure (картинки страниц-сканов PDF → PNG для модели, T-025); " +
+        "остальной код получает готовые байты.",
+      {
+        path: `^${SERVER}/`,
+        pathNot: [`^${MOD}/llm/infrastructure/images/`, `^${MOD}/statements/infrastructure/`],
+      },
       { path: npmPattern(["sharp"]) },
+    ),
+    rule(
+      "document-parsers-only-in-statements-infrastructure",
+      "Разбор недоверенных файлов (unpdf, xlsx, papaparse) — только в statements/infrastructure: он идёт в изолированном " +
+        "потоке с таймаутом и лимитом памяти (SEC-03, T-025); остальной код получает готовые строки от парсера.",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/statements/infrastructure/`] },
+      { path: npmPattern(["unpdf", "xlsx", "papaparse"]) },
     ),
     rule(
       "transformers-only-in-llm-masking",

@@ -5,6 +5,8 @@
 !pnpm-lock.yaml
 !pnpm-workspace.yaml
 !patches/
+# Тарболл SheetJS CE с cdn.sheetjs.com (xlsx в npm заброшен на 0.18.5 с уязвимостями; T-025): npm-зависимость file:.
+!vendor/
 !tooling/tsconfig.base.json
 !apps/server/
 !apps/web/

@@ -52,6 +52,9 @@ catalog:
   "@testing-library/react": 16.3.3
   "@testing-library/user-event": 14.6.8
   "@types/node": 26.6.5
+  "@types/fontkit": 2.0.9
+  "@types/papaparse": 5.5.2
+  "@types/pdfkit": 0.17.7
   "@types/pg": 8.23.1
   "@types/react": 19.3.0
   "@types/react-dom": 19.3.0
@@ -67,6 +70,10 @@ catalog:
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   fast-check: 4.10.2
+  # Разбор выписок (T-025): определение типа файла по содержимому (SEC-03), CSV, текст и картинки PDF.
+  file-type: 22.2.0
+  papaparse: 5.7.0
+  unpdf: 1.9.1
   # Нечёткое сравнение названий контрагентов и товаров в приложении (ADR-0012; в БД — pg_trgm), T-020.
   fuzzball: 2.2.6
   # Подсчёт токенов o200k_base в тесте размера префикса агента (T-010) — только dev.
@@ -74,6 +81,10 @@ catalog:
   hono: 4.13.13
   i18next: 26.5.7
   jsdom: 30.1.3
+  # Генератор синтетических выписок tooling/synth (T-025) — только dev: PDF, кириллический TTF и контуры букв для сканов.
+  dejavu-fonts-ttf: 2.37.3
+  fontkit: 2.0.4
+  pdfkit: 0.20.2
   # Парсер PostgreSQL 18 (WASM) для аудитора SQL — точная версия, обновление с прогоном канареек (ADR-0019).
   libpg-query: 18.2.0
   lucide-react: 1.61.0

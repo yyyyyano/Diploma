@@ -151,6 +151,10 @@ const EXPECTED: Record<string, string[]> = {
     `${P}/telemetry/telemetry.ts → @langfuse/otel`,
   ],
   "sharp-only-in-llm-images": [`${M}/receipts/application/recognize.ts → sharp`],
+  "document-parsers-only-in-statements-infrastructure": [
+    `${M}/receipts/application/recognize.ts → unpdf`,
+    `${M}/receipts/application/recognize.ts → xlsx`,
+  ],
   "transformers-only-in-llm-masking": [`${M}/agent/application/run.ts → @huggingface/transformers`],
   "ai-only-in-web-assistant": [
     `${W}/features/accounts/AccountsPage.tsx → @ai-sdk/react`,

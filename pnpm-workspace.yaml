@@ -10,6 +10,9 @@ catalog:
   "@axe-core/playwright": 4.14.0
   # ИИ (ADR-0009): Vercel AI SDK 7 — точные версии одной линейки (ai и @ai-sdk/* выходят вместе); обновление —
   # отдельной задачей со сверкой документации node_modules/ai/docs.
+  # Провайдеры (T-023): Groq и OpenAI-совместимый (Z.ai, llama-server) — на той же линейке @ai-sdk/provider 4.0.34.
+  "@ai-sdk/groq": 4.0.72
+  "@ai-sdk/openai-compatible": 3.0.80
   "@ai-sdk/otel": 1.0.153
   "@ai-sdk/provider": 4.0.34
   "@ai-sdk/react": 4.0.157

@@ -6,6 +6,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@ai-sdk/groq": "catalog:",
+    "@ai-sdk/openai-compatible": "catalog:",
     "@ai-sdk/otel": "catalog:",
     "@ai-sdk/provider": "catalog:",
     "@hono/node-server": "catalog:",

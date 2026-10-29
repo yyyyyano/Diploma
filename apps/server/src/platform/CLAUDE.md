@@ -256,6 +256,16 @@
   жизни — по `Clock`, сверх `max` вытесняется давняя по использованию; в памяти процесса. Кэш пользовательских данных —
   только так (опция `cache` Drizzle выключена).
 
+## Публичный API — `sandbox/` (T-025: SEC-03, NFR-11)
+- `sandbox/isolated.ts` — `runIsolated(worker, input, { timeoutMs, memoryMb }, transfer?)`: недоверенный разбор (PDF, XLSX,
+  картинки) в `worker_thread` с `resourceLimits` и `terminate()` по таймауту; сбой — `SandboxError { kind: timeout |
+  memory | failed | rejected, code? }` без текста исключения. `defineIsolatedWorker({ name, devUrl })` описывает рабочий
+  файл `*.worker.ts`, который зовёт `serveIsolated(handler)` (`sandbox/serve.ts`); отказ по правилу —
+  `throw new SandboxRejection("код")`. В `make dev` поток — `.ts` рядом с кодом, в образе — `dist/<имя>.worker.mjs`
+  (своя точка входа в `tsdown.config.ts`; `workerUrl` выбирает по расширению файла помощника). В рабочих файлах — без
+  синтаксиса, который Node не стирает (параметры-свойства классов, enum). Проверки: `isolated.test.ts`,
+  `isolated.build.test.ts` (tsdown собирает бандл и запускает его node).
+
 ## Таблицы платформы
 `settings`, `secrets`, `rate_limits`, `background_job_run` (`jobs/`) — `systemTable` платформы (без домохозяйства), схема — `<папка>/schema.ts`,
 запросы — `<папка>/<папка>.repo.ts` через `SystemDb`. Флаг `tables` в `modules.ts` не нужен: правило
@@ -300,7 +310,7 @@
 `@kosht/kernel`, `@kosht/contract` (каталог ошибок; `SiteEvent`, `EntityKind`, `EntityId` — `realtime/`), `zod`; `drizzle-orm`, `pg` — только `db/` (+ `drizzle-orm` в
 `schema.ts`/`*.repo.ts` settings, secrets, rate-limit); `libpg-query` — только `db/` (ADR-0019); `pino`, `pino-roll` —
 `logging/`; `pino-pretty` — только цели `make logs`/`log-find` (dev); `pg-boss` — только `jobs/` (ADR-0008); `hono`, `@hono/node-server`, `@orpc/server`,
-`@orpc/openapi` — `http/` (oRPC — ещё `main/` и `api/` модулей). Модули — нет.
+`@orpc/openapi` — `http/` (oRPC — ещё `main/` и `api/` модулей); `node:worker_threads` — `sandbox/`. Модули — нет.
 
 ## Запреты
 - `drizzle()`, `pg`, `$client`, `unsafeRaw` вне `platform/db` и тестов; `ISOLATION_VIOLATION` не ловить и не глушить.

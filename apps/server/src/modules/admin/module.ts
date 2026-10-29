@@ -11,7 +11,7 @@ import { makeAdminUsers } from "./application/admin-users.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import type { MailFacade } from "../mail/index.ts";
-import type { LlmFacade } from "../llm/index.ts";
+import type { LlmAdminFacade } from "../llm/index.ts";
 import type { LegalBaseFacade } from "../legal-base/index.ts";
 import type { NormTablesFacade } from "../norm-tables/index.ts";
 import type { SystemFacade } from "../system/index.ts";
@@ -24,7 +24,7 @@ export interface AdminFacades {
   readonly privacy: PrivacyFacade;
   readonly notifications: NotificationsFacade;
   readonly mail: MailFacade;
-  readonly llm: LlmFacade;
+  readonly llm: LlmAdminFacade;
   readonly legalBase: LegalBaseFacade;
   readonly normTables: NormTablesFacade;
   readonly system: SystemFacade;
@@ -40,6 +40,7 @@ export function createAdminModule({ facades }: ModuleDeps<AdminFacades, Platform
       identity: facades.identity,
       system: facades.system,
       mail: facades.mail,
+      llm: facades.llm.admin,
     }),
   });
 }

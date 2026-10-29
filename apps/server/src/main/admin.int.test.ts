@@ -317,3 +317,113 @@ describe("ADM-60: «Система»", () => {
     );
   });
 });
+
+describe("ADM-20, ADM-50, NFR-16, PRIV-07: «Провайдеры ИИ» и «Запросы к ИИ» сквозь HTTP", () => {
+  const SECRET = "gsk_http-секрет-не-должен-вернуться";
+
+  it("обычный пользователь — FORBIDDEN на каждой процедуре; без входа — 401", async () => {
+    const user = await registerUser(stack, db, "ai-plain@example.test");
+    for (const [path, body] of [
+      ["/admin/ai/providers", undefined],
+      ["/admin/ai/usage", undefined],
+      ["/admin/ai/chain", { task: "chat", models: ["groq/openai/gpt-oss-120b"] }],
+      ["/admin/ai/model-enabled", { id: "groq/openai/gpt-oss-120b", enabled: false }],
+      ["/admin/ai/test", { id: "llama/qwen3.5-4b" }],
+      ["/admin/ai/key", { provider: "groq", key: SECRET }],
+      [
+        "/admin/ai/price",
+        { id: "groq/openai/gpt-oss-120b", inputMicrosPerMillion: 1, outputMicrosPerMillion: 1 },
+      ],
+    ] as const) {
+      const response = await stack.call("local", path, { cookie: user.cookie, body });
+      expect([path, response.status]).toEqual([path, 403]);
+    }
+    expect((await stack.call("local", "/admin/ai/providers")).status).toBe(401);
+  });
+
+  it("администратор: умолчания миграции — цепочка чата Groq → Z.ai → локальная; ключ — только статус", async () => {
+    const response = await stack.call("local", "/admin/ai/providers", { cookie: root });
+    expect(response.status).toBe(200);
+    const view = await json<{
+      providers: { id: string; key: string }[];
+      chains: { task: string; models: string[] }[];
+    }>(response);
+    expect(view.providers.find((provider) => provider.id === "groq")?.key).toMatch(/^(set|unset)$/);
+    expect(view.chains.find((chain) => chain.task === "chat")?.models.slice(0, 3)).toEqual([
+      "groq/openai/gpt-oss-120b",
+      "zai/glm-4.7-flash",
+      "llama/qwen3.5-4b",
+    ]);
+  });
+
+  it("ключ сохраняется как «задан» и не возвращается ни в одном ответе; снятие — «не задан»", async () => {
+    const saved = await stack.call("local", "/admin/ai/key", {
+      cookie: root,
+      body: { provider: "zai", key: SECRET },
+    });
+    expect(saved.status).toBe(200);
+    const text = await saved.text();
+    expect(text).not.toContain(SECRET);
+    expect(JSON.parse(text).providers.find((p: { id: string }) => p.id === "zai").key).toBe("set");
+    for (const path of ["/admin/ai/providers", "/admin/ai/usage", "/admin/system"]) {
+      expect(await (await stack.call("local", path, { cookie: root })).text()).not.toContain(
+        SECRET,
+      );
+    }
+    const cleared = await json<{ providers: { id: string; key: string }[] }>(
+      await stack.call("local", "/admin/ai/key", {
+        cookie: root,
+        body: { provider: "zai", key: null },
+      }),
+    );
+    expect(cleared.providers.find((provider) => provider.id === "zai")?.key).not.toBe("set");
+  });
+
+  it("порядок цепочки задачи сохраняется; модель без нужной возможности — 400", async () => {
+    const ok = await stack.call("local", "/admin/ai/chain", {
+      cookie: root,
+      body: { task: "chat", models: ["llama/qwen3.5-4b", "groq/openai/gpt-oss-120b"] },
+    });
+    expect(ok.status).toBe(200);
+    expect(
+      (
+        await json<{ chains: { task: string; custom: boolean; models: string[] }[] }>(ok)
+      ).chains.find((chain) => chain.task === "chat"),
+    ).toEqual({
+      task: "chat",
+      custom: true,
+      models: ["llama/qwen3.5-4b", "groq/openai/gpt-oss-120b"],
+    });
+    const bad = await stack.call("local", "/admin/ai/chain", {
+      cookie: root,
+      body: { task: "receipt.extract", models: ["groq/openai/gpt-oss-120b"] },
+    });
+    expect(bad.status).toBe(400);
+  });
+
+  it("«Проверить связь» с локальной моделью, когда llama-server не запущен, — unreachable; неизвестная запись — 404", async () => {
+    const down = await stack.call("local", "/admin/ai/test", {
+      cookie: root,
+      body: { id: "llama/qwen3.5-4b" },
+    });
+    expect(await down.json()).toEqual({ ok: false, reason: "unreachable" });
+    const none = await stack.call("local", "/admin/ai/test", {
+      cookie: root,
+      body: { id: "nobody/none" },
+    });
+    expect(none.status).toBe(404);
+  });
+
+  it("«Запросы к ИИ»: цифры за период без текстов; период не из списка — 400", async () => {
+    const response = await stack.call("local", "/admin/ai/usage?period=week", { cookie: root });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      period: "week",
+      totals: { requests: expect.any(Number) },
+      langfuseUrl: null,
+    });
+    expect(
+      (await stack.call("local", "/admin/ai/usage?period=year", { cookie: root })).status,
+    ).toBe(400);
+  });
+});

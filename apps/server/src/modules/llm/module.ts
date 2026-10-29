@@ -9,6 +9,7 @@ import type { PrivacyFacade } from "../privacy/index.ts";
 import type { IdentityFacade } from "../identity/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
+import { makeLlmAdmin, type LlmAdmin } from "./application/admin.ts";
 import { makePreferences } from "./application/preferences.ts";
 import { makeProviderAlerts } from "./application/provider-alerts.ts";
 import { makeRetention } from "./application/retention.ts";
@@ -56,15 +57,16 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
     clock: platform.clock,
     notifications: facades.notifications,
   });
+  const providers = createProviderRegistry([
+    createTestProvider({ paceMs: TEST_PROVIDER_PACE_MS }),
+    // Ключи — секреты (админка или .env), читаются в момент вызова: смена ключа действует сразу (NFR-16).
+    createGroqAdapter({ key: async () => platform.secrets.reveal(GROQ_API_KEY) }),
+    createZaiAdapter({ key: async () => platform.secrets.reveal(ZAI_API_KEY) }),
+    createLlamaAdapter({ baseUrl: async () => platform.settings.get(LLM_LLAMA_BASE_URL) }),
+  ]);
   const gateway: LlmGateway = createLlmGateway({
     system: platform.system,
-    providers: createProviderRegistry([
-      createTestProvider({ paceMs: TEST_PROVIDER_PACE_MS }),
-      // Ключи — секреты (админка или .env), читаются в момент вызова: смена ключа действует сразу (NFR-16).
-      createGroqAdapter({ key: async () => platform.secrets.reveal(GROQ_API_KEY) }),
-      createZaiAdapter({ key: async () => platform.secrets.reveal(ZAI_API_KEY) }),
-      createLlamaAdapter({ baseUrl: async () => platform.settings.get(LLM_LLAMA_BASE_URL) }),
-    ]),
+    providers,
     timeouts: async () => ({
       cloudMs: await platform.settings.get(LLM_TIMEOUT_CLOUD_MS),
       localMs: await platform.settings.get(LLM_TIMEOUT_LOCAL_MS),
@@ -92,9 +94,11 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
   // PRIV-06: трассы пользователя удаляются вместе с аккаунтом; Langfuse выключен — ждут в очереди повторов.
   const traces = makeTraceDeletion({ platform, deleter });
   const retention = makeRetention({ platform, deleter });
+  // Админка ИИ (ADM-20, ADM-50): цифры и настройки без текстов запросов; адрес Langfuse — только на этом компьютере.
+  const admin = makeLlmAdmin({ platform, providers, langfuseUrl: langfuse?.baseUrl ?? null });
   return defineModule({
     id: "llm",
-    facade: gateway,
+    facade: { ...gateway, admin },
     router: llmRouter(preferences),
     settings: [
       LLM_MODE,
@@ -122,3 +126,6 @@ export function scenarioOf(file: string): string {
 
 /** Что модуль даёт соседям: шлюз к моделям. */
 export type LlmFacade = LlmGateway;
+
+/** Фасад для админки (модуль admin): шлюз и `admin` — цепочки, реестр, ключи, расход; тексты запросов не хранятся. */
+export type LlmAdminFacade = LlmFacade & { readonly admin: LlmAdmin };

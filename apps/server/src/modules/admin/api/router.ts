@@ -3,6 +3,7 @@
 // (PRIV-07): учётные записи identity, флаг режима privacy, система и почта.
 import type { AdminUser, JobRun, SystemOverview } from "@kosht/contract";
 import type { IdentityFacade } from "../../identity/index.ts";
+import type { LlmAdminFacade } from "../../llm/index.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import type { SystemFacade } from "../../system/index.ts";
 import { admin } from "../../../platform/http/procedures.ts";
@@ -33,6 +34,8 @@ export function adminRouter(d: {
   >;
   readonly system: SystemFacade;
   readonly mail: Pick<MailFacade, "smtp">;
+  /** Админка ИИ (ADM-20, ADM-50): цифры и настройки — без текстов запросов (ADM-22). */
+  readonly llm: LlmAdminFacade["admin"];
 }) {
   async function overview(): Promise<SystemOverview> {
     const view = await d.system.view();
@@ -89,5 +92,19 @@ export function adminRouter(d: {
       await d.system.setLan(input);
       return overview();
     }),
+    aiProviders: admin.admin.aiProviders.handler(() => d.llm.providers()),
+    setAiChain: admin.admin.setAiChain.handler(({ input }) =>
+      d.llm.setChain(input.task, input.models),
+    ),
+    setAiModelEnabled: admin.admin.setAiModelEnabled.handler(({ input }) =>
+      d.llm.enable(input.id, input.enabled),
+    ),
+    saveAiModel: admin.admin.saveAiModel.handler(({ input }) => d.llm.saveModel(input)),
+    testAiProvider: admin.admin.testAiProvider.handler(({ input }) =>
+      d.llm.testConnection(input.id),
+    ),
+    setAiKey: admin.admin.setAiKey.handler(({ input }) => d.llm.setKey(input.provider, input.key)),
+    aiUsage: admin.admin.aiUsage.handler(({ input }) => d.llm.usage(input.period)),
+    setAiPrice: admin.admin.setAiPrice.handler(({ input }) => d.llm.setPrice(input.id, input)),
   };
 }

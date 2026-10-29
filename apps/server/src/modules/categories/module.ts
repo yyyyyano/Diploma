@@ -49,6 +49,8 @@ export function createCategoriesModule({
       categorize: categorize.categorize,
       list: catalog.list,
       setUserRule: catalog.setUserRule,
+      userRule: catalog.userRule,
+      removeUserRule: catalog.removeUserRule,
     },
     router: categoriesRouter(catalog),
     settings: [MODEL_BATCH],

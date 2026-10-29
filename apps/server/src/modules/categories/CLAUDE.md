@@ -22,7 +22,9 @@ T-022.
     и своих не скрытых; сбой модели или метка вне списка — «Прочее»/«Прочие доходы» с источником `fallback`.
   - `categorize(s, inputs)` = оба шага, ответ в порядке входа: `{ key, category: CategoryRef, source }` (источник —
     для «Откуда эта цифра?», хранит владелец операции).
-  - `list(s)`, `setUserRule(s, { matcher: merchant | item, pattern, category })` (CAT-05; своя чужая — `NOT_FOUND`).
+  - `list(s)`, `setUserRule(s, { matcher: merchant | item, pattern, category })` (CAT-05; своя чужая — `NOT_FOUND`),
+    `userRule(s, { matcher, pattern })` → категория правила или `undefined`, `removeUserRule(s, { matcher, pattern })` —
+    для «Отменить» правила из исправления (T-022).
 - Контракт `contract.categories.*` (все authed): `list`, `create` (`CONFLICT` — то же название того же типа), `rename`
   (своя), `setHidden` (своя или встроенная — встроенная только скрывается).
 - Подсказка — `application/categorize.prompt.ts` (`CATEGORIZE_PROMPT_VERSION`; строки — блоком `<document>`).

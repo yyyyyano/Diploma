@@ -147,6 +147,26 @@ describe("CAT-03: гибридный порядок — правила без м
   });
 });
 
+describe("CAT-05: правило пользователя читается и снимается (для «Отменить»)", () => {
+  it("userRule отдаёт категорию правила по шаблону без учёта регистра; removeUserRule снимает; чужого правила нет", async () => {
+    const s = scoped();
+    const other = scoped();
+    const { catalog } = setup();
+    const rule = { matcher: "merchant" as const, pattern: "такси" };
+    expect(await catalog.userRule(s, rule)).toBeUndefined();
+    await catalog.setUserRule(s, { ...rule, category: { type: "system", code: "transport" } });
+    expect(await catalog.userRule(s, { ...rule, pattern: "ТАКСИ" })).toEqual({
+      type: "system",
+      code: "transport",
+    });
+    expect(await catalog.userRule(other, rule)).toBeUndefined();
+    await catalog.removeUserRule(other, rule);
+    expect(await catalog.userRule(s, rule)).toBeDefined();
+    await catalog.removeUserRule(s, rule);
+    expect(await catalog.userRule(s, rule)).toBeUndefined();
+  });
+});
+
 describe("CAT-04, RCPT-15: позиции чека — тем же порядком по наименованию", () => {
   it("«Молоко 3,2%» → Продукты, «Бальзам для волос» → Красота и гигиена; правило пользователя для позиции", async () => {
     const s = scoped();

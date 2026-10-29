@@ -102,6 +102,43 @@ export async function listUserRules(s: ScopedDb): Promise<UserRule[]> {
   return rows.map((row) => ({ ...row, matcher: row.matcher as UserRule["matcher"] }));
 }
 
+/** CAT-05: правило пользователя по шаблону — для «Отменить» (вернуть прежнее) и для вопроса «применить к прошлым». */
+export async function findUserRule(
+  s: ScopedDb,
+  matcher: UserRule["matcher"],
+  pattern: string,
+): Promise<UserRule | undefined> {
+  const rows = await s.db
+    .select({
+      pattern: categoryRules.pattern,
+      systemCode: categoryRules.systemCode,
+      categoryId: categoryRules.categoryId,
+    })
+    .from(categoryRules)
+    .where(
+      and(
+        s.own(categoryRules),
+        eq(categoryRules.matcher, matcher),
+        eq(categoryRules.pattern, pattern),
+      ),
+    );
+  const row = rows[0];
+  return row === undefined ? undefined : { ...row, matcher };
+}
+
+/** CAT-05: удалить правило пользователя по шаблону («Отменить» правила, которого раньше не было). */
+export async function deleteUserRule(
+  s: ScopedDb,
+  matcher: UserRule["matcher"],
+  pattern: string,
+): Promise<void> {
+  await s.delete(
+    categoryRules,
+    and(eq(categoryRules.matcher, matcher), eq(categoryRules.pattern, pattern)) ??
+      eq(categoryRules.matcher, matcher),
+  );
+}
+
 /** CAT-05: правило пользователя для контрагента или позиции — новое или заменяет прежнее с тем же шаблоном. */
 export async function upsertUserRule(s: ScopedDb, rule: UserRule, at: Date): Promise<void> {
   await s

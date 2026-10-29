@@ -17,7 +17,9 @@ import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { z } from "zod";
 import {
+  deleteUserRule,
   findCustom,
+  findUserRule,
   hiddenCodes,
   insertCustom,
   listCustom,
@@ -152,7 +154,27 @@ export function makeCatalog(d: CatalogDeps) {
     );
   }
 
-  return { list, create, rename, setHidden, setUserRule };
+  /** Фасад (T-022): текущее правило пользователя по шаблону — чтобы «Отменить» вернуло прежнее. */
+  async function userRule(
+    s: ScopedDb,
+    rule: { matcher: "merchant" | "item"; pattern: string },
+  ): Promise<CategoryRef | undefined> {
+    const found = await findUserRule(s, rule.matcher, rule.pattern.toUpperCase());
+    if (found === undefined) return undefined;
+    return found.categoryId === null
+      ? { type: "system", code: SystemCategoryCode.parse(found.systemCode) }
+      : { type: "custom", id: CategoryId.parse(found.categoryId) };
+  }
+
+  /** Фасад (T-022): убрать правило пользователя (правила, которого не было до «Отменить»). */
+  async function removeUserRule(
+    s: ScopedDb,
+    rule: { matcher: "merchant" | "item"; pattern: string },
+  ): Promise<void> {
+    await deleteUserRule(s, rule.matcher, rule.pattern.toUpperCase());
+  }
+
+  return { list, create, rename, setHidden, setUserRule, userRule, removeUserRule };
 }
 
 export type Catalog = ReturnType<typeof makeCatalog>;

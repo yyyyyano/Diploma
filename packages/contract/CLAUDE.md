@@ -31,6 +31,13 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   приводит `Numeric`), `get` (карточка с историей), `create`/`update` (→ `{ transaction, undoToken }`), `requestDelete`
   (`ids` ≤ `MAX_BULK` → `{ decisionId }`), `explainRate` (курс НБРБ → `traceId`); `Transaction.amountInByn: null` — «курс не получен».
 - `files` (T-016): `download` — `GET /files/{id}`, вход `FileRef { id }`, ответ — сам файл (`z.file()`).
+- `llm` (T-023): `models` (модели для выбора в чате и выбор вошедшего), `setPreferredModel({ modelId | null })` — LLM-10;
+  id пользователя во входе нет.
+- `admin` — «Провайдеры ИИ» и «Запросы к ИИ» (T-023, `admin/ai.contract.ts`): `aiProviders`, `setAiChain`,
+  `setAiModelEnabled`, `saveAiModel`, `testAiProvider`, `setAiKey` (ключ только на входе), `aiUsage`, `setAiPrice`;
+  `AI_TASKS` и `AI_CAPABILITIES` сверяет `llm/domain/tasks.test.ts` с шлюзом; формы ответов — `admin.contract.test.ts`
+  (ни текстов, ни пользователей, ни значений ключей).
+- `privacy.state.cloud` — `{ granted, since, outdated }`: согласие по прежнему тексту — `outdated`, облако выключено.
 - `admin` (T-017): «Пользователи» (`AdminUser`, действия по `{ id }`, `AdminResetResult`) и «Система»
   (`SystemOverview`: `JobRun`, почта без пароля, пояс, сеть, Langfuse); форму ответов сторожит `admin.contract.test.ts`
   (PRIV-07: без данных пользователей).

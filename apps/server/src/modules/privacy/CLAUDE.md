@@ -29,11 +29,12 @@ PRIV-01/02/05/06/08, AUTH-02.
   `cloudUsers()` — id пользователей в облачном режиме (столбец «Режим ИИ» админки, ADM-30).
 - Контракт `contract.privacy.*` (authed): `dataExport` (`GET /privacy/export`) — последняя заявка
   (`none | pending | ready | failed`, файл `{ id, name, size }`); `requestExport` (`POST /privacy/export`); `state` —
-  облако разрешено ли и с какого момента, история решений (новые сверху, ≤ 200); `setCloudConsent({ granted,
+  облако разрешено ли (по действующему тексту), с какого момента, `outdated` — согласие по прежнему тексту, история решений (новые сверху, ≤ 200); `setCloudConsent({ granted,
   version })` — строка журнала, `privacy_modes` и событие одной транзакцией (`cloud-consent-settings.ts`); устаревшая
   версия — `CONFLICT`.
 - Источник облачного согласия (`consentSource`, порт `ConsentSource`): последнее решение вида `cloud` пользователя
-  scope, без кэша — отзыв действует на следующий вызов модели; решения нет — `false`.
+  scope, без кэша — отзыв действует на следующий вызов модели; решения нет — `false`; согласие по прежнему тексту
+  (`text_version` ≠ `CONSENT_VERSIONS.cloud`) не действует — «условия обновились» (T-023, R48).
 - События (`events.ts`, экспорт из `index.ts`): `privacy.consent-changed { ids }` — id новых строк журнала;
   `privacy.export-ready { ids }` — готовые заявки архива.
 - Таблица `privacy_consents` (`userOwnedTable`): `kind` (`personal-data | cloud`), `granted`, `text_version`,
@@ -49,7 +50,8 @@ PRIV-01/02/05/06/08, AUTH-02.
 ## Запреты
 - Строки журнала не правятся и не удаляются сценариями (кроме удаления аккаунта): новое решение — новая строка.
 - Данные домохозяйства — только через `s: ScopedDb` с `s.own(privacy_consents)`; «чьи данные» — только `s.scope`.
-- Изменили текст политики или облачного согласия в словаре `policy` — поднимите версию в `CONSENT_VERSIONS`.
+- Изменили текст политики или облачного согласия в словаре `policy` — поднимите версию в `CONSENT_VERSIONS`: у всех,
+  кто согласился по прежнему тексту, облако выключится до повторного согласия (миграция сбрасывает и `privacy_modes`).
 
 ## Как тестировать
 - `pnpm vitest run apps/server/src/modules/privacy` — журнал, событие, устаревшая версия, источник облачного

@@ -19,7 +19,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
   (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/accounts`, `_app/operations` (адрес — `features/operations/model/search.ts`), `_app/assistant`, `_app/memory`,
   `_app/settings`, `_app/admin` (`requireRole(…, "admin")`
-  → иначе «нет такой страницы»; вкладки `_app/admin/users`, `_app/admin/system`, `/admin` → `/admin/users`), `dev.gallery` (витрина; только разработка и `--mode e2e`).
+  → иначе «нет такой страницы»; вкладки `_app/admin/users`, `_app/admin/system`, `_app/admin/ai-requests` (период — `?period=`), `_app/admin/ai-providers`, `/admin` → `/admin/users`), `dev.gallery` (витрина; только разработка и `--mode e2e`).
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
   нет маршрута — нет пункта (DES-15).
 - `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`

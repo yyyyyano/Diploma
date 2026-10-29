@@ -4,7 +4,8 @@
 
 ## Назначение
 Раздел «Администрирование»: процедуры `contract.admin.*` поверх admin-фасадов модулей; своих данных нет (PRIV-07).
-Сделано: «Пользователи» (ADM-30) и «Система» (ADM-60); остальные вкладки — задачи своих модулей.
+Сделано: «Пользователи» (ADM-30), «Система» (ADM-60), «Провайдеры ИИ» (ADM-50) и «Запросы к ИИ» (ADM-20/21/22);
+остальные вкладки — задачи своих модулей.
 
 ## Требования SPEC
 ADM-01…60 (экраны).
@@ -19,7 +20,11 @@ ADM-01…60 (экраны).
   `false` до T-052); `setUserStatus`, `setUserRole` (последний админ — `LAST_ADMIN`), `deleteUser({ id, email })`,
   `resetUserPassword({ id })` — фасады identity; `system` — `system.view()` + `mail.smtp.view()`; `setMail`,
   `sendTestMail` (на адрес вошедшего администратора), `setTimeZone`, `setLan` — отвечают обновлённой «Системой».
-  Форма ответов — только метаданные (`packages/contract/src/admin/admin.contract.test.ts`).
+  «Провайдеры ИИ» (`facades.llm.admin`, `LlmAdminFacade`): `aiProviders`, `setAiChain` (порядок цепочки задачи),
+  `setAiModelEnabled`, `saveAiModel` (облачность — по провайдеру), `testAiProvider` («Проверить связь», сбой — в
+  ответе), `setAiKey` (ключ только для записи; наружу — «задан / не задан»); «Запросы к ИИ»: `aiUsage({ period })`
+  (цифры журнала расхода), `setAiPrice` (прайс-лист). Ответы — типы `admin/ai.contract.ts`: без текстов запросов,
+  пользователей и значений ключей. Форма ответов — только метаданные (`packages/contract/src/admin/admin.contract.test.ts`).
 
 ## Зависимости
 Можно: identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo (`tooling/architecture/modules.ts`). Слушает: —.

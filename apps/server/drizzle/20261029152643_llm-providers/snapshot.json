@@ -1,0 +1,398 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2d3d87a1-9032-4e89-aa58-0c792aed0166",
+  "prevIds": ["e78d9aea-836d-429b-98fc-bdfa1a196333"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "llm_preferences"],
+      "writes": [
+        "s|tbl|public.llm_preferences",
+        "n|tbl|public.llm_preferences",
+        "e|tbl|public.llm_preferences",
+        "n|rel|public.llm_preferences",
+        "n|type|public.llm_preferences",
+        "n|rel|public.llm_preferences_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "llm_task_chains"],
+      "writes": [
+        "s|tbl|public.llm_task_chains",
+        "n|tbl|public.llm_task_chains",
+        "e|tbl|public.llm_task_chains",
+        "n|rel|public.llm_task_chains",
+        "n|type|public.llm_task_chains",
+        "n|rel|public.llm_task_chains_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "llm_models", "rpm"],
+      "writes": [
+        "s|col|public.llm_models.rpm",
+        "n|col|public.llm_models.rpm",
+        "e|col|public.llm_models.rpm"
+      ],
+      "reads": ["n|tbl|public.llm_models", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "llm_models", "tpm"],
+      "writes": [
+        "s|col|public.llm_models.tpm",
+        "n|col|public.llm_models.tpm",
+        "e|col|public.llm_models.tpm"
+      ],
+      "reads": ["n|tbl|public.llm_models", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "llm_models", "rpd"],
+      "writes": [
+        "s|col|public.llm_models.rpd",
+        "n|col|public.llm_models.rpd",
+        "e|col|public.llm_models.rpd"
+      ],
+      "reads": ["n|tbl|public.llm_models", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "llm_models", "tpd"],
+      "writes": [
+        "s|col|public.llm_models.tpd",
+        "n|col|public.llm_models.tpd",
+        "e|col|public.llm_models.tpd"
+      ],
+      "reads": ["n|tbl|public.llm_models", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "llm_models", "user_selectable"],
+      "writes": [
+        "s|col|public.llm_models.user_selectable",
+        "n|col|public.llm_models.user_selectable",
+        "e|col|public.llm_models.user_selectable"
+      ],
+      "reads": ["n|tbl|public.llm_models", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "llm_preferences", "llm_preferences_user_idx"],
+      "writes": [
+        "s|idx|public.llm_preferences_user_idx",
+        "n|idx|public.llm_preferences_user_idx",
+        "e|idx|public.llm_preferences_user_idx",
+        "n|rel|public.llm_preferences_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.llm_preferences",
+        "n|sch|public",
+        "n|col|public.llm_preferences.household_id",
+        "n|col|public.llm_preferences.user_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "llm_preferences",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "llm_task_chains",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_models",
+        "name": "rpm",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_models",
+        "name": "tpm",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_models",
+        "name": "rpd",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_models",
+        "name": "tpd",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_models",
+        "name": "user_selectable",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "household_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "model_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_task_chains",
+        "name": "task",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_task_chains",
+        "name": "model_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_task_chains",
+        "name": "position",
+        "type": "integer",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "llm_preferences_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_preferences",
+        "name": "llm_preferences_pkey",
+        "columns": ["household_id", "id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "llm_task_chains",
+        "name": "llm_task_chains_pkey",
+        "columns": ["task", "model_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    }
+  ]
+}

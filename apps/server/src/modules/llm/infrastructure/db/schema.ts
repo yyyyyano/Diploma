@@ -2,8 +2,18 @@
 // В журнале — только служебное: задача, провайдер, модель, токены, длительность, стоимость, код ошибки. Ни текстов
 // запросов и ответов, ни пользователя (OBS-04): лимиты считаются по провайдеру и модели.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, index, integer, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { systemTable } from "../../../../platform/db/tables.ts";
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { systemTable, userOwnedTable } from "../../../../platform/db/tables.ts";
 
 /** Реестр моделей (LLM-09): модель — запись, а не строка в коде; новая модель — строка в админке (T-023). */
 export const llmModels = systemTable("llm_models", {
@@ -22,7 +32,37 @@ export const llmModels = systemTable("llm_models", {
   /** Цены условной стоимости: микродолларов за миллион токенов. */
   inputMicrosPerMillion: integer().notNull().default(0),
   outputMicrosPerMillion: integer().notNull().default(0),
+  /** Лимиты бесплатного тарифа (LLM-05, LLM-09): запросов и токенов в минуту и в сутки; null — лимит не опубликован. */
+  rpm: integer(),
+  tpm: integer(),
+  rpd: integer(),
+  tpd: integer(),
+  /** Администратор разрешил пользователям выбирать эту модель в чате (LLM-10). */
+  userSelectable: boolean().notNull().default(false),
 });
+
+/**
+ * Порядок цепочки по задаче (LLM-02, ADM-50): модели задачи по возрастанию position. У задачи без строк порядок —
+ * по priority записей реестра. Без внешнего ключа на llm_models: модель удалена — строка просто не находит запись.
+ */
+export const llmTaskChains = systemTable(
+  "llm_task_chains",
+  {
+    task: text().notNull(),
+    modelId: text().notNull(),
+    position: integer().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.task, t.modelId] })],
+);
+
+/** Выбор модели пользователем в чате (LLM-10): одна строка на пользователя; «Авто» — строки нет. */
+export const llmPreferences = userOwnedTable(
+  "llm_preferences",
+  {
+    modelId: text().notNull(),
+  },
+  (t) => [uniqueIndex("llm_preferences_user_idx").on(t.householdId, t.userId)],
+);
 
 /** Журнал расхода (LLM-06): строка на каждый вызов модели. */
 export const llmUsage = systemTable(

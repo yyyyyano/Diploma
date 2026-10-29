@@ -18,6 +18,17 @@ import { migrateDatabase } from "../../../main/migrate-database.ts";
 import { PG_BOSS_VERSION } from "../../jobs/install.ts";
 import { appRoleGrants, appRoleOptions } from "../roles.ts";
 
+/**
+ * Состояние реестра моделей в тестах (T-023): боевые миграции кладут Groq, Z.ai и локальные модели с цепочками, а
+ * тестовая модель в боевой базе выключена. Тесты работают с одним тестовым провайдером, как раньше, и добавляют
+ * нужные записи сами: облачные выключены, цепочки сброшены (порядок — по приоритету), test/scripted включена.
+ * Изменили текст — шаблон собирается заново (он входит в отпечаток).
+ */
+const REGISTRY_FIXTURE = [
+  "update llm_models set enabled = (provider = 'test')",
+  "delete from llm_task_chains",
+];
+
 function connectionOf(config: DbConfig): TestDbConnection {
   const { host, port, user, password, database } = connectionOptions(config);
   if (
@@ -59,6 +70,7 @@ export async function prepareServerTemplate(): Promise<TestDbContext> {
     .update(fingerprintDir(config.migrationsDir))
     // Схему pgboss ставит установщик pg-boss: новая версия — новая схема, значит и новый шаблон.
     .update(`pg-boss@${PG_BOSS_VERSION}`)
+    .update(REGISTRY_FIXTURE.join(";"))
     .update(appRoleGrants({ ...role, owner: admin.user }).join("\n"))
     .digest("hex")
     .slice(0, 16);
@@ -69,6 +81,7 @@ export async function prepareServerTemplate(): Promise<TestDbContext> {
       const pool = createPool(config.migration, { database: name, max: 1 });
       try {
         await migrateDatabase(pool, role, config.migrationsDir);
+        for (const statement of REGISTRY_FIXTURE) await pool.query(statement);
       } finally {
         await pool.end();
       }

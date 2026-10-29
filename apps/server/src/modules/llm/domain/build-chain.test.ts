@@ -65,6 +65,37 @@ describe("LLM-02, LLM-09: цепочка по задаче из возможно
     ).toEqual(["llama/qwen"]);
   });
 
+  it("ADM-50: порядок задачи из админки важнее приоритета; модель вне порядка в цепочку не входит", () => {
+    expect(
+      buildChain(all, "chat", {
+        cloudAllowed: true,
+        order: ["llama/qwen", "zai/glm", "groq/llama", "llama/vision"],
+      }).map((m) => m.id),
+    ).toEqual(["llama/qwen", "zai/glm", "groq/llama"]);
+    expect(
+      buildChain(all, "chat", { cloudAllowed: true, order: ["zai/glm"] }).map((m) => m.id),
+    ).toEqual(["zai/glm"]);
+  });
+
+  it("порядок задачи не открывает облако без согласия", () => {
+    expect(
+      buildChain(all, "chat", {
+        cloudAllowed: false,
+        order: ["groq/llama", "zai/glm", "llama/qwen"],
+      }).map((m) => m.id),
+    ).toEqual(["llama/qwen"]);
+  });
+
+  it("выбранная пользователем модель вне порядка задачи идёт первой", () => {
+    expect(
+      buildChain(all, "chat", {
+        cloudAllowed: true,
+        order: ["groq/llama"],
+        preferred: "llama/qwen",
+      }).map((m) => m.id),
+    ).toEqual(["llama/qwen", "groq/llama"]);
+  });
+
   it("свойство: при cloudAllowed = false в любой цепочке любой задачи только локальные записи", () => {
     const models = fc.array(
       fc.record({
@@ -80,13 +111,20 @@ describe("LLM-02, LLM-09: цепочка по задаче из возможно
     const task = fc.constantFrom(...(Object.keys(TASKS) as LlmTask[]));
     expect(() =>
       fc.assert(
-        fc.property(models, task, fc.option(fc.string()), (list, t, preferred) => {
-          const chain = buildChain(list, t, {
-            cloudAllowed: false,
-            ...(preferred === null ? {} : { preferred }),
-          });
-          return chain.every((m) => !m.cloud && m.enabled);
-        }),
+        fc.property(
+          models,
+          task,
+          fc.option(fc.string()),
+          fc.array(fc.string()),
+          (list, t, preferred, order) => {
+            const chain = buildChain(list, t, {
+              cloudAllowed: false,
+              order,
+              ...(preferred === null ? {} : { preferred }),
+            });
+            return chain.every((m) => !m.cloud && m.enabled);
+          },
+        ),
       ),
     ).not.toThrow();
   });

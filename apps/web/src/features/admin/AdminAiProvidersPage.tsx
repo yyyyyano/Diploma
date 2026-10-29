@@ -29,6 +29,7 @@ import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { SkeletonCard, StatusBadge } from "../../ui/index.ts";
 import { dollarsToMicros, microsToDollars } from "./ai-format.ts";
+import { LocalModelsCard } from "./LocalModelsCard.tsx";
 import { useProviderName } from "./provider-name.ts";
 import classes from "./Admin.module.css";
 
@@ -72,8 +73,9 @@ export function AdminAiProvidersPage() {
       </div>
       <div className={classes.grid}>
         <KeysCard view={view.data} />
-        <RegistryCard view={view.data} />
+        <LocalModelsCard />
       </div>
+      <RegistryCard view={view.data} />
     </>
   );
 }

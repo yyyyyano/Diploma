@@ -73,6 +73,13 @@ test("первый запуск → администратор → вход → 
   await page.getByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }).check();
   await page.getByRole("button", { name: "Продолжить" }).click();
 
+  // NFR-25 (T-024): «Готовим систему» — прогресс локальных моделей; в стенде скачивание выключено (интернета нет),
+  // экран говорит, где его запустить; войти можно сразу.
+  await expect(page.getByRole("heading", { level: 1, name: "Готовим систему" })).toBeVisible();
+  await expect(page.getByText(/Скачивание ещё не начато/)).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("button", { name: "Войти" }).click();
+
   // Администратор создан — вход с пометкой.
   await expect(page).toHaveURL(/\/login\?created=true$/);
   await expect(page.getByRole("status")).toContainText("Администратор создан");
@@ -174,6 +181,7 @@ test("первый запуск → администратор → вход → 
   await expect(page).toHaveURL(/\/admin\/ai-providers$/);
   await expect(page.getByRole("region", { name: "Чат и агент" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Ключи API" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Локальные модели" })).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("link", { name: "Запросы к ИИ" }).click();
   await expect(page).toHaveURL(/\/admin\/ai-requests\?period=day$/);

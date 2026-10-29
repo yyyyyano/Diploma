@@ -59,7 +59,19 @@ const view = (patch: Partial<AiProviders> = {}): AiProviders => ({
 });
 
 function renderPage(data: AiProviders = view()) {
-  server.use(http.get("*/api/admin/ai/providers", () => HttpResponse.json(data)));
+  server.use(
+    http.get("*/api/admin/ai/providers", () => HttpResponse.json(data)),
+    // блок «Локальные модели» (LocalModelsCard.test.tsx) здесь не проверяется — отвечает «нет»
+    http.get("*/api/admin/ai/local-models", () =>
+      HttpResponse.json({
+        state: "absent",
+        bytesDone: 0,
+        bytesTotal: 0,
+        models: [],
+        selfTest: { state: "unknown", problem: null, cpuFallback: false },
+      }),
+    ),
+  );
   renderWithProviders(
     <QueryClientProvider
       client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}

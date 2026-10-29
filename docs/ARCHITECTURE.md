@@ -445,7 +445,8 @@ modules/llm/
   каждого вызова уже даёт порт `platform/telemetry` (T-010); `userId` — внутренний id, `sessionId` — id диалога;
   хранение 30 дней (своя ночная задача), удаление трасс пользователя при PRIV-06.
 - **Локальные модели** (NFR-25, ADM-50): свой загрузчик (Range + sha256 + прогресс) в `data/models/`, llama-server
-  в режиме роутера, самотест «2+2» + эталонный вектор при старте с откатом на CPU. Подробно — ADR-0011.
+  в режиме роутера (пресеты `data/models/presets.ini`, `GET /models?reload=1` после загрузки), самотест «2+2» и порядок
+  векторов («кошка» ближе к «кот», чем к «налог») с откатом на CPU. Подробно — ADR-0011, дополнение T-024.
 
 ### 8.2 Агент
 
@@ -763,7 +764,7 @@ apps/web/src/
   llama-server и whisper.cpp; `observability` — Langfuse, **включён по умолчанию** (OBS-05), приложение работает и без него.
 - **`make dev`** — инфраструктура в контейнерах, код на хосте (`node --watch`, Vite с прокси); **`make up`** — всё в
   контейнерах (`make init && make up` на чистой машине). Только Docker Engine (пробрасывает iGPU `/dev/dri`).
-- Данные — тома `pgdata`, `models` и `./data/{files,logs,backups,exports}` (одни пути в обоих режимах); копия —
+- Данные — том `pgdata` и `./data/{files,logs,backups,exports,models}` (одни пути в обоих режимах); копия —
   `make backup` и кнопка в админке, мастер-ключ в неё не входит.
 - Образ — `docker/Dockerfile`: tsdown, один `.mjs` на точку входа, `node_modules` сервера рядом, сайт и миграции
   внутри; секреты БД, мастер-ключ и Langfuse создаёт `make init` в `secrets/`; готовность машины — `make doctor`.

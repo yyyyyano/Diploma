@@ -49,6 +49,8 @@ x-app: &app
     - ./data/logs:/app/data/logs
     - ./data/backups:/app/data/backups
     - ./data/exports:/app/data/exports
+    # Локальные модели (NFR-25): скачивает worker, читают llama и whisper (там — только чтение); NER — api и worker.
+    - ./data/models:/app/data/models
   depends_on:
     db:
       condition: service_healthy
@@ -148,17 +150,35 @@ services:
     <<: *app
     command: ["node", "dist/bot.mjs"]
 
-  # ── models (T-024: загрузчик моделей; до него сервисы не запускаются — make up/dev без WITH_MODELS=1) ──
+  # ── models: llama-server (режим роутера) и whisper.cpp — только WITH_MODELS=1; модели скачивает загрузчик приложения
+  # (NFR-25) в ./data/models — тот же bind-путь в обоих режимах запуска, как ./data/files (ADR-0015) ──
   # Образы — по тегу сборки и digest: llama.cpp b11854 (Vulkan), whisper.cpp v1.9.5 (коммит d1be6fd, Vulkan).
   # iGPU Intel Arc — /dev/dri и группа render хоста (RENDER_GID пишет make init).
   llama:
     profiles: [models]
     image: ghcr.io/ggml-org/llama.cpp:server-vulkan-b11854@sha256:2716be5463dcecd02ace322f77fa0ea10b7168c5c8f0e45458b303541fca6632
-    command: ["--host", "0.0.0.0", "--port", "8080", "--model", "/models/llm/chat.gguf"]
+    # Режим роутера без --model: модели и их ключи (mmproj на процессоре, векторы) — в пресетах, которые пишет приложение
+    # (/models/presets.ini, README llama.cpp b11854). Модели, скачанные после старта, роутер видит после GET /models?reload=1
+    # (его шлёт загрузчик). Не больше двух моделей в памяти; простаивающие выгружаются (--sleep-idle-seconds).
+    command:
+      [
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8080",
+        "--models-preset",
+        "/models/presets.ini",
+        "--models-dir",
+        "/models/llm",
+        "--models-max",
+        "2",
+        "--sleep-idle-seconds",
+        "300",
+      ]
     devices: ["/dev/dri:/dev/dri"]
     group_add: ["${RENDER_GID:-992}"]
     volumes:
-      - models:/models:ro
+      - ./data/models:/models:ro
     ports:
       - "127.0.0.1:8142:8080"
     read_only: true
@@ -178,12 +198,12 @@ services:
         "--port",
         "8080",
         "--model",
-        "/models/whisper/model.bin",
+        "/models/whisper/ggml-large-v3-turbo-q5_0.bin",
       ]
     devices: ["/dev/dri:/dev/dri"]
     group_add: ["${RENDER_GID:-992}"]
     volumes:
-      - models:/models:ro
+      - ./data/models:/models:ro
     ports:
       - "127.0.0.1:8143:8080"
     read_only: true
@@ -333,7 +353,6 @@ secrets:
 
 volumes:
   pgdata:
-  models:
   langfuse_db:
   langfuse_clickhouse:
   langfuse_clickhouse_logs:

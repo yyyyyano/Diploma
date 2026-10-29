@@ -93,7 +93,7 @@ MODELS_PROFILE = $(if $(filter 1,$(WITH_MODELS)),--profile models)
 # Langfuse включён по умолчанию (OBS-05, ADR-0010); первый его старт — до 2–3 минут.
 UP_TIMEOUT := 600
 SECRETS := secrets/db_password secrets/db_app_password secrets/master.key
-DATA_DIRS := data/files data/logs data/backups data/exports
+DATA_DIRS := data/files data/logs data/backups data/exports data/models
 
 doctor: need-node ## Проверить машину: Node, pnpm, Docker Engine (не Desktop, ≥ 28.3.3), группы docker и render, свободные порты
 	@node tooling/doctor.ts

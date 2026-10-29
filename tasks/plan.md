@@ -1125,7 +1125,7 @@
 - Зависимости: T-019, T-010
 
 ### T-021 · Операции: таблица со страницами, фильтры, ручной ввод, карточка и правка с отменой
-- Статус: todo
+- Статус: in-progress (приостановлено пользователем 2026-10-29: ветка `task/T-021-operations`, коммиты b5ebe35..a1e8b32 вместе с T-022; по словам имплементатора, `make check` был зелёный; не прогнаны `make test-int`, `make e2e`, `make bench`; ревью фазы 2 не делается по решению пользователя)
 - Модули: `transactions`, `accounts`, `features/operations`, `entities/transaction`, `entities/category`
 - SPEC: TXN-01, TXN-02, TXN-03, TXN-05, FIN-01, STMT-02, STMT-09, CAT-02, AGT-03, AGT-05, AGT-07, P5
 - Экран: Operations — design/screens/Operations.dc.html (состояния loading, empty, error, add-operation,
@@ -1160,7 +1160,7 @@
 - Зависимости: T-020, T-019, T-015
 
 ### T-022 · Массовые действия и обучение категоризации на исправлениях
-- Статус: todo
+- Статус: in-progress (приостановлено пользователем 2026-10-29: ветка `task/T-021-operations`, коммиты b5ebe35..a1e8b32 вместе с T-022; по словам имплементатора, `make check` был зелёный; не прогнаны `make test-int`, `make e2e`, `make bench`; ревью фазы 2 не делается по решению пользователя)
 - Модули: `transactions`, `categories`, `features/operations`
 - SPEC: TXN-04, CAT-05, AGT-03, AGT-07
 - Экран: Operations — design/screens/Operations.dc.html, `Operations--bulk-selection` (панель массовых действий,

@@ -17,3 +17,14 @@ export class LlmSchemaError extends Error {
   readonly code = "LLM_SCHEMA";
   override readonly name = "LlmSchemaError";
 }
+
+/** Модель не ответила за отведённое время (первый кусок потока или весь ответ) — цепочка идёт дальше (LLM-03). */
+export class LlmTimeoutError extends Error {
+  readonly code = "LLM_TIMEOUT";
+  override readonly name = "LlmTimeoutError";
+  readonly ms: number;
+  constructor(ms: number) {
+    super(`Модель не ответила за ${String(ms)} мс.`);
+    this.ms = ms;
+  }
+}

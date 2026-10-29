@@ -37,6 +37,8 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   `setAiModelEnabled`, `saveAiModel`, `testAiProvider`, `setAiKey` (ключ только на входе), `aiUsage`, `setAiPrice`;
   `AI_TASKS` и `AI_CAPABILITIES` сверяет `llm/domain/tasks.test.ts` с шлюзом; формы ответов — `admin.contract.test.ts`
   (ни текстов, ни пользователей, ни значений ключей).
+- `llm.localModelsProgress` (localOnly, T-024): `{ state, bytesDone, bytesTotal }` для экрана первого запуска; `admin.localModels`,
+  `downloadLocalModels`, `selfTestLocalModels` — `LocalModelsOverview` (модели каталога с файлами, прогресс, самотест).
 - `privacy.state.cloud` — `{ granted, since, outdated }`: согласие по прежнему тексту — `outdated`, облако выключено.
 - `admin` (T-017): «Пользователи» (`AdminUser`, действия по `{ id }`, `AdminResetResult`) и «Система»
   (`SystemOverview`: `JobRun`, почта без пароля, пояс, сеть, Langfuse); форму ответов сторожит `admin.contract.test.ts`

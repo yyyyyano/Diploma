@@ -1,7 +1,6 @@
 // Маскирование перед облаком (PRIV-03, ARCHITECTURE §8.1): порты. Реализация — masker.ts (правила, склонённый словарь
 // имён пользователя, NER), обёртка модели — masked-model.ts.
 import type { Scope } from "@kosht/kernel";
-import type { Span } from "../../domain/masking/rules.ts";
 
 /** Замаскированный текст и таблица обратной подстановки (метка → исходное значение). */
 export interface Masked {
@@ -33,8 +32,4 @@ export interface KnownNames {
   names(scope: Scope): Promise<readonly string[]>;
 }
 
-/** Распознаватель имён и адресов в свободном тексте (NER, ADR-0009); в тестах — словарный. */
-export interface NameRecognizer {
-  /** Отрезки kind `name` и `address`; модель не скачана — пусто (режим деградации: правила и словарь). */
-  recognize(text: string): Promise<readonly Span[]>;
-}
+export type { NameRecognizer } from "../ports.ts";

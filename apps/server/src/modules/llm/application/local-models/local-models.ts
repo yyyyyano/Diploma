@@ -12,7 +12,6 @@ import {
   upsertLocalModel,
   type LocalModelRow,
 } from "../../infrastructure/db/local-models.repo.ts";
-import type { LocalModelStatus } from "../../infrastructure/db/schema.ts";
 import { LLM_LLAMA_BASE_URL, LLM_MODELS_DOWNLOAD } from "../../settings.ts";
 import { CATALOG, type CatalogFile, type CatalogModel, type ModelKind } from "./catalog.ts";
 import { downloadFile, ModelDownloadError, type DownloadDeps } from "./download-file.ts";
@@ -343,6 +342,3 @@ export function makeLocalModels(d: LocalModelsDeps) {
 }
 
 export type LocalModels = ReturnType<typeof makeLocalModels>;
-
-/** Статус строки для тестов и админки. */
-export type { LocalModelStatus };

@@ -8,7 +8,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Logger } from "../../../../platform/logging/logger.ts";
-import type { NameRecognizer } from "../../application/masking/ports.ts";
+import type { NameRecognizer } from "../../application/ports.ts";
 import type { Span } from "../../domain/masking/rules.ts";
 
 /** Токен в виде, который отдаёт конвейер token-classification: метка BIOUL, уверенность, кусок слова. */

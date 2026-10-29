@@ -23,7 +23,8 @@ ADM-01…60 (экраны).
   «Провайдеры ИИ» (`facades.llm.admin`, `LlmAdminFacade`): `aiProviders`, `setAiChain` (порядок цепочки задачи),
   `setAiModelEnabled`, `saveAiModel` (облачность — по провайдеру), `testAiProvider` («Проверить связь», сбой — в
   ответе), `setAiKey` (ключ только для записи; наружу — «задан / не задан»); «Запросы к ИИ»: `aiUsage({ period })`
-  (цифры журнала расхода), `setAiPrice` (прайс-лист). Ответы — типы `admin/ai.contract.ts`: без текстов запросов,
+  (цифры журнала расхода), `setAiPrice` (прайс-лист); локальные модели (NFR-25): `localModels` (набор, файлы, прогресс,
+  самотест), `downloadLocalModels` (задача в worker), `selfTestLocalModels` (запасной режим на процессоре при «мусоре»). Ответы — типы `admin/ai.contract.ts`: без текстов запросов,
   пользователей и значений ключей. Форма ответов — только метаданные (`packages/contract/src/admin/admin.contract.test.ts`).
 
 ## Зависимости

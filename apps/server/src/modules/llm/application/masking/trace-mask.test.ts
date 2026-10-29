@@ -2,7 +2,6 @@
 // маскирования, настоящий процессор Langfuse с маской, экспорт — в память: ни имя, ни счёт, ни карта, ни телефон, ни
 // email не должны попасть ни в один атрибут ни одного спана. Данные синтетические (NFR-18).
 import { MockLanguageModelV4, testScope } from "@kosht/testing";
-import type { ReadableSpan, SpanExporter } from "@opentelemetry/sdk-trace-base";
 import { generateText } from "ai";
 import { describe, expect, it } from "vitest";
 import { createTelemetry } from "../../../../platform/telemetry/telemetry.ts";
@@ -26,16 +25,20 @@ const usage = {
   outputTokens: { total: 1, text: 1, reasoning: undefined },
 };
 
+/** Экспортёр в память; типы OpenTelemetry сюда не тянем (правило границ): форма — по структуре. */
 function memoryExporter() {
-  const spans: ReadableSpan[] = [];
-  const exporter: SpanExporter = {
-    export: (batch, done) => {
+  const spans: { attributes: Record<string, unknown> }[] = [];
+  const exporter = {
+    export: (
+      batch: { attributes: Record<string, unknown> }[],
+      done: (result: { code: number }) => void,
+    ) => {
       spans.push(...batch);
       done({ code: 0 });
     },
     shutdown: async () => {},
   };
-  return { exporter, spans };
+  return { exporter: exporter as never, spans };
 }
 
 describe("КП PRIV: в Langfuse текст замаскирован", () => {

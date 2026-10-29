@@ -202,7 +202,8 @@
 - `module/define-module.ts` — `defineModule({ id, facade?, router?, events?, jobs?, subscriptions?, schedules?, sweeps?,
   tools?, deliveryChannels?, undo?, confirm?, userData?, settings?, secrets?, rateRules?, sessionSource?, scopeVerifier? })`
   → `ModuleDescriptor<F>` (источник сессий сайта и проверка владельца задач — по одному на процесс, их даёт `identity`;
-  `consentSource` — облачное согласие (PRIV-02), один на процесс; второй — `RegistryError`; `stop` — остановка работы
+  `consentSource` — облачное согласие (PRIV-02) и `knownNamesSource` — имена пользователя для маскирования (PRIV-03,
+  `platform.knownNames`; даёт profile) — по одному на процесс; второй — `RegistryError`; `stop` — остановка работы
   модуля в памяти при `close()`, первой и в порядке, обратном созданию)
   (все списки есть, пустые — тоже). id — kebab-case; имена событий, задач, расписаний, обходов, `undo`/`confirm` —
   `<id>.<…>`; подписка — только своего модуля (`module === id`); иначе `RangeError` при создании. `Platform` (`clock`,
@@ -210,7 +211,8 @@
   (нет источника — false), `tools()` — инструменты агента из реестра (до конца сборки — ошибка), `actionHandlers()` — реестры обработчиков
   `undo`/`confirm` всех модулей для `actions`, `deliveryChannels()` — каналы доставки уведомлений по имени (так же
   поздно), `userData()` — владельцы данных в порядке `modules.ts` (так же поздно; privacy, PRIV-05/06), `scoped(scope)`), `SystemPlatform`
-  (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа; только
+  (+ `system: SystemDb`, `deriveKey("auth/v1")` — ключ из мастер-ключа, `localOrigin` — адрес локального входа, `modelsDir` —
+  `<DATA_DIR>/models` для локальных моделей; только
   модулям с `system`/`public` в `modules.ts`), `ModuleDeps<F, P>` = `{ platform, facades }`
   (фасады — ровно `dependsOn`, ключ — id в camelCase), `NoFacades`, `ActionHandler(s, payload)`, `DeliveryChannel`.
 - `tools/define-tool.ts` — `defineTool` (ARCHITECTURE §8.2): `ImmediateTool` (`read | write`, `execute(ctx, input)`,

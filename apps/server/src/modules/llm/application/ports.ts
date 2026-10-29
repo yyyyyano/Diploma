@@ -1,3 +1,5 @@
+import type { Span } from "../domain/masking/rules.ts";
+
 // Порты llm к внешнему миру сверх провайдеров моделей (ARCHITECTURE §4.4).
 
 /** Удаление трасс пользователя в Langfuse (PRIV-06, OBS-05): сколько трасс отправлено на удаление. */
@@ -16,4 +18,10 @@ export interface Embedder {
   /** Длина вектора модели. */
   readonly dimensions: number;
   embed(texts: readonly string[]): Promise<number[][]>;
+}
+
+/** Распознаватель имён и адресов в свободном тексте (NER, ADR-0009); в тестах — словарный. */
+export interface NameRecognizer {
+  /** Отрезки kind `name` и `address`; модель не скачана — пусто (режим деградации: правила и словарь). */
+  recognize(text: string): Promise<readonly Span[]>;
 }

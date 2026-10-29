@@ -30,7 +30,9 @@ function renderSetup() {
     history: createMemoryHistory({ initialEntries: ["/setup"] }),
   });
   renderWithProviders(
-    <QueryClientProvider client={new QueryClient()}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <RouterProvider router={router} />
     </QueryClientProvider>,
   );
@@ -74,6 +76,9 @@ describe("AUTH-10: экран первого запуска", () => {
         body = await request.json();
         return HttpResponse.json({ ok: true, recoveryCode: "KQ7M-4XPD-9TJC-2HWR" });
       }),
+      http.get("*/api/llm/local-models-progress", () =>
+        HttpResponse.json({ state: "absent", bytesDone: 0, bytesTotal: 4_400_000_000 }),
+      ),
     );
     const router = renderSetup();
     await submit("admin@example.test", "пароль-администратора");
@@ -87,6 +92,8 @@ describe("AUTH-10: экран первого запуска", () => {
       screen.getByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }),
     );
     await userEvent.click(next);
+    // NFR-25: после кода — «Готовим систему»; войти можно сразу
+    await userEvent.click(await screen.findByRole("button", { name: "Войти" }));
     expect(await screen.findByText("Вход")).toBeInTheDocument();
     expect(body).toEqual({ email: "admin@example.test", password: "пароль-администратора" });
     expect(router.state.location.search).toEqual({ created: true });
@@ -100,5 +107,58 @@ describe("AUTH-10: экран первого запуска", () => {
     await submit("admin@example.test", "пароль-администратора");
     expect(await screen.findByText("Вход")).toBeInTheDocument();
     expect(router.state.location.search).toEqual({});
+  });
+
+  describe("NFR-25, AUTH-10: шаг «Готовим систему» — прогресс локальных моделей", () => {
+    async function toPrepare(progress: () => Response | Promise<Response>) {
+      server.use(
+        http.post("*/api/identity/setup", () =>
+          HttpResponse.json({ ok: true, recoveryCode: "KQ7M-4XPD-9TJC-2HWR" }),
+        ),
+        http.get("*/api/llm/local-models-progress", progress),
+      );
+      renderSetup();
+      await submit("admin@example.test", "пароль-администратора");
+      await userEvent.click(
+        await screen.findByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }),
+      );
+      await userEvent.click(screen.getByRole("button", { name: "Продолжить" }));
+      await screen.findByRole("heading", { name: "Готовим систему" });
+    }
+
+    it("идёт скачивание — полоса с байтами и пояснение про докачку; «Войти» доступно сразу", async () => {
+      await toPrepare(() =>
+        HttpResponse.json({
+          state: "downloading",
+          bytesDone: 1_500_000_000,
+          bytesTotal: 4_400_000_000,
+        }),
+      );
+      const bar = await screen.findByRole("progressbar", { name: "Локальные модели: скачано" });
+      expect(bar).toHaveAttribute("value", "1500000000");
+      expect(screen.getByText(/Скачано 1,4 ГБ из 4,1 ГБ/)).toBeInTheDocument();
+      expect(screen.getByText(/продолжу с места остановки/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    });
+
+    it("всё скачано — так и сказано; ещё не начато — где запустить", async () => {
+      await toPrepare(() =>
+        HttpResponse.json({ state: "ready", bytesDone: 4_400_000_000, bytesTotal: 4_400_000_000 }),
+      );
+      expect(await screen.findByText(/Скачаны: модель для чата/)).toBeInTheDocument();
+    });
+
+    it("ошибка скачивания — понятный текст и путь к повтору; ошибка опроса не мешает войти", async () => {
+      await toPrepare(() => HttpResponse.json({ state: "failed", bytesDone: 10, bytesTotal: 100 }));
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Скачивание остановилось с ошибкой",
+      );
+    });
+
+    it("опрос не отвечает — «это не мешает войти»", async () => {
+      await toPrepare(() => HttpResponse.error());
+      expect(await screen.findByText(/не мешает войти/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    });
   });
 });

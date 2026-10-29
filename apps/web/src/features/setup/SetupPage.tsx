@@ -6,7 +6,8 @@
 import { SetupInput } from "@kosht/contract";
 import { Button, Checkbox, PasswordInput, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
-import { useMutation } from "@tanstack/react-query";
+import { formatFileSize } from "@kosht/i18n";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ChevronRight, Lock, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -29,6 +30,7 @@ export function SetupPage() {
     navigate({ to: "/login", search: created ? { created: true } : {} });
   const [recoveryCode, setRecoveryCode] = useState<string | undefined>();
   const [saved, setSaved] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const setup = useMutation(
     orpc.identity.setup.mutationOptions({
       onSuccess: (result) => setRecoveryCode(result.recoveryCode),
@@ -52,7 +54,9 @@ export function SetupPage() {
       </header>
       <main className={classes.main}>
         <div className={classes.col}>
-          {recoveryCode !== undefined ? (
+          {recoveryCode !== undefined && preparing ? (
+            <PrepareStep onContinue={() => void toLogin(true)} />
+          ) : recoveryCode !== undefined ? (
             <div className={classes.card}>
               <div className={classes.heading}>
                 <h1 className={classes.title}>{t("setup:code.title")}</h1>
@@ -74,7 +78,7 @@ export function SetupPage() {
                   size="md"
                   disabled={!saved}
                   rightSection={<ChevronRight size={18} strokeWidth={1.8} aria-hidden />}
-                  onClick={() => void toLogin(true)}
+                  onClick={() => setPreparing(true)}
                 >
                   {t("setup:code.continue")}
                 </Button>
@@ -143,6 +147,68 @@ export function SetupPage() {
           <p className={classes.once}>{t("setup:once")}</p>
         </div>
       </main>
+    </div>
+  );
+}
+
+/**
+ * «Готовим систему» (AUTH-10, NFR-25): после кода восстановления — прогресс скачивания локальных моделей. Опрос раз в 2 с
+ * (у системной задачи нет домохозяйства, потока событий для неё нет); войти можно сразу — скачивание идёт в фоне.
+ */
+function PrepareStep({ onContinue }: { readonly onContinue: () => void }) {
+  const { t } = useTranslation("setup");
+  const progress = useQuery(
+    orpc.llm.localModelsProgress.queryOptions({
+      refetchInterval: (query) => (query.state.data?.state === "ready" ? false : 2000),
+    }),
+  );
+  const data = progress.data;
+  return (
+    <div className={classes.card}>
+      <div className={classes.heading}>
+        <h1 className={classes.title}>{t("prepare.title")}</h1>
+        <p className={classes.intro}>{t("prepare.intro")}</p>
+      </div>
+      <section className={classes.task} aria-labelledby="setup-models">
+        <h2 id="setup-models" className={classes.taskTitle}>
+          {t("prepare.models")}
+        </h2>
+        {progress.isError && <output className={classes.note}>{t("prepare.error")}</output>}
+        {data !== undefined && (data.state === "downloading" || data.state === "failed") && (
+          <>
+            <progress
+              className={classes.bar}
+              value={data.bytesDone}
+              max={Math.max(1, data.bytesTotal)}
+              aria-label={t("prepare.modelsProgressLabel")}
+            />
+            <p className={classes.note}>
+              {t("prepare.modelsProgress", {
+                done: formatFileSize(data.bytesDone),
+                total: formatFileSize(data.bytesTotal),
+              })}
+            </p>
+          </>
+        )}
+        {data?.state === "downloading" && <p className={classes.hint}>{t("prepare.modelsNote")}</p>}
+        {data?.state === "ready" && <p className={classes.hint}>{t("prepare.modelsDone")}</p>}
+        {data?.state === "absent" && <p className={classes.hint}>{t("prepare.modelsAbsent")}</p>}
+        {data?.state === "failed" && (
+          <p className={classes.error} role="alert">
+            <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+            {t("prepare.modelsFailed")}
+          </p>
+        )}
+      </section>
+      <div className={classes.actions}>
+        <Button
+          size="md"
+          rightSection={<ChevronRight size={18} strokeWidth={1.8} aria-hidden />}
+          onClick={onContinue}
+        >
+          {t("prepare.continue")}
+        </Button>
+      </div>
     </div>
   );
 }

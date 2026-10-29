@@ -153,3 +153,49 @@
     width: 100%;
   }
 }
+
+/* «Готовим систему» (макет Setup.dc.html, шаг 3): задача с полосой прогресса. */
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  padding: var(--s-16);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.taskTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.bar {
+  width: 100%;
+  height: 10px;
+  appearance: none;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.bar::-webkit-progress-bar {
+  background: var(--surface);
+}
+
+.bar::-webkit-progress-value {
+  background: var(--brand);
+  border-radius: var(--r-pill);
+}
+
+.bar::-moz-progress-bar {
+  background: var(--brand);
+}

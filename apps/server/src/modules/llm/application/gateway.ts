@@ -20,6 +20,7 @@ import type { Logger } from "../../../platform/logging/logger.ts";
 import type { Telemetry, TelemetryCallOptions } from "../../../platform/telemetry/telemetry.ts";
 import type { Clock, Scope } from "@kosht/kernel";
 import { buildChain } from "../domain/build-chain.ts";
+import { prepareDocument } from "../domain/injection.ts";
 import { isSystemCaller, type Caller } from "../domain/caller.ts";
 import { costMicros } from "../domain/cost.ts";
 import type { LlmTask, StructuredTask } from "../domain/tasks.ts";
@@ -36,10 +37,14 @@ import {
   type CassetteMode,
   type CassetteRef,
 } from "../infrastructure/providers/cassettes.ts";
+import { sanitizeFilePart } from "../infrastructure/images/strip-metadata.ts";
 import type { ProviderRegistry } from "../infrastructure/providers/providers.ts";
 import { chainedModel, type ChainEntry, type ChainEvent } from "./chained-model.ts";
 import { createLimiter } from "./limiter.ts";
 import { LlmSchemaError } from "./errors.ts";
+import { maskedModel } from "./masking/masked-model.ts";
+import type { Masker } from "./masking/ports.ts";
+import type { SanitizeFile } from "./masking/prompt.ts";
 import { assertOutsideTransaction, errorCodeOf, meteredModel } from "./metered-model.ts";
 
 /** Опции трасс вызова: порта платформы и интеграции трасс шлюза (Langfuse). */
@@ -60,8 +65,13 @@ export interface ExtractRequest<T> {
   readonly schema: z.ZodType<T>;
   /** Инструкции — отдельно от документа (SEC-10/11). */
   readonly instructions: string;
-  /** Документ — данные: уходит блоком <document>, не инструкциями. */
+  /** Документ — данные: уходит блоком <document>, не инструкциями (приказы и теги разметки нейтрализуются, SEC-10). */
   readonly document: string;
+  /**
+   * Изображения документа (фото чека, скан выписки — файловые части AI SDK). Облачной модели уходят перекодированными
+   * без метаданных (PRIV-04); сами изображения не маскируются (PRIV-04, решение пользователя 2026-10-29 для сканов).
+   */
+  readonly images?: readonly { readonly data: Uint8Array; readonly mediaType: string }[];
   /** Версия подсказки (ключ кассет и кэша eval). */
   readonly promptVersion: string;
 }
@@ -100,6 +110,13 @@ export interface GatewayDeps {
   readonly providers: ProviderRegistry;
   readonly consent: { cloudAllowed(scope: Exclude<Caller, { kind: "system" }>): Promise<boolean> };
   readonly telemetry: Telemetry;
+  /**
+   * Маскирование перед облаком (PRIV-03): обязательно — шлюз без маскировщика не соберётся, облачная модель в обход
+   * него невозможна. Применяется к облачным записям цепочки, когда вызывает пользователь (scope).
+   */
+  readonly masker: Masker;
+  /** Очистка файловых частей облачного промпта (PRIV-04); по умолчанию — sharp без метаданных. */
+  readonly sanitizeFile?: SanitizeFile;
   /** Интеграции трасс AI SDK (Langfuse); пусто — трассы только опциями порта (выключены). */
   readonly integrations?: readonly AiTelemetry[];
   readonly clock: Clock;
@@ -163,6 +180,19 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
     return adapter;
   }
 
+  /**
+   * Облачная модель — только за маскированием (PRIV-03) и очисткой изображений (PRIV-04). Задача без данных
+   * пользователя (systemCaller, PRIV-09) личного не несёт — маскировать нечего; локальные модели данные не отдают.
+   */
+  function protect(caller: Caller, record: StoredModel, model: LanguageModelV4): LanguageModelV4 {
+    if (!record.cloud || isSystemCaller(caller)) return model;
+    return maskedModel(model, {
+      masker: d.masker,
+      scope: caller,
+      sanitizeFile: d.sanitizeFile ?? sanitizeFilePart,
+    });
+  }
+
   async function languageModel(caller: Caller, task: LlmTask): Promise<LanguageModelV4> {
     assertOutsideTransaction();
     const config = await d.cassettes();
@@ -178,7 +208,7 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
     const entries: ChainEntry[] = (await chainFor(caller, task)).map((record) => ({
       record,
       model: meteredModel(
-        adapterOf(record).languageModel(record.modelId),
+        protect(caller, record, adapterOf(record).languageModel(record.modelId)),
         { task, price: record, provider: record.provider, modelId: record.modelId },
         meter,
       ),
@@ -218,11 +248,36 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
 
   async function extract<T>(caller: Caller, request: ExtractRequest<T>): Promise<T> {
     const model = await languageModel(caller, request.task);
+    // SEC-10: приказы в тексте документа заменяются меткой, теги не закрывают блок; в лог — только число замен.
+    const prepared = prepareDocument(request.document);
+    if (prepared.neutralized > 0) {
+      d.log.warn({ count: prepared.neutralized }, "llm.injection-neutralized");
+    }
+    const document = `<document>\n${prepared.text}\n</document>`;
+    const images = request.images ?? [];
+    const input =
+      images.length === 0
+        ? { prompt: document }
+        : {
+            messages: [
+              {
+                role: "user" as const,
+                content: [
+                  { type: "text" as const, text: document },
+                  ...images.map((image) => ({
+                    type: "file" as const,
+                    data: image.data,
+                    mediaType: image.mediaType,
+                  })),
+                ],
+              },
+            ],
+          };
     const call = () =>
       generateText({
         model,
         system: request.instructions,
-        prompt: `<document>\n${request.document}\n</document>`,
+        ...input,
         output: Output.object({ schema: request.schema }),
         ...telemetryOf(caller, request.task),
       });

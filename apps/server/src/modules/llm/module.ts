@@ -10,6 +10,8 @@ import type { IdentityFacade } from "../identity/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { createLlmGateway, type LlmGateway } from "./application/gateway.ts";
 import { makeLlmAdmin, type LlmAdmin } from "./application/admin.ts";
+import { createMasker } from "./application/masking/masker.ts";
+import { createRedactions } from "./application/masking/redactions.ts";
 import { makePreferences } from "./application/preferences.ts";
 import { makeProviderAlerts } from "./application/provider-alerts.ts";
 import { makeRetention } from "./application/retention.ts";
@@ -64,9 +66,13 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
     createZaiAdapter({ key: async () => platform.secrets.reveal(ZAI_API_KEY) }),
     createLlamaAdapter({ baseUrl: async () => platform.settings.get(LLM_LLAMA_BASE_URL) }),
   ]);
+  // PRIV-03: имена пользователя — из словаря profile (platform.knownNames); замены помнятся для трасс Langfuse (OBS-03).
+  const redactions = createRedactions(() => platform.clock.now().getTime());
+  const masker = createMasker({ names: platform.knownNames, redactions });
   const gateway: LlmGateway = createLlmGateway({
     system: platform.system,
     providers,
+    masker,
     timeouts: async () => ({
       cloudMs: await platform.settings.get(LLM_TIMEOUT_CLOUD_MS),
       localMs: await platform.settings.get(LLM_TIMEOUT_LOCAL_MS),

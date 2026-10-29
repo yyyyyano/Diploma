@@ -25,6 +25,7 @@ import {
   TRANSCRIPT,
 } from "../infrastructure/providers/test-provider.ts";
 import { LlmInTransactionError, LlmSchemaError } from "./errors.ts";
+import { createMasker } from "./masking/masker.ts";
 import { createLlmGateway, type CassetteConfig } from "./gateway.ts";
 
 let db: TestDb;
@@ -95,6 +96,7 @@ function gateway(
       log: memory.log,
       cassettes: async () => options.cassettes ?? { mode: "live" },
       timeouts: async () => ({ cloudMs: 5000, localMs: 5000 }),
+      masker: createMasker({ names: { names: async () => [] } }),
     }),
   };
 }

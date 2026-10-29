@@ -11,6 +11,7 @@ import { createTelemetry } from "../../../platform/telemetry/telemetry.ts";
 import type { ProviderAdapter } from "../infrastructure/providers/provider-adapter.ts";
 import { createProviderRegistry } from "../infrastructure/providers/providers.ts";
 import type { ChainEvent } from "./chained-model.ts";
+import { createMasker } from "./masking/masker.ts";
 import { createLlmGateway } from "./gateway.ts";
 
 let db: TestDb;
@@ -126,6 +127,7 @@ function gateway(
       log: memory.log,
       cassettes: async () => ({ mode: "live" }),
       timeouts: async () => ({ cloudMs: 5000, localMs: 5000 }),
+      masker: createMasker({ names: { names: async () => [] } }),
       ...(options.preferred === undefined ? {} : { preferredModel: async () => options.preferred }),
       onProviderEvent: async (event) => {
         options.events?.push(event);

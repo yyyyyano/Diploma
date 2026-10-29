@@ -110,3 +110,35 @@ export function changedFields(before: Snapshot, after: Snapshot): Field[] {
 export function shortTime(time: string | null): string | null {
   return time === null ? null : time.slice(0, 5);
 }
+
+/** Полное состояние операции для истории и «Отменить»: сравниваемые поля и то, что нужно для восстановления удалённой. */
+export interface StoredState extends Snapshot {
+  readonly description: string;
+  readonly source: string;
+  readonly visibility: string;
+  readonly transferPairId: string | null;
+  readonly refundOfId: string | null;
+  readonly version: number;
+  /** Момент создания (ISO): удалённая операция возвращается с прежней датой записи. */
+  readonly createdAt: string;
+}
+
+/**
+ * Категории какого вида допустимы операции: расход — расходные, доход — доходные, возврат — любые (возврат покупки
+ * остаётся в категории покупки, возврат налога — «Возвраты»), у перевода категории нет.
+ */
+export function categoryKindsOf(type: TransactionType): readonly ("expense" | "income")[] {
+  if (type === "transfer") return [];
+  if (type === "refund") return ["expense", "income"];
+  return [type === "income" ? "income" : "expense"];
+}
+
+/** Вид категории для автоподбора: возврат покупки подбирается как расход. */
+export function kindForRules(type: TransactionType): "expense" | "income" {
+  return type === "income" ? "income" : "expense";
+}
+
+/** Время «08:47» → «08:47:00» (формат колонки time(0)); нет — null. */
+export function toDbTime(time: string | null): string | null {
+  return time === null ? null : `${time}:00`;
+}

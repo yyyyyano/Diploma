@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import {
   balanceDeltas,
   changedFields,
+  categoryKindsOf,
   directionOf,
+  kindForRules,
+  toDbTime,
   shortTime,
   type Snapshot,
 } from "./transactions.ts";
@@ -109,5 +112,21 @@ describe("TXN-05: что изменилось", () => {
   it("время из БД «08:47:00» показывается как «08:47»", () => {
     expect(shortTime("08:47:00")).toBe("08:47");
     expect(shortTime(null)).toBeNull();
+  });
+});
+
+describe("TXN-01: какие категории допустимы типу операции", () => {
+  it("расход — расходные, доход — доходные, возврат — любые, у перевода категории нет", () => {
+    expect(categoryKindsOf("expense")).toEqual(["expense"]);
+    expect(categoryKindsOf("income")).toEqual(["income"]);
+    expect(categoryKindsOf("refund")).toEqual(["expense", "income"]);
+    expect(categoryKindsOf("transfer")).toEqual([]);
+  });
+
+  it("возврат покупки подбирается как расход, время для колонки — с секундами", () => {
+    expect(kindForRules("refund")).toBe("expense");
+    expect(kindForRules("income")).toBe("income");
+    expect(toDbTime("08:47")).toBe("08:47:00");
+    expect(toDbTime(null)).toBeNull();
   });
 });

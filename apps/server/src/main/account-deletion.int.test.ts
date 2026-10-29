@@ -128,6 +128,19 @@ async function seedUser(email: string): Promise<Seeded> {
     pattern: "ТАКСИ",
     category: { type: "system", code: "transport" },
   });
+  // Операция на вкладе и её история (TXN-03, TXN-05) — строками владельца.
+  const operation = await db.owner.query<{ id: string }>(
+    `insert into transactions (household_id, user_id, account_id, type, direction, occurred_on, amount_minor,
+       currency, amount_byn_minor, category_code, category_source, source)
+     values ($1, $2, $3, 'income', 'in', '2026-10-28', 10000, 'BYN', 10000, 'interest', 'user', 'manual')
+     returning id`,
+    [...ids, created.account.id],
+  );
+  await db.owner.query(
+    `insert into transaction_revisions (household_id, user_id, transaction_id, batch_id, action, channel, version_after)
+     values ($1, $2, $3, uuidv7(), 'created', 'web', 1)`,
+    [...ids, operation.rows[0]?.id],
+  );
   const preference = await stack.call("local", "/notifications/preferences", {
     cookie: user.cookie,
     body: { kind: "goal", channel: "web", enabled: false },

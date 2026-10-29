@@ -12,6 +12,7 @@ import type { FxRatesFacade } from "../fx-rates/index.ts";
 import type { ActionsFacade } from "../actions/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
+import { transactionsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface TransactionsFacades {
@@ -25,7 +26,7 @@ export interface TransactionsFacades {
 }
 
 export function createTransactionsModule(_deps: ModuleDeps<TransactionsFacades, Platform>) {
-  return defineModule({ id: "transactions" });
+  return defineModule({ id: "transactions", userData: transactionsUserData });
 }
 
 /** Что модуль даёт соседям: пока ничего (undefined). */

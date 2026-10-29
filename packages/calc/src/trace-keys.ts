@@ -18,6 +18,10 @@ export const TRACE_KEYS = [
   "accounts.balanceInByn",
   "accounts.total",
   "accounts.available",
+  // STMT-02, STMT-09: сумма операции, её эквивалент в BYN и сдвиг остатка счёта от операции.
+  "transactions.amount",
+  "transactions.amountInByn",
+  "transactions.balanceDelta",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

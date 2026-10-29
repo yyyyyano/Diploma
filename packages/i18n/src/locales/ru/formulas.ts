@@ -24,4 +24,9 @@ export const formulas = {
     total: "Всего на счетах",
     available: "Доступно без накопительного",
   },
+  transactions: {
+    amount: "Сумма операции",
+    amountInByn: "Сумма в BYN по курсу НБРБ на день операции",
+    balanceDelta: "Изменение остатка счёта",
+  },
 } as const;

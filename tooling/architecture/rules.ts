@@ -443,6 +443,20 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["@langfuse/*", "@opentelemetry/*"]) },
     ),
     rule(
+      "sharp-only-in-llm-images",
+      "Обработка изображений (sharp) — только в llm/infrastructure/images: перед облаком изображение перекодируется " +
+        "без метаданных (EXIF, геометки), остальной код получает готовые байты от шлюза llm (PRIV-04).",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/llm/infrastructure/images/`] },
+      { path: npmPattern(["sharp"]) },
+    ),
+    rule(
+      "transformers-only-in-llm-masking",
+      "Локальная NER-модель (@huggingface/transformers, onnxruntime) — только в llm/infrastructure/masking: " +
+        "остальной код получает маскирование через порт Masker шлюза llm (PRIV-03, ADR-0009).",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/llm/infrastructure/masking/`] },
+      { path: npmPattern(["@huggingface/*", "onnxruntime-node", "onnxruntime-web"]) },
+    ),
+    rule(
       "ai-only-in-web-assistant",
       "AI SDK на сайте (ai, @ai-sdk/react) — только в features/assistant: чат с потоком ответа; остальные экраны " +
         "получают готовые данные процедурами (ADR-0009, ADR-0013).",

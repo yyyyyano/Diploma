@@ -25,6 +25,17 @@ export interface RawTable {
   readonly lines: readonly RawLine[];
 }
 
+/** Картинка страницы или фото: скан читает модель с изображениями (STMT-04 шаг 4). */
+export interface RawImage {
+  readonly bytes: Uint8Array;
+  readonly mime: string;
+}
+
+/** Что вернуло чтение файла: таблица (текстовый файл или PDF с текстовым слоем) или картинки (скан). */
+export type RawDocument =
+  | { readonly kind: "table"; readonly table: RawTable }
+  | { readonly kind: "images"; readonly images: readonly RawImage[] };
+
 /** Смысл колонки (STMT-04 шаг 2); `ignore` — колонка не нужна. */
 export const ROLES = [
   "date",

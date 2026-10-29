@@ -3,7 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { server } from "../test/msw.ts";
-import { createApiClient } from "./api.ts";
+import { createApiClient, orpc } from "./api.ts";
 import { progressQueryKey, retryDelayMs, runEventStream } from "./events.ts";
 
 const ORIGIN = "http://localhost:5173";
@@ -37,8 +37,9 @@ const unauthorized = () =>
 /** Запросы с данными и признаком «устарели» — чтобы видеть инвалидацию по состоянию кэша. */
 function cacheWithData(): QueryClient {
   const queryClient = new QueryClient();
-  queryClient.setQueryData(["accounts", "list"], []);
-  queryClient.setQueryData(["transactions", "list"], []);
+  queryClient.setQueryData(orpc.accounts.list.queryKey(), []);
+  queryClient.setQueryData(orpc.transactions.list.queryKey({ input: { page: 1 } }), []);
+  queryClient.setQueryData(orpc.categories.list.queryKey(), []);
   return queryClient;
 }
 
@@ -47,7 +48,7 @@ const invalidated = (queryClient: QueryClient) =>
     .getQueryCache()
     .getAll()
     .filter((query) => query.state.isInvalidated)
-    .map((query) => query.queryKey[0]);
+    .map((query) => (query.queryKey[0] as string[]).join("."));
 
 /**
  * Поток, который отвечает по очереди заготовками; следующий запрос после них останавливает клиента (abort) —
@@ -70,7 +71,7 @@ function scripted(responses: readonly (() => Response)[], controller: AbortContr
 const noWait = () => Promise.resolve();
 
 describe("NFR-21: клиент events.stream", () => {
-  it("changed — перезапрашиваются запросы", async () => {
+  it("changed по счёту — перезапрашиваются только запросы счетов, операции и категории не тронуты", async () => {
     const queryClient = cacheWithData();
     const controller = new AbortController();
     scripted(
@@ -83,7 +84,43 @@ describe("NFR-21: клиент events.stream", () => {
       signal: controller.signal,
       sleep: noWait,
     });
-    expect(invalidated(queryClient)).toEqual(["accounts", "transactions"]);
+    expect(invalidated(queryClient)).toEqual(["accounts.list"]);
+  });
+
+  it("changed по операции — только запросы операций (привязка «сущность → запросы»)", async () => {
+    const queryClient = cacheWithData();
+    const controller = new AbortController();
+    scripted(
+      [() => sse({ event: "message", data: { type: "changed", entity: "transaction", id: ID } })],
+      controller,
+    );
+    await runEventStream({
+      client: createApiClient(() => ORIGIN),
+      queryClient,
+      signal: controller.signal,
+      sleep: noWait,
+    });
+    expect(invalidated(queryClient)).toEqual(["transactions.list"]);
+  });
+
+  it("changed незнакомой сущности — безопасное умолчание: перезапрос всех запросов", async () => {
+    const queryClient = cacheWithData();
+    const controller = new AbortController();
+    scripted(
+      [() => sse({ event: "message", data: { type: "changed", entity: "receipt", id: ID } })],
+      controller,
+    );
+    await runEventStream({
+      client: createApiClient(() => ORIGIN),
+      queryClient,
+      signal: controller.signal,
+      sleep: noWait,
+    });
+    expect(invalidated(queryClient)).toEqual([
+      "accounts.list",
+      "transactions.list",
+      "categories.list",
+    ]);
   });
 
   it("progress — ход работы в кэше под progressQueryKey, без перезапроса данных", async () => {
@@ -123,7 +160,11 @@ describe("NFR-21: клиент events.stream", () => {
       sleep: noWait,
     });
     expect(stream.reconnects()).toBe(2);
-    expect(invalidated(queryClient)).toEqual(["accounts", "transactions"]);
+    expect(invalidated(queryClient)).toEqual([
+      "accounts.list",
+      "transactions.list",
+      "categories.list",
+    ]);
   });
 
   it("ошибка сервера — переподключение после паузы и перезапрос", async () => {
@@ -145,7 +186,11 @@ describe("NFR-21: клиент events.stream", () => {
     });
     expect(stream.reconnects()).toBe(2);
     expect(pauses.slice(0, 2)).toEqual([1000, 2000]);
-    expect(invalidated(queryClient)).toEqual(["accounts", "transactions"]);
+    expect(invalidated(queryClient)).toEqual([
+      "accounts.list",
+      "transactions.list",
+      "categories.list",
+    ]);
   });
 
   it("UNAUTHORIZED — сессии нет: поток не переподключается", async () => {

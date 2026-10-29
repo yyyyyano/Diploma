@@ -23,7 +23,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 - Пункт меню — `staticData: { nav: { group, order, section, icon, phoneOrder?, role? }, page }` в файле маршрута;
   нет маршрута — нет пункта (DES-15).
 - `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`
-  (`useEventStream`, `runEventStream`, `progressQueryKey`), `errors` (`errorCodeOf` → код для `errors:<код>`,
+  (`useEventStream`, `runEventStream`, `progressQueryKey`, привязка «сущность → запросы»), `errors` (`errorCodeOf` → код для `errors:<код>`,
   `errorParamsOf` → параметры текста, `retryAfterMinutes` всегда есть), `i18n`,
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
@@ -57,4 +57,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 ## Подводные камни
 - Боевая сборка (`vite build`) перегенерирует `routeTree.gen.ts` без `dev.*`; следующий `make typecheck` вернёт их.
 - `useQuery` не хранит `undefined`: гость в кэше сессии — `null`.
-- Поток `events.stream` на `changed` перезапрашивает все активные запросы; на `UNAUTHORIZED` не переподключается.
+- Поток `events.stream` на `changed` перезапрашивает запросы только своей сущности (`ENTITY_QUERIES` в `lib/events.ts`:
+  `account`, `transaction`, `category`, `notification`, `profile-fact`, `chat-message`, `data-export`); сущности, которой там
+  нет, — все запросы (безопасное умолчание); новая сущность сигнала — строка в `ENTITY_QUERIES`. На `UNAUTHORIZED` не
+  переподключается.

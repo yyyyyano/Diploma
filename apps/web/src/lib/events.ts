@@ -6,9 +6,9 @@
 // не переподключается, его запустит заново каркас после входа.
 import type { SiteEvent } from "@kosht/contract";
 import { ORPCError } from "@orpc/client";
-import { useQueryClient, type QueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryClient, type QueryKey } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { client as defaultClient, type ApiClient } from "./api.ts";
+import { client as defaultClient, orpc, type ApiClient } from "./api.ts";
 
 /** Ключ кэша хода фоновой работы: useQuery({ queryKey: progressQueryKey("receipt", id), … }). */
 export function progressQueryKey(entity: string, id: string) {
@@ -48,9 +48,26 @@ export interface EventStreamOptions {
   readonly sleep?: (ms: number, signal: AbortSignal) => Promise<void>;
 }
 
+/**
+ * Привязка «сущность сигнала → запросы» (NFR-21): `changed` перезапрашивает только запросы своей сущности, а не все
+ * активные — иначе каждая операция дёргала бы экран счетов, уведомления и чат. Сущности, которой здесь нет (новый
+ * вид сигнала, чек до своей задачи), — безопасное умолчание: перезапрос всех.
+ */
+const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
+  account: () => [orpc.accounts.key()],
+  transaction: () => [orpc.transactions.key()],
+  category: () => [orpc.categories.key()],
+  notification: () => [orpc.notifications.key()],
+  "profile-fact": () => [orpc.profile.key()],
+  "chat-message": () => [orpc.chat.key()],
+  "data-export": () => [orpc.privacy.key()],
+};
+
 function apply(event: SiteEvent, queryClient: QueryClient): void {
   if (event.type === "changed") {
-    void queryClient.invalidateQueries();
+    const keys = ENTITY_QUERIES[event.entity]?.();
+    if (keys === undefined) void queryClient.invalidateQueries();
+    else for (const queryKey of keys) void queryClient.invalidateQueries({ queryKey });
     return;
   }
   const progress: Progress = event.percent === undefined ? {} : { percent: event.percent };

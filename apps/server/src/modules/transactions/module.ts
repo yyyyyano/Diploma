@@ -1,17 +1,26 @@
-// Модуль transactions (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль transactions (паспорт — CLAUDE.md): операции — таблица, ручной ввод и правка с «Отменить», удаление после «Да»,
+// инструменты агента (TXN-01…05, FIN-01, STMT-02, STMT-09). Остаток счёта пересчитывает фасад accounts; курс НБРБ
+// и категорию «по умолчанию» доопределяют фоновые задачи.
 import {
   defineModule,
   type ModuleDeps,
   type Platform,
 } from "../../platform/module/define-module.ts";
 import type { AccountsFacade } from "../accounts/index.ts";
-import type { CategoriesFacade } from "../categories/index.ts";
-import type { MerchantsFacade } from "../merchants/index.ts";
-import type { FxRatesFacade } from "../fx-rates/index.ts";
 import type { ActionsFacade } from "../actions/index.ts";
+import type { CategoriesFacade } from "../categories/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
+import type { FxRatesFacade } from "../fx-rates/index.ts";
+import type { MerchantsFacade } from "../merchants/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
+import { transactionsTools } from "./agent/tools.ts";
+import { transactionsRouter } from "./api/router.ts";
+import { makeBase, makeOperations } from "./application/operations.ts";
+import { DELETE_HANDLER } from "./application/remove.ts";
+import { RESTORE_HANDLER } from "./application/write.ts";
+import { transactionsChanged } from "./events.ts";
+import { categorizeJob } from "./jobs/categorize.job.ts";
+import { fillRatesJob } from "./jobs/fill-rates.job.ts";
 import { transactionsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -25,9 +34,37 @@ export interface TransactionsFacades {
   readonly notifications: NotificationsFacade;
 }
 
-export function createTransactionsModule(_deps: ModuleDeps<TransactionsFacades, Platform>) {
-  return defineModule({ id: "transactions", userData: transactionsUserData });
+export function createTransactionsModule({
+  platform,
+  facades,
+}: ModuleDeps<TransactionsFacades, Platform>) {
+  const deps = {
+    platform,
+    accounts: facades.accounts,
+    categories: facades.categories,
+    merchants: facades.merchants,
+    fxRates: facades.fxRates,
+    actions: facades.actions,
+    explain: facades.explain,
+  };
+  const base = makeBase(deps);
+  const jobs = {
+    fillRates: fillRatesJob(base.background.fillRates),
+    categorize: categorizeJob(base.background.categorizeFallback),
+  };
+  const ops = makeOperations(deps, base, jobs);
+  const tools = transactionsTools(ops);
+  return defineModule({
+    id: "transactions",
+    router: transactionsRouter(ops),
+    events: [transactionsChanged],
+    jobs: [jobs.fillRates, jobs.categorize],
+    tools: [tools.search, tools.add, tools.update, tools.remove],
+    undo: { [RESTORE_HANDLER]: ops.restore },
+    confirm: { [DELETE_HANDLER]: ops.confirmDelete },
+    userData: transactionsUserData,
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: пока ничего (undefined) — фасад (агрегаты пачками, запись из чека и выписки) добавят их задачи. */
 export type TransactionsFacade = ReturnType<typeof createTransactionsModule>["facade"];

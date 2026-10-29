@@ -50,6 +50,8 @@ interface Household {
   readonly factId: string;
   /** Своя категория B. */
   readonly categoryId: string;
+  /** Операция B на её счёте. */
+  readonly transactionId: string;
 }
 
 /**
@@ -181,6 +183,43 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   },
   "tool:rename_account": { input: (b) => ({ id: b.accountId, name: "чужой" }) },
   "tool:delete_account": { input: (b) => ({ id: b.accountId }) },
+  "transactions.list": { input: () => ({}) },
+  "transactions.get": { input: (b) => ({ id: b.transactionId }) },
+  "transactions.create": {
+    input: (b) => ({
+      accountId: b.accountId,
+      type: "expense",
+      occurredOn: "2026-10-28",
+      amount: { minor: 100, currency: "BYN" },
+    }),
+  },
+  "transactions.update": {
+    input: (b) => ({ id: b.transactionId, patch: { note: "чужая" } }),
+  },
+  "transactions.requestDelete": { input: (b) => ({ ids: [b.transactionId] }) },
+  "transactions.explainRate": { input: (b) => ({ id: b.transactionId }) },
+  "tool:search_transactions": {
+    // Фильтр по счёту B: чужой счёт даёт пустую страницу, не его строки.
+    input: (b) => ({ accountId: b.accountId, limit: 50 }),
+  },
+  "tool:add_transaction": {
+    input: (b) => ({
+      transaction: {
+        accountId: b.accountId,
+        type: "expense",
+        occurredOn: "2026-10-28",
+        amount: { minor: 100, currency: "BYN" },
+        occurredTime: null,
+        merchant: null,
+        note: null,
+        category: null,
+      },
+    }),
+  },
+  "tool:update_transaction": {
+    input: (b) => ({ id: b.transactionId, patch: { note: "чужая" } }),
+  },
+  "tool:delete_transaction": { input: (b) => ({ ids: [b.transactionId] }) },
   "profile.facts": { input: () => undefined },
   "profile.onboarding": { input: () => undefined },
   "profile.completeOnboarding": { input: () => ({ answers: {} }) },
@@ -275,6 +314,13 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, $3, 'expense', 'ticket', 'kids') returning id`,
     [ids.household_id, ids.user_id, `категория ${email}`],
   );
+  const operation = await db.owner.query<{ id: string }>(
+    `insert into transactions (household_id, user_id, account_id, type, direction, occurred_on, amount_minor,
+       currency, amount_byn_minor, category_code, category_source, source, description)
+     values ($1, $2, $3, 'expense', 'out', '2026-10-27', 1250, 'BYN', 1250, 'cafes', 'user', 'manual', $4)
+     returning id`,
+    [ids.household_id, ids.user_id, account.rows[0]?.id, `покупка ${email}`],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -288,6 +334,7 @@ async function seedHousehold(email: string): Promise<Household> {
     fileId: file.rows[0]?.id ?? "",
     factId: fact.rows[0]?.id ?? "",
     categoryId: category.rows[0]?.id ?? "",
+    transactionId: operation.rows[0]?.id ?? "",
   };
 }
 
@@ -423,12 +470,22 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "profile.facts",
       "profile.onboarding",
       "profile.setFact",
+      "transactions.create",
+      "transactions.explainRate",
+      "transactions.get",
+      "transactions.list",
+      "transactions.requestDelete",
+      "transactions.update",
+      "add_transaction",
       "create_account",
       "delete_account",
+      "delete_transaction",
       "explain_number",
       "list_accounts",
       "read_profile_facts",
       "rename_account",
+      "search_transactions",
+      "update_transaction",
       "upsert_profile_fact",
     ]);
     const foreign = [
@@ -444,6 +501,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.fileId,
       b.factId,
       b.categoryId,
+      b.transactionId,
     ];
     const violations: string[] = [];
     for (const c of cases) {
@@ -469,6 +527,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
     const list = (await callAsA("accounts.list", undefined, "user")) as { items: { id: string }[] };
     expect(list.items.map((item) => item.id)).toContain(a.accountId);
     expect(await callAsA("identity.me", undefined, "user")).toMatchObject({ email: a.email });
+    // И свою операцию: список A содержит её и не содержит операцию B (TXN-02).
+    const listed = (await callAsA("transactions.list", {}, "user")) as { items: { id: string }[] };
+    expect(listed.items.map((item) => item.id)).toContain(a.transactionId);
+    expect(listed.items.map((item) => item.id)).not.toContain(b.transactionId);
   });
 });
 

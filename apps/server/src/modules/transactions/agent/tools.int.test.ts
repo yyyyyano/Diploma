@@ -1,0 +1,117 @@
+// AGT-03 «операции», AGT-05, AGT-07, ROLE-01: инструменты без модели — поиск (компактно, с total), добавить и изменить
+// сразу с undoToken (источник «ассистент», канал запуска), удалить — только ожидающее решение, операция на месте до «Да».
+import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import {
+  newScope,
+  transactionsWithJournal,
+} from "../application/__fixtures__/transactions-with-journal.ts";
+import { transactionsTools } from "./tools.ts";
+
+let db: TestDb;
+beforeAll(async () => {
+  db = await createTestDb();
+});
+afterAll(async () => {
+  await db.drop();
+});
+
+async function setup() {
+  const s = newScope(db);
+  const t = transactionsWithJournal(db);
+  await s.transaction((tx) => t.accounts.cash(tx));
+  const tools = transactionsTools(t.ops);
+  const ctx = (channel: "web" | "telegram" = "web") => ({ s, requestId: "tool-test", channel });
+  return { s, t, tools, ctx };
+}
+
+const ADD = {
+  transaction: {
+    type: "expense",
+    occurredOn: "2026-10-21",
+    amount: { minor: 1500, currency: "BYN" },
+    merchant: "Кофейня «Зерно»",
+    category: { type: "system", code: "cafes" },
+  },
+};
+
+describe("AGT-05: add_transaction и update_transaction — сразу, с «Отменить»", () => {
+  it("«потратил 15 на кофе»: операция от ассистента в «Наличных», undoToken отменяет её", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const result = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    expect(tools.add.output.parse(result)).toMatchObject({
+      transaction: {
+        source: "assistant",
+        amount: { minor: 1500, currency: "BYN" },
+        category: { type: "system", code: "cafes" },
+      },
+    });
+    expect(await t.actions.undo(s, result.undoToken)).toBe("undone");
+    expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(0);
+  });
+
+  it("из Telegram канал отмены и истории — telegram", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const { transaction } = await tools.add.execute(ctx("telegram"), tools.add.input.parse(ADD));
+    expect((await t.ops.get(s, transaction.id)).history[0]).toMatchObject({ channel: "telegram" });
+  });
+
+  it("update_transaction меняет сумму и возвращает undoToken; во входе нет владельца", async () => {
+    const { t, s, tools, ctx } = await setup();
+    const { transaction } = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    const edited = await tools.update.execute(
+      ctx(),
+      tools.update.input.parse({
+        id: transaction.id,
+        patch: { amount: { minor: 1800, currency: "BYN" } },
+      }),
+    );
+    expect(edited.transaction.amount.minor).toBe(1800);
+    expect(await t.actions.undo(s, edited.undoToken)).toBe("undone");
+    expect(
+      tools.update.input.safeParse({ id: transaction.id, patch: {}, householdId: "чужое" }).success,
+    ).toBe(false);
+  });
+});
+
+describe("AGT-03: search_transactions", () => {
+  it("находит по тексту, отдаёт не больше limit строк и общее число", async () => {
+    const { tools, ctx } = await setup();
+    for (let i = 0; i < 3; i += 1) {
+      await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    }
+    const found = await tools.search.execute(
+      ctx(),
+      tools.search.input.parse({ query: "зерно", limit: 2 }),
+    );
+    expect(found.items).toHaveLength(2);
+    expect(found.total).toBe(3);
+    expect(tools.search.input.safeParse({ limit: 51 }).success).toBe(false);
+  });
+});
+
+describe("AGT-07: delete_transaction — только решение «Да/Нет»", () => {
+  it("propose создаёт решение с обработчиком transactions.delete; операция на месте, «Да» удаляет", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const { transaction } = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    const draft = await tools.remove.propose(
+      ctx(),
+      tools.remove.input.parse({ ids: [transaction.id] }),
+    );
+    expect(draft.action).toBe("transactions.delete");
+    const decisionId = (draft.payload as { decisionId: string }).decisionId;
+    expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(1);
+    await t.actions.answer(s, decisionId, "yes", "web");
+    expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(0);
+  });
+
+  it("описания инструментов — по-английски, виды: search — read, add и update — write, delete — destructive", async () => {
+    const { tools } = await setup();
+    expect([tools.search, tools.add, tools.update, tools.remove].map((tool) => tool.kind)).toEqual([
+      "read",
+      "write",
+      "write",
+      "destructive",
+    ]);
+  });
+});

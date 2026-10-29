@@ -52,6 +52,7 @@ describe("дерево процедур", () => {
       "actions.decision",
       "actions.answer",
       "explain.get",
+      "files.upload",
       "files.download",
       "notifications.list",
       "notifications.markRead",

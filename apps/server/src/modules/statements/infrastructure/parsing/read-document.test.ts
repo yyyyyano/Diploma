@@ -5,7 +5,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import yazl from "yazl";
 import type { RawDocument } from "../../domain/types.ts";
-import { DocumentReadError, readDocument } from "./read-document.ts";
+import { DocumentReadError } from "../../application/ports.ts";
+import { readDocument } from "./read-document.ts";
 import { assertSafeZip, XLSX_ZIP_LIMITS } from "./zip-guard.ts";
 
 const DATASET = fileURLToPath(
@@ -95,6 +96,13 @@ describe("STMT-04: чтение файлов в песочнице", () => {
     ]);
     const fromPng = await readDocument(fileOf("scan-png"), limits);
     expect(fromPng).toMatchObject({ kind: "images", images: [{ mime: "image/png" }] });
+  });
+
+  it("байты вызывающего после чтения целы: потоку уходит копия, буфер не отсоединяется", async () => {
+    const file = fileOf("lesbank-csv-september");
+    await readDocument(file, limits);
+    expect(file.bytes.byteLength).toBeGreaterThan(0);
+    await expect(readDocument(file, limits)).resolves.toMatchObject({ kind: "table" });
   });
 
   it("битый PDF — отказ «unreadable», а не падение процесса", async () => {

@@ -3,6 +3,15 @@
 // смысл колонок и правила значений — здесь.
 import type { Money } from "@kosht/kernel";
 
+/** Тип файла по содержимому (его определил модуль files) — вход чтения. */
+export type FileType = "pdf" | "xlsx" | "xls" | "csv" | "jpg" | "png" | "webp" | "heic";
+
+/** Вход чтения файла в песочнице: тип и байты. */
+export interface ReadInput {
+  readonly type: FileType;
+  readonly bytes: Uint8Array;
+}
+
 /** Откуда прочитана таблица: от этого зависят позиции ячеек (PDF — по координатам) и отпечаток формата. */
 export type SourceKind = "csv" | "xlsx" | "xls" | "pdf";
 

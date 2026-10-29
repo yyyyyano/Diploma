@@ -7,31 +7,18 @@ import {
   SandboxError,
   type SandboxLimits,
 } from "../../../../platform/sandbox/isolated.ts";
-import type { RawDocument } from "../../domain/types.ts";
-import type { ReadInput } from "./parse.worker.ts";
+import { DocumentReadError, type ReadFailure } from "../../application/ports.ts";
+import type { RawDocument, ReadInput } from "../../domain/types.ts";
 
 export const statementWorker = defineIsolatedWorker({
   name: "statement-parse",
   devUrl: new URL("./parse.worker.ts", import.meta.url),
 });
 
-/** Причина отказа чтения для лога: без текста документа. */
-export type ReadFailure = "timeout" | "memory" | "failed" | "zip-bomb" | "unreadable" | "too-big";
-
-export class DocumentReadError extends Error {
-  override name = "DocumentReadError";
-  readonly reason: ReadFailure;
-  constructor(reason: ReadFailure) {
-    super(`read:${reason}`);
-    this.reason = reason;
-  }
-}
-
 export async function readDocument(input: ReadInput, limits: SandboxLimits): Promise<RawDocument> {
-  // Буфер уходит потоку без копирования, если байты занимают его целиком (чужой общий буфер отсоединять нельзя).
-  const own =
-    input.bytes.byteLength === input.bytes.buffer.byteLength && input.bytes.byteOffset === 0;
-  const bytes = own ? input.bytes : input.bytes.slice();
+  // Потоку уходит копия: буфер вызывающего не отсоединяется (его байты нужны ему и после чтения), а копия переезжает
+  // в поток без повторного копирования.
+  const bytes = input.bytes.slice();
   try {
     return await runIsolated<ReadInput, RawDocument>(
       statementWorker,

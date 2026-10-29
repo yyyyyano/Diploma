@@ -48,24 +48,34 @@ function guessDescription(
   return best?.index;
 }
 
-export function schemaFromHeader(grid: Grid, header: HeaderLocation): ColumnSchema | undefined {
-  if (header.roles === undefined) return undefined;
-  let roles = dedupe(header.roles);
+/** Схема по ролям колонок (из словаря заголовков или из ответа модели): поправки по смыслу и форматы по образцам. */
+export function schemaFromRoles(
+  grid: Grid,
+  dataStart: number,
+  given: readonly Role[],
+): ColumnSchema | undefined {
+  let roles = dedupe(given);
   // Рядом с «Суммой операции» простая «Валюта» — валюта операции, а не счёта.
   if (roles.includes("operationAmount") && roles.includes("amount")) {
     roles = roles.map((role) => (role === "currency" ? "operationCurrency" : role));
   }
   if (!hasRequiredRoles(roles)) return undefined;
   if (!roles.includes("description")) {
-    const guess = guessDescription(grid, header.dataStart, roles);
+    const guess = guessDescription(grid, dataStart, roles);
     if (guess !== undefined)
       roles = roles.map((role, index) => (index === guess ? "description" : role));
   }
   return inferFormats(
     grid,
-    header.dataStart,
+    dataStart,
     roles.map((role, index) => ({ index, role })),
   );
+}
+
+export function schemaFromHeader(grid: Grid, header: HeaderLocation): ColumnSchema | undefined {
+  return header.roles === undefined
+    ? undefined
+    : schemaFromRoles(grid, header.dataStart, header.roles);
 }
 
 /** Схема годится, если разобрано ≥ 90 % строк с датой (и хотя бы одна): иначе формат не тот или изменился. */

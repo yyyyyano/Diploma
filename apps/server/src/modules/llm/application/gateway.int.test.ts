@@ -94,6 +94,7 @@ function gateway(
       clock: new FakeClock("2026-10-25T09:00:00Z"),
       log: memory.log,
       cassettes: async () => options.cassettes ?? { mode: "live" },
+      timeouts: async () => ({ cloudMs: 5000, localMs: 5000 }),
     }),
   };
 }

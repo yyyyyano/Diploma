@@ -18,12 +18,18 @@ import type { SystemDb } from "../../../platform/db/system-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { Telemetry, TelemetryCallOptions } from "../../../platform/telemetry/telemetry.ts";
-import type { Clock } from "@kosht/kernel";
+import type { Clock, Scope } from "@kosht/kernel";
 import { buildChain } from "../domain/build-chain.ts";
 import { isSystemCaller, type Caller } from "../domain/caller.ts";
 import { costMicros } from "../domain/cost.ts";
 import type { LlmTask, StructuredTask } from "../domain/tasks.ts";
-import { insertUsage, listModels, type StoredModel } from "../infrastructure/db/llm.repo.ts";
+import {
+  insertUsage,
+  listChains,
+  listModels,
+  usageWindows,
+  type StoredModel,
+} from "../infrastructure/db/llm.repo.ts";
 import {
   recordingModel,
   replayModel,
@@ -31,7 +37,8 @@ import {
   type CassetteRef,
 } from "../infrastructure/providers/cassettes.ts";
 import type { ProviderRegistry } from "../infrastructure/providers/providers.ts";
-import { chainedModel } from "./chained-model.ts";
+import { chainedModel, type ChainEntry, type ChainEvent } from "./chained-model.ts";
+import { createLimiter } from "./limiter.ts";
 import { LlmSchemaError } from "./errors.ts";
 import { assertOutsideTransaction, errorCodeOf, meteredModel } from "./metered-model.ts";
 
@@ -98,6 +105,12 @@ export interface GatewayDeps {
   readonly clock: Clock;
   readonly log: Logger;
   readonly cassettes: () => Promise<CassetteConfig>;
+  /** Сроки первого куска ответа, мс: облачным и локальным моделям — разные (настройки llm.timeout-*). */
+  readonly timeouts: () => Promise<{ readonly cloudMs: number; readonly localMs: number }>;
+  /** Выбранная пользователем модель чата (LLM-10, llm_preferences); «Авто» — undefined. */
+  readonly preferredModel?: (scope: Scope) => Promise<string | undefined>;
+  /** Событие провайдера для администратора: исчерпан лимит или ошибка (уведомление ai-provider, NOTIF-03). */
+  readonly onProviderEvent?: (event: ChainEvent) => Promise<void>;
 }
 
 export function createLlmGateway(d: GatewayDeps): LlmGateway {
@@ -111,9 +124,33 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
     return isSystemCaller(caller) ? true : d.consent.cloudAllowed(caller);
   }
 
+  // Лимитёр один на процесс: окна — из журнала, размыкатель и остатки по заголовкам — в памяти (limiter.ts).
+  const limiter = createLimiter({
+    now: () => d.clock.now(),
+    usage: () => usageWindows(d.system, d.clock.now()),
+  });
+
+  /** Записи реестра, чей провайдер известен коду и настроен (задан ключ): остальные в цепочку не попадают. */
+  async function usable(models: readonly StoredModel[]): Promise<StoredModel[]> {
+    const configured = new Map<string, boolean>();
+    for (const provider of new Set(models.map((model) => model.provider))) {
+      const adapter = d.providers.get(provider);
+      configured.set(provider, adapter !== undefined && ((await adapter.isConfigured?.()) ?? true));
+    }
+    return models.filter((model) => configured.get(model.provider) === true);
+  }
+
   async function chainFor(caller: Caller, task: LlmTask): Promise<StoredModel[]> {
-    const chain = buildChain(await listModels(d.system), task, {
+    const [models, chains] = await Promise.all([listModels(d.system), listChains(d.system)]);
+    // LLM-10: выбор пользователя действует только в чате, и пока администратор разрешает модель выбирать.
+    const choice =
+      task === "chat" && !isSystemCaller(caller) ? await d.preferredModel?.(caller) : undefined;
+    const preferred = models.find((model) => model.id === choice && model.userSelectable)?.id;
+    const order = chains.get(task);
+    const chain = buildChain(await usable(models), task, {
       cloudAllowed: await cloudAllowed(caller),
+      ...(order === undefined ? {} : { order }),
+      ...(preferred === undefined ? {} : { preferred }),
     }) as StoredModel[];
     // Ни одной подходящей модели (всё выключено или нужна облачная без согласия) — сервис недоступен.
     if (chain.length === 0) throw new AppError("UNAVAILABLE");
@@ -138,14 +175,25 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
         meter,
       );
     }
-    const chain = (await chainFor(caller, task)).map((record) =>
-      meteredModel(
+    const entries: ChainEntry[] = (await chainFor(caller, task)).map((record) => ({
+      record,
+      model: meteredModel(
         adapterOf(record).languageModel(record.modelId),
         { task, price: record, provider: record.provider, modelId: record.modelId },
         meter,
       ),
-    );
-    const model = chainedModel(chain);
+    }));
+    const timeouts = await d.timeouts();
+    const model = chainedModel(entries, {
+      limiter,
+      timeoutMs: (cloud) => (cloud ? timeouts.cloudMs : timeouts.localMs),
+      onEvent: (event) => {
+        // Уведомление администратору — побочное дело: ответ пользователю оно не задерживает и не ломает.
+        void d.onProviderEvent?.(event).catch((failure: unknown) => {
+          d.log.warn({ err: failure, code: "LLM_NOTIFY" }, "llm.notify-failed");
+        });
+      },
+    });
     if (config.mode === "record") {
       if (config.cassette === undefined) throw new AppError("UNAVAILABLE");
       return recordingModel(model, config.cassette);

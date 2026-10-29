@@ -182,7 +182,10 @@ function AnswersCard({ usage }: { readonly usage: AiUsage }) {
                   className={classes.bar}
                   value={row.requests}
                   max={Math.max(1, total)}
-                  aria-label={`${name(row.provider)}: ${String(row.requests)}`}
+                  aria-label={t("ai.requests.byProviderRow", {
+                    provider: name(row.provider),
+                    count: row.requests,
+                  })}
                 />
               </li>
             ))}

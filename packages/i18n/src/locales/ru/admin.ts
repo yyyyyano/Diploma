@@ -239,6 +239,7 @@ export const admin = {
       errorsHint: "{{count}} из {{total}} запросов",
       byTask: "По задачам",
       byTaskRow: "{{task}}: {{count}}",
+      byProviderRow: "{{provider}}: {{count}}",
       whoAnswered: "Кто отвечал",
       cloudShare: "Облачные модели — {{percent}} %, локальные — {{local}} %",
       cloudShareHint:

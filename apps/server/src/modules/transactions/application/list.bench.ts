@@ -7,7 +7,10 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { transactions } from "../infrastructure/db/schema.ts";
-import { newScope, transactionsWithJournal } from "./__fixtures__/transactions-with-journal.ts";
+import {
+  newScope,
+  transactionsWithJournal,
+} from "../../../main/__fixtures__/transactions-with-journal.ts";
 
 const BUDGET_MS = 150;
 const ROWS = 10_000;

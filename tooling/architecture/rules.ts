@@ -57,6 +57,8 @@ export function missingPlatformDbPaths(baseDir: string): string[] {
 /** Тестовый код: тесты рядом с файлами, фикстуры, кассеты, @kosht/testing, e2e, настройка тестов сайта. */
 const TEST_CODE = [
   String.raw`\.(test|spec)\.tsx?$`,
+  // Замеры времени (make bench, CONSTRAINTS «Бюджеты времени») — тоже тестовый код.
+  String.raw`\.bench\.ts$`,
   "/__fixtures__/",
   "/__cassettes__/",
   "^packages/testing/",

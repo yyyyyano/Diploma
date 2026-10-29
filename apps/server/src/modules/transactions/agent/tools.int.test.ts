@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
   newScope,
   transactionsWithJournal,
-} from "../application/__fixtures__/transactions-with-journal.ts";
+} from "../../../main/__fixtures__/transactions-with-journal.ts";
 import { transactionsTools } from "./tools.ts";
 
 let db: TestDb;

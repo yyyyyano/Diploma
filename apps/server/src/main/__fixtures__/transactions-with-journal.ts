@@ -8,30 +8,30 @@ import { FakeClock, testScope } from "@kosht/testing";
 import { SystemCategoryCode } from "@kosht/contract";
 import { LocalDate, Money } from "@kosht/kernel";
 import type { TestDb } from "@kosht/testing/db";
-import { createScopedCache } from "../../../../platform/cache/scoped-cache.ts";
-import { createScopedDb, type ScopedDb } from "../../../../platform/db/scoped-db.ts";
-import { createSystemDb } from "../../../../platform/db/system-db.ts";
-import type { EventDef } from "../../../../platform/events/define-event.ts";
-import type { JobDef } from "../../../../platform/jobs/define-job.ts";
-import { memoryLogger } from "../../../../platform/logging/__fixtures__/memory-logger.ts";
-import type { Platform, SystemPlatform } from "../../../../platform/module/define-module.ts";
-import type { Realtime } from "../../../../platform/realtime/realtime.ts";
+import { createScopedCache } from "../../platform/cache/scoped-cache.ts";
+import { createScopedDb, type ScopedDb } from "../../platform/db/scoped-db.ts";
+import { createSystemDb } from "../../platform/db/system-db.ts";
+import type { EventDef } from "../../platform/events/define-event.ts";
+import type { JobDef } from "../../platform/jobs/define-job.ts";
+import { memoryLogger } from "../../platform/logging/__fixtures__/memory-logger.ts";
+import type { Platform, SystemPlatform } from "../../platform/module/define-module.ts";
+import type { Realtime } from "../../platform/realtime/realtime.ts";
 import {
   makeAccounts,
   DELETE_HANDLER as ACCOUNT_DELETE,
   RESTORE_HANDLER as ACCOUNT_RESTORE,
-} from "../../../accounts/application/accounts.ts";
-import { createActionsModule } from "../../../actions/index.ts";
-import { makeCatalog } from "../../../categories/application/catalog.ts";
-import { makeCategorize } from "../../../categories/application/categorize.ts";
-import { createExplainModule } from "../../../explain/index.ts";
-import type { FxRate } from "../../../fx-rates/index.ts";
-import { createMerchantsModule } from "../../../merchants/index.ts";
-import { DELETE_HANDLER } from "../remove.ts";
-import { makeBase, makeOperations } from "../operations.ts";
-import { fillRatesJob } from "../../jobs/fill-rates.job.ts";
-import { categorizeJob } from "../../jobs/categorize.job.ts";
-import { RESTORE_HANDLER } from "../write.ts";
+} from "../../modules/accounts/application/accounts.ts";
+import { createActionsModule } from "../../modules/actions/index.ts";
+import { makeCatalog } from "../../modules/categories/application/catalog.ts";
+import { makeCategorize } from "../../modules/categories/application/categorize.ts";
+import { createExplainModule } from "../../modules/explain/index.ts";
+import type { FxRate } from "../../modules/fx-rates/index.ts";
+import { createMerchantsModule } from "../../modules/merchants/index.ts";
+import { DELETE_HANDLER } from "../../modules/transactions/application/remove.ts";
+import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
+import { fillRatesJob } from "../../modules/transactions/jobs/fill-rates.job.ts";
+import { categorizeJob } from "../../modules/transactions/jobs/categorize.job.ts";
+import { RESTORE_HANDLER } from "../../modules/transactions/application/write.ts";
 
 /** Курс НБРБ как на проводе: BYN за `scale` единиц в десятитысячных. */
 export type Rates = Readonly<Record<string, Omit<FxRate, "id" | "currency">>>;

@@ -11,7 +11,7 @@ import {
   newScope,
   transactionsWithJournal,
   WEB,
-} from "./__fixtures__/transactions-with-journal.ts";
+} from "../../../main/__fixtures__/transactions-with-journal.ts";
 
 let db: TestDb;
 beforeAll(async () => {

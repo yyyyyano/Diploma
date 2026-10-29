@@ -142,25 +142,6 @@ export async function existingIds(s: ScopedDb, ids: readonly string[]): Promise<
   return new Set(rows.map((row) => row.id));
 }
 
-/** CAT-05: операции с тем же контрагентом (ключ очистки), кроме указанных, — «применить к прошлым». */
-export async function listByMerchantKey(
-  s: ScopedDb,
-  merchantKey: string,
-  except: readonly string[],
-): Promise<TransactionRow[]> {
-  return s.db
-    .select()
-    .from(transactions)
-    .where(
-      and(
-        s.own(transactions),
-        eq(transactions.merchantKey, merchantKey),
-        except.length > 0 ? sql`${transactions.id} <> all(${[...except]}::uuid[])` : undefined,
-      ),
-    )
-    .orderBy(asc(transactions.id));
-}
-
 export async function insertRevisions(s: ScopedDb, rows: readonly NewRevision[]): Promise<void> {
   if (rows.length === 0) return;
   await s.insert(transactionRevisions).values([...rows]);

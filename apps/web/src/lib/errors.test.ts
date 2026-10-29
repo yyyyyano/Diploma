@@ -18,11 +18,18 @@ describe("параметры текста ошибки", () => {
     const error = new ORPCError("RATE_LIMITED", {
       data: { requestId: "req-1", params: { retryAfterMinutes: 5 } },
     });
-    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 5 });
+    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 5, name: "файл" });
   });
 
-  it("нет параметров, не та форма или не ошибка сервера — только минуты по умолчанию", () => {
-    const fallback = { retryAfterMinutes: 1 };
+  it("имя файла из ответа об ошибке загрузки подставляется в текст", () => {
+    const error = new ORPCError("FILE_TYPE_NOT_ALLOWED", {
+      data: { requestId: "req-1", params: { name: "выписка.pdf" } },
+    });
+    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 1, name: "выписка.pdf" });
+  });
+
+  it("нет параметров, не та форма или не ошибка сервера — минуты и имя файла по умолчанию", () => {
+    const fallback = { retryAfterMinutes: 1, name: "файл" };
     expect(errorParamsOf(new ORPCError("CONFLICT"))).toEqual(fallback);
     expect(
       errorParamsOf(new ORPCError("CONFLICT", { data: { params: { nested: { a: 1 } } } })),

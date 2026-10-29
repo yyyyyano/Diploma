@@ -36,6 +36,14 @@ export const ERRORS = {
   EMAIL_TAKEN: { status: 409, retryable: false },
   /** Ссылка из письма уже использована или устарела (AUTH-03, AUTH-04): нужно новое письмо. */
   LINK_INVALID: { status: 410, retryable: false },
+  /** Загрузка: файл больше предела своего вида (фото, выписка) — SEC-03. */
+  FILE_TOO_LARGE: { status: 413, retryable: false },
+  /** Загрузка: тип по содержимому не из белого списка или расширение подменено (SEC-03). */
+  FILE_TYPE_NOT_ALLOWED: { status: 415, retryable: false },
+  /** Загрузка: файлов за раз больше предела (SEC-03). */
+  TOO_MANY_FILES: { status: 413, retryable: false },
+  /** Выписку не удалось прочитать: повреждена, слишком сложная или небезопасная (STMT-04, SEC-03). */
+  STATEMENT_UNREADABLE: { status: 422, retryable: false },
   RATE_LIMITED: { status: 429, retryable: true },
   /** Всё непредвиденное: наружу без текста исключения, стек — в лог. */
   INTERNAL: { status: 500, retryable: false },

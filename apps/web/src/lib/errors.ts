@@ -11,9 +11,13 @@ export function errorCodeOf(error: unknown): ErrorCode {
   return "INTERNAL";
 }
 
-/** Параметры текста ошибки: всё из data.params ответа; минуты ожидания есть всегда (по умолчанию 1). */
+/**
+ * Параметры текста ошибки: всё из data.params ответа; минуты ожидания есть всегда (по умолчанию 1), имя файла — у
+ * ошибок загрузки (по умолчанию «файл»).
+ */
 export type ErrorTextParams = Record<string, string | number | boolean> & {
   readonly retryAfterMinutes: number;
+  readonly name: string;
 };
 
 /** Параметры для подстановки в текст ошибки («через {{retryAfterMinutes}} мин.»); нет или не по схеме — умолчания. */
@@ -24,5 +28,10 @@ export function errorParamsOf(error: unknown): ErrorTextParams {
   const parsed = ErrorParams.safeParse(params);
   const found = parsed.success ? parsed.data : {};
   const minutes = found["retryAfterMinutes"];
-  return { ...found, retryAfterMinutes: typeof minutes === "number" ? minutes : 1 };
+  const name = found["name"];
+  return {
+    ...found,
+    retryAfterMinutes: typeof minutes === "number" ? minutes : 1,
+    name: typeof name === "string" ? name : "файл",
+  };
 }

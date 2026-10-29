@@ -7,7 +7,35 @@ import { pickErrors } from "../errors.ts";
 
 export const FileRef = z.strictObject({ id: z.uuid() });
 
+/** Что загружают: фото чека или выписка (PDF, Excel, CSV, скан) — вид задаёт лимиты и белый список типов (SEC-03). */
+export const UploadKind = z.enum(["receipt-photo", "statement"]);
+
+export const UploadedFile = z.strictObject({
+  id: z.uuid(),
+  name: z.string(),
+  mime: z.string(),
+  size: z.number().int().nonnegative(),
+});
+
 export const filesContract = {
+  /**
+   * Приём файлов (SEC-03): multipart/form-data — поле `kind` и файлы `files[0]`, `files[1]`…. Тип проверяется по
+   * содержимому, а не по имени и заявленному типу; все файлы проверяются до сохранения первого.
+   */
+  upload: oc
+    .route({ method: "POST", path: "/files" })
+    .input(z.strictObject({ kind: UploadKind, files: z.array(z.file()).min(1) }))
+    .output(z.strictObject({ files: z.array(UploadedFile) }))
+    .errors(
+      pickErrors(
+        "VALIDATION",
+        "UNAUTHORIZED",
+        "FILE_TOO_LARGE",
+        "FILE_TYPE_NOT_ALLOWED",
+        "TOO_MANY_FILES",
+      ),
+    ),
+
   /** Скачать свой файл. */
   download: oc
     .route({ method: "GET", path: "/files/{id}" })

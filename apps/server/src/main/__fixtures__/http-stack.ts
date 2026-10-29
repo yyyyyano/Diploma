@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createApiHandler } from "../../platform/http/api.ts";
 import { createApp, type HttpApp } from "../../platform/http/app.ts";
-import { BODY_LIMIT } from "../../platform/http/body-limit.ts";
+import { BODY_LIMIT, UPLOAD_BODY_LIMIT } from "../../platform/http/body-limit.ts";
 import type { ListenerName } from "../../platform/http/guard.ts";
 import { memoryLogger } from "../../platform/logging/__fixtures__/memory-logger.ts";
 import type { Composition } from "../compose.ts";
@@ -24,6 +24,8 @@ export const STACK_HOST: Readonly<Record<ListenerName, string>> = {
 
 export interface CallOptions {
   readonly body?: unknown;
+  /** multipart/form-data (приём файлов) вместо JSON. */
+  readonly form?: FormData;
   readonly cookie?: string;
   /** POST без тела (выход, «отправить ещё раз»). */
   readonly post?: boolean;
@@ -67,6 +69,7 @@ export async function startHttpStack(
           session: (headers) => api.composition.session(headers),
           shutdownSignal: new AbortController().signal,
           bodyLimit: async () => BODY_LIMIT.default,
+          uploadBodyLimit: async () => UPLOAD_BODY_LIMIT.default,
         },
       }),
     );
@@ -80,7 +83,10 @@ export async function startHttpStack(
       const headers = new Headers({ host });
       if (options.cookie !== undefined) headers.set("cookie", options.cookie);
       const init: RequestInit = { headers };
-      if (options.body !== undefined) {
+      if (options.form !== undefined) {
+        init.method = "POST";
+        init.body = options.form;
+      } else if (options.body !== undefined) {
         headers.set("content-type", "application/json");
         init.method = "POST";
         init.body = JSON.stringify(options.body);

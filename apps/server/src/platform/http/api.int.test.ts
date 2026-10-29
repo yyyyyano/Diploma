@@ -46,6 +46,7 @@ function server(
     sessions?: SessionRegistry;
     log?: Logger;
     bodyLimit?: number;
+    uploadBodyLimit?: number;
   } = {},
 ) {
   const log = options.log ?? memoryLogger().log;
@@ -61,6 +62,9 @@ function server(
       session: (headers) => openSession(registry, db.pool, headers),
       shutdownSignal: new AbortController().signal,
       bodyLimit: async () => options.bodyLimit ?? BODY_LIMIT.default,
+      ...(options.uploadBodyLimit === undefined
+        ? {}
+        : { uploadBodyLimit: async () => options.uploadBodyLimit ?? 0 }),
     },
   });
   const host = listener === "local" ? "127.0.0.1:8140" : "192.168.1.5:8141";
@@ -224,6 +228,36 @@ describe("T-009: размер тела запроса /api ограничен н
     } as RequestInit);
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ code: "VALIDATION" });
+  });
+});
+
+describe("SEC-03: у приёма файлов свой предел тела", () => {
+  const form = (size: number) => {
+    const data = new FormData();
+    data.set("kind", "statement");
+    data.set("files[0]", new File([new Uint8Array(size)], "a.csv"));
+    return data;
+  };
+
+  it("тело POST /api/files больше upload-предела отклоняется до чтения, меньше — доходит до процедуры", async () => {
+    const call = server({ bodyLimit: 64, uploadBodyLimit: 4096 });
+    const big = await call("/api/files", { method: "POST", body: form(8000) });
+    expect(big.status).toBe(400);
+    expect(await big.json()).toMatchObject({ code: "VALIDATION" });
+    // Тело больше общего предела JSON (64), но в пределе приёма файлов: до процедуры дошло (её здесь нет — 404).
+    const ok = await call("/api/files", { method: "POST", body: form(500) });
+    expect(ok.status).toBe(404);
+  });
+
+  it("общий предел JSON на другие процедуры не ослабляется", async () => {
+    const call = server({ bodyLimit: 64, uploadBodyLimit: 4096 });
+    const padded = `${JSON.stringify({ name: "Ира" })}${" ".repeat(200)}`;
+    const response = await call("/api/fx/echo", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: padded,
+    });
+    expect(response.status).toBe(400);
   });
 });
 

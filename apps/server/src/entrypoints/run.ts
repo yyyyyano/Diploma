@@ -14,7 +14,7 @@ import { ConfigError, loadConfig, type AppConfig } from "../platform/config/conf
 import { AppRoleError } from "../platform/db/roles.ts";
 import { createApiHandler } from "../platform/http/api.ts";
 import { createApp, type HttpApp } from "../platform/http/app.ts";
-import { BODY_LIMIT } from "../platform/http/body-limit.ts";
+import { BODY_LIMIT, UPLOAD_BODY_LIMIT } from "../platform/http/body-limit.ts";
 import { createListeners, ListenError } from "../platform/http/listeners.ts";
 import { RealtimeStartError } from "../platform/realtime/listener.ts";
 import { withLogContext } from "../platform/logging/context.ts";
@@ -144,6 +144,7 @@ async function startRole(
           session: (headers) => app.session(headers),
           shutdownSignal: shutdownSignal.signal,
           bodyLimit: () => app.settings.get(BODY_LIMIT),
+          uploadBodyLimit: () => app.settings.get(UPLOAD_BODY_LIMIT),
         },
         webDistDir: config.webDistDir,
         ...(options.routes === undefined ? {} : { routes: options.routes }),

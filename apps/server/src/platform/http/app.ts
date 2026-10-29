@@ -27,6 +27,9 @@ export interface HttpEnv {
 
 export type HttpApp = Hono<HttpEnv>;
 
+/** Приём файлов: единственная процедура, чьё тело — файлы, а не JSON (свой предел, SEC-03). */
+export const UPLOAD_PATH = `${API_PREFIX}/files`;
+
 /** /readyz ждёт ответа БД не дольше: зависшая база — «не готов», а не висящая проба контейнера. */
 export const READY_TIMEOUT_MS = 2_000;
 
@@ -38,6 +41,8 @@ export interface ApiOptions {
   readonly shutdownSignal: AbortSignal;
   /** Предел тела запроса процедур, байт (настройка BODY_LIMIT, body-limit.ts). */
   readonly bodyLimit: () => Promise<number>;
+  /** Предел тела приёма файлов POST /api/files, байт (UPLOAD_BODY_LIMIT); не задан — действует bodyLimit. */
+  readonly uploadBodyLimit?: () => Promise<number>;
 }
 
 export interface AppOptions {
@@ -127,7 +132,10 @@ export function createApp(options: AppOptions): HttpApp {
   // Предел тела — до разбора процедурой: больше предела — VALIDATION через app.onError (тело не читается целиком).
   const limitBody = async (c: Context<HttpEnv>, next: () => Promise<void>) => {
     if (options.api === undefined) return next();
-    const maxSize = await options.api.bodyLimit();
+    const upload = c.req.method === "POST" && c.req.path === UPLOAD_PATH;
+    const maxSize = await (upload && options.api.uploadBodyLimit !== undefined
+      ? options.api.uploadBodyLimit()
+      : options.api.bodyLimit());
     return bodyLimit({
       maxSize,
       onError: () => {

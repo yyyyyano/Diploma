@@ -37,6 +37,11 @@ x-app: &app
     LANGFUSE_BASE_URL: http://langfuse-web:3000
     LANGFUSE_PUBLIC_KEY_FILE: /run/secrets/langfuse_public_key
     LANGFUSE_SECRET_KEY_FILE: /run/secrets/langfuse_secret_key
+    # Ключи облачных ИИ-провайдеров (T-023): запасное значение из .env, ключ из админки важнее (NFR-16); пусто — не задан.
+    GROQ_API_KEY: ${GROQ_API_KEY:-}
+    ZAI_API_KEY: ${ZAI_API_KEY:-}
+    # Локальные модели — сервис llama этого Compose (профиль models), а не порт хоста.
+    LLAMA_BASE_URL: http://llama:8080/v1
   secrets: [db_password, db_app_password, master_key, langfuse_public_key, langfuse_secret_key]
   # Те же ./data/…, что у make dev (DATA_DIR=data); папки создаёт make up от имени пользователя.
   volumes:

@@ -38,11 +38,36 @@ function schemaInPrompt(model: LanguageModelV4): LanguageModelV4 {
   });
 }
 
+/**
+ * Z.ai: модели GLM-4.7/4.5-Flash по умолчанию «думают» — замер 2026-10-29: JSON за 35 с (879 символов рассуждений)
+ * против 2,9 с с `thinking: { type: "disabled" }`. Срок первого куска облачной модели — 30 с (llm.timeout-cloud-ms),
+ * поэтому с мышлением Z.ai не успевал бы как запасной провайдер. Поле уходит в тело запроса как есть (`providerOptions.zai`).
+ */
+function withoutThinking(model: LanguageModelV4): LanguageModelV4 {
+  return wrapLanguageModel({
+    model,
+    middleware: {
+      transformParams: async ({ params }) => ({
+        ...params,
+        providerOptions: {
+          ...params.providerOptions,
+          [ZAI_PROVIDER_ID]: {
+            ...params.providerOptions?.[ZAI_PROVIDER_ID],
+            thinking: { type: "disabled" },
+          },
+        },
+      }),
+    },
+  });
+}
+
 function create(options: {
   readonly id: string;
   readonly cloud: boolean;
   readonly source: RemoteSource;
   readonly structuredOutputs: boolean;
+  /** Отключить «мышление» модели (Z.ai): ответ на порядок быстрее. */
+  readonly noThinking?: boolean;
   /** `GET /models` неполон: модель вне списка проверяется пробой на один токен. */
   readonly partialModelList?: boolean;
   readonly fetch?: typeof fetch;
@@ -59,7 +84,8 @@ function create(options: {
     cloud: options.cloud,
     languageModel: (modelId) => {
       const model = provider.languageModel(modelId);
-      return options.structuredOutputs ? model : schemaInPrompt(model);
+      const prepared = options.structuredOutputs ? model : schemaInPrompt(model);
+      return options.noThinking === true ? withoutThinking(prepared) : prepared;
     },
     embeddingModel: (modelId): EmbeddingModelV4 => provider.embeddingModel(modelId),
     isConfigured: async () =>
@@ -92,6 +118,7 @@ export function createZaiAdapter(d: {
     structuredOutputs: false,
     // Проверено 2026-10-29: glm-4.7-flash отвечает, но в GET /models Z.ai его нет.
     partialModelList: true,
+    noThinking: true,
     ...(d.fetch === undefined ? {} : { fetch: d.fetch }),
   });
 }

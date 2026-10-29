@@ -108,6 +108,25 @@ describe("Z.ai", () => {
   });
 });
 
+describe("Z.ai: мышление выключено", () => {
+  it("в запрос уходит thinking: disabled — иначе ответ идёт десятки секунд", async () => {
+    const seen: Seen[] = [];
+    const adapter = createZaiAdapter({
+      key: async () => "zai-key",
+      fetch: fakeFetch("привет", seen),
+    });
+    await generateText({ model: adapter.languageModel("glm-4.7-flash"), prompt: "Привет" });
+    expect(seen[0]?.body).toMatchObject({ thinking: { type: "disabled" } });
+  });
+
+  it("у Groq и llama-server поле не добавляется", async () => {
+    const seen: Seen[] = [];
+    const groq = createGroqAdapter({ key: async () => "k", fetch: fakeFetch("x", seen) });
+    await generateText({ model: groq.languageModel("m"), prompt: "p" });
+    expect(seen[0]?.body).not.toHaveProperty("thinking");
+  });
+});
+
 describe("Z.ai: неполный список моделей", () => {
   it("модель вне GET /models проверяется пробой на один токен", async () => {
     const seen: Seen[] = [];

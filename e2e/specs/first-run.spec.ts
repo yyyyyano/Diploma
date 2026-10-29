@@ -42,6 +42,8 @@ async function accessibleAtBothWidths(page: Page) {
 test("первый запуск → администратор → вход → «Наличные · 0,00 BYN» → ассистент; axe 0 на 1440 и 390", async ({
   page: firstPage,
 }) => {
+  // Один длинный сценарий (первый запуск проходит один раз): axe на двух ширинах у десятка маршрутов не укладывается в 30 с.
+  test.setTimeout(90_000);
   let page = firstPage;
   const own = new URL(test.info().project.use.baseURL ?? "").origin;
   const foreign: string[] = [];
@@ -165,6 +167,20 @@ test("первый запуск → администратор → вход → 
   await page.getByRole("link", { name: "Система" }).click();
   await expect(page).toHaveURL(/\/admin\/system$/);
   await expect(page.getByRole("heading", { level: 2, name: "Фоновые задачи" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  // ADM-50, ADM-20 (T-023): «Провайдеры ИИ» — цепочки по задачам и ключи только для записи; «Запросы к ИИ» — цифры
+  // журнала и период в адресе. Тестовая модель в боевой миграции выключена, а стенд отвечает кассетой.
+  await page.getByRole("link", { name: "Провайдеры ИИ" }).click();
+  await expect(page).toHaveURL(/\/admin\/ai-providers$/);
+  await expect(page.getByRole("region", { name: "Чат и агент" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Ключи API" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("link", { name: "Запросы к ИИ" }).click();
+  await expect(page).toHaveURL(/\/admin\/ai-requests\?period=day$/);
+  await expect(page.getByRole("region", { name: "По задачам" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("link", { name: "7 дней" }).click();
+  await expect(page).toHaveURL(/period=week$/);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
 
   // Выход — снова вход.

@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "ab0b33cf42ec70e9",
+      "fingerprint": "1b0ae886d7ae8936",
       "parts": [
         {
           "delayMs": 1,
@@ -14,7 +14,7 @@
           }
         },
         {
-          "delayMs": 3,
+          "delayMs": 5,
           "part": {
             "type": "tool-input-start",
             "id": "call-1",
@@ -22,7 +22,7 @@
           }
         },
         {
-          "delayMs": 2,
+          "delayMs": 1,
           "part": {
             "type": "tool-input-delta",
             "id": "call-1",
@@ -30,14 +30,14 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "tool-input-end",
             "id": "call-1"
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "tool-call",
             "toolCallId": "call-1",
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 7,
+          "delayMs": 12,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -68,7 +68,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "15f14c8da1f3ad05",
+      "fingerprint": "efe4f21f92843f63",
       "parts": [
         {
           "delayMs": 0,
@@ -78,7 +78,7 @@
           }
         },
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "text-start",
             "id": "text-1"
@@ -101,7 +101,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 303,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -109,7 +109,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -125,7 +125,7 @@
           }
         },
         {
-          "delayMs": 302,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -133,7 +133,7 @@
           }
         },
         {
-          "delayMs": 304,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -141,7 +141,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -149,7 +149,7 @@
           }
         },
         {
-          "delayMs": 309,
+          "delayMs": 305,
           "part": {
             "type": "text-delta",
             "id": "text-1",

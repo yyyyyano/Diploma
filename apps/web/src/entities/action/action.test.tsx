@@ -124,4 +124,84 @@ describe("AGT-07: ожидающее решение «Да/Нет»", () => {
     render(<DecisionDialog decisionId={DECISION} opened onClose={() => {}} />);
     await expect.poll(() => screen.queryByRole("dialog")).toBeNull();
   });
+
+  it("«Да» отдаёт undoToken — страница показывает «Отменить» после удаления", async () => {
+    const answered: { status: string; undoToken: string | null }[] = [];
+    server.use(
+      http.get("*/api/actions/decision", () =>
+        HttpResponse.json({
+          id: DECISION,
+          status: "pending",
+          summary: { key: "decisions.fallback", params: {} },
+          createdAt: "2026-10-26T09:00:00.000Z",
+        }),
+      ),
+      http.post("*/api/actions/answer", () =>
+        HttpResponse.json({ status: "yes", undoToken: TOKEN }),
+      ),
+    );
+    render(
+      <DecisionDialog
+        decisionId={DECISION}
+        opened
+        onClose={() => {}}
+        onAnswered={(status, undoToken) => answered.push({ status, undoToken })}
+      />,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Да, выполнить" }));
+    await expect.poll(() => answered).toEqual([{ status: "yes", undoToken: TOKEN }]);
+  });
+
+  it("STMT-01: «Да» на удаление счёта с операциями — CONFLICT с понятным текстом, окно остаётся", async () => {
+    server.use(
+      http.get("*/api/actions/decision", () =>
+        HttpResponse.json({
+          id: DECISION,
+          status: "pending",
+          summary: { key: "decisions.accountDelete", params: { name: "Карта" } },
+          createdAt: "2026-10-26T09:00:00.000Z",
+        }),
+      ),
+      http.post("*/api/actions/answer", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "CONFLICT",
+            status: 409,
+            message: "CONFLICT",
+            data: { requestId: "req-00000001", params: { reason: "account-has-transactions" } },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    render(<DecisionDialog decisionId={DECISION} opened onClose={() => {}} />);
+    await userEvent.click(await screen.findByRole("button", { name: "Да, выполнить" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "В этом счёте есть операции — удалить его нельзя.",
+    );
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("кнопка «Да» может называть действие с числом («Да, перенести 13»)", async () => {
+    server.use(
+      http.get("*/api/actions/decision", () =>
+        HttpResponse.json({
+          id: DECISION,
+          status: "pending",
+          summary: { key: "decisions.fallback", params: {} },
+          createdAt: "2026-10-26T09:00:00.000Z",
+        }),
+      ),
+    );
+    render(
+      <DecisionDialog
+        decisionId={DECISION}
+        opened
+        onClose={() => {}}
+        confirmLabel="Да, перенести 13"
+      />,
+    );
+    expect(await screen.findByRole("button", { name: "Да, перенести 13" })).toBeInTheDocument();
+  });
 });

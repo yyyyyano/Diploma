@@ -31,7 +31,9 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `useAccountName`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
-  (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`);
+  (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`; `onAnswered(status,
+  undoToken)` — «Отменить» сразу после «Да»; ошибка «Да» — в окне, конфликт с причиной — `decisions:conflict.<причина>`;
+  `confirmLabel` — «Да, перенести 13»);
   `entities/category` — `CategoryPicker` (встроенные и свои нужного типа, «Новая категория»), `categoryName`, `refKey`;
   `entities/profile-fact` — `FactEditor`, `FactValueText`, `factLabel`, `keyLabel` (факт профиля словами и форма по
   ключу); `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,

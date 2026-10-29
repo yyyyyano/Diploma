@@ -3,10 +3,12 @@
 // ответ сервер не исполняет. Закрыть окно — не ответить.
 import type { DecisionSummary } from "@kosht/contract";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import type { z } from "zod";
 import { orpc } from "../../lib/api.ts";
+import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { ConfirmDialog } from "../../ui/index.ts";
 
 /** Вопрос решения: ключ «decisions.<вид>» → «decisions:<вид>» с параметрами; нет текста — запасной. */
@@ -25,11 +27,21 @@ export interface DecisionDialogProps {
   readonly decisionId: string;
   readonly opened: boolean;
   readonly onClose: () => void;
-  readonly onAnswered?: (status: "yes" | "no") => void;
+  /** undoToken — «Отменить» сразу после «Да» (удаление операций, TXN-03); у «Нет» и у повтора — null. */
+  readonly onAnswered?: (status: "yes" | "no", undoToken: string | null) => void;
+  /** Кнопка-глагол «Да» с числом («Да, перенести 13»); без неё — «Да, выполнить». */
+  readonly confirmLabel?: string;
 }
 
-export function DecisionDialog({ decisionId, opened, onClose, onAnswered }: DecisionDialogProps) {
-  const { t } = useTranslation(["common", "decisions"]);
+export function DecisionDialog({
+  decisionId,
+  opened,
+  onClose,
+  onAnswered,
+  confirmLabel,
+}: DecisionDialogProps) {
+  const { t } = useTranslation(["common", "decisions", "errors"]);
+  const [failure, setFailure] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const decision = useQuery({
     ...orpc.actions.decision.queryOptions({ input: { id: decisionId } }),
@@ -39,8 +51,20 @@ export function DecisionDialog({ decisionId, opened, onClose, onAnswered }: Deci
     orpc.actions.answer.mutationOptions({
       onSuccess: async (result) => {
         await queryClient.invalidateQueries({ queryKey: orpc.actions.decision.key() });
-        onAnswered?.(result.status);
+        onAnswered?.(result.status, result.undoToken ?? null);
         onClose();
+      },
+      // «Да» не прошло: причина по-человечески. Конфликт с причиной (счёт с операциями) — свой текст из
+      // decisions:conflict.<причина>, остальное — по коду каталога ошибок.
+      onError: (error) => {
+        const code = errorCodeOf(error);
+        const params = errorParamsOf(error);
+        const reason = params["reason"];
+        setFailure(
+          code === "CONFLICT" && typeof reason === "string"
+            ? t(`decisions:conflict.${reason}`, { defaultValue: t("errors:CONFLICT") })
+            : t(`errors:${code}`, params),
+        );
       },
     }),
   );
@@ -49,12 +73,16 @@ export function DecisionDialog({ decisionId, opened, onClose, onAnswered }: Deci
     <ConfirmDialog
       opened={opened && decision.data?.status === "pending"}
       title={t("common:decision.title")}
-      confirmLabel={t("common:decision.yes")}
+      confirmLabel={confirmLabel ?? t("common:decision.yes")}
       pending={answer.isPending}
-      onConfirm={() => answer.mutate({ id: decisionId, answer: "yes" })}
+      onConfirm={() => {
+        setFailure(null);
+        answer.mutate({ id: decisionId, answer: "yes" });
+      }}
       onCancel={onClose}
     >
       <p>{summary === undefined ? "" : decisionText(t, summary)}</p>
+      {failure !== null && <p role="alert">{failure}</p>}
     </ConfirmDialog>
   );
 }

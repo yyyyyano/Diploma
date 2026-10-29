@@ -44,6 +44,8 @@ const env: NodeJS.ProcessEnv = {
   LOG_LEVEL: "info",
   // Стенд офлайн (NFR-11): трассы не уходят в Langfuse, даже если make init создал ключи.
   LANGFUSE_ENABLED: "false",
+  // Первый запуск ставит скачивание моделей — в стенде оно выключено (NFR-11): интернета нет.
+  LLM_MODELS_DOWNLOAD: "0",
   // Модели — кассета чата с паузами записи (виден поток), без сети и ключей (NFR-11).
   LLM_MODE: "replay",
   LLM_CASSETTE: resolve("apps/server/src/modules/chat/api/__cassettes__/accounts.json"),

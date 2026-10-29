@@ -17,7 +17,11 @@ import { makePreferences } from "./application/preferences.ts";
 import { makeProviderAlerts } from "./application/provider-alerts.ts";
 import { makeRetention } from "./application/retention.ts";
 import { makeTraceDeletion } from "./application/trace-deletion.ts";
+import { makeLocalModels } from "./application/local-models/local-models.ts";
 import { llmRouter } from "./api/router.ts";
+import { localModelsReady } from "./events.ts";
+import { downloadModelsJob } from "./jobs/download-models.job.ts";
+import { onSystemInitialized } from "./subscriptions/on-system-initialized.ts";
 import { createGroqAdapter } from "./infrastructure/providers/groq.ts";
 import {
   createLlamaAdapter,
@@ -34,6 +38,7 @@ import {
   LLM_CASSETTE_DELAYS,
   LLM_LLAMA_BASE_URL,
   LLM_MODE,
+  LLM_MODELS_DOWNLOAD,
   LLM_TIMEOUT_CLOUD_MS,
   LLM_TIMEOUT_LOCAL_MS,
   LLM_TRACE_RETENTION_DAYS,
@@ -112,12 +117,27 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
   // PRIV-06: трассы пользователя удаляются вместе с аккаунтом; Langfuse выключен — ждут в очереди повторов.
   const traces = makeTraceDeletion({ platform, deleter });
   const retention = makeRetention({ platform, deleter });
+  // Локальные модели (NFR-25): скачивает worker (задача), прогресс читает api из llm_local_models; старт — после первого
+  // запуска системы (подписка на identity.system-initialized) и кнопкой в админке.
+  const localModels = makeLocalModels({ platform });
+  const downloadJob = downloadModelsJob(localModels.download, (s, ids) =>
+    s.transaction((tx) => platform.events.publish(tx, localModelsReady, { ids: [...ids] })),
+  );
   // Админка ИИ (ADM-20, ADM-50): цифры и настройки без текстов запросов; адрес Langfuse — только на этом компьютере.
-  const admin = makeLlmAdmin({ platform, providers, langfuseUrl: langfuse?.baseUrl ?? null });
+  const admin = makeLlmAdmin({
+    platform,
+    providers,
+    langfuseUrl: langfuse?.baseUrl ?? null,
+    localModels,
+    startDownload: (s) => s.transaction((tx) => platform.jobs.enqueue(tx, downloadJob, {})),
+  });
   return defineModule({
     id: "llm",
     facade: { ...gateway, admin },
-    router: llmRouter(preferences),
+    router: llmRouter(preferences, localModels),
+    events: [localModelsReady],
+    jobs: [downloadJob],
+    subscriptions: [onSystemInitialized(platform, downloadJob)],
     settings: [
       LLM_MODE,
       LLM_CASSETTE,
@@ -125,6 +145,7 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
       LLM_TIMEOUT_CLOUD_MS,
       LLM_TIMEOUT_LOCAL_MS,
       LLM_LLAMA_BASE_URL,
+      LLM_MODELS_DOWNLOAD,
       LLM_USAGE_RETENTION_DAYS,
       LLM_TRACE_RETENTION_DAYS,
     ],

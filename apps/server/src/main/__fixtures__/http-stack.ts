@@ -43,10 +43,10 @@ export interface HttpStack {
  */
 export async function startHttpStack(
   db: TestDb,
-  options: { readonly worker?: boolean } = {},
+  options: { readonly worker?: boolean; readonly env?: Readonly<Record<string, string>> } = {},
 ): Promise<HttpStack> {
   const dataDir = await mkdtemp(join(tmpdir(), "kosht-stack-data-"));
-  const env = { DATA_DIR: dataDir };
+  const env = { DATA_DIR: dataDir, ...options.env };
   const api = await composeOnTestDb(db, "api", env);
   const worker = options.worker === false ? undefined : await composeOnTestDb(db, "worker", env);
   await api.composition.startJobs();

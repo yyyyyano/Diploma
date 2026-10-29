@@ -66,6 +66,17 @@ function setup(overrides: Partial<Record<"groq" | "zai" | "llama", AdapterOption
       adapter("llama", overrides.llama ?? { cloud: false }),
     ]),
     langfuseUrl: "http://127.0.0.1:3001",
+    localModels: {
+      view: async () => ({
+        state: "absent" as const,
+        bytesDone: 0,
+        bytesTotal: 0,
+        models: [],
+        selfTest: { state: "unknown" as const, problem: null, cpuFallback: false },
+      }),
+      selfTest: async () => ({ state: "unknown" as const, problem: null, cpuFallback: false }),
+    },
+    startDownload: async () => {},
   });
   return { admin, stored, clock };
 }

@@ -60,6 +60,18 @@ export const LLM_LLAMA_BASE_URL = defineSetting({
   env: "LLAMA_BASE_URL",
 });
 
+/**
+ * Скачивать ли локальные модели (NFR-25): по умолчанию да — после первого запуска и кнопкой в админке. Тесты и стенд
+ * e2e выключают (LLM_MODELS_DOWNLOAD=0): гигабайты из интернета в тестах недопустимы (NFR-11).
+ */
+export const LLM_MODELS_DOWNLOAD = defineSetting({
+  key: "llm.models-download",
+  schema: z.boolean(),
+  default: true,
+  env: "LLM_MODELS_DOWNLOAD",
+  fromEnv: (raw) => raw === "1" || raw === "true",
+});
+
 /** Сколько дней хранится журнал расхода (LLM-06): старше — удаляет ночная задача llm.usage-retention. */
 export const LLM_USAGE_RETENTION_DAYS = defineSetting({
   key: "llm.usage-retention-days",

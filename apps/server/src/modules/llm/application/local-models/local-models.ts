@@ -13,7 +13,7 @@ import {
   type LocalModelRow,
 } from "../../infrastructure/db/local-models.repo.ts";
 import type { LocalModelStatus } from "../../infrastructure/db/schema.ts";
-import { LLM_LLAMA_BASE_URL } from "../../settings.ts";
+import { LLM_LLAMA_BASE_URL, LLM_MODELS_DOWNLOAD } from "../../settings.ts";
 import { CATALOG, type CatalogFile, type CatalogModel, type ModelKind } from "./catalog.ts";
 import { downloadFile, ModelDownloadError, type DownloadDeps } from "./download-file.ts";
 import { renderPresets } from "./presets.ts";
@@ -36,7 +36,7 @@ export interface ModelView {
   readonly bytesDone: number;
   readonly bytesTotal: number;
   readonly errorCode: string | null;
-  readonly files: readonly FileView[];
+  readonly files: FileView[];
 }
 
 export interface SelfTestView {
@@ -51,7 +51,7 @@ export interface LocalModelsOverview {
   readonly state: "absent" | "downloading" | "ready" | "failed";
   readonly bytesDone: number;
   readonly bytesTotal: number;
-  readonly models: readonly ModelView[];
+  readonly models: ModelView[];
   readonly selfTest: SelfTestView;
 }
 
@@ -70,8 +70,6 @@ export interface LocalModelsDeps {
   readonly catalog?: readonly CatalogModel[];
   readonly fetch?: typeof fetch;
   readonly freeBytes?: DownloadDeps["freeBytes"];
-  /** Событие «модели готовы» (llm.local-models-ready): публикует задача в своей транзакции. */
-  readonly onReady?: (rowIds: readonly string[]) => Promise<void>;
 }
 
 export function makeLocalModels(d: LocalModelsDeps) {
@@ -121,6 +119,13 @@ export function makeLocalModels(d: LocalModelsDeps) {
     if (states.includes("pending")) return "pending";
     return "absent";
   };
+
+  async function anotherDownloader(): Promise<boolean> {
+    const now = clock.now().getTime();
+    return (await listLocalModelRows(system)).some(
+      (row) => row.status === "downloading" && now - row.updatedAt.getTime() <= STALE_MS,
+    );
+  }
 
   /** Состояние всех моделей каталога и самотеста — для админки и экрана первого запуска. */
   async function view(): Promise<LocalModelsOverview> {
@@ -245,7 +250,15 @@ export function makeLocalModels(d: LocalModelsDeps) {
   async function download(ctx: {
     readonly signal: AbortSignal;
     progress(percent: number): Promise<void>;
+    /** Событие «модели готовы» (llm.local-models-ready): публикует задача в своей транзакции. */
+    ready?(rowIds: readonly string[]): Promise<void>;
   }): Promise<void> {
+    // Скачивает один: свежие строки «скачивается» — значит, другая задача уже работает (две кнопки, два администратора).
+    if (await anotherDownloader()) return;
+    if (!(await d.platform.settings.get(LLM_MODELS_DOWNLOAD))) {
+      log.info({ reason: "disabled" }, "llm.model-download-disabled");
+      return;
+    }
     const files = catalog.flatMap((model) => model.files.map((file) => ({ model, file })));
     const total = files.reduce((sum, { file }) => sum + file.size, 0);
     let finished = 0;
@@ -319,11 +332,10 @@ export function makeLocalModels(d: LocalModelsDeps) {
     await writePresets(false);
     await reloadRouter();
     const rows = await listLocalModelRows(system);
-    await d.onReady?.(
-      rows
-        .filter((row) => row.status === "ready" && row.file !== SELF_TEST_KEY)
-        .map((row) => row.id),
-    );
+    const readyIds = rows
+      .filter((row) => row.status === "ready" && row.file !== SELF_TEST_KEY)
+      .map((row) => row.id);
+    if (readyIds.length > 0) await ctx.ready?.(readyIds);
     await selfTest();
   }
 

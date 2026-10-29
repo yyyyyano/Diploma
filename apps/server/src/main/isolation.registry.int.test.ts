@@ -127,6 +127,9 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
       "ссылка сброса уходит самому пользователю по id (AUTH-05, R37); не админу — FORBIDDEN (admin.int.test.ts)",
   },
   "admin.aiProviders": { input: () => undefined },
+  "admin.localModels": { input: () => undefined },
+  "admin.downloadLocalModels": { input: () => undefined },
+  "admin.selfTestLocalModels": { input: () => undefined },
   "admin.setAiChain": { input: () => ({ task: "chat", models: ["groq/openai/gpt-oss-120b"] }) },
   "admin.setAiModelEnabled": {
     input: () => ({ id: "groq/openai/gpt-oss-120b", enabled: true }),
@@ -161,6 +164,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "admin.sendTestMail": { input: () => undefined },
   "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
   "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
+  "llm.localModelsProgress": {
+    exempt:
+      "прогресс скачивания локальных моделей (localOnly): байты и состояние системной задачи, домохозяйства и данных пользователя нет",
+  },
   "llm.models": { input: () => undefined },
   "llm.setPreferredModel": { input: () => ({ modelId: null }) },
   "accounts.list": { input: () => undefined },
@@ -469,7 +476,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "actions.undo",
       "admin.aiProviders",
       "admin.aiUsage",
+      "admin.downloadLocalModels",
+      "admin.localModels",
       "admin.saveAiModel",
+      "admin.selfTestLocalModels",
       "admin.sendTestMail",
       "admin.setAiChain",
       "admin.setAiKey",

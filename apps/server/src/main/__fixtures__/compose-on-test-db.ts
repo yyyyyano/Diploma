@@ -34,6 +34,8 @@ export async function composeOnTestDb(
       MASTER_KEY_FILE: join(dir, "master.key"),
       // Тесты офлайн (NFR-11): трассы не уходят в Langfuse, даже если make init создал ключи.
       LANGFUSE_ENABLED: "false",
+      // Гигабайты моделей из интернета в тестах недопустимы (NFR-11): загрузчик локальных моделей выключен.
+      LLM_MODELS_DOWNLOAD: "0",
       DATA_DIR: join(dir, "data"),
       ...env,
     }),

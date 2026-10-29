@@ -105,6 +105,11 @@ export function adminRouter(d: {
     ),
     setAiKey: admin.admin.setAiKey.handler(({ input }) => d.llm.setKey(input.provider, input.key)),
     aiUsage: admin.admin.aiUsage.handler(({ input }) => d.llm.usage(input.period)),
+    localModels: admin.admin.localModels.handler(() => d.llm.localModels()),
+    downloadLocalModels: admin.admin.downloadLocalModels.handler(({ context }) =>
+      d.llm.downloadLocalModels(context.s),
+    ),
+    selfTestLocalModels: admin.admin.selfTestLocalModels.handler(() => d.llm.selfTestLocalModels()),
     setAiPrice: admin.admin.setAiPrice.handler(({ input }) => d.llm.setPrice(input.id, input)),
   };
 }

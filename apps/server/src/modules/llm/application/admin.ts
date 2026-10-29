@@ -16,6 +16,7 @@ import {
   type SaveAiModelInput,
 } from "@kosht/contract";
 import { APICallError } from "@ai-sdk/provider";
+import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import { costMicros } from "../domain/cost.ts";
@@ -34,6 +35,7 @@ import { usageByModel, usageByTask, usageTotals } from "../infrastructure/db/usa
 import type { ProviderRegistry } from "../infrastructure/providers/providers.ts";
 import { RemoteStatusError } from "../infrastructure/providers/remote-fetch.ts";
 import { GROQ_API_KEY, ZAI_API_KEY } from "../settings.ts";
+import type { LocalModels } from "./local-models/local-models.ts";
 
 const DAY_MS = 86_400_000;
 const PERIOD_DAYS: Readonly<Record<AiPeriod, number>> = { day: 1, week: 7, month: 30 };
@@ -63,6 +65,10 @@ export function makeLlmAdmin(d: {
   readonly providers: ProviderRegistry;
   /** Адрес интерфейса Langfuse на этом компьютере (OBS-05); выключен — null. */
   readonly langfuseUrl: string | null;
+  /** Локальные модели (NFR-25): состояние и самотест; скачивание — задача в worker. */
+  readonly localModels: Pick<LocalModels, "view" | "selfTest">;
+  /** Поставить задачу скачивания (в транзакции администратора; уже идёт — та же задача). */
+  readonly startDownload: (s: ScopedDb) => Promise<void>;
 }) {
   const { system, secrets, clock } = d.platform;
 
@@ -271,7 +277,34 @@ export function makeLlmAdmin(d: {
     return usage(period);
   }
 
-  return { providers, setChain, enable, saveModel, testConnection, setKey, usage, setPrice };
+  /** «Локальные модели» (ADM-50, NFR-25): набор с прогрессом и итог самотеста. */
+  const localModels = () => d.localModels.view();
+
+  /** «Скачать»: ставит задачу; прогресс — по опросу `localModels`. */
+  async function downloadLocalModels(s: ScopedDb) {
+    await d.startDownload(s);
+    return d.localModels.view();
+  }
+
+  /** «Проверить модели»: самотест, при «мусоре» — запасной режим на процессоре. */
+  async function selfTestLocalModels() {
+    await d.localModels.selfTest();
+    return d.localModels.view();
+  }
+
+  return {
+    providers,
+    setChain,
+    enable,
+    saveModel,
+    testConnection,
+    setKey,
+    usage,
+    setPrice,
+    localModels,
+    downloadLocalModels,
+    selfTestLocalModels,
+  };
 }
 
 export type LlmAdmin = ReturnType<typeof makeLlmAdmin>;

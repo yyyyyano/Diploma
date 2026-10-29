@@ -129,7 +129,7 @@ beforeEach(async () => {
   await db.owner.query("delete from llm_local_models");
 });
 
-function setup(options: { baseUrl?: string } = {}) {
+function setup(options: { baseUrl?: string; download?: boolean } = {}) {
   const clock = new FakeClock("2026-10-29T09:00:00Z");
   const logs = memoryLogger();
   const ready: (readonly string[])[] = [];
@@ -140,20 +140,34 @@ function setup(options: { baseUrl?: string } = {}) {
       clock,
       log: logs.log,
       modelsDir: dir,
-      settings: { get: async () => options.baseUrl ?? llamaBase } as never,
+      settings: {
+        get: async (def: { key: string }) =>
+          def.key === "llm.models-download"
+            ? options.download !== false
+            : (options.baseUrl ?? llamaBase),
+      } as never,
     },
     catalog: catalog(),
     freeBytes: async () => Number.MAX_SAFE_INTEGER,
-    onReady: async (ids) => void ready.push(ids),
   });
   const ctx = {
     signal: new AbortController().signal,
     progress: async (p: number) => void progress.push(p),
+    ready: async (ids: readonly string[]) => void ready.push(ids),
   };
   return { models, clock, logs, ready, progress, ctx };
 }
 
 describe("NFR-25: скачивание набора моделей", () => {
+  it("загрузка выключена настройкой (тесты, e2e): ни запроса в сеть, ни файлов, ни событий", async () => {
+    const { models, ctx, ready } = setup({ baseUrl: "http://127.0.0.1:1/v1", download: false });
+    await models.download(ctx);
+    expect(filesState.ranges).toEqual([]);
+    expect(existsSync(join(dir, "llm/big.bin"))).toBe(false);
+    expect(ready).toEqual([]);
+    expect((await models.view()).state).toBe("absent");
+  });
+
   it("до скачивания — «нет»; после — все файлы на диске, «готово», прогресс 100, пресеты записаны, событие «готовы»", async () => {
     const { models, ready, progress, ctx } = setup({ baseUrl: "http://127.0.0.1:1/v1" });
     expect(await models.view()).toMatchObject({ state: "absent", bytesDone: 0 });
@@ -194,6 +208,17 @@ describe("NFR-25: скачивание набора моделей", () => {
       errorCode: "HTTP_404",
     });
     expect(logs.lines().some((line) => line["msg"] === "llm.model-download-failed")).toBe(true);
+  });
+
+  it("второй загрузчик не стартует, пока первый жив (свежая строка «скачивается»): файлы не скачиваются дважды", async () => {
+    const { models, ctx } = setup({ baseUrl: "http://127.0.0.1:1/v1" });
+    await db.owner.query(
+      `insert into llm_local_models (file, model, status, bytes_done, bytes_total, updated_at)
+       values ('llm/big.bin', 'qwen3.5-4b', 'downloading', 1000, ${String(BIG.length)}, '2026-10-29T09:00:00Z')`,
+    );
+    await models.download(ctx);
+    expect(filesState.ranges).toEqual([]);
+    expect(existsSync(join(dir, "llm/big.bin"))).toBe(false);
   });
 
   it("«скачивается» без новостей дольше минуты — «ожидает»: worker умер, вечной загрузки не показываем", async () => {

@@ -55,6 +55,7 @@ function adapter(
 ): ProviderAdapter {
   return {
     id,
+    cloud: id !== "llama",
     languageModel: (modelId) => models[modelId] ?? answering(`${id}/${modelId}`),
     isConfigured: async () => configured,
   };

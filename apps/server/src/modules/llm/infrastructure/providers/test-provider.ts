@@ -178,6 +178,7 @@ export function createTestProvider(options: { readonly paceMs?: number } = {}): 
   const paceMs = options.paceMs ?? 0;
   return {
     id: TEST_PROVIDER_ID,
+    cloud: false,
     languageModel: (modelId) => scriptedModel(modelId, paceMs),
     embeddingModel: hashEmbedder,
     transcriptionModel: fixedTranscriber,

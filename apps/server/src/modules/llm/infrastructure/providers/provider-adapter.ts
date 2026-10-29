@@ -5,6 +5,8 @@ import type { EmbeddingModelV4, LanguageModelV4, TranscriptionModelV4 } from "@a
 export interface ProviderAdapter {
   /** Как в поле provider записи реестра: «test», «groq», «zai», «llama». */
   readonly id: string;
+  /** Данные уходят за пределы компьютера (PRIV-02): облачность записи реестра задаёт провайдер, а не администратор. */
+  readonly cloud: boolean;
   languageModel(modelId: string): LanguageModelV4;
   embeddingModel?(modelId: string): EmbeddingModelV4;
   transcriptionModel?(modelId: string): TranscriptionModelV4;

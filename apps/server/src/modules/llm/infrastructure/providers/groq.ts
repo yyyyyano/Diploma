@@ -25,6 +25,7 @@ export function createGroqAdapter(d: {
   });
   return {
     id: GROQ_PROVIDER_ID,
+    cloud: true,
     languageModel: (modelId) => provider.languageModel(modelId),
     transcriptionModel: (modelId) => provider.transcription(modelId),
     isConfigured: async () => (await d.key()) !== undefined,

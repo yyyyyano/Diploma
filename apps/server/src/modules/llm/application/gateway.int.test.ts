@@ -45,7 +45,7 @@ const scope = testScope();
 
 /** Облачная модель «cloud/mock» — MockLanguageModelV4 с заданным ответом. */
 function cloudProvider(model: LanguageModelV4): ProviderAdapter {
-  return { id: "cloud", languageModel: () => model };
+  return { id: "cloud", cloud: true, languageModel: () => model };
 }
 
 async function addCloudModel(priority = 1) {

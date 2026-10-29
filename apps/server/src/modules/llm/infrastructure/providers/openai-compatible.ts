@@ -40,6 +40,7 @@ function schemaInPrompt(model: LanguageModelV4): LanguageModelV4 {
 
 function create(options: {
   readonly id: string;
+  readonly cloud: boolean;
   readonly source: RemoteSource;
   readonly structuredOutputs: boolean;
   readonly fetch?: typeof fetch;
@@ -53,6 +54,7 @@ function create(options: {
   });
   return {
     id: options.id,
+    cloud: options.cloud,
     languageModel: (modelId) => {
       const model = provider.languageModel(modelId);
       return options.structuredOutputs ? model : schemaInPrompt(model);
@@ -70,6 +72,7 @@ export function createZaiAdapter(d: {
 }): ProviderAdapter {
   return create({
     id: ZAI_PROVIDER_ID,
+    cloud: true,
     source: { baseUrl: async () => ZAI_BASE_URL, key: d.key },
     structuredOutputs: false,
     ...(d.fetch === undefined ? {} : { fetch: d.fetch }),
@@ -83,6 +86,7 @@ export function createLlamaAdapter(d: {
 }): ProviderAdapter {
   return create({
     id: LLAMA_PROVIDER_ID,
+    cloud: false,
     source: { baseUrl: d.baseUrl },
     structuredOutputs: true,
     ...(d.fetch === undefined ? {} : { fetch: d.fetch }),

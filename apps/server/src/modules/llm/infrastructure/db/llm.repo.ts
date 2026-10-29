@@ -1,5 +1,5 @@
 // Запросы к таблицам llm (systemTable) через SystemDb: реестр моделей, порядок цепочек и журнал расхода.
-import { asc, inArray, lt, sql } from "drizzle-orm";
+import { asc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import { CAPABILITIES, type Capability } from "../../domain/tasks.ts";
 import type { ModelRecord } from "../../domain/build-chain.ts";
@@ -129,4 +129,78 @@ export interface UsageRow {
 /** Строка журнала расхода — без текстов (OBS-04). */
 export async function insertUsage(db: SystemDb, row: UsageRow): Promise<void> {
   await db.insert(llmUsage).values(row);
+}
+
+/** Заменить порядок цепочки задачи (ADM-50): строки задачи удаляются и пишутся заново одной транзакцией. */
+export async function replaceChain(
+  db: SystemDb,
+  task: string,
+  modelIds: readonly string[],
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(llmTaskChains).where(eq(llmTaskChains.task, task));
+    await tx
+      .insert(llmTaskChains)
+      .values(modelIds.map((modelId, index) => ({ task, modelId, position: index + 1 })));
+  });
+}
+
+/** Включить или выключить запись; есть ли такая запись — false, если нет. */
+export async function setModelEnabled(
+  db: SystemDb,
+  id: string,
+  enabled: boolean,
+): Promise<boolean> {
+  const rows = await db
+    .update(llmModels)
+    .set({ enabled })
+    .where(eq(llmModels.id, id))
+    .returning({ id: llmModels.id });
+  return rows.length > 0;
+}
+
+/** Цена записи (прайс-лист, ADM-21); есть ли такая запись — false, если нет. */
+export async function setModelPrice(db: SystemDb, id: string, price: Price): Promise<boolean> {
+  const rows = await db
+    .update(llmModels)
+    .set(price)
+    .where(eq(llmModels.id, id))
+    .returning({ id: llmModels.id });
+  return rows.length > 0;
+}
+
+export interface ModelInput {
+  readonly provider: string;
+  readonly modelId: string;
+  readonly cloud: boolean;
+  readonly capabilities: readonly Capability[];
+  readonly priority: number;
+  readonly userSelectable: boolean;
+  readonly contextTokens: number;
+  readonly inputMicrosPerMillion: number;
+  readonly outputMicrosPerMillion: number;
+  readonly limits: RateLimits;
+}
+
+/** Добавить запись или обновить существующую (`provider/модель`); включённость у существующей не меняется. */
+export async function upsertModel(db: SystemDb, input: ModelInput): Promise<void> {
+  const fields = {
+    capabilities: [...input.capabilities],
+    priority: input.priority,
+    userSelectable: input.userSelectable,
+    contextTokens: input.contextTokens,
+    inputMicrosPerMillion: input.inputMicrosPerMillion,
+    outputMicrosPerMillion: input.outputMicrosPerMillion,
+    ...input.limits,
+  };
+  await db
+    .insert(llmModels)
+    .values({
+      id: `${input.provider}/${input.modelId}`,
+      provider: input.provider,
+      modelId: input.modelId,
+      cloud: input.cloud,
+      ...fields,
+    })
+    .onConflictDoUpdate({ target: llmModels.id, set: fields });
 }

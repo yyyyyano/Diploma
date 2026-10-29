@@ -27,11 +27,16 @@ import { makeCategorize } from "../../modules/categories/application/categorize.
 import { createExplainModule } from "../../modules/explain/index.ts";
 import type { FxRate } from "../../modules/fx-rates/index.ts";
 import { createMerchantsModule } from "../../modules/merchants/index.ts";
-import { DELETE_HANDLER } from "../../modules/transactions/application/remove.ts";
+import {
+  APPLY_RULE_HANDLER,
+  CATEGORY_HANDLER,
+  DELETE_HANDLER,
+  RESTORE_HANDLER,
+  TRANSFER_HANDLER,
+} from "../../modules/transactions/application/handlers.ts";
 import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
 import { fillRatesJob } from "../../modules/transactions/jobs/fill-rates.job.ts";
 import { categorizeJob } from "../../modules/transactions/jobs/categorize.job.ts";
-import { RESTORE_HANDLER } from "../../modules/transactions/application/write.ts";
 
 /** Курс НБРБ как на проводе: BYN за `scale` единиц в десятитысячных. */
 export type Rates = Readonly<Record<string, Omit<FxRate, "id" | "currency">>>;
@@ -100,6 +105,9 @@ export function transactionsWithJournal(
       ]),
       confirm: new Map<string, (s: ScopedDb, p: unknown) => Promise<string | undefined | void>>([
         [DELETE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmDelete(s, p)],
+        [CATEGORY_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmChangeCategory(s, p)],
+        [TRANSFER_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmMarkTransfer(s, p)],
+        [APPLY_RULE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmApplyRule(s, p)],
         [ACCOUNT_DELETE, (s: ScopedDb, p: unknown) => ready().accounts.confirmDelete(s, p)],
       ]),
     }),
@@ -161,6 +169,8 @@ export function transactionsWithJournal(
     categorize: categorize.categorize,
     list: catalog.list,
     setUserRule: catalog.setUserRule,
+    userRule: catalog.userRule,
+    removeUserRule: catalog.removeUserRule,
   };
 
   const deps = {

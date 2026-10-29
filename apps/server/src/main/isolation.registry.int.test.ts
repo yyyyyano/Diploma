@@ -198,6 +198,16 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   },
   "transactions.requestDelete": { input: (b) => ({ ids: [b.transactionId] }) },
   "transactions.explainRate": { input: (b) => ({ id: b.transactionId }) },
+  "transactions.requestChangeCategory": {
+    input: (b) => ({
+      ids: [b.transactionId],
+      category: { type: "system", code: "transport" },
+    }),
+  },
+  "transactions.requestMarkTransfer": { input: (b) => ({ ids: [b.transactionId] }) },
+  "tool:bulk_change_category": {
+    input: (b) => ({ ids: [b.transactionId], categoryCode: "transport" }),
+  },
   "tool:search_transactions": {
     // Фильтр по счёту B: чужой счёт даёт пустую страницу, не его строки.
     input: (b) => ({ accountId: b.accountId, limit: 50 }),
@@ -468,9 +478,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "transactions.explainRate",
       "transactions.get",
       "transactions.list",
+      "transactions.requestChangeCategory",
       "transactions.requestDelete",
+      "transactions.requestMarkTransfer",
       "transactions.update",
       "add_transaction",
+      "bulk_change_category",
       "create_account",
       "delete_account",
       "delete_transaction",

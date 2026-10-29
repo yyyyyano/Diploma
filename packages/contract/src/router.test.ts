@@ -81,6 +81,8 @@ describe("дерево процедур", () => {
       "transactions.create",
       "transactions.update",
       "transactions.requestDelete",
+      "transactions.requestChangeCategory",
+      "transactions.requestMarkTransfer",
       "transactions.explainRate",
       "chat.history",
       "chat.send",

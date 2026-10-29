@@ -17,13 +17,14 @@ import {
   TransactionId,
   TransactionType,
   UndoToken,
+  UpdateResult,
 } from "@kosht/contract";
 import { LocalDate, Money } from "@kosht/kernel";
 import { z } from "zod";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
 import type { Operations } from "../application/operations.ts";
-import { DELETE_HANDLER } from "../application/remove.ts";
+import { CATEGORY_HANDLER, DELETE_HANDLER } from "../application/handlers.ts";
 
 const Change = z.strictObject({ transaction: Transaction, undoToken: UndoToken });
 
@@ -137,7 +138,7 @@ export function transactionsTools(ops: Operations) {
         note: z.string().max(500).optional(),
         categoryCode: SystemCategoryCode.optional(),
       }),
-      output: Change,
+      output: UpdateResult,
       execute: async (ctx, input) => {
         const id = parsed(TransactionId, input.id);
         const current =
@@ -161,6 +162,28 @@ export function transactionsTools(ops: Operations) {
           { channel: ctx.channel, source: "assistant" },
         );
       },
+    }),
+    changeCategory: defineTool({
+      name: "bulk_change_category",
+      toolset: "core",
+      kind: "destructive",
+      description:
+        "Ask the user to confirm moving transactions (by id) to a built-in category. Nothing changes until the user says yes.",
+      input: z.strictObject({
+        ids: z.array(Id).min(1).max(50),
+        categoryCode: z.string().max(20),
+      }),
+      propose: async (ctx, input) => ({
+        action: CATEGORY_HANDLER,
+        payload: {
+          decisionId: await ops.requestChangeCategory(
+            ctx.s,
+            input.ids.map((id) => parsed(TransactionId, id)),
+            { type: "system", code: parsed(SystemCategoryCode, input.categoryCode) },
+            ctx.channel,
+          ),
+        },
+      }),
     }),
     remove: defineTool({
       name: "delete_transaction",

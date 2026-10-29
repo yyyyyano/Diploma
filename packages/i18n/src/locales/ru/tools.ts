@@ -13,4 +13,5 @@ export const tools = {
   add_transaction: "Записываю операцию…",
   update_transaction: "Меняю операцию…",
   delete_transaction: "Готовлю удаление операций…",
+  bulk_change_category: "Готовлю смену категории…",
 } as const;

@@ -18,6 +18,16 @@ export function transactionsRouter(ops: Operations) {
     requestDelete: authed.transactions.requestDelete.handler(async ({ input, context }) => ({
       decisionId: await ops.requestDelete(context.s, input.ids, "web"),
     })),
+    requestChangeCategory: authed.transactions.requestChangeCategory.handler(
+      async ({ input, context }) => ({
+        decisionId: await ops.requestChangeCategory(context.s, input.ids, input.category, "web"),
+      }),
+    ),
+    requestMarkTransfer: authed.transactions.requestMarkTransfer.handler(
+      async ({ input, context }) => ({
+        decisionId: await ops.requestMarkTransfer(context.s, input.ids, "web"),
+      }),
+    ),
     explainRate: authed.transactions.explainRate.handler(async ({ input, context }) => ({
       traceId: await ops.explainRate(context.s, input.id),
     })),

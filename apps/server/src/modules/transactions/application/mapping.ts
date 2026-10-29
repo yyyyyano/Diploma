@@ -81,3 +81,11 @@ export function stateOf(row: TransactionRow): StoredState {
     createdAt: row.createdAt.toISOString(),
   };
 }
+
+/** Та же ли это категория (встроенная — по коду, своя — по id); у операции без категории — нет. */
+export function sameCategory(current: CategoryRef | null, other: CategoryRef): boolean {
+  if (current === null || current.type !== other.type) return false;
+  return current.type === "system"
+    ? current.code === (other as typeof current).code
+    : current.id === (other as typeof current).id;
+}

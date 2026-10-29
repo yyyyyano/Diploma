@@ -120,6 +120,79 @@ describe("AGT-03: search_transactions", () => {
   });
 });
 
+describe("AGT-07: bulk_change_category — только решение «Да/Нет»", () => {
+  it("propose создаёт решение с числом и категорией, операции не тронуты; «Да» переносит их", async () => {
+    const { s, t, tools, ctx } = await setup();
+    const first = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    const second = await tools.add.execute(
+      ctx(),
+      tools.add.input.parse({ ...ADD, date: "2026-10-22" }),
+    );
+    const ids = [first.transaction.id, second.transaction.id];
+    const draft = await tools.changeCategory.propose(
+      ctx(),
+      tools.changeCategory.input.parse({ ids, categoryCode: "taxi" }),
+    );
+    expect(draft.action).toBe("transactions.bulk-category");
+    const decisionId = (draft.payload as { decisionId: string }).decisionId;
+    expect(await t.actions.decision(s, decisionId)).toMatchObject({
+      summary: { key: "decisions.transactionsCategory", params: { count: 2, category: "Такси" } },
+    });
+    await t.actions.answer(s, decisionId, "yes", "web");
+    const after = await t.ops.list(s, { page: 1, pageSize: 50 });
+    expect(
+      after.items.every(
+        (item) => item.category?.type === "system" && item.category.code === "taxi",
+      ),
+    ).toBe(true);
+  });
+
+  it("неизвестный код категории и чужие id — VALIDATION и NOT_FOUND, решение не создаётся", async () => {
+    const { tools, ctx } = await setup();
+    const { transaction } = await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    await expect(
+      tools.changeCategory.propose(
+        ctx(),
+        tools.changeCategory.input.parse({ ids: [transaction.id], categoryCode: "такси" }),
+      ),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(
+      tools.changeCategory.propose(
+        ctx(),
+        tools.changeCategory.input.parse({
+          ids: ["0199c1a0-0000-7000-8000-0000000000aa"],
+          categoryCode: "taxi",
+        }),
+      ),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("CAT-05: update_transaction с категорией — правило и вопрос про прошлые в ответе", () => {
+  it("исправление категории у операции с названием отдаёт applyToPast, когда есть прошлые", async () => {
+    const { tools, ctx } = await setup();
+    const rides = [];
+    for (const date of ["2026-10-20", "2026-10-21"]) {
+      rides.push(
+        await tools.add.execute(
+          ctx(),
+          tools.add.input.parse({
+            type: "expense",
+            amountMinor: 740,
+            date,
+            merchant: "ТАКСИ 7788",
+          }),
+        ),
+      );
+    }
+    const edited = await tools.update.execute(
+      ctx(),
+      tools.update.input.parse({ id: rides[0]?.transaction.id, categoryCode: "transport" }),
+    );
+    expect(tools.update.output.parse(edited).applyToPast).toMatchObject({ count: 1 });
+  });
+});
+
 describe("AGT-07: delete_transaction — только решение «Да/Нет»", () => {
   it("propose создаёт решение с обработчиком transactions.delete; операция на месте, «Да» удаляет", async () => {
     const { s, t, tools, ctx } = await setup();

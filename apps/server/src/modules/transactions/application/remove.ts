@@ -14,9 +14,7 @@ import {
   type TransactionRow,
 } from "../infrastructure/db/transactions.repo.ts";
 import type { Deps, Parts } from "./deps.ts";
-import { RESTORE_HANDLER } from "./write.ts";
-
-export const DELETE_HANDLER = "transactions.delete";
+import { DELETE_HANDLER, RESTORE_HANDLER } from "./handlers.ts";
 
 const DeletePayload = z.object({
   ids: z.array(z.uuid()).min(1),
@@ -31,6 +29,15 @@ function label(row: TransactionRow): string {
   return `${name} ${formatMoney(Money.of(row.amountMinor, row.currency))}`;
 }
 
+/** Перечень для вопроса «Да/Нет»: три самые поздние операции — «Название сумма», через «;» (TXN-04: с перечнем). */
+export function exampleLabels(rows: readonly TransactionRow[]): string {
+  return [...rows]
+    .sort((a, b) => (a.occurredOn === b.occurredOn ? 0 : a.occurredOn < b.occurredOn ? 1 : -1))
+    .slice(0, EXAMPLES)
+    .map(label)
+    .join("; ");
+}
+
 export function makeRemove(d: Deps, parts: Parts) {
   /** AGT-07: вопрос «Удалить N операций?» — ожидающее решение; чужие и неизвестные id — NOT_FOUND. */
   async function requestDelete(
@@ -41,11 +48,7 @@ export function makeRemove(d: Deps, parts: Parts) {
     const unique = [...new Set(ids)];
     const rows = await findMany(s, unique);
     if (rows.length !== unique.length) throw new AppError("NOT_FOUND");
-    const examples = [...rows]
-      .sort((a, b) => (a.occurredOn === b.occurredOn ? 0 : a.occurredOn < b.occurredOn ? 1 : -1))
-      .slice(0, EXAMPLES)
-      .map(label)
-      .join("; ");
+    const examples = exampleLabels(rows);
     return d.actions.propose(s, {
       handler: DELETE_HANDLER,
       payload: { ids: unique, channel },

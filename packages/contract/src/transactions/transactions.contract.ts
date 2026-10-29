@@ -179,6 +179,17 @@ export type UpdateTransactionInput = z.input<typeof UpdateTransactionInput>;
 
 const Change = z.strictObject({ transaction: Transaction, undoToken: UndoToken });
 
+/**
+ * «Применить к N прошлым операциям?» (CAT-05): ручная смена категории создала правило для контрагента; прошлых
+ * операций с ним, которые правило изменит, — `count`; ответ «Да» — `actions.answer` по `decisionId`.
+ */
+export const ApplyToPast = z.strictObject({ decisionId: DecisionId, count: z.int().min(1) });
+export type ApplyToPast = z.infer<typeof ApplyToPast>;
+
+/** Результат правки: изменённая операция, «Отменить» и, если исправление создало правило, вопрос про прошлые. */
+export const UpdateResult = Change.extend({ applyToPast: ApplyToPast.nullable() });
+export type UpdateResult = z.infer<typeof UpdateResult>;
+
 /** Сколько операций за один раз можно выбрать для удаления и массовых действий (T-022). */
 export const MAX_BULK = 500;
 
@@ -205,11 +216,25 @@ export const transactionsContract = {
   update: oc
     .route({ method: "POST", path: "/transactions/update" })
     .input(UpdateTransactionInput)
-    .output(Change)
+    .output(UpdateResult)
     .errors(pickErrors("UNAUTHORIZED", "VALIDATION", "NOT_FOUND", "CONFLICT")),
   /** Удаление — только после «Да» (AGT-07): ожидающее решение; «Отменить» отдаёт actions.answer. */
   requestDelete: oc
     .route({ method: "POST", path: "/transactions/delete" })
+    .input(z.strictObject({ ids: z.array(TransactionId).min(1).max(MAX_BULK) }))
+    .output(z.strictObject({ decisionId: DecisionId }))
+    .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
+  /** Массовая смена категории (TXN-04, AGT-07): ожидающее решение с числом и примерами; «Да» исполняет код. */
+  requestChangeCategory: oc
+    .route({ method: "POST", path: "/transactions/change-category" })
+    .input(
+      z.strictObject({ ids: z.array(TransactionId).min(1).max(MAX_BULK), category: CategoryRef }),
+    )
+    .output(z.strictObject({ decisionId: DecisionId }))
+    .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND", "VALIDATION")),
+  /** Пометить выбранные переводом (TXN-04, AGT-07): ожидающее решение; у перевода нет категории. */
+  requestMarkTransfer: oc
+    .route({ method: "POST", path: "/transactions/mark-transfer" })
     .input(z.strictObject({ ids: z.array(TransactionId).min(1).max(MAX_BULK) }))
     .output(z.strictObject({ decisionId: DecisionId }))
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),

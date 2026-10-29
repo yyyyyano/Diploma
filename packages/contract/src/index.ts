@@ -150,6 +150,7 @@ export {
   profileContract,
 } from "./profile/profile.contract.ts";
 export {
+  ApplyToPast,
   CreateTransactionInput,
   Direction,
   MAX_BULK,
@@ -164,6 +165,7 @@ export {
   TransactionRevision,
   TransactionSource,
   TransactionType,
+  UpdateResult,
   UpdateTransactionInput,
   UpdateTransactionPatch,
   Visibility,

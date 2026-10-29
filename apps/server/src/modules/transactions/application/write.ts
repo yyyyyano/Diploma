@@ -4,6 +4,7 @@
 // убирает всё вместе). Операция пишется в валюте своего счёта.
 import {
   CreateTransactionInput,
+  type ApplyToPast,
   type Transaction,
   type UpdateTransactionInput,
 } from "@kosht/contract";
@@ -28,9 +29,10 @@ import {
 } from "../infrastructure/db/transactions.repo.ts";
 import type { ChosenCategory } from "./prepare.ts";
 import type { Deps, Origin, Parts } from "./deps.ts";
-import { categoryRefOf, snapshotOf, toDto } from "./mapping.ts";
+import { categoryRefOf, sameCategory, snapshotOf, toDto } from "./mapping.ts";
+import type { Rule, UndoRule } from "./rule.ts";
 
-export const RESTORE_HANDLER = "transactions.restore";
+import { RESTORE_HANDLER } from "./handlers.ts";
 
 type CreateInput = z.output<typeof CreateTransactionInput>;
 type UpdateInput = z.output<typeof UpdateTransactionInput>;
@@ -52,7 +54,7 @@ function categoryColumns(category: ChosenCategory) {
   };
 }
 
-export function makeWrite(d: Deps, parts: Parts) {
+export function makeWrite(d: Deps, parts: Parts, rule: Rule) {
   const { clock, log, jobs } = d.platform;
   const { prepare, ledger } = parts;
 
@@ -68,10 +70,16 @@ export function makeWrite(d: Deps, parts: Parts) {
     if (pendingModel) await jobs.enqueue(tx, parts.jobs.categorize, { ids: [row.id] });
   }
 
-  async function record(tx: ScopedDb, row: TransactionRow, batchId: string, origin: Origin) {
+  async function record(
+    tx: ScopedDb,
+    row: TransactionRow,
+    batchId: string,
+    origin: Origin,
+    undoRule: UndoRule | null = null,
+  ) {
     return d.actions.record(tx, {
       handler: RESTORE_HANDLER,
-      payload: { batchId },
+      payload: undoRule === null ? { batchId } : { batchId, rule: undoRule },
       subject: `transaction:${row.id}`,
       channel: origin.channel,
     });
@@ -137,7 +145,7 @@ export function makeWrite(d: Deps, parts: Parts) {
     s: ScopedDb,
     input: UpdateInput,
     origin: Origin,
-  ): Promise<{ transaction: Transaction; undoToken: string }> {
+  ): Promise<{ transaction: Transaction; undoToken: string; applyToPast: ApplyToPast | null }> {
     const [row] = await findMany(s, [input.id]);
     if (row === undefined) throw new AppError("NOT_FOUND");
     if (input.expectedVersion !== undefined && input.expectedVersion !== row.version) {
@@ -230,12 +238,26 @@ export function makeWrite(d: Deps, parts: Parts) {
         channel: origin.channel,
         changes: [{ before: locked, after }],
       });
-      const token = await record(tx, after, batchId, origin);
+      // CAT-05: человек сам назвал категорию — запоминаем правило контрагента и спрашиваем про прошлые операции.
+      const taught =
+        p.category !== undefined &&
+        category.ref !== null &&
+        category.source === "user" &&
+        !sameCategory(categoryRefOf(row), category.ref);
+      const learned =
+        taught && category.ref !== null
+          ? await rule.learn(tx, after, category.ref, origin.channel)
+          : { undoRule: null, applyToPast: null };
+      const token = await record(tx, after, batchId, origin, learned.undoRule);
       await enqueueFollowUps(tx, after, category.pendingModel);
-      return { row: after, undoToken: token };
+      return { row: after, undoToken: token, applyToPast: learned.applyToPast };
     });
     log.info({ transactionId: row.id }, "transactions.updated");
-    return { transaction: toDto(result.row), undoToken: result.undoToken };
+    return {
+      transaction: toDto(result.row),
+      undoToken: result.undoToken,
+      applyToPast: result.applyToPast,
+    };
   }
 
   /** Валюта своего счёта — для инструмента агента: «потратил 15 с карты» без валюты в запросе (чужой — NOT_FOUND). */

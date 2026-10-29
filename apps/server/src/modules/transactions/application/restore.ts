@@ -2,7 +2,9 @@
 // изменённую возвращает к состоянию «до», удалённую воссоздаёт с тем же id и датой записи. Если операцию после
 // действия уже правили (версия не та) — CONFLICT: «Отменить» не затирает более позднюю правку. Остатки счетов
 // сдвигаются обратно тем же учётом, что и само действие.
+import { CategoryId, SystemCategoryCode } from "@kosht/contract";
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { StoredState } from "../domain/transactions.ts";
@@ -15,15 +17,26 @@ import {
   updateTransaction,
 } from "../infrastructure/db/transactions.repo.ts";
 import type { Change } from "./ledger.ts";
+import type { Rule } from "./rule.ts";
 import type { Deps, Parts } from "./deps.ts";
 
-function batchIdOf(payload: unknown): string {
-  const batchId = (payload as { batchId?: unknown } | null)?.batchId;
-  if (typeof batchId !== "string") throw new Error("transactions.restore: нет batchId в журнале.");
-  return batchId;
-}
+/** Нагрузка журнала: пачка ревизий и, если исправление создало правило контрагента, как его вернуть (CAT-05). */
+const Payload = z.object({
+  batchId: z.string().min(1),
+  rule: z
+    .object({
+      pattern: z.string().min(1),
+      previous: z
+        .discriminatedUnion("type", [
+          z.object({ type: z.literal("system"), code: SystemCategoryCode }),
+          z.object({ type: z.literal("custom"), id: CategoryId }),
+        ])
+        .nullable(),
+    })
+    .optional(),
+});
 
-export function makeRestore(d: Deps, parts: Parts) {
+export function makeRestore(d: Deps, parts: Parts, rule: Rule) {
   /** Поля состояния «до» для UPDATE (то, что правится пользователем и системой). */
   function columns(state: StoredState) {
     return {
@@ -46,7 +59,9 @@ export function makeRestore(d: Deps, parts: Parts) {
   }
 
   async function restore(tx: ScopedDb, payload: unknown): Promise<void> {
-    const batchId = batchIdOf(payload);
+    const parsed = Payload.safeParse(payload);
+    if (!parsed.success) throw new Error("transactions.restore: нет batchId в журнале.");
+    const { batchId, rule: undoRule } = parsed.data;
     const revisions = await listBatch(tx, batchId);
     if (revisions.length === 0) throw new Error("transactions.restore: пачки нет в истории.");
     const current = new Map(
@@ -118,6 +133,8 @@ export function makeRestore(d: Deps, parts: Parts) {
       restoring: true,
       changes,
     });
+    // CAT-05: исправление отменено — правило контрагента такое, каким было до него.
+    if (undoRule !== undefined) await rule.revert(tx, undoRule);
     // Курс, которого не было в состоянии «до», досчитает фон (как после обычного ввода).
     const missing = changes.flatMap((c) =>
       c.after !== undefined && c.after.amountBynMinor === null && c.after.currency !== "BYN"

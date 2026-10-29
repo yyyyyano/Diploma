@@ -16,8 +16,13 @@ import type { NotificationsFacade } from "../notifications/index.ts";
 import { transactionsTools } from "./agent/tools.ts";
 import { transactionsRouter } from "./api/router.ts";
 import { makeBase, makeOperations } from "./application/operations.ts";
-import { DELETE_HANDLER } from "./application/remove.ts";
-import { RESTORE_HANDLER } from "./application/write.ts";
+import {
+  APPLY_RULE_HANDLER,
+  CATEGORY_HANDLER,
+  DELETE_HANDLER,
+  RESTORE_HANDLER,
+  TRANSFER_HANDLER,
+} from "./application/handlers.ts";
 import { transactionsChanged } from "./events.ts";
 import { categorizeJob } from "./jobs/categorize.job.ts";
 import { fillRatesJob } from "./jobs/fill-rates.job.ts";
@@ -59,9 +64,14 @@ export function createTransactionsModule({
     router: transactionsRouter(ops),
     events: [transactionsChanged],
     jobs: [jobs.fillRates, jobs.categorize],
-    tools: [tools.search, tools.add, tools.update, tools.remove],
+    tools: [tools.search, tools.add, tools.update, tools.changeCategory, tools.remove],
     undo: { [RESTORE_HANDLER]: ops.restore },
-    confirm: { [DELETE_HANDLER]: ops.confirmDelete },
+    confirm: {
+      [DELETE_HANDLER]: ops.confirmDelete,
+      [CATEGORY_HANDLER]: ops.confirmChangeCategory,
+      [TRANSFER_HANDLER]: ops.confirmMarkTransfer,
+      [APPLY_RULE_HANDLER]: ops.confirmApplyRule,
+    },
     userData: transactionsUserData,
   });
 }

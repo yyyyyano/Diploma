@@ -13,6 +13,7 @@ import { notificationsContract } from "./notifications/notifications.contract.ts
 import { mailContract } from "./mail/mail.contract.ts";
 import { privacyContract } from "./privacy/privacy.contract.ts";
 import { profileContract } from "./profile/profile.contract.ts";
+import { transactionsContract } from "./transactions/transactions.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 
 export const contract = {
@@ -28,6 +29,7 @@ export const contract = {
   profile: profileContract,
   accounts: accountsContract,
   categories: categoriesContract,
+  transactions: transactionsContract,
   chat: chatContract,
   admin: adminContract,
 };

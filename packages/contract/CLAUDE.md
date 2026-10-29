@@ -27,6 +27,9 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   **Решение:** контракт не импортирует `ai` — `UiMessageChunk` и `UiMessagePart` слабые («объект с `type`»): форму
   кусков и частей строит AI SDK на сервере и проверяет AI SDK на сайте (`useChat`).
 - `identity`, `accounts` (T-009): вход, первый запуск, `accounts.list`.
+- `transactions` (T-021): `list` (GET: страница + размер ≤ 100 + `total`, фильтры плоскими полями строки запроса — числа
+  приводит `Numeric`), `get` (карточка с историей), `create`/`update` (→ `{ transaction, undoToken }`), `requestDelete`
+  (`ids` ≤ `MAX_BULK` → `{ decisionId }`), `explainRate` (курс НБРБ → `traceId`); `Transaction.amountInByn: null` — «курс не получен».
 - `files` (T-016): `download` — `GET /files/{id}`, вход `FileRef { id }`, ответ — сам файл (`z.file()`).
 - `admin` (T-017): «Пользователи» (`AdminUser`, действия по `{ id }`, `AdminResetResult`) и «Система»
   (`SystemOverview`: `JobRun`, почта без пароля, пояс, сеть, Langfuse); форму ответов сторожит `admin.contract.test.ts`

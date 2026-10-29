@@ -132,10 +132,11 @@ export const CategoryRef = z.discriminatedUnion("type", [
 export type CategoryRef = z.infer<typeof CategoryRef>;
 
 /**
- * Откуда категория (CAT-03, «Откуда эта цифра?»): правило пользователя, справочник контрагентов, ключевое слово,
+ * Откуда категория (CAT-03, «Откуда эта цифра?»): выбрана человеком (`user`, операция, T-021), правило пользователя, справочник контрагентов, ключевое слово,
  * MCC, модель, кэш одинаковых классификаций (LLM-05), «Прочее» (ничего не подошло или модель недоступна).
  */
 export const CategorySource = z.enum([
+  "user",
   "user-rule",
   "merchant",
   "keyword",

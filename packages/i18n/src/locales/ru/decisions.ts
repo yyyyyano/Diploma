@@ -4,6 +4,15 @@ export const decisions = {
   /** Вопрос без своего текста — запасной. */
   fallback: "Выполнить это действие?",
   /** AGT-07: удалить счёт (accounts.requestDelete). */
+  /** AGT-07, TXN-03: удалить операции (transactions.requestDelete) — вопрос с перечнем и счётчиком. */
+  transactionsDelete_one:
+    "Удалить операцию «{{examples}}»? Сразу после этого её можно вернуть кнопкой «Отменить».",
+  transactionsDelete_few:
+    "Удалить {{count}} операции ({{examples}})? Сразу после этого их можно вернуть кнопкой «Отменить».",
+  transactionsDelete_many:
+    "Удалить {{count}} операций ({{examples}})? Сразу после этого их можно вернуть кнопкой «Отменить».",
+  transactionsDelete_other:
+    "Удалить {{count}} операции ({{examples}})? Сразу после этого их можно вернуть кнопкой «Отменить».",
   accountDelete:
     "Удалить счёт «{{name}}»? Он пропадёт из списка счетов, отменить удаление будет нельзя.",
 } as const;

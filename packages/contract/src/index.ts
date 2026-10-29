@@ -149,4 +149,23 @@ export {
   ProfileFact,
   profileContract,
 } from "./profile/profile.contract.ts";
+export {
+  CreateTransactionInput,
+  Direction,
+  MAX_BULK,
+  TimeOfDay,
+  Transaction,
+  TransactionCard,
+  transactionsContract,
+  TransactionField,
+  TransactionId,
+  TransactionList,
+  TransactionListInput,
+  TransactionRevision,
+  TransactionSource,
+  TransactionType,
+  UpdateTransactionInput,
+  UpdateTransactionPatch,
+  Visibility,
+} from "./transactions/transactions.contract.ts";
 export { contract } from "./router.ts";

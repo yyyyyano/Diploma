@@ -9,4 +9,8 @@ export const tools = {
   create_account: "Добавляю счёт…",
   rename_account: "Переименовываю счёт…",
   delete_account: "Готовлю удаление счёта…",
+  search_transactions: "Ищу операции…",
+  add_transaction: "Записываю операцию…",
+  update_transaction: "Меняю операцию…",
+  delete_transaction: "Готовлю удаление операций…",
 } as const;

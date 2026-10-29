@@ -22,6 +22,12 @@ export const TRACE_KEYS = [
   "transactions.amount",
   "transactions.amountInByn",
   "transactions.balanceDelta",
+  // STMT-04: сверка цепочки остатков выписки — остаток на начало, операции, остаток на конец, ожидаемый конец и разница.
+  "statements.openingBalance",
+  "statements.operation",
+  "statements.closingBalance",
+  "statements.expectedClosing",
+  "statements.balanceDifference",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

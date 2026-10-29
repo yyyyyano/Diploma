@@ -1,6 +1,7 @@
 // Публичный API @kosht/calc — все числа P1/P2 (паспорт — packages/calc/CLAUDE.md).
 export { node, type Calc, type NodeOptions } from "./calc.ts";
 export { toByn, type FxRateInput } from "./fx/to-byn.ts";
+export { balanceChainDifference, type BalanceChainInput } from "./statements/balance-chain.ts";
 export { freeBalance, type FreeBalanceInput } from "./fin/free-balance.ts";
 export {
   avg,

@@ -29,4 +29,11 @@ export const formulas = {
     amountInByn: "Сумма в BYN по курсу НБРБ на день операции",
     balanceDelta: "Изменение остатка счёта",
   },
+  statements: {
+    openingBalance: "Остаток на начало периода по выписке",
+    operation: "Операция выписки",
+    closingBalance: "Остаток на конец периода по выписке",
+    expectedClosing: "Остаток на конец, если все операции учтены",
+    balanceDifference: "Расхождение с выпиской",
+  },
 } as const;

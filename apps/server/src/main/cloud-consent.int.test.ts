@@ -17,6 +17,10 @@ beforeAll(async () => {
     `insert into llm_models (id, provider, model_id, cloud, capabilities, priority, context_tokens)
      values ('test/cloud', 'test', 'cloud', true, array['text', 'tools', 'structured'], 1, 8192)`,
   );
+  // Облачную модель администратор разрешил выбирать в чате (LLM-10).
+  await db.owner.query(
+    "update llm_models set user_selectable = true where id in ('test/cloud', 'test/scripted')",
+  );
 });
 afterAll(async () => {
   await stack.close();
@@ -80,5 +84,62 @@ describe("PRIV-02: отзыв облачного согласия действу
     });
     expect(await granted.json()).toMatchObject({ cloud: { granted: true } });
     expect(await callChat(scope)).toBe("cloud");
+  });
+});
+
+describe("LLM-10, PRIV-02: выбранная облачная модель после отзыва согласия не используется", () => {
+  async function chooseHttp(cookie: string, modelId: string | null) {
+    return stack.call("local", "/llm/preferred-model", { cookie, body: { modelId } });
+  }
+
+  it("с согласием выбор принят и отвечает облачная модель; отзыв — «Авто» и только локальная, вернули — снова облачная", async () => {
+    const user = await registerUser(stack, db, "chooser@example.test", { cloud: true });
+    const scope = makeScope(user);
+    const chosen = await chooseHttp(user.cookie, "test/cloud");
+    expect(chosen.status).toBe(200);
+    expect(await chosen.json()).toMatchObject({ selected: "test/cloud" });
+    expect(await callChat(scope)).toBe("cloud");
+
+    await stack.call("local", "/privacy/cloud-consent", {
+      cookie: user.cookie,
+      body: { granted: false, version: CONSENT_VERSIONS.cloud },
+    });
+    const view = await (await stack.call("local", "/llm/models", { cookie: user.cookie })).json();
+    expect(view).toMatchObject({ selected: null });
+    expect(view.items.map((item: { id: string }) => item.id)).toEqual(["test/scripted"]);
+    expect(await callChat(scope)).toBe("scripted");
+    expect((await chooseHttp(user.cookie, "test/cloud")).status).toBe(400);
+
+    await stack.call("local", "/privacy/cloud-consent", {
+      cookie: user.cookie,
+      body: { granted: true, version: CONSENT_VERSIONS.cloud },
+    });
+    expect(await callChat(scope)).toBe("cloud");
+  });
+
+  it("облачное согласие по прежнему тексту не действует: чат идёт локально, выбор — «Авто»", async () => {
+    const user = await registerUser(stack, db, "old-terms@example.test", { cloud: true });
+    await chooseHttp(user.cookie, "test/cloud");
+    await db.owner.query(
+      "update privacy_consents set text_version = '2026-10-26' where user_id = $1 and kind = 'cloud'",
+      [user.userId],
+    );
+    expect(await callChat(makeScope(user))).toBe("scripted");
+    expect(
+      await (await stack.call("local", "/llm/models", { cookie: user.cookie })).json(),
+    ).toMatchObject({
+      selected: null,
+    });
+  });
+
+  it("выбор одного пользователя другому не виден", async () => {
+    const a = await registerUser(stack, db, "pick-a@example.test", { cloud: true });
+    const b = await registerUser(stack, db, "pick-b@example.test", { cloud: true });
+    await chooseHttp(a.cookie, "test/cloud");
+    expect(
+      await (await stack.call("local", "/llm/models", { cookie: b.cookie })).json(),
+    ).toMatchObject({
+      selected: null,
+    });
   });
 });

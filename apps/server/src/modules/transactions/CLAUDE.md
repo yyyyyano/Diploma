@@ -63,4 +63,5 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
   курсы НБРБ — карта в памяти, шлюз моделей — шпион): `operations.int.test.ts` (ввод, правка, удаление, «Отменить»,
   валюта, счёт с операциями), `list.int.test.ts` (страницы, поиск, фильтры), `background.int.test.ts` (курс и модель в
   фоне), инструменты — `agent/tools.int.test.ts`; изоляция — `main/isolation.registry.int.test.ts`; удаление аккаунта —
-  `main/account-deletion.int.test.ts`.
+  `main/account-deletion.int.test.ts`. Бюджет «страница 50 строк ≤ 150 мс p95» — `make bench`
+  (`application/list.bench.ts`: 10 000 операций, замер `list` на настоящем Postgres; p95 печатается).

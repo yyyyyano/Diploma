@@ -229,6 +229,12 @@ coverage-baseline: need-node db-up secrets/db_app_password ## Прогнать �
 test-int: need-node db-up secrets/db_app_password ## Интеграционные тесты на настоящем Postgres: своя база на тестовый файл
 	$(BIN)/vitest run --project int
 
+# Бюджеты времени (CONSTRAINTS «Бюджеты времени»): `*.bench.ts` рядом с кодом, настоящий Postgres, синтетический набор;
+# p95 печатается из реального прогона. Свой конфиг — `make test` и `make check` замеров не гоняют (под нагрузкой других
+# тестов p95 врал бы).
+bench: need-node db-up secrets/db_app_password ## Замеры бюджетов времени (p95) на синтетических наборах: страница операций ≤ 150 мс и др.
+	$(BIN)/vitest run -c vitest.bench.config.ts --reporter=verbose
+
 deps-check: need-node ## Границы модулей (dependency-cruiser из modules.ts) + страховка «проверено 0 файлов»
 	node tooling/checks/deps-guard.mjs
 

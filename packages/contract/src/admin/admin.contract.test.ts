@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import { AdminResetResult, AdminUser, JobRun, SystemOverview } from "./admin.contract.ts";
+import { AI_CAPABILITIES, AI_TASKS, AiProvider, AiProviders, AiUsage } from "./ai.contract.ts";
 
 /** Ключи объекта схемы и всех вложенных объектов и массивов — плоским списком путей. */
 function paths(schema: z.ZodType, prefix = ""): string[] {
@@ -67,5 +68,40 @@ describe("PRIV-07: ответы админки — без данных поль�
       AdminResetResult.safeParse({ delivery: "shown", link: "http://127.0.0.1:8140/recovery" })
         .success,
     ).toBe(true);
+  });
+});
+
+describe("ADM-22, PRIV-07, NFR-16: «Провайдеры ИИ» и «Запросы к ИИ» — числа и метаданные", () => {
+  /** Поля, которые в ответах админки об ИИ быть не должны: тексты запросов и ответов, пользователи, значения ключей. */
+  const SECRET_OR_PERSONAL =
+    /prompt|answer|completion|content|body|message|userId|\busers\b|household|email|secret|apiKey|value/i;
+
+  it("ответы не несут текстов, пользователей и значений ключей", () => {
+    expect(paths(AiUsage).filter((path) => SECRET_OR_PERSONAL.test(path))).toEqual([]);
+    expect(paths(AiProviders).filter((path) => SECRET_OR_PERSONAL.test(path))).toEqual([]);
+  });
+
+  it("ключ провайдера в ответе — только статус «задан / не задан»", () => {
+    expect(paths(AiProvider)).toEqual(["id", "cloud", "key"]);
+    expect(AiProvider.shape.key.options).toEqual(["set", "unset", "unreadable", "none"]);
+  });
+
+  it("«Запросы к ИИ» — цифры журнала: запросы, токены, стоимость, время, ошибки, облако и локально, лимиты, прайс", () => {
+    expect(paths(AiUsage).filter((path) => !path.includes("."))).toEqual([
+      "period",
+      "totals",
+      "byTask",
+      "byProvider",
+      "cloudRequests",
+      "localRequests",
+      "dailyLimits",
+      "prices",
+      "langfuseUrl",
+    ]);
+  });
+
+  it("состав задач и возможностей — один на проводе и в шлюзе (сверяет llm/domain/tasks.test.ts)", () => {
+    expect(AI_TASKS).toContain("receipt.extract");
+    expect(AI_CAPABILITIES).toContain("embeddings");
   });
 });

@@ -15,6 +15,24 @@ export {
 } from "./accounts/accounts.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
+  AI_CAPABILITIES,
+  AI_TASKS,
+  AiCapability,
+  AiConnectionResult,
+  AiLimits,
+  AiModel,
+  AiPeriod,
+  AiProvider,
+  AiProviders,
+  AiTask,
+  AiUsage,
+  SaveAiModelInput,
+  SetAiChainInput,
+  SetAiKeyInput,
+  SetAiModelEnabledInput,
+  SetAiPriceInput,
+} from "./admin/ai.contract.ts";
+export {
   AdminResetResult,
   AdminUser,
   adminContract,

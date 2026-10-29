@@ -7,6 +7,17 @@ import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { pickErrors } from "../errors.ts";
 import { Email, Role } from "../identity/identity.contract.ts";
+import {
+  AiConnectionResult,
+  AiPeriod,
+  AiProviders,
+  AiUsage,
+  SaveAiModelInput,
+  SetAiChainInput,
+  SetAiKeyInput,
+  SetAiModelEnabledInput,
+  SetAiPriceInput,
+} from "./ai.contract.ts";
 
 const Ok = z.strictObject({ ok: z.literal(true) });
 
@@ -155,4 +166,51 @@ export const adminContract = {
     )
     .output(SystemOverview)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** «Провайдеры ИИ» (ADM-50): цепочки по задачам, реестр моделей, статус ключей. */
+  aiProviders: oc
+    .route({ method: "GET", path: "/admin/ai/providers" })
+    .output(AiProviders)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** Порядок цепочки задачи (ADM-50): модели с нужными возможностями; иначе — VALIDATION. */
+  setAiChain: oc
+    .route({ method: "POST", path: "/admin/ai/chain" })
+    .input(SetAiChainInput)
+    .output(AiProviders)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** Включить или выключить модель реестра (ADM-50). */
+  setAiModelEnabled: oc
+    .route({ method: "POST", path: "/admin/ai/model-enabled" })
+    .input(SetAiModelEnabledInput)
+    .output(AiProviders)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** Добавить модель существующего провайдера или изменить возможности, цены, лимиты, разрешение выбора (LLM-09). */
+  saveAiModel: oc
+    .route({ method: "POST", path: "/admin/ai/model" })
+    .input(SaveAiModelInput)
+    .output(AiProviders)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** «Проверить связь» (LLM-08): список моделей провайдера и модель в нём. Сбой — в ответе, а не ошибкой процедуры. */
+  testAiProvider: oc
+    .route({ method: "POST", path: "/admin/ai/test" })
+    .input(z.strictObject({ id: z.string().min(1).max(200) }))
+    .output(AiConnectionResult)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** Ключ API провайдера: только запись; после сохранения — «задан» (NFR-16). */
+  setAiKey: oc
+    .route({ method: "POST", path: "/admin/ai/key" })
+    .input(SetAiKeyInput)
+    .output(AiProviders)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** «Запросы к ИИ» (ADM-20): цифры журнала расхода за период; текстов запросов нет (ADM-22). */
+  aiUsage: oc
+    .route({ method: "GET", path: "/admin/ai/usage" })
+    .input(z.strictObject({ period: AiPeriod.default("day") }))
+    .output(AiUsage)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** Прайс-лист условной стоимости (ADM-21): цена записи за миллион токенов. */
+  setAiPrice: oc
+    .route({ method: "POST", path: "/admin/ai/price" })
+    .input(SetAiPriceInput)
+    .output(AiUsage)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
 };

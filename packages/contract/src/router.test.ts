@@ -99,6 +99,14 @@ describe("дерево процедур", () => {
       "admin.sendTestMail",
       "admin.setTimeZone",
       "admin.setLan",
+      "admin.aiProviders",
+      "admin.setAiChain",
+      "admin.setAiModelEnabled",
+      "admin.saveAiModel",
+      "admin.testAiProvider",
+      "admin.setAiKey",
+      "admin.aiUsage",
+      "admin.setAiPrice",
     ]);
   });
 

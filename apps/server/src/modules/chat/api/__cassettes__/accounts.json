@@ -4,17 +4,17 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "245db990ad119fe1",
+      "fingerprint": "ab0b33cf42ec70e9",
       "parts": [
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "stream-start",
             "warnings": []
           }
         },
         {
-          "delayMs": 2,
+          "delayMs": 3,
           "part": {
             "type": "tool-input-start",
             "id": "call-1",
@@ -22,7 +22,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 2,
           "part": {
             "type": "tool-input-delta",
             "id": "call-1",
@@ -30,14 +30,14 @@
           }
         },
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "tool-input-end",
             "id": "call-1"
           }
         },
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "tool-call",
             "toolCallId": "call-1",
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 3,
+          "delayMs": 7,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -68,7 +68,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "143299dc07692b75",
+      "fingerprint": "15f14c8da1f3ad05",
       "parts": [
         {
           "delayMs": 0,
@@ -93,7 +93,7 @@
           }
         },
         {
-          "delayMs": 302,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -101,7 +101,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -117,7 +117,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 302,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -125,7 +125,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 302,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -133,7 +133,7 @@
           }
         },
         {
-          "delayMs": 306,
+          "delayMs": 304,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -149,7 +149,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 309,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -172,8 +172,8 @@
             },
             "usage": {
               "inputTokens": {
-                "total": 245,
-                "noCache": 245
+                "total": 315,
+                "noCache": 315
               },
               "outputTokens": {
                 "total": 13,

@@ -185,6 +185,21 @@ describe("ARCHITECTURE §6.4: источник сессий и проверка 
   });
 });
 
+describe("PRIV-03: источник имён пользователя", () => {
+  it("один на процесс; второй — ошибка с обоими модулями", () => {
+    const names = async () => ["Анна"];
+    expect(
+      buildRegistries([defineModule({ id: "profile", knownNamesSource: names })]).knownNamesSource,
+    ).toBe(names);
+    expect(() =>
+      buildRegistries([
+        defineModule({ id: "profile", knownNamesSource: names }),
+        defineModule({ id: "privacy", knownNamesSource: names }),
+      ]),
+    ).toThrow(/profile и privacy/);
+  });
+});
+
 describe("PRIV-02, ADR-0009: облачное согласие и остановка модулей", () => {
   it("источник согласия — один на процесс; второй — ошибка с обоими модулями", () => {
     const consent = async () => false;

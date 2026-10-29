@@ -10,6 +10,7 @@ import type { SessionResolver } from "../platform/http/session.ts";
 import type { JobDef } from "../platform/jobs/define-job.ts";
 import type { ScopeVerifier } from "../platform/jobs/scope-verifier.ts";
 import type { ConsentSource } from "../platform/module/consent-source.ts";
+import type { KnownNamesSource } from "../platform/module/known-names.ts";
 import type { ScheduleDef } from "../platform/jobs/schedule.ts";
 import type { SweepDef } from "../platform/jobs/sweep.ts";
 import {
@@ -48,6 +49,7 @@ export interface Registries {
   readonly scopeVerifier: ScopeVerifier | undefined;
   /** Источник облачного согласия (модуль согласий); нет — облако запрещено. */
   readonly consentSource: ConsentSource | undefined;
+  readonly knownNamesSource: KnownNamesSource | undefined;
   /** Остановки модулей в порядке, обратном созданию: верхние модули останавливаются раньше нижних. */
   readonly stops: readonly (() => Promise<void>)[];
 }
@@ -154,6 +156,7 @@ export function buildRegistries(
   const sessionSource = new Registry<SessionResolver>("источник сессий");
   const scopeVerifier = new Registry<ScopeVerifier>("проверка scope задач");
   const consentSource = new Registry<ConsentSource>("источник облачного согласия");
+  const knownNamesSource = new Registry<KnownNamesSource>("источник имён пользователя");
   const stops: (() => Promise<void>)[] = [];
   const sameObject = (a: unknown, b: unknown) => a === b;
 
@@ -193,6 +196,9 @@ export function buildRegistries(
     if (m.sessionSource !== undefined) sessionSource.add("session", m.sessionSource, m.id);
     if (m.scopeVerifier !== undefined) scopeVerifier.add("scope", m.scopeVerifier, m.id);
     if (m.consentSource !== undefined) consentSource.add("consent", m.consentSource, m.id);
+    if (m.knownNamesSource !== undefined) {
+      knownNamesSource.add("known-names", m.knownNamesSource, m.id);
+    }
     if (m.stop !== undefined) stops.unshift(m.stop);
   }
 
@@ -215,6 +221,7 @@ export function buildRegistries(
     sessionSource: sessionSource.values()[0],
     scopeVerifier: scopeVerifier.values()[0],
     consentSource: consentSource.values()[0],
+    knownNamesSource: knownNamesSource.values()[0],
     stops,
   };
 }

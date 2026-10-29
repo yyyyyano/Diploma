@@ -38,6 +38,7 @@ import type {
 } from "../platform/module/define-module.ts";
 import { createRateLimiter } from "../platform/rate-limit/rate-limit.ts";
 import { createConsentRegistry } from "../platform/module/consent-source.ts";
+import { createKnownNamesRegistry } from "../platform/module/known-names.ts";
 import { createRealtimeHub } from "../platform/realtime/hub.ts";
 import {
   createRealtime,
@@ -144,6 +145,7 @@ export async function compose(
   const sessions = createSessionRegistry();
   const scopes = createScopeVerifierRegistry();
   const consent = createConsentRegistry();
+  const knownNames = createKnownNamesRegistry();
   // pg-boss — на том же пуле роли приложения (своего пула нет); пояс расписаний — настройка clock.time-zone.
   const jobs = createJobs({
     pool,
@@ -185,6 +187,7 @@ export async function compose(
     // Трассы ИИ (ADR-0010): Langfuse, если включён конфигурацией и make init создал ключи.
     telemetry: createTelemetry(await loadLangfuseTarget(config.langfuse, log)),
     consent,
+    knownNames,
     tools: () => {
       if (registered === undefined) {
         throw new Error("Инструменты агента запрошены до конца сборки модулей.");
@@ -239,6 +242,9 @@ export async function compose(
     if (registries.sessionSource !== undefined) sessions.register(registries.sessionSource);
     if (registries.scopeVerifier !== undefined) scopes.register(registries.scopeVerifier);
     if (registries.consentSource !== undefined) consent.register(registries.consentSource);
+    if (registries.knownNamesSource !== undefined) {
+      knownNames.register(registries.knownNamesSource);
+    }
     registered = registries;
     events = createEvents({ jobs, subscriptions: registries.subscriptions });
     // worker и bot потоков сайта не отдают: их хаб пуст и ничего не слушает.

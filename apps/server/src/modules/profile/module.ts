@@ -10,6 +10,7 @@ import type { IdentityFacade } from "../identity/index.ts";
 import { profileTools } from "./agent/tools.ts";
 import { profileRouter } from "./api/router.ts";
 import { makeFacts, RESTORE_HANDLER } from "./application/facts.ts";
+import { makeKnownNames } from "./application/known-names.ts";
 import { factsChanged } from "./events.ts";
 import { profileUserData } from "./user-data.ts";
 
@@ -34,6 +35,8 @@ export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFac
     tools: [tools.readFacts, tools.upsertFact],
     undo: { [RESTORE_HANDLER]: facts.restore },
     userData: profileUserData,
+    // PRIV-03: имена детей — в словарь маскирования шлюза llm (облако получает метки вместо имён).
+    knownNamesSource: makeKnownNames(platform),
   });
 }
 

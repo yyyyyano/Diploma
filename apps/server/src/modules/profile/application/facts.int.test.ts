@@ -8,6 +8,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createScopedDb, type ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { factsWithJournal } from "./__fixtures__/facts-with-journal.ts";
+import { makeKnownNames } from "./known-names.ts";
 
 let db: TestDb;
 beforeAll(async () => {
@@ -266,5 +267,36 @@ describe("AUTH-07, PROF-02: анкета на 1 минуту", () => {
       { key: "housingQueue", status: "before", since: null },
       { key: "youngSpecialist", value: true, until: null },
     ]);
+  });
+});
+
+describe("PRIV-03: имена детей — словарь маскирования", () => {
+  const children = (...names: (string | null)[]): FactValueInput => ({
+    key: "children",
+    children: names.map((name) => ({ name, birthDate: null, age: 7, disability: false })),
+  });
+
+  it("имена из действующего факта «дети»; пустые и повторы не попадают; удалённый факт — ничего", async () => {
+    const s = scoped();
+    const { facts } = factsWithJournal();
+    const names = makeKnownNames({ scoped: (scope) => createScopedDb(db.pool, scope) });
+    expect(await names(s.scope)).toEqual([]);
+    const { fact } = await facts.set(s, {
+      value: children("Анна", null, "Анна", "Игорь"),
+      source: "user",
+      channel: "web",
+    });
+    expect(await names(s.scope)).toEqual(["Анна", "Игорь"]);
+    await facts.remove(s, fact.id, "web");
+    expect(await names(s.scope)).toEqual([]);
+  });
+
+  it("ROLE-01: имена другого домохозяйства не видны", async () => {
+    const a = scoped();
+    const b = scoped();
+    const { facts } = factsWithJournal();
+    const names = makeKnownNames({ scoped: (scope) => createScopedDb(db.pool, scope) });
+    await facts.set(a, { value: children("Секретное"), source: "user", channel: "web" });
+    expect(await names(b.scope)).toEqual([]);
   });
 });

@@ -28,6 +28,7 @@ import type { SettingDef, Settings } from "../settings/settings.ts";
 import type { Telemetry } from "../telemetry/telemetry.ts";
 import type { ToolDef } from "../tools/define-tool.ts";
 import type { ConsentRegistry, ConsentSource } from "./consent-source.ts";
+import type { KnownNamesRegistry, KnownNamesSource } from "./known-names.ts";
 
 /** Порты платформы, которые получает каждый модуль. */
 export interface Platform {
@@ -44,6 +45,8 @@ export interface Platform {
   readonly telemetry: Telemetry;
   /** Облачное согласие пользователя (PRIV-02): источник даёт модуль согласий; нет его — облако запрещено. */
   readonly consent: Pick<ConsentRegistry, "cloudAllowed">;
+  /** Словарь имён пользователя для маскирования (PRIV-03): источник даёт модуль profile; нет его — пусто. */
+  readonly knownNames: Pick<KnownNamesRegistry, "names">;
   /**
    * Инструменты агента всех модулей (реестр корня композиции, ADR-0009): агент не импортирует предметные модули.
    * Доступны после сборки модулей — вызов из фабрики модуля — ошибка.
@@ -128,6 +131,8 @@ export interface ModuleParts {
   readonly scopeVerifier?: ScopeVerifier;
   /** Источник облачного согласия (PRIV-02) — один на процесс, его даёт модуль согласий. */
   readonly consentSource?: ConsentSource;
+  /** Источник имён пользователя для маскирования (PRIV-03) — один на процесс, его даёт модуль profile. */
+  readonly knownNamesSource?: KnownNamesSource;
   /**
    * Остановка процесса (SIGTERM): довести или прервать свою работу в памяти (запуски агента) до закрытия очереди и
    * пула. Корень композиции зовёт её первой при close().
@@ -157,6 +162,7 @@ export interface ModuleDescriptor<F = unknown> {
   readonly sessionSource: SessionResolver | undefined;
   readonly scopeVerifier: ScopeVerifier | undefined;
   readonly consentSource: ConsentSource | undefined;
+  readonly knownNamesSource: KnownNamesSource | undefined;
   readonly stop: (() => Promise<void>) | undefined;
 }
 
@@ -200,6 +206,7 @@ export function defineModule(
     sessionSource: spec.sessionSource,
     scopeVerifier: spec.scopeVerifier,
     consentSource: spec.consentSource,
+    knownNamesSource: spec.knownNamesSource,
     stop: spec.stop,
   };
   // id — префикс событий, задач и действий (docs/CAPABILITIES.md «Как читать»): по префиксу видно владельца.

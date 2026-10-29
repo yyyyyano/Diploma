@@ -20,6 +20,8 @@ catalog:
   "@fontsource-variable/literata": 5.3.0
   "@fontsource-variable/onest": 5.3.1
   "@hono/node-server": 2.1.5
+  # NER для маскирования (T-024): русская модель имён и адресов на onnxruntime-node (ADR-0009, дополнение T-024).
+  "@huggingface/transformers": 4.3.1
   # Трассы Langfuse (ADR-0010, T-011): @langfuse/otel 6.0.2 ждёт OpenTelemetry 2.x / 0.2xx и @opentelemetry/api < 1.10 —
   # с линией 3.x / 0.300 импорт @langfuse/otel падает (research 12, §3.2). Все версии — точные, обновление вместе.
   "@langfuse/otel": 6.0.2
@@ -79,6 +81,8 @@ catalog:
   # Почта (ADR-0016, T-012): SMTP-клиент без зависимостей, свои типы; импортируется только в mail/infrastructure.
   nodemailer: 10.0.10
   pg: 8.23.1
+  # Перекодирование изображений без метаданных перед облаком (PRIV-04, T-024).
+  sharp: 0.35.5
   # Очередь задач на той же базе (ADR-0008) — точная версия; импортируется только в platform/jobs.
   pg-boss: 12.38.0
   # Логи (ADR-0010): pino + pino-roll как поток в процессе (ротация), pino-pretty — чтение в make logs.
@@ -105,6 +109,10 @@ minimumReleaseAge: 1440
 # Пакеты, которым разрешены скрипты установки; новая нативная зависимость — новая строка (ADR-0001).
 allowBuilds:
   lefthook: true
+  # NER (T-024): CPU-библиотеки onnxruntime-node лежат в самом пакете; его postinstall докачивает CUDA-провайдеры
+  # (+272 МБ, видеокарты NVIDIA нет), поэтому скрипт выключен; protobufjs скрипт установки не нужен.
+  onnxruntime-node: false
+  protobufjs: false
 
 # dependency-cruiser 18.7 не понимает TypeScript 7 и молча проверяет 0 файлов: даём ему свой TypeScript 6
 # (ADR-0002). Снимается, когда dependency-cruiser поддержит TS ≥ 7.1.

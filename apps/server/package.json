@@ -11,6 +11,7 @@
     "@ai-sdk/otel": "catalog:",
     "@ai-sdk/provider": "catalog:",
     "@hono/node-server": "catalog:",
+    "@huggingface/transformers": "catalog:",
     "@kosht/calc": "workspace:*",
     "@kosht/contract": "workspace:*",
     "@kosht/i18n": "workspace:*",
@@ -36,6 +37,7 @@
     "pg-boss": "catalog:",
     "pino": "catalog:",
     "pino-roll": "catalog:",
+    "sharp": "catalog:",
     "yazl": "catalog:",
     "zod": "catalog:"
   },

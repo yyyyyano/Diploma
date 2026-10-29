@@ -8,11 +8,15 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
+import { configure } from "@testing-library/react";
 import { http, HttpResponse, type JsonBodyType } from "msw";
 import { afterEach } from "vitest";
 import { renderWithProviders } from "../../../test/render.tsx";
 import { OperationsSearch } from "../model/search.ts";
 import { OperationsPage } from "../OperationsPage.tsx";
+
+// Экран тяжёлый, а `make check` гоняет сотни тестов параллельно: первый findBy после холодного импорта ждёт дольше секунды.
+configure({ asyncUtilTimeout: 8_000 });
 
 export const CASH = "0190f0a0-0000-7000-8000-0000000000c1";
 export const USD = "0190f0a0-0000-7000-8000-0000000000c2";

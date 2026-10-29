@@ -50,6 +50,7 @@ describe("словари ru", () => {
       "admin",
       "profile",
       "categories",
+      "operations",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });

@@ -24,8 +24,8 @@ describe("NFR-19: createT — словари ru без React", () => {
   });
 
   it("несуществующее пространство имён не компилируется", () => {
-    // @ts-expect-error — пространства имён operations ещё нет: его добавит задача экрана «Операции»
-    expect(t("operations:title")).toBe("title");
+    // @ts-expect-error — пространства имён receipts ещё нет: его добавит задача экрана «Чеки и документы»
+    expect(t("receipts:title")).toBe("title");
   });
 });
 

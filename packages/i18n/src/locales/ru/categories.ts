@@ -41,6 +41,7 @@ export const categories = {
     income: "Доходы",
   },
   source: {
+    user: "выбрана вами",
     "user-rule": "по вашему правилу",
     merchant: "по справочнику магазинов",
     keyword: "по ключевому слову",

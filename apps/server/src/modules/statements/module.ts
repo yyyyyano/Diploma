@@ -1,5 +1,6 @@
-// Модуль statements (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль statements (паспорт — CLAUDE.md): разбор выписок любого банка (T-025) — чтение PDF/XLSX/XLS/CSV/сканов в
+// изолированном потоке, колонки (запомненный формат → эвристика → модель), сверка остатков, запоминание формата.
+// Предпросмотр, дубли, типы, импорт и откат — T-026.
 import {
   defineModule,
   type ModuleDeps,
@@ -14,6 +15,16 @@ import type { FxRatesFacade } from "../fx-rates/index.ts";
 import type { LlmFacade } from "../llm/index.ts";
 import type { ActionsFacade } from "../actions/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
+import { makeParseStatement } from "./application/parse-statement.ts";
+import type { DocumentReader } from "./application/ports.ts";
+import { makeRememberFormat } from "./application/remember-format.ts";
+import { readDocument } from "./infrastructure/parsing/read-document.ts";
+import {
+  STATEMENTS_COLUMNS_SAMPLE_ROWS,
+  STATEMENTS_PARSE_MEMORY_MB,
+  STATEMENTS_PARSE_TIMEOUT_MS,
+} from "./settings.ts";
+import { statementsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface StatementsFacades {
@@ -28,9 +39,40 @@ export interface StatementsFacades {
   readonly notifications: NotificationsFacade;
 }
 
-export function createStatementsModule(_deps: ModuleDeps<StatementsFacades, Platform>) {
-  return defineModule({ id: "statements" });
+export function createStatementsModule({
+  platform,
+  facades,
+}: ModuleDeps<StatementsFacades, Platform>) {
+  // Чтение — в потоке с таймаутом и лимитом памяти из настроек (SEC-03).
+  const reader: DocumentReader = {
+    read: async (input) =>
+      readDocument(input, {
+        timeoutMs: await platform.settings.get(STATEMENTS_PARSE_TIMEOUT_MS),
+        memoryMb: await platform.settings.get(STATEMENTS_PARSE_MEMORY_MB),
+      }),
+  };
+  const { parseStatement, parseBytes } = makeParseStatement({
+    reader,
+    llm: facades.llm,
+    files: facades.files,
+    settings: platform.settings,
+    log: platform.log,
+  });
+  const rememberFormat = makeRememberFormat(platform);
+  return defineModule({
+    id: "statements",
+    facade: { parseStatement, parseBytes, rememberFormat },
+    settings: [
+      STATEMENTS_PARSE_TIMEOUT_MS,
+      STATEMENTS_PARSE_MEMORY_MB,
+      STATEMENTS_COLUMNS_SAMPLE_ROWS,
+    ],
+    userData: statementsUserData,
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/**
+ * Что модуль даёт соседям: parseStatement(s, fileId) → ParsedStatement (чтение, колонки, сверка остатков),
+ * parseBytes(s, { type, bytes }) — то же по байтам, rememberFormat(s, parsed) — запомнить формат после импорта.
+ */
 export type StatementsFacade = ReturnType<typeof createStatementsModule>["facade"];

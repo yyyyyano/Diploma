@@ -189,6 +189,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
   "explain.get": { input: (b) => ({ id: b.traceId }) },
   "files.download": { input: (b) => ({ id: b.fileId }) },
+  "files.upload": {
+    exempt:
+      "приём файлов запроса: чужих id во входе нет, файл сохраняется в домохозяйство сессии (main/files.int.test.ts)",
+  },
   "tool:explain_number": { input: (b) => ({ traceId: b.traceId }) },
   "notifications.list": { input: () => ({}) },
   "notifications.markRead": { input: (b) => ({ ids: [b.notificationId] }) },

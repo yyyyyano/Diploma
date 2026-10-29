@@ -1,0 +1,267 @@
+{
+  "case": "yantar-pdf-foreign",
+  "origin": "PDF карты в BYN с покупками в USD и EUR: сумма в валюте операции, её валюта и сумма в BYN отдельными колонками. Вымышленный «Янтарьбанк», карта ****0907.",
+  "bank": "Янтарьбанк",
+  "accountMask": "0907",
+  "currency": "BYN",
+  "period": null,
+  "openingMinor": 180000,
+  "closingMinor": 350533,
+  "balanceCheck": "ok",
+  "differenceMinor": 0,
+  "headerRow": 3,
+  "columns": [
+    {
+      "index": 0,
+      "role": "date"
+    },
+    {
+      "index": 1,
+      "role": "description"
+    },
+    {
+      "index": 2,
+      "role": "operationAmount"
+    },
+    {
+      "index": 3,
+      "role": "operationCurrency"
+    },
+    {
+      "index": 4,
+      "role": "amount"
+    },
+    {
+      "index": 5,
+      "role": "balance"
+    }
+  ],
+  "needsModel": false,
+  "scan": false,
+  "rows": [
+    {
+      "date": "2026-09-03",
+      "amountMinor": -6728,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 173272
+    },
+    {
+      "date": "2026-09-03",
+      "amountMinor": -10719,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 162553
+    },
+    {
+      "date": "2026-09-04",
+      "amountMinor": -7753,
+      "currency": "BYN",
+      "description": "SADOVAYA ONLINE EUR",
+      "original": {
+        "minor": -2184,
+        "currency": "EUR"
+      },
+      "balanceMinor": 154800
+    },
+    {
+      "date": "2026-09-05",
+      "amountMinor": -6384,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 148416
+    },
+    {
+      "date": "2026-09-06",
+      "amountMinor": -7677,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 140739
+    },
+    {
+      "date": "2026-09-07",
+      "amountMinor": 109753,
+      "currency": "BYN",
+      "description": "Пособие",
+      "balanceMinor": 250492
+    },
+    {
+      "date": "2026-09-08",
+      "amountMinor": -7989,
+      "currency": "BYN",
+      "description": "MARKET ONLINE USD",
+      "original": {
+        "minor": -2458,
+        "currency": "USD"
+      },
+      "balanceMinor": 242503
+    },
+    {
+      "date": "2026-09-09",
+      "amountMinor": -11403,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI",
+      "balanceMinor": 231100
+    },
+    {
+      "date": "2026-09-10",
+      "amountMinor": -11756,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 219344
+    },
+    {
+      "date": "2026-09-11",
+      "amountMinor": -303,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 219041
+    },
+    {
+      "date": "2026-09-11",
+      "amountMinor": -4832,
+      "currency": "BYN",
+      "description": "DOSTAVKA ONLINE EUR",
+      "original": {
+        "minor": -1361,
+        "currency": "EUR"
+      },
+      "balanceMinor": 214209
+    },
+    {
+      "date": "2026-09-12",
+      "amountMinor": -10537,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 203672
+    },
+    {
+      "date": "2026-09-13",
+      "amountMinor": -1993,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 201679
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -5756,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI",
+      "balanceMinor": 195923
+    },
+    {
+      "date": "2026-09-15",
+      "amountMinor": -4433,
+      "currency": "BYN",
+      "description": "KNIZHNY ONLINE USD",
+      "original": {
+        "minor": -1364,
+        "currency": "USD"
+      },
+      "balanceMinor": 191490
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": -6992,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 184498
+    },
+    {
+      "date": "2026-09-17",
+      "amountMinor": 169063,
+      "currency": "BYN",
+      "description": "Аванс",
+      "balanceMinor": 353561
+    },
+    {
+      "date": "2026-09-18",
+      "amountMinor": -6870,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 346691
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -12776,
+      "currency": "BYN",
+      "description": "MARKET ONLINE USD",
+      "original": {
+        "minor": -3931,
+        "currency": "USD"
+      },
+      "balanceMinor": 333915
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -12001,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 321914
+    },
+    {
+      "date": "2026-09-20",
+      "amountMinor": -3229,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 318685
+    },
+    {
+      "date": "2026-09-21",
+      "amountMinor": -10983,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 307702
+    },
+    {
+      "date": "2026-09-22",
+      "amountMinor": -5613,
+      "currency": "BYN",
+      "description": "KNIZHNY ONLINE USD",
+      "original": {
+        "minor": -1727,
+        "currency": "USD"
+      },
+      "balanceMinor": 302089
+    },
+    {
+      "date": "2026-09-23",
+      "amountMinor": -11390,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 290699
+    },
+    {
+      "date": "2026-09-24",
+      "amountMinor": -185,
+      "currency": "BYN",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 290514
+    },
+    {
+      "date": "2026-09-25",
+      "amountMinor": -11742,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 278772
+    },
+    {
+      "date": "2026-09-26",
+      "amountMinor": -9606,
+      "currency": "BYN",
+      "description": "SADOVAYA ONLINE EUR",
+      "original": {
+        "minor": -2706,
+        "currency": "EUR"
+      },
+      "balanceMinor": 269166
+    },
+    {
+      "date": "2026-09-27",
+      "amountMinor": 81367,
+      "currency": "BYN",
+      "description": "Поступление НПД",
+      "balanceMinor": 350533
+    }
+  ]
+}

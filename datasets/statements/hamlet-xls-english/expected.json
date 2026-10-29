@@ -1,0 +1,245 @@
+{
+  "case": "hamlet-xls-english",
+  "origin": "XLS (BIFF8): английские заголовки, даты мм/дд/гггг, суммы «1,234.56» текстом, валюта USD в шапке, операции от новых к старым. Вымышленный «Hamlet Bank».",
+  "bank": "Hamlet Bank",
+  "accountMask": "7788",
+  "currency": "USD",
+  "period": null,
+  "openingMinor": 500000,
+  "closingMinor": 737510,
+  "balanceCheck": "ok",
+  "differenceMinor": 0,
+  "headerRow": 4,
+  "columns": [
+    {
+      "index": 0,
+      "role": "date"
+    },
+    {
+      "index": 1,
+      "role": "description"
+    },
+    {
+      "index": 2,
+      "role": "amount"
+    },
+    {
+      "index": 3,
+      "role": "balance"
+    }
+  ],
+  "needsModel": false,
+  "scan": false,
+  "rows": [
+    {
+      "date": "2026-09-29",
+      "amountMinor": -10105,
+      "currency": "USD",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 737510
+    },
+    {
+      "date": "2026-09-28",
+      "amountMinor": -9401,
+      "currency": "USD",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 747615
+    },
+    {
+      "date": "2026-09-27",
+      "amountMinor": 109258,
+      "currency": "USD",
+      "description": "Поступление НПД",
+      "balanceMinor": 757016
+    },
+    {
+      "date": "2026-09-26",
+      "amountMinor": -6903,
+      "currency": "USD",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 647758
+    },
+    {
+      "date": "2026-09-25",
+      "amountMinor": -5912,
+      "currency": "USD",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 654661
+    },
+    {
+      "date": "2026-09-24",
+      "amountMinor": -2961,
+      "currency": "USD",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 660573
+    },
+    {
+      "date": "2026-09-23",
+      "amountMinor": -2936,
+      "currency": "USD",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 663534
+    },
+    {
+      "date": "2026-09-22",
+      "amountMinor": -10677,
+      "currency": "USD",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 666470
+    },
+    {
+      "date": "2026-09-21",
+      "amountMinor": -6661,
+      "currency": "USD",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 677147
+    },
+    {
+      "date": "2026-09-20",
+      "amountMinor": -2449,
+      "currency": "USD",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 683808
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -6799,
+      "currency": "USD",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 686257
+    },
+    {
+      "date": "2026-09-18",
+      "amountMinor": -8773,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 693056
+    },
+    {
+      "date": "2026-09-17",
+      "amountMinor": -9231,
+      "currency": "USD",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 701829
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": 121934,
+      "currency": "USD",
+      "description": "Аванс",
+      "balanceMinor": 711060
+    },
+    {
+      "date": "2026-09-15",
+      "amountMinor": -521,
+      "currency": "USD",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 589126
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -10360,
+      "currency": "USD",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 589647
+    },
+    {
+      "date": "2026-09-13",
+      "amountMinor": -3791,
+      "currency": "USD",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 600007
+    },
+    {
+      "date": "2026-09-12",
+      "amountMinor": -1958,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 603798
+    },
+    {
+      "date": "2026-09-11",
+      "amountMinor": -2746,
+      "currency": "USD",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 605756
+    },
+    {
+      "date": "2026-09-10",
+      "amountMinor": -3341,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 608502
+    },
+    {
+      "date": "2026-09-09",
+      "amountMinor": -9865,
+      "currency": "USD",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 611843
+    },
+    {
+      "date": "2026-09-08",
+      "amountMinor": -3304,
+      "currency": "USD",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 621708
+    },
+    {
+      "date": "2026-09-07",
+      "amountMinor": -5026,
+      "currency": "USD",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 625012
+    },
+    {
+      "date": "2026-09-06",
+      "amountMinor": -4248,
+      "currency": "USD",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 630038
+    },
+    {
+      "date": "2026-09-05",
+      "amountMinor": 174744,
+      "currency": "USD",
+      "description": "Аванс",
+      "balanceMinor": 634286
+    },
+    {
+      "date": "2026-09-04",
+      "amountMinor": -841,
+      "currency": "USD",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 459542
+    },
+    {
+      "date": "2026-09-03",
+      "amountMinor": -11120,
+      "currency": "USD",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 460383
+    },
+    {
+      "date": "2026-09-02",
+      "amountMinor": -10373,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 471503
+    },
+    {
+      "date": "2026-09-01",
+      "amountMinor": -7762,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 481876
+    },
+    {
+      "date": "2026-09-01",
+      "amountMinor": -10362,
+      "currency": "USD",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 489638
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "case": "csv-balance-mismatch",
+  "origin": "CSV, в шапке остатки полной выписки, а одной операции в файле нет: цепочка остатков не сходится, импорт обязан получить пометку «проверьте» (STMT-04 шаг 3).",
+  "bank": null,
+  "accountMask": null,
+  "currency": "BYN",
+  "period": null,
+  "openingMinor": 80000,
+  "closingMinor": 66571,
+  "balanceCheck": "mismatch",
+  "differenceMinor": -7022,
+  "headerRow": 2,
+  "columns": [
+    {
+      "index": 0,
+      "role": "date"
+    },
+    {
+      "index": 1,
+      "role": "description"
+    },
+    {
+      "index": 2,
+      "role": "amount"
+    }
+  ],
+  "needsModel": false,
+  "scan": false,
+  "rows": [
+    {
+      "date": "2026-09-01",
+      "amountMinor": -10203,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK"
+    },
+    {
+      "date": "2026-09-02",
+      "amountMinor": -4610,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI"
+    },
+    {
+      "date": "2026-09-04",
+      "amountMinor": -230,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST"
+    },
+    {
+      "date": "2026-09-06",
+      "amountMinor": -11702,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL"
+    },
+    {
+      "date": "2026-09-07",
+      "amountMinor": -3022,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST"
+    },
+    {
+      "date": "2026-09-09",
+      "amountMinor": 56515,
+      "currency": "BYN",
+      "description": "Зарплата за месяц"
+    },
+    {
+      "date": "2026-09-12",
+      "amountMinor": -8185,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI"
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -1894,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK"
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": -832,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK"
+    },
+    {
+      "date": "2026-09-17",
+      "amountMinor": -1063,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3"
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -1964,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL"
+    },
+    {
+      "date": "2026-09-21",
+      "amountMinor": -9917,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK"
+    },
+    {
+      "date": "2026-09-22",
+      "amountMinor": -5687,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3"
+    },
+    {
+      "date": "2026-09-24",
+      "amountMinor": -3613,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026"
+    }
+  ]
+}

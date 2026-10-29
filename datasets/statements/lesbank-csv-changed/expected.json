@@ -1,0 +1,196 @@
+{
+  "case": "lesbank-csv-changed",
+  "origin": "Тот же вымышленный банк, но формат изменился: другой порядок и названия колонок, одна колонка суммы со знаком, даты гггг-мм-дд, суммы «1234.56», колонка валюты. Проверка: изменение формата замечено.",
+  "bank": "Лесбанк",
+  "accountMask": "4821",
+  "currency": "BYN",
+  "period": {
+    "from": "2026-11-01",
+    "to": "2026-11-30"
+  },
+  "openingMinor": 70000,
+  "closingMinor": 250000,
+  "balanceCheck": "ok",
+  "differenceMinor": 0,
+  "headerRow": 3,
+  "columns": [
+    {
+      "index": 0,
+      "role": "date"
+    },
+    {
+      "index": 1,
+      "role": "amount"
+    },
+    {
+      "index": 2,
+      "role": "currency"
+    },
+    {
+      "index": 3,
+      "role": "description"
+    },
+    {
+      "index": 4,
+      "role": "balance"
+    }
+  ],
+  "needsModel": false,
+  "scan": false,
+  "rows": [
+    {
+      "date": "2026-11-01",
+      "amountMinor": -6945,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 63055
+    },
+    {
+      "date": "2026-11-02",
+      "amountMinor": -997,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 62058
+    },
+    {
+      "date": "2026-11-03",
+      "amountMinor": -591,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 61467
+    },
+    {
+      "date": "2026-11-04",
+      "amountMinor": -1244,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 60223
+    },
+    {
+      "date": "2026-11-06",
+      "amountMinor": -6849,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 53374
+    },
+    {
+      "date": "2026-11-07",
+      "amountMinor": 148335,
+      "currency": "BYN",
+      "description": "Поступление НПД",
+      "balanceMinor": 201709
+    },
+    {
+      "date": "2026-11-08",
+      "amountMinor": -3645,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 198064
+    },
+    {
+      "date": "2026-11-09",
+      "amountMinor": -6878,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 191186
+    },
+    {
+      "date": "2026-11-11",
+      "amountMinor": -7077,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI",
+      "balanceMinor": 184109
+    },
+    {
+      "date": "2026-11-12",
+      "amountMinor": -1622,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 182487
+    },
+    {
+      "date": "2026-11-13",
+      "amountMinor": -5363,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 177124
+    },
+    {
+      "date": "2026-11-15",
+      "amountMinor": -4219,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 172905
+    },
+    {
+      "date": "2026-11-16",
+      "amountMinor": -9100,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 163805
+    },
+    {
+      "date": "2026-11-17",
+      "amountMinor": -1224,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 162581
+    },
+    {
+      "date": "2026-11-18",
+      "amountMinor": -633,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 161948
+    },
+    {
+      "date": "2026-11-20",
+      "amountMinor": -3624,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 158324
+    },
+    {
+      "date": "2026-11-21",
+      "amountMinor": 104784,
+      "currency": "BYN",
+      "description": "Пособие",
+      "balanceMinor": 263108
+    },
+    {
+      "date": "2026-11-22",
+      "amountMinor": -2795,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 260313
+    },
+    {
+      "date": "2026-11-23",
+      "amountMinor": -3679,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 256634
+    },
+    {
+      "date": "2026-11-25",
+      "amountMinor": -373,
+      "currency": "BYN",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 256261
+    },
+    {
+      "date": "2026-11-26",
+      "amountMinor": -1140,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 255121
+    },
+    {
+      "date": "2026-11-27",
+      "amountMinor": -5121,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 250000
+    }
+  ]
+}

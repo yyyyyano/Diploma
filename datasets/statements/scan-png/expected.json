@@ -1,0 +1,116 @@
+{
+  "case": "scan-png",
+  "origin": "Скан выписки — картинка PNG (страница, нарисованная контурами букв, с наклоном и размытием). Разбирает модель с изображениями; в тестах её ответ — сценарный, равный эталону.",
+  "bank": "Лесбанк",
+  "accountMask": "4821",
+  "currency": "BYN",
+  "period": null,
+  "openingMinor": 90000,
+  "closingMinor": 150963,
+  "balanceCheck": "ok",
+  "differenceMinor": 0,
+  "headerRow": null,
+  "columns": null,
+  "needsModel": true,
+  "scan": true,
+  "rows": [
+    {
+      "date": "2026-09-02",
+      "amountMinor": -1777,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 88223
+    },
+    {
+      "date": "2026-09-03",
+      "amountMinor": -6637,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 81586
+    },
+    {
+      "date": "2026-09-05",
+      "amountMinor": -4758,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 76828
+    },
+    {
+      "date": "2026-09-07",
+      "amountMinor": -7200,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV",
+      "balanceMinor": 69628
+    },
+    {
+      "date": "2026-09-09",
+      "amountMinor": -2893,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAY",
+      "balanceMinor": 66735
+    },
+    {
+      "date": "2026-09-10",
+      "amountMinor": 107859,
+      "currency": "BYN",
+      "description": "Поступление НПД",
+      "balanceMinor": 174594
+    },
+    {
+      "date": "2026-09-12",
+      "amountMinor": -4845,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 169749
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -5860,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 163889
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": -881,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 163008
+    },
+    {
+      "date": "2026-09-18",
+      "amountMinor": -502,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 162506
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -9276,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 153230
+    },
+    {
+      "date": "2026-09-21",
+      "amountMinor": -829,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 152401
+    },
+    {
+      "date": "2026-09-23",
+      "amountMinor": -657,
+      "currency": "BYN",
+      "description": "MOBILE STATION OPLATA SVYAZI",
+      "balanceMinor": 151744
+    },
+    {
+      "date": "2026-09-25",
+      "amountMinor": -781,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 150963
+    }
+  ]
+}

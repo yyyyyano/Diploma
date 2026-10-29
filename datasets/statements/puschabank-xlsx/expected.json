@@ -1,0 +1,322 @@
+{
+  "case": "puschabank-xlsx",
+  "origin": "XLSX с шапкой банка (название, IBAN, период, остатки) над таблицей, настоящие ячейки-даты и числа, колонки «Дебет» и «Кредит». Вымышленный «Пущабанк», IBAN с нулевой контрольной суммой.",
+  "bank": "Пущабанк",
+  "accountMask": "1234",
+  "currency": "BYN",
+  "period": {
+    "from": "2026-09-01",
+    "to": "2026-09-30"
+  },
+  "openingMinor": 250000,
+  "closingMinor": 390876,
+  "balanceCheck": "ok",
+  "differenceMinor": 0,
+  "headerRow": 7,
+  "columns": [
+    {
+      "index": 0,
+      "role": "date"
+    },
+    {
+      "index": 1,
+      "role": "description"
+    },
+    {
+      "index": 2,
+      "role": "debit"
+    },
+    {
+      "index": 3,
+      "role": "credit"
+    },
+    {
+      "index": 4,
+      "role": "balance"
+    }
+  ],
+  "needsModel": false,
+  "scan": false,
+  "rows": [
+    {
+      "date": "2026-09-01",
+      "amountMinor": -8217,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 241783
+    },
+    {
+      "date": "2026-09-01",
+      "amountMinor": -9145,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 232638
+    },
+    {
+      "date": "2026-09-02",
+      "amountMinor": -5150,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 227488
+    },
+    {
+      "date": "2026-09-03",
+      "amountMinor": -1053,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 226435
+    },
+    {
+      "date": "2026-09-03",
+      "amountMinor": -9899,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 216536
+    },
+    {
+      "date": "2026-09-04",
+      "amountMinor": 98063,
+      "currency": "BYN",
+      "description": "Пособие",
+      "balanceMinor": 314599
+    },
+    {
+      "date": "2026-09-05",
+      "amountMinor": -7022,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 307577
+    },
+    {
+      "date": "2026-09-06",
+      "amountMinor": -8780,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 298797
+    },
+    {
+      "date": "2026-09-06",
+      "amountMinor": -8717,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 290080
+    },
+    {
+      "date": "2026-09-07",
+      "amountMinor": -10285,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 279795
+    },
+    {
+      "date": "2026-09-08",
+      "amountMinor": -10706,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 269089
+    },
+    {
+      "date": "2026-09-08",
+      "amountMinor": -9418,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 259671
+    },
+    {
+      "date": "2026-09-09",
+      "amountMinor": -11633,
+      "currency": "BYN",
+      "description": "DOSTAVKA PIROG 24 MINSK",
+      "balanceMinor": 248038
+    },
+    {
+      "date": "2026-09-10",
+      "amountMinor": -7767,
+      "currency": "BYN",
+      "description": "EVROTORG T-0042 MINSK UL. VESNOVAYA 12",
+      "balanceMinor": 240271
+    },
+    {
+      "date": "2026-09-11",
+      "amountMinor": -2225,
+      "currency": "BYN",
+      "description": "GIPPO MINSK PR. PEREDOVIKOV 3",
+      "balanceMinor": 238046
+    },
+    {
+      "date": "2026-09-11",
+      "amountMinor": -8588,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 229458
+    },
+    {
+      "date": "2026-09-12",
+      "amountMinor": 91627,
+      "currency": "BYN",
+      "description": "Пособие",
+      "balanceMinor": 321085
+    },
+    {
+      "date": "2026-09-13",
+      "amountMinor": -7942,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 313143
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -9972,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 303171
+    },
+    {
+      "date": "2026-09-14",
+      "amountMinor": -10753,
+      "currency": "BYN",
+      "description": "APTEKA LISTOK 77 MINSK",
+      "balanceMinor": 292418
+    },
+    {
+      "date": "2026-09-15",
+      "amountMinor": -4753,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 287665
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": -968,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 286697
+    },
+    {
+      "date": "2026-09-16",
+      "amountMinor": -246,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 286451
+    },
+    {
+      "date": "2026-09-17",
+      "amountMinor": -693,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 285758
+    },
+    {
+      "date": "2026-09-18",
+      "amountMinor": -10794,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 274964
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -8015,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 266949
+    },
+    {
+      "date": "2026-09-19",
+      "amountMinor": -6607,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 260342
+    },
+    {
+      "date": "2026-09-20",
+      "amountMinor": 72481,
+      "currency": "BYN",
+      "description": "Поступление НПД",
+      "balanceMinor": 332823
+    },
+    {
+      "date": "2026-09-21",
+      "amountMinor": -8849,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 323974
+    },
+    {
+      "date": "2026-09-22",
+      "amountMinor": -9937,
+      "currency": "BYN",
+      "description": "BELNEFT AZS 118 BREST",
+      "balanceMinor": 314037
+    },
+    {
+      "date": "2026-09-22",
+      "amountMinor": -9749,
+      "currency": "BYN",
+      "description": "SADOVAYA KAFE GRODNO",
+      "balanceMinor": 304288
+    },
+    {
+      "date": "2026-09-23",
+      "amountMinor": -10594,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 293694
+    },
+    {
+      "date": "2026-09-24",
+      "amountMinor": -11203,
+      "currency": "BYN",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 282491
+    },
+    {
+      "date": "2026-09-24",
+      "amountMinor": -4587,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 277904
+    },
+    {
+      "date": "2026-09-25",
+      "amountMinor": -2838,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 275066
+    },
+    {
+      "date": "2026-09-26",
+      "amountMinor": -4709,
+      "currency": "BYN",
+      "description": "KNIZHNY DVOR MINSK",
+      "balanceMinor": 270357
+    },
+    {
+      "date": "2026-09-27",
+      "amountMinor": -1459,
+      "currency": "BYN",
+      "description": "ERIP OPLATA ZHKH UL. LESNAYA 15 KV. 7 LITSEVOY SCHET 0045-1123 ZA SENTYABR 2026",
+      "balanceMinor": 268898
+    },
+    {
+      "date": "2026-09-27",
+      "amountMinor": -2066,
+      "currency": "BYN",
+      "description": "MARKET ZELENY 5 GOMEL",
+      "balanceMinor": 266832
+    },
+    {
+      "date": "2026-09-28",
+      "amountMinor": 129978,
+      "currency": "BYN",
+      "description": "Поступление НПД",
+      "balanceMinor": 396810
+    },
+    {
+      "date": "2026-09-29",
+      "amountMinor": -5934,
+      "currency": "BYN",
+      "description": "KINO ZVEZDA MINSK",
+      "balanceMinor": 390876
+    }
+  ]
+}

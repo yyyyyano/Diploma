@@ -66,7 +66,10 @@ function uploadForm(kind: string, files: readonly { name: string; bytes: Uint8Ar
   form.set("kind", kind);
   for (const [index, file] of files.entries()) {
     // Заявленный браузером тип подделать проще всего — сервер его не слушает.
-    form.set(`files[${index}]`, new File([file.bytes], file.name, { type: "application/pdf" }));
+    form.set(
+      `files[${index}]`,
+      new File([new Uint8Array(file.bytes)], file.name, { type: "application/pdf" }),
+    );
   }
   return form;
 }

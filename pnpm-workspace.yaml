@@ -2,6 +2,7 @@
 packages:
   - apps/*
   - packages/*
+  - tooling/synth
   - e2e
 
 # Единые версии для всех пакетов: в package.json пишется "<пакет>": "catalog:" (ADR-0001).

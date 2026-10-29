@@ -1,0 +1,15 @@
+{
+  "name": "@kosht/synth",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@types/fontkit": "catalog:",
+    "@types/pdfkit": "catalog:",
+    "dejavu-fonts-ttf": "catalog:",
+    "fontkit": "catalog:",
+    "pdfkit": "catalog:",
+    "sharp": "catalog:",
+    "xlsx": "file:../../vendor/xlsx-0.20.3.tgz"
+  },
+  "//": "Генераторы синтетических наборов (T-025): только dev. Свой пакет, чтобы библиотеки генератора не попадали в корневой node_modules — иначе фикстуры правил границ (tooling/architecture/fixtures) находят их там."
+}

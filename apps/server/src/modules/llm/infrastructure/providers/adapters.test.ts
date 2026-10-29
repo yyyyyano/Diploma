@@ -108,6 +108,27 @@ describe("Z.ai", () => {
   });
 });
 
+describe("Z.ai: неполный список моделей", () => {
+  it("модель вне GET /models проверяется пробой на один токен", async () => {
+    const seen: Seen[] = [];
+    const adapter = createZaiAdapter({
+      key: async () => "zai-key",
+      fetch: fakeFetch("pong", seen),
+    });
+    await adapter.probe?.("glm-4.7-flash");
+    expect(seen).toHaveLength(1);
+    expect(seen[0]?.url).toBe("https://api.z.ai/api/paas/v4/chat/completions");
+    expect(seen[0]?.body).toMatchObject({ model: "glm-4.7-flash", max_tokens: 1 });
+  });
+
+  it("у Groq и llama-server пробы нет: их список моделей полон", () => {
+    expect("probe" in createGroqAdapter({ key: async () => "k" })).toBe(false);
+    expect("probe" in createLlamaAdapter({ baseUrl: async () => "http://127.0.0.1:8142/v1" })).toBe(
+      false,
+    );
+  });
+});
+
 describe("llama-server", () => {
   it("адрес — настройка, читается на каждый вызов; ключа нет; схема уходит как json_schema", async () => {
     const seen: Seen[] = [];

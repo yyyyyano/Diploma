@@ -15,6 +15,7 @@ import {
   type AiUsage,
   type SaveAiModelInput,
 } from "@kosht/contract";
+import { APICallError } from "@ai-sdk/provider";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import { costMicros } from "../domain/cost.ts";
@@ -145,13 +146,27 @@ export function makeLlmAdmin(d: {
     const started = performance.now();
     try {
       const available = await adapter.listModels();
-      return available.includes(model.modelId)
-        ? { ok: true, ms: Math.round(performance.now() - started) }
-        : { ok: false, reason: "model-missing" };
+      if (!available.includes(model.modelId)) {
+        // Список провайдера неполон (Z.ai) — модель проверяется пробой; иначе её просто нет.
+        if (adapter.probe === undefined) return { ok: false, reason: "model-missing" };
+        try {
+          await adapter.probe(model.modelId);
+        } catch (error) {
+          const status = APICallError.isInstance(error) ? error.statusCode : undefined;
+          if (status === 400 || status === 404) return { ok: false, reason: "model-missing" };
+          throw error;
+        }
+      }
+      return { ok: true, ms: Math.round(performance.now() - started) };
     } catch (error) {
       d.platform.log.warn({ reason: `connection-test:${model.provider}` }, "llm.test-failed");
-      const unauthorized =
-        error instanceof RemoteStatusError && (error.status === 401 || error.status === 403);
+      const status =
+        error instanceof RemoteStatusError
+          ? error.status
+          : APICallError.isInstance(error)
+            ? error.statusCode
+            : undefined;
+      const unauthorized = status === 401 || status === 403;
       return { ok: false, reason: unauthorized ? "unauthorized" : "unreachable" };
     }
   }

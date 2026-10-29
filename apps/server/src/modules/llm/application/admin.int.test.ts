@@ -1,6 +1,7 @@
 // ADM-20, ADM-21, ADM-22, ADM-50, LLM-08, LLM-09, NFR-16, PRIV-02 на Postgres: админка ИИ — порядок цепочек, реестр
 // моделей, «Проверить связь», ключи только для записи, цифры журнала расхода по прайсу. Провайдеры — подставные
 // адаптеры (сети нет, NFR-11), секреты — в памяти.
+import { APICallError } from "@ai-sdk/provider";
 import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -25,7 +26,12 @@ const NOW = "2026-10-29T12:00:00Z";
 
 function adapter(
   id: string,
-  options: { cloud: boolean; models?: () => Promise<readonly string[]>; configured?: boolean },
+  options: {
+    cloud: boolean;
+    models?: () => Promise<readonly string[]>;
+    configured?: boolean;
+    probe?: (modelId: string) => Promise<void>;
+  },
 ): ProviderAdapter {
   return {
     id,
@@ -35,6 +41,7 @@ function adapter(
     },
     isConfigured: async () => options.configured ?? true,
     ...(options.models === undefined ? {} : { listModels: options.models }),
+    ...(options.probe === undefined ? {} : { probe: options.probe }),
   };
 }
 
@@ -197,6 +204,44 @@ describe("LLM-08, ADM-50: «Проверить связь»", () => {
   it("модели нет в списке провайдера — model-missing", async () => {
     const { admin } = setup({ groq: { cloud: true, models: async () => ["other"] } });
     expect(await admin.testConnection("groq/big")).toEqual({ ok: false, reason: "model-missing" });
+  });
+
+  it("список провайдера неполон (Z.ai): модели в нём нет, но проба отвечает — связь есть", async () => {
+    const { admin } = setup({
+      zai: { cloud: true, models: async () => ["glm-4.5"], probe: async () => undefined },
+    });
+    expect(await admin.testConnection("zai/flash")).toMatchObject({ ok: true });
+  });
+
+  it("проба отвечает 400 — модели у провайдера нет; 429 «перегружен» — провайдер не отвечает", async () => {
+    const failure = (statusCode: number) =>
+      new APICallError({ message: "x", url: "u", requestBodyValues: {}, statusCode });
+    const missing = setup({
+      zai: {
+        cloud: true,
+        models: async () => [],
+        probe: async () => {
+          throw failure(400);
+        },
+      },
+    });
+    expect(await missing.admin.testConnection("zai/flash")).toEqual({
+      ok: false,
+      reason: "model-missing",
+    });
+    const busy = setup({
+      zai: {
+        cloud: true,
+        models: async () => [],
+        probe: async () => {
+          throw failure(429);
+        },
+      },
+    });
+    expect(await busy.admin.testConnection("zai/flash")).toEqual({
+      ok: false,
+      reason: "unreachable",
+    });
   });
 
   it("ключ не задан — no-key, до сети не доходит", async () => {

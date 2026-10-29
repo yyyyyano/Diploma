@@ -4,7 +4,7 @@
 // делает AI SDK (LLM-04). llama-server схему понимает (грамматика) — отдельной подсказки не нужно.
 import type { EmbeddingModelV4, LanguageModelV4 } from "@ai-sdk/provider";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { wrapLanguageModel } from "ai";
+import { generateText, wrapLanguageModel } from "ai";
 import type { ProviderAdapter } from "./provider-adapter.ts";
 import {
   fetchModelIds,
@@ -43,6 +43,8 @@ function create(options: {
   readonly cloud: boolean;
   readonly source: RemoteSource;
   readonly structuredOutputs: boolean;
+  /** `GET /models` неполон: модель вне списка проверяется пробой на один токен. */
+  readonly partialModelList?: boolean;
   readonly fetch?: typeof fetch;
 }): ProviderAdapter {
   const provider = createOpenAICompatible({
@@ -52,7 +54,7 @@ function create(options: {
     includeUsage: true,
     supportsStructuredOutputs: options.structuredOutputs,
   });
-  return {
+  const adapter: ProviderAdapter = {
     id: options.id,
     cloud: options.cloud,
     languageModel: (modelId) => {
@@ -63,7 +65,20 @@ function create(options: {
     isConfigured: async () =>
       options.source.key === undefined ? true : (await options.source.key()) !== undefined,
     listModels: () => fetchModelIds(options.source, options.fetch),
+    ...(options.partialModelList === true
+      ? {
+          probe: async (modelId: string) => {
+            await generateText({
+              model: adapter.languageModel(modelId),
+              prompt: "ping",
+              maxOutputTokens: 1,
+              maxRetries: 0,
+            });
+          },
+        }
+      : {}),
   };
+  return adapter;
 }
 
 export function createZaiAdapter(d: {
@@ -75,6 +90,8 @@ export function createZaiAdapter(d: {
     cloud: true,
     source: { baseUrl: async () => ZAI_BASE_URL, key: d.key },
     structuredOutputs: false,
+    // Проверено 2026-10-29: glm-4.7-flash отвечает, но в GET /models Z.ai его нет.
+    partialModelList: true,
     ...(d.fetch === undefined ? {} : { fetch: d.fetch }),
   });
 }

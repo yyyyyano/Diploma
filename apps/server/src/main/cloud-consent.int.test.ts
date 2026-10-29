@@ -104,9 +104,11 @@ describe("LLM-10, PRIV-02: выбранная облачная модель по
       cookie: user.cookie,
       body: { granted: false, version: CONSENT_VERSIONS.cloud },
     });
-    const view = await (await stack.call("local", "/llm/models", { cookie: user.cookie })).json();
+    const view = (await (
+      await stack.call("local", "/llm/models", { cookie: user.cookie })
+    ).json()) as { selected: string | null; items: { id: string }[] };
     expect(view).toMatchObject({ selected: null });
-    expect(view.items.map((item: { id: string }) => item.id)).toEqual(["test/scripted"]);
+    expect(view.items.map((item) => item.id)).toEqual(["test/scripted"]);
     expect(await callChat(scope)).toBe("scripted");
     expect((await chooseHttp(user.cookie, "test/cloud")).status).toBe(400);
 

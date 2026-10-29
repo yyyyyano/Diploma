@@ -14,4 +14,9 @@ export interface ProviderAdapter {
   isConfigured?(): Promise<boolean>;
   /** Идентификаторы моделей, которые провайдер отдаёт сейчас (`GET /models`): «Проверить связь» (LLM-08). */
   listModels?(): Promise<readonly string[]>;
+  /**
+   * Проба одной модели вызовом на один токен — для провайдеров, чей `GET /models` неполон (Z.ai не перечисляет
+   * бесплатные *-flash модели, хотя они отвечают): модели нет в списке — проверка идёт пробой, а не отказом.
+   */
+  probe?(modelId: string): Promise<void>;
 }

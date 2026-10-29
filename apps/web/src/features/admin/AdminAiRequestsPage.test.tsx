@@ -1,6 +1,6 @@
 // ADM-20, ADM-21, ADM-22, OBS-05: «Запросы к ИИ» — плитки показателей, по задачам, кто отвечал, дневные лимиты, период
 // в адресе, прайс-лист, ссылка на Langfuse; текстов запросов нет; пусто, загрузка, ошибка.
-import type { AiUsage } from "@kosht/contract";
+import { AiPeriod, type AiUsage } from "@kosht/contract";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createMemoryHistory,
@@ -14,7 +14,6 @@ import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { AiPeriod } from "@kosht/contract";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
 import { AdminAiRequestsPage } from "./AdminAiRequestsPage.tsx";
@@ -87,7 +86,9 @@ function renderPage(
     getParentRoute: () => root,
     path: "/admin/ai-requests",
     validateSearch: z.object({ period: AiPeriod.catch("day") }),
-    component: () => <AdminAiRequestsPage period={route.useSearch().period} />,
+    component: () => (
+      <AdminAiRequestsPage period={(route.useSearch() as { period: AiPeriod }).period} />
+    ),
   });
   const router = createRouter({
     routeTree: root.addChildren([route]),

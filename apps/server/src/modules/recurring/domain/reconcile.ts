@@ -91,7 +91,7 @@ export function newItemOf(candidate: Candidate) {
     source: "detected" as const,
     anchorDay: candidate.anchorDay,
     occurrences: toOccurrences(candidate),
-    memberIds: candidate.occurrences.map((o) => o.id),
+    memberIds: [...candidate.memberIds],
     lastOccurredOn: candidate.lastOccurredOn,
     nextExpectedOn: candidate.nextExpectedOn,
     categoryCode: candidate.categoryCode,

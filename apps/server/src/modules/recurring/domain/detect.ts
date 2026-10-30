@@ -54,6 +54,8 @@ export interface Candidate {
   readonly period: RecurringPeriod;
   /** Последние повторы серии (≤ window), по возрастанию даты: основание средней суммы. */
   readonly occurrences: readonly HistoryOp[];
+  /** Все операции серии: по ним «Операции» помечают регулярные строки. */
+  readonly memberIds: readonly string[];
   /** День месяца серии (медиана); у еженедельных — null. */
   readonly anchorDay: number | null;
   readonly lastOccurredOn: LocalDate;
@@ -186,6 +188,7 @@ export function detect(
         flow: last.flow,
         period: series.period,
         occurrences: series.ops.slice(-s.window),
+        memberIds: series.ops.map((op) => op.id),
         anchorDay: series.anchorDay,
         lastOccurredOn: last.on,
         nextExpectedOn: nextExpected(series.period, last.on, series.anchorDay),

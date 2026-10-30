@@ -34,6 +34,7 @@ function candidate(over: Partial<Candidate> = {}): Candidate {
         categoryId: null,
       },
     ],
+    memberIds: ["a", "b"],
     anchorDay: 12,
     lastOccurredOn: d("2026-10-12"),
     nextExpectedOn: d("2026-11-12"),

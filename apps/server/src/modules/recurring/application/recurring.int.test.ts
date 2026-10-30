@@ -409,12 +409,14 @@ describe("REC-02: признак «регулярный» в «Операция�
       from: "2026-01-01",
       to: TODAY,
     });
-    const creditOps = rows.filter((row) => row.merchantKey.includes("кредит")).map((row) => row.id);
+    const creditOps = rows.filter((row) => row.merchantKey.includes("КРЕДИТ")).map((row) => row.id);
     const shop = rows
-      .filter((row) => row.merchantKey.includes("евроопт"))
+      .filter((row) => row.merchantKey.includes("ЕВРООПТ"))
       .slice(0, 3)
       .map((row) => row.id);
     expect(credit).toBeDefined();
+    expect(creditOps).toHaveLength(7);
+    expect(shop.length).toBeGreaterThan(0);
     const marked = await r.read.markers(s, [...creditOps, ...shop]);
     expect(marked.toSorted()).toEqual(creditOps.toSorted());
     await r.decisions.exclude(s, credit?.id ?? "", "web");

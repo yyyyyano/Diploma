@@ -214,6 +214,7 @@ describe("REC-01: основание — последние операции с�
       { ...DEFAULT_DETECT, window: 6 },
     );
     expect(found[0]?.occurrences).toHaveLength(6);
+    expect(found[0]?.memberIds).toHaveLength(8);
     expect(found[0]?.categoryCode).toBe("subscriptions");
   });
 });

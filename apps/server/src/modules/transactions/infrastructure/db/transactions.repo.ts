@@ -390,21 +390,22 @@ export interface HistoryRow {
 }
 
 /**
- * REC-01: доходы и расходы с известным контрагентом за период — без переводов и возвратов, без «ожидает выписки» (она
- * придёт второй раз) и без курса НБРБ (эквивалента ещё нет). Ключи контрагентов — пачкой, не запросом на операцию.
+ * REC-01: доходы и расходы с известным контрагентом и эквивалентом в BYN за период — без переводов и возвратов, без
+ * «ожидает выписки» (она придёт второй раз). Одним запросом на всю историю, не запросом на операцию. Пустые контрагент и
+ * сумма отсеяны условием, поэтому колонки читаются как непустые.
  */
 export async function recurringHistory(
   s: ScopedDb,
-  input: { from: string; to: string; merchantKeys?: readonly string[] },
+  input: { from: string; to: string },
 ): Promise<HistoryRow[]> {
   const rows = await s.db
     .select({
       id: transactions.id,
-      merchantKey: transactions.merchantKey,
-      merchantName: transactions.merchantName,
+      merchantKey: sql<string>`${transactions.merchantKey}`,
+      merchantName: sql<string>`coalesce(${transactions.merchantName}, ${transactions.merchantKey})`,
       type: transactions.type,
       occurredOn: transactions.occurredOn,
-      amountBynMinor: transactions.amountBynMinor,
+      amountBynMinor: sql<number>`${transactions.amountBynMinor}`.mapWith(Number),
       categoryCode: transactions.categoryCode,
       categoryId: transactions.categoryId,
     })
@@ -418,23 +419,8 @@ export async function recurringHistory(
         isNotNull(transactions.amountBynMinor),
         gte(transactions.occurredOn, input.from),
         lte(transactions.occurredOn, input.to),
-        input.merchantKeys === undefined
-          ? undefined
-          : inArray(transactions.merchantKey, [...input.merchantKeys]),
       ),
     )
     .orderBy(asc(transactions.occurredOn), asc(transactions.id));
-  return rows.flatMap((row) =>
-    row.merchantKey === null || row.amountBynMinor === null
-      ? []
-      : [
-          {
-            ...row,
-            merchantKey: row.merchantKey,
-            merchantName: row.merchantName ?? row.merchantKey,
-            amountBynMinor: row.amountBynMinor,
-            type: row.type as "expense" | "income",
-          },
-        ],
-  );
+  return rows.map((row) => ({ ...row, type: row.type as HistoryRow["type"] }));
 }

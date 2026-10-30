@@ -5,6 +5,14 @@ import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import { AdminResetResult, AdminUser, JobRun, SystemOverview } from "./admin.contract.ts";
 import { AI_CAPABILITIES, AI_TASKS, AiProvider, AiProviders, AiUsage } from "./ai.contract.ts";
+import {
+  LawAdminActs,
+  LawCandidates,
+  LawDictionary,
+  LawFetchEntry,
+  LawsOverview,
+  LawUpdateEntry,
+} from "./laws.contract.ts";
 
 /** Ключи объекта схемы и всех вложенных объектов и массивов — плоским списком путей. */
 function paths(schema: z.ZodType, prefix = ""): string[] {
@@ -103,5 +111,46 @@ describe("ADM-22, PRIV-07, NFR-16: «Провайдеры ИИ» и «Запро
   it("состав задач и возможностей — один на проводе и в шлюзе (сверяет llm/domain/tasks.test.ts)", () => {
     expect(AI_TASKS).toContain("receipt.extract");
     expect(AI_CAPABILITIES).toContain("embeddings");
+  });
+});
+
+describe("PRIV-07, LAW-40: вкладка «Законы» — метаданные общей правовой базы, без данных пользователей", () => {
+  const USER_DATA =
+    /user|household|owner|amount|money|balance|transaction|receipt|statement|fact|message/i;
+
+  it("сводка — состояние базы, расписание и загрузчик, ровно эти разделы", () => {
+    expect(paths(LawsOverview).filter((path) => !path.includes("."))).toEqual([
+      "summary",
+      "startup",
+      "vectors",
+      "schedule",
+      "newActsMode",
+      "loaderContact",
+      "userAgent",
+    ]);
+  });
+
+  it("ни в сводке, ни в списках, журналах, очереди и справочниках нет полей о пользователях и их финансах", () => {
+    for (const schema of [
+      LawsOverview,
+      LawAdminActs,
+      LawUpdateEntry,
+      LawFetchEntry,
+      LawCandidates,
+      LawDictionary,
+    ]) {
+      expect(paths(schema).filter((path) => USER_DATA.test(path))).toEqual([]);
+    }
+  });
+
+  it("запись журнала запросов — адрес, код ответа, размер и время; тела страницы нет", () => {
+    expect(paths(LawFetchEntry).filter((path) => !path.includes("."))).toEqual([
+      "at",
+      "url",
+      "httpStatus",
+      "bytes",
+      "ms",
+      "outcome",
+    ]);
   });
 });

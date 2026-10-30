@@ -71,6 +71,25 @@ export {
   ObligationRow,
 } from "./fin/fin.contract.ts";
 export {
+  AddLawActsInput,
+  AddLawActsResult,
+  LAW_ACT_PAGE_SIZE,
+  LAW_DICTIONARY_KINDS,
+  LawAdminAct,
+  LawAdminActs,
+  LawAdminStatus,
+  LawCandidate,
+  LawCandidates,
+  LawDictionary,
+  LawDictionaryKind,
+  LawFetchEntry,
+  LawMoment,
+  LawPravoId,
+  LawsOverview,
+  LawUpdateEntry,
+  SetLawsSettingsInput,
+} from "./admin/laws.contract.ts";
+export {
   LAW_GROUPS,
   LawActView,
   LawCatalog,

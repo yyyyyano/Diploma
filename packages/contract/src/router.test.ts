@@ -153,6 +153,20 @@ describe("дерево процедур", () => {
       "admin.downloadLocalModels",
       "admin.selfTestLocalModels",
       "admin.setAiPrice",
+      "admin.lawsOverview",
+      "admin.setLawsSettings",
+      "admin.lawsActs",
+      "admin.lawsUpdates",
+      "admin.lawsFetches",
+      "admin.lawsCandidates",
+      "admin.decideLawCandidate",
+      "admin.lawsCheckNow",
+      "admin.lawsCheckText",
+      "admin.addLawActs",
+      "admin.excludeLawAct",
+      "admin.lawsDictionary",
+      "admin.lawsDictionaryUpsert",
+      "admin.lawsDictionaryRemove",
     ]);
   });
 

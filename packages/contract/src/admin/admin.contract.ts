@@ -5,6 +5,7 @@
 // которой действует администратор.
 import { oc } from "@orpc/contract";
 import { z } from "zod";
+import { PageNumber } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 import { Email, Role } from "../identity/identity.contract.ts";
 import {
@@ -19,8 +20,34 @@ import {
   SetAiModelEnabledInput,
   SetAiPriceInput,
 } from "./ai.contract.ts";
+import {
+  AddLawActsInput,
+  AddLawActsResult,
+  LawAdminActs,
+  LawAdminStatus,
+  LawCandidates,
+  LawDictionary,
+  LawDictionaryKind,
+  LawDictionaryUpsertInput,
+  LawFetchEntry,
+  LawPravoId,
+  LawsOverview,
+  LawUpdateEntry,
+  SetLawsSettingsInput,
+} from "./laws.contract.ts";
 
 const Ok = z.strictObject({ ok: z.literal(true) });
+
+/** Номер страницы из строки запроса GET («2») или готовое целое. */
+const PageNumeric = z
+  .union([
+    z.int(),
+    z
+      .string()
+      .regex(/^\d{1,6}$/u)
+      .transform(Number),
+  ])
+  .pipe(PageNumber);
 
 /** Строка «Пользователи» (ADM-30). */
 export const AdminUser = z.strictObject({
@@ -228,5 +255,87 @@ export const adminContract = {
     .route({ method: "POST", path: "/admin/ai/price" })
     .input(SetAiPriceInput)
     .output(AiUsage)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** «Законы» (LAW-40): сводка, расписание, прогресс стартового каталога, векторный индекс, контакт загрузчика. */
+  lawsOverview: oc
+    .route({ method: "GET", path: "/admin/laws" })
+    .output(LawsOverview)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** Автообновление, режим новых актов, контакт загрузчика, время проверки и ночное окно; время вне окна — VALIDATION. */
+  setLawsSettings: oc
+    .route({ method: "POST", path: "/admin/laws/settings" })
+    .input(SetLawsSettingsInput)
+    .output(LawsOverview)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** Список актов по статусу, страницами (LAW-40: «Актуален», «Есть принятые изменения»…). */
+  lawsActs: oc
+    .route({ method: "GET", path: "/admin/laws/acts" })
+    .input(
+      z.strictObject({
+        status: LawAdminStatus.optional(),
+        page: PageNumeric.default(1),
+      }),
+    )
+    .output(LawAdminActs)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** Журнал обновлений (новые первыми, до 100 строк). */
+  lawsUpdates: oc
+    .route({ method: "GET", path: "/admin/laws/updates" })
+    .output(z.strictObject({ items: z.array(LawUpdateEntry).max(100) }))
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** Журнал запросов загрузчика: адрес без параметров поиска, код ответа, размер, время. */
+  lawsFetches: oc
+    .route({ method: "GET", path: "/admin/laws/fetches" })
+    .output(z.strictObject({ items: z.array(LawFetchEntry).max(100) }))
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** Очередь кандидатов с причинами. */
+  lawsCandidates: oc
+    .route({ method: "GET", path: "/admin/laws/candidates" })
+    .output(LawCandidates)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** «Добавить» (задача загрузки акта) или «Отклонить» (повторно не предлагается); уже решённый — NOT_FOUND. */
+  decideLawCandidate: oc
+    .route({ method: "POST", path: "/admin/laws/candidates/decide" })
+    .input(z.strictObject({ id: z.uuid(), decision: z.enum(["add", "reject"]) }))
+    .output(LawCandidates)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** «Проверить сейчас»: ставит задачу в worker (проверка, затем пополнение каталога); идёт такая же — та же задача. */
+  lawsCheckNow: oc
+    .route({ method: "POST", path: "/admin/laws/check-now" })
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** «Проверить, появился ли текст» у акта-карточки: задача в worker; текст берётся только с pravo.by (LEGAL-06). */
+  lawsCheckText: oc
+    .route({ method: "POST", path: "/admin/laws/check-text" })
+    .input(z.strictObject({ pravoId: LawPravoId }))
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** «Добавить акт по ссылке / списком» (LAW-16), в том числе местные акты (LAW-06): задача в worker. */
+  addLawActs: oc
+    .route({ method: "POST", path: "/admin/laws/add" })
+    .input(AddLawActsInput)
+    .output(AddLawActsResult)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** «Исключить акт»: не показывается, не ищется, не проверяется; повторное добавление по ссылке возвращает его. */
+  excludeLawAct: oc
+    .route({ method: "POST", path: "/admin/laws/exclude" })
+    .input(z.strictObject({ pravoId: LawPravoId }))
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** Справочники: один общий редактор на семь видов (`kind`). */
+  lawsDictionary: oc
+    .route({ method: "GET", path: "/admin/laws/dictionary" })
+    .input(z.strictObject({ kind: LawDictionaryKind }))
+    .output(LawDictionary)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  lawsDictionaryUpsert: oc
+    .route({ method: "POST", path: "/admin/laws/dictionary/upsert" })
+    .input(LawDictionaryUpsertInput)
+    .output(LawDictionary)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  lawsDictionaryRemove: oc
+    .route({ method: "POST", path: "/admin/laws/dictionary/remove" })
+    .input(z.strictObject({ kind: LawDictionaryKind, id: z.string().max(1100) }))
+    .output(LawDictionary)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
 };

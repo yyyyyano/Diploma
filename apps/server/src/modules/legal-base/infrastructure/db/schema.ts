@@ -108,16 +108,6 @@ export const legalActSnapshots = publicTable(
   ],
 );
 
-/** Вид фрагмента (LAW-20). */
-export const FRAGMENT_KINDS = [
-  "norm",
-  "definitions",
-  "transitional",
-  "effective-date",
-  "appendix",
-] as const;
-export type FragmentKind = (typeof FRAGMENT_KINDS)[number];
-
 /** Фрагмент — цитируемая единица акта; ключ `pathKey` стабилен между редакциями (LAW-31). */
 export const legalFragments = publicTable(
   "legal_fragments",

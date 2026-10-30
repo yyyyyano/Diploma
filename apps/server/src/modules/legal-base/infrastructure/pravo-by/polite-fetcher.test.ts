@@ -24,7 +24,6 @@ const robotsTxt = readFileSync(
   new URL("../../__fixtures__/pravo-by/robots.txt", import.meta.url),
   "utf8",
 );
-const BASE = "https://pravo.by";
 const DOC = "https://pravo.by/document/?guid=3871&p0=H10200090";
 const CONTACT = "operator@example.test";
 
@@ -110,7 +109,6 @@ function setup(opts: { replies: (url: string) => Reply; contact?: string; random
   const sleeps: number[] = [];
   const logger = memoryLogger();
   const loader = createPoliteFetcher({
-    baseUrl: BASE,
     fetch: fetcher.make(clock),
     clock,
     sleep: async (ms) => {

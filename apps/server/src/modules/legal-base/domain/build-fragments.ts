@@ -3,7 +3,16 @@
 // (cheerio), здесь только правила разреза. Вёрстка страниц — экспорт из Word/ЭТАЛОН: классы `article` и `point` есть, но
 // главы, подпункты и приложения опознаются ещё и по тексту (LAW-39: вёрстка меняется, правила не должны на неё опираться).
 import { createHash } from "node:crypto";
-import type { FragmentKind } from "../infrastructure/db/schema.ts";
+
+/** Вид фрагмента (LAW-20). */
+export const FRAGMENT_KINDS = [
+  "norm",
+  "definitions",
+  "transitional",
+  "effective-date",
+  "appendix",
+] as const;
+export type FragmentKind = (typeof FRAGMENT_KINDS)[number];
 
 /** Абзац страницы: класс вёрстки и видимый текст (надстрочные цифры уже в Юникоде: «216¹»). */
 export interface RawParagraph {

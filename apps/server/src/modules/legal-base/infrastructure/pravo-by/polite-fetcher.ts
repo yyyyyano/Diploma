@@ -35,7 +35,6 @@ export interface FetcherSettings {
 }
 
 export interface PoliteFetcherDeps {
-  readonly baseUrl: string;
   readonly fetch: typeof fetch;
   readonly clock: Clock;
   /** Ожидание: боевое — таймер с отменой по signal, тестовое — сдвиг FakeClock. */
@@ -193,7 +192,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     const { requests, errors } = await store.record(entry, clock.today());
     if (requests >= MIN_REQUESTS_FOR_SHARE && errors / requests > MAX_ERROR_SHARE) {
       await store.stop(clock.today(), "LOADER_TOO_MANY_ERRORS");
-      log.warn({ requests, errors }, "legal-base.loader.too-many-errors");
+      log.warn({ count: errors, total: requests }, "legal-base.loader.too-many-errors");
       throw new LoaderStopped("LOADER_TOO_MANY_ERRORS");
     }
   }
@@ -214,7 +213,12 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
   }
 
   /** robots.txt: из БД, не старше суток; иначе — запрос (сам он robots не проверяет). */
-  async function robotsFor(userAgent: string, settings: FetcherSettings, signal?: AbortSignal) {
+  async function robotsFor(
+    site: URL,
+    userAgent: string,
+    settings: FetcherSettings,
+    signal?: AbortSignal,
+  ) {
     const state = await store.read();
     const fresh =
       state.robotsFetchedAt !== null &&
@@ -222,7 +226,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     let text = state.robotsTxt ?? "";
     if (!fresh) {
       const got = await requestWithRetries(
-        new URL("/robots.txt", deps.baseUrl),
+        new URL("/robots.txt", site),
         userAgent,
         settings,
         signal,
@@ -231,7 +235,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
       text = got.status === 200 ? got.body : "";
       await store.saveRobots(text, clock.now());
     }
-    return robotsParser(new URL("/robots.txt", deps.baseUrl).href, text);
+    return robotsParser(new URL("/robots.txt", site).href, text);
   }
 
   async function requestWithRetries(
@@ -245,7 +249,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
       let result = await attempt(target, userAgent, settings, signal);
       for (const delay of RETRY_LADDER_MS) {
         if (!("transient" in result)) break;
-        log.info({ delayMs: delay }, "legal-base.loader.retry");
+        log.info({ ms: delay }, "legal-base.loader.retry");
         await deps.sleep(delay, signal);
         result = await attempt(target, userAgent, settings, signal);
       }
@@ -270,7 +274,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     async get(url: URL, signal?: AbortSignal): Promise<Fetched> {
       const userAgent = await ready();
       const settings = await deps.settings();
-      const robots = await robotsFor(userAgent, settings, signal);
+      const robots = await robotsFor(url, userAgent, settings, signal);
       if (robots.isAllowed(url.href, userAgent) === false) {
         await store.record(
           {

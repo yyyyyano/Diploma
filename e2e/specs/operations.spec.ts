@@ -59,7 +59,8 @@ test("«Операции»: ввод, карточка, правка, удале
   await page.getByRole("button", { name: "Продолжить" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
+  await page.getByRole("link", { name: "Счета", exact: true }).first().click();
   await expect(page.getByRole("article", { name: "Наличные" })).toBeVisible({ timeout: 15_000 });
 
   // DES-16, загрузка: ответ списка придержан — скелетон; затем отпущен.

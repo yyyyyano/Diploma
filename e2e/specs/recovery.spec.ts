@@ -106,5 +106,5 @@ test("забыл пароль → письмо в ящике → новый па
   // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 });

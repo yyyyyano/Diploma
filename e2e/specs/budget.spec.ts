@@ -54,7 +54,7 @@ test("«Лимиты и цели»: пусто, новый лимит и цел�
   await page.getByRole("button", { name: "Продолжить" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // DES-16: пусто — что здесь будет и первый шаг для лимитов и для целей.
   await page.goto("/budget");

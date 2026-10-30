@@ -55,6 +55,8 @@ test("«Счета»: итог с «Откуда эта цифра?», доба�
   await page.getByRole("button", { name: "Продолжить" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
+  await expect(page).toHaveURL(/\/home$/);
+  await page.getByRole("link", { name: "Счета", exact: true }).first().click();
   await expect(page).toHaveURL(/\/accounts$/);
 
   // STMT-01, STMT-02: «Наличные» с самого начала и день остатка; итог в BYN.

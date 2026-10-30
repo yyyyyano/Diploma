@@ -55,9 +55,9 @@ test("«Что ассистент знает обо мне»: указать, у
   // AUTH-07: анкету можно пропустить целиком — второй раз она не показывается.
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
   await page.goto("/");
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // PROF-05: пусто — что здесь будет; ключи PROF-01 — «Не указано · Указать».
   await page.goto("/memory");

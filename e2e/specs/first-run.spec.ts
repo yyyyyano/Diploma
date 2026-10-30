@@ -114,7 +114,11 @@ test("первый запуск → администратор → вход → 
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("link", { name: "Перейти на главную" }).click();
 
+  // DASH-04: вошедшего встречает главная, у нового пользователя — «первые шаги».
+  await expect(page).toHaveURL(/\/home$/);
+  await expect(page.getByRole("heading", { name: "Добро пожаловать в Кошт" })).toBeVisible();
   // STMT-01: «Наличные» с самого начала — их создаёт worker, список обновляется без перезагрузки.
+  await page.getByRole("link", { name: "Счета", exact: true }).first().click();
   await expect(page).toHaveURL(/\/accounts$/);
   const cash = page.getByRole("article", { name: "Наличные" });
   await expect(cash).toBeVisible({ timeout: 15_000 });
@@ -162,7 +166,7 @@ test("первый запуск → администратор → вход → 
 
   // Вошедшему первый запуск и вход не нужны: «/setup» ведёт в раздел.
   await page.goto("/setup");
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // ADM-30, ADM-60: администрирование — пункт меню только администратору; «/admin» открывает «Пользователи».
   await page.getByRole("link", { name: "Администрирование" }).first().click();

@@ -55,7 +55,7 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // PRIV-02: облачное согласие — окно с текстом, «Дать согласие» после отметки; отзыв — сразу.
   await page.goto("/settings?tab=privacy");

@@ -55,7 +55,7 @@ test("«Регулярные платежи»: пусто, добавить вр
   await page.getByRole("button", { name: "Продолжить" }).click();
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // DES-16: пусто — что здесь будет и первый шаг.
   await page.goto("/recurring");

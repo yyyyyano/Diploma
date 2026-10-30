@@ -45,7 +45,7 @@ test("колокольчик со списком и настройки увед�
   // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
-  await expect(page).toHaveURL(/\/accounts$/);
+  await expect(page).toHaveURL(/\/home$/);
 
   // NOTIF-01: колокольчик в каркасе; список открывается.
   for (const size of VIEWPORTS) {

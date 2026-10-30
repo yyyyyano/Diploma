@@ -16,6 +16,8 @@ export {
   type LimitBarProps,
   type LimitLevel,
 } from "./components/LimitBar.tsx";
+export { LawQuote, type LawQuoteProps } from "./components/LawQuote.tsx";
+export { LawRefChip, type LawRefChipProps } from "./components/LawRefChip.tsx";
 export { Logo, type LogoProps } from "./components/Logo.tsx";
 export { Money, type MoneyKind, type MoneyProps } from "./components/Money.tsx";
 export { PageHeader, type PageHeaderProps } from "./components/PageHeader.tsx";

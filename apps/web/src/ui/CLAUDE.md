@@ -16,7 +16,7 @@
   `tabular` — табличные цифры, DES-07; `size="kpi"`), `WhyButton` (ⓘ, `aria-label` с названием числа), `Formula`
   (`dl`: строки и итог), `DonutChart` (T-033: кольцо трат — SVG, число в центре, скрытая таблица для диктора; значения только для долей, суммы — готовые подписи), `ColumnChart` (парные столбцы «доход / расход» по месяцам, столбец — кнопка с подписью; высота — доля от наибольшего, ≥ 3 % у непустого; свои, а не Recharts — ADR-0013, дополнение T-033), `LimitBar` (T-032, BUD-02: полоса лимита — `percent` с сервера, `label` — имя для диктора, `status` — строка под полосой; до 80 % `--brand`, 80–99 % `--warn-bar` + треугольник, от 100 % `--danger` + «!», заливка ≤ 100 %; родной `<progress>` с подписью — роль progressbar), `StatusBadge` (иконка обязательна — без неё не компилируется), `Steps` (этапы проверки: сделано / идёт / ждёт, иконка и подпись состояния, анимация отключается при `prefers-reduced-motion`), `CategoryIcon` (`icon` — ключ `CATEGORY_ICONS`,
   `color` — ключ `CATEGORY_COLORS`; без `label` — декоративный, с `label` — `img` с именем), `StatCard` (`tone`: free,
-  benefit).
+  benefit), `LawRefChip` (T-038, DES-06: «ст. 210 НК» — чип со значком закона; с `href` — `<a>`, `external` — новая вкладка и `rel`), `LawQuote` (DES-12: дословная цитата шрифтом законов, источник-чип со ссылкой на pravo.by, редакция, предупреждение о принятых изменениях).
 - Состояния экрана (DES-16): `EmptyState` (пусто и ошибка: `tone="error"`, `headingLevel`), `Skeleton`, `Loading`,
   `SkeletonCard`, `SkeletonList`, `SkeletonText` (`<output aria-busy>` + «Загрузка…»).
 - Панели и подтверждения (P5): `Sheet` (Drawer 460 px справа или снизу), `ConfirmDialog` (кнопка-глагол, `tone`

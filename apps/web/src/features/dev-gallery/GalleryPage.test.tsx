@@ -25,6 +25,7 @@ describe("витрина /dev/gallery", () => {
       "money-title",
       "why-title",
       "badges-title",
+      "law-title",
       "categories-title",
       "logo-title",
       "stat-title",

@@ -34,6 +34,8 @@ import {
   ConfirmDialog,
   EmptyState,
   Formula,
+  LawQuote,
+  LawRefChip,
   Logo,
   Money,
   PageHeader,
@@ -309,6 +311,26 @@ export function GalleryPage() {
               Счёт · 5530
             </StatusBadge>
           </div>
+        </Section>
+
+        <Section id="law" title="LawRefChip и LawQuote — нормы закона (DES-06, DES-12)">
+          <div className={classes.row}>
+            <LawRefChip label="ст. 210 НК" />
+            <LawRefChip
+              label="Закон № 90-З"
+              href="https://pravo.by/document/?guid=3871&p0=H10200090"
+              external
+            />
+          </div>
+          <LawQuote
+            source="НК (Особенная часть), ст. 210, п. 1"
+            href="https://pravo.by/document/?guid=3871&p0=Hk0900071"
+            edition="Редакция по состоянию на 21.10.2026"
+            warning="Есть принятые изменения: Закон № 170-З от 17.07.2026"
+          >
+            При определении размера налоговой базы плательщик имеет право на получение социальных
+            налоговых вычетов.
+          </LawQuote>
         </Section>
 
         <Section id="categories" title="CategoryIcon и выбор категории (DES-14, CAT-02)">

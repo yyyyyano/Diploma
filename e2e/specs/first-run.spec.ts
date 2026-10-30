@@ -205,8 +205,41 @@ test("первый запуск → администратор → вход → 
   await expect(page).toHaveURL(/period=week$/);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
 
-  // Выход — снова вход.
+  // LEGAL-11 (T-038): «База законов» открыта всем; вошедший видит её в каркасе, с пунктом меню. Каталог — из сохранённых
+  // страниц стенда, «ст. 210 НК» ведёт в читалку, текст — по частям; акт «только карточка» — без текста, со ссылкой.
+  await page.getByRole("link", { name: "База законов" }).first().click();
+  await expect(page).toHaveURL(/\/laws$/);
+  await expect(page.getByRole("heading", { level: 1, name: "База законов" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Налоги" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("searchbox", { name: "Поиск по базе законов" }).fill("ст. 210 НК");
+  await page.getByRole("link", { name: /Открыть статью 210/ }).click();
+  await expect(page).toHaveURL(/\/laws\/Hk0900071/);
+  await expect(
+    page.getByRole("heading", { level: 2, name: /^Статья 210\. Социальные налоговые вычеты/ }),
+  ).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Оглавление" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.goto("/laws/C20200778");
+  await expect(page.getByRole("heading", { name: "Текста этого акта в базе нет" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+
+  // Выход — снова вход (со страницы раздела: на «Базе законов» гость остался бы на ней, она открыта всем).
+  await page.goto("/home");
   await page.getByRole("button", { name: "Выйти", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
+  // Гость видит «Базу законов» без меню: заголовок гостя, «Войти» и «Регистрация», ни одного раздела пользователя.
+  await page.goto("/laws");
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Законы Беларуси о деньгах — простым поиском" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Регистрация" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Администрирование" })).toHaveCount(0);
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.goto("/laws/H10200090");
+  await expect(
+    page.getByRole("heading", { level: 1, name: /О защите прав потребителей/ }),
+  ).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
   expect(foreign).toEqual([]);
 });

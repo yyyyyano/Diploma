@@ -1,0 +1,44 @@
+.quote {
+  margin: 0;
+  padding: var(--s-12) var(--s-16);
+  border-left: 3px solid var(--law);
+  border-radius: var(--r-sm);
+  background: var(--law-soft);
+}
+
+.text {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font-law-local);
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8);
+  margin-top: var(--s-10);
+}
+
+.edition {
+  color: var(--ink-2);
+  font-size: 12.5px;
+}
+
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-6);
+  margin: var(--s-8) 0 0;
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.warning svg {
+  flex: none;
+  margin-top: var(--s-2);
+}

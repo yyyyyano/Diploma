@@ -15,7 +15,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `session`, `Shell`; граница ошибок `ErrorScreen`, «нет страницы» `NotFoundScreen`), `shell/AppShell` (меню из
   реестра маршрутов под роль, поток событий, выход, колокольчик `features/notifications` в углу `AppFrame`).
 - `routes/`: `__root`; `index` — стартовый «/» (вошедший → `/onboarding`, пока анкета `pending`, иначе `/home`;
-  гость → `/setup`, если `setupAvailable`, иначе `/login`); `onboarding` (анкета, без каркаса, AUTH-07); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/recovery`, `_public/policy` (все);
+  гость → `/setup`, если `setupAvailable`, иначе `/login`); `onboarding` (анкета, без каркаса, AUTH-07); `_public/login`, `_public/register` (гость), `_public/verify-email`, `_public/recovery`, `_public/policy` (все), `_public/laws` (раскладка: вошедший — в каркасе, гость — в рамке без меню; `/laws` — каталог, `/laws/$pravoId` — читалка, адрес — `features/laws/model/search.ts`);
   `_local/setup` (только пока `setupAvailable`), `_local/mailbox` (ящик; на сетевом входе сервер — `NOT_FOUND`); `_app`
   (`beforeLoad`: `requireUser` → без сессии `/login`; каркас из контекста), `_app/home` (главная, период — `?from=&to=`), `_app/accounts`, `_app/recurring` (вкладка — `?section=`), `_app/budget`, `_app/operations` (адрес — `features/operations/model/search.ts`), `_app/assistant`, `_app/memory`,
   `_app/settings`, `_app/admin` (`requireRole(…, "admin")`
@@ -37,8 +37,8 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `entities/category` — `CategoryPicker` (встроенные и свои нужного типа, «Новая категория»), `CategoryBadge`, `useCategoryLookup`, `categoryName`, `refKey`;
   `entities/transaction` — `TransactionAmount` (эквивалент в BYN, исходная валюта, «курс не получен»), `moneyKindOf`;
   `entities/goal` — `GoalCard` (цель с процентом, взносом, «укладывается», отставанием; `variant`: full / compact), `ContributeDialog` (взнос в копилку: `budgets.contribute`, `onDone` отдаёт `undoToken`); `entities/profile-fact` — `FactEditor`, `FactValueText`, `factLabel`, `keyLabel` (факт профиля словами и форма по
-  ключу); `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
-  `features/notifications`, `features/accounts`, `features/dashboard`, `features/recurring`, `features/budget`, `features/operations`, `features/admin`, `features/onboarding`, `features/memory`,
+  ключу); `entities/law` — `LawStatusBadge` (состояние акта словами и значком); `entities/notification` — `NotificationItem` (кнопки «Показать», «Да/Нет», «Отменить»), `objectHref`; экраны `features/setup`, `features/auth`, `features/mailbox`, `features/settings`,
+  `features/notifications`, `features/accounts`, `features/dashboard`, `features/recurring`, `features/budget`, `features/operations`, `features/admin`, `features/onboarding`, `features/memory`, `features/laws`,
   `features/assistant` (единственное место AI SDK на сайте — правило `ai-only-in-web-assistant`).
 - Дизайн-система — `src/ui/CLAUDE.md`; витрина — `src/features/dev-gallery/CLAUDE.md`.
 

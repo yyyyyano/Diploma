@@ -55,6 +55,7 @@ describe("словари ru", () => {
       "recurring",
       "budget",
       "dashboard",
+      "laws",
     ]);
     expect(Object.keys(resources.ru)).toEqual([...NAMESPACES]);
   });

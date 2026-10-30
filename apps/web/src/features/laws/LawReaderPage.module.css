@@ -1,0 +1,240 @@
+/* Макет design/screens/Laws.dc.html, состояние article-reader: путь, строка фактов, плашка изменений, оглавление и текст. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+  padding: var(--s-16) var(--s-32) var(--s-120);
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-6);
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.crumbs a {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-10) var(--s-14);
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-14) var(--s-16);
+  background: var(--law-soft);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.notice svg {
+  flex: none;
+  margin-top: var(--s-2);
+  color: var(--law);
+}
+
+.notice p {
+  margin: 0 0 var(--s-4);
+}
+
+.noticeTitle {
+  font-weight: 650;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) minmax(0, 1fr);
+  gap: var(--s-20);
+  align-items: start;
+}
+
+.toc {
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: var(--s-12);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tocGroup {
+  margin-bottom: var(--s-8);
+}
+
+.tocTitle {
+  margin: var(--s-8) var(--s-8) var(--s-4);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+
+.tocLink {
+  display: flex;
+  gap: var(--s-10);
+  min-height: 44px;
+  padding: var(--s-8);
+  align-items: center;
+  border-radius: var(--r-sm);
+  color: var(--ink);
+  font-size: 13.5px;
+  text-decoration: none;
+}
+
+.tocLink:hover {
+  background: var(--kit-hover-soft);
+}
+
+.tocLink[aria-current="page"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.tocLink:focus-visible,
+.button:focus-visible,
+.link:focus-visible,
+.pagerLink:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.tocNo {
+  flex: none;
+  min-width: 56px;
+  font-weight: 650;
+}
+
+.article {
+  padding: var(--s-28) var(--s-32);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+
+.articleTitle {
+  margin: 0 0 var(--s-16);
+  font-family: var(--font-law-local);
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.law {
+  font-family: var(--font-law-local);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.law p {
+  margin: 0 0 var(--s-12);
+}
+
+.excluded {
+  margin: 0 0 var(--s-12);
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-12);
+  margin-top: var(--s-20);
+  padding-top: var(--s-16);
+  border-top: 1px solid var(--line);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  min-height: 44px;
+  padding: 0 var(--s-16);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: 44px;
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pager {
+  display: inline-flex;
+  margin-left: auto;
+}
+
+.pagerLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--ink-2);
+}
+
+.copied {
+  min-height: 1em;
+  color: var(--income);
+  font-size: 13px;
+}
+
+.disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-8);
+  margin: var(--s-8) 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.disclaimer svg {
+  flex: none;
+  margin-top: var(--s-2);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding: var(--s-12) var(--s-16) var(--s-120);
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .toc {
+    max-height: 40vh;
+  }
+  .article {
+    padding: var(--s-16);
+  }
+}

@@ -27,7 +27,7 @@ describe("LAW-39: карантин снимка", () => {
       title: "Закон",
       parsed: parsedWith(keys(40)),
       pageText: "Статья 1. Права",
-      previousPaths: new Set(keys(40)),
+      previous: keys(40).map((pathKey) => ({ pathKey, textHash: pathKey })),
     });
     expect(reasons).toEqual([]);
   });
@@ -50,8 +50,8 @@ describe("LAW-39: карантин снимка", () => {
   });
 
   it("пропало больше 5% фрагментов — карантин, ровно 5% — ещё нет", () => {
-    const previous = new Set(keys(100));
-    const common = { title: "Закон", pageText: "текст", previousPaths: previous };
+    const previous = keys(100).map((pathKey) => ({ pathKey, textHash: `old-${pathKey}` }));
+    const common = { title: "Закон", pageText: "текст", previous };
     expect(assessSnapshot({ ...common, parsed: parsedWith(keys(94)) })).toEqual(["fragments-lost"]);
     expect(assessSnapshot({ ...common, parsed: parsedWith(keys(95)) })).toEqual([]);
   });

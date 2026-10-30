@@ -3,7 +3,7 @@
 // карантин — действующая редакция остаётся, администратор уведомлён; изменённая нормальная страница ждёт T-036.
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
-import { FakeClock } from "@kosht/testing";
+import { FakeClock, hashEmbedder } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createSystemDb } from "../../../platform/db/system-db.ts";
@@ -12,6 +12,7 @@ import { withChangedLayout } from "../__fixtures__/layout-changed.ts";
 import { START_CATALOG } from "../domain/start-catalog.ts";
 import { seedActs } from "../infrastructure/db/catalog.repo.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
+import { makeEmbedder } from "./embed.ts";
 import { makeLoadAct } from "./load-act.ts";
 
 const page = (name: string): string =>
@@ -186,20 +187,68 @@ describe("LAW-39: карантин и канарейки", () => {
     expect(new Set(notified.map((n) => n.key)).size).toBe(1);
   });
 
-  it("изменённая страница без признаков поломки сохраняется ожидающей — редакцию применит T-036", async () => {
+  it("КП LAW: подмена страницы с одной изменённой статьёй → ровно одна новая версия фрагмента и векторизация только её", async () => {
     const current = { source: pages({ Hk0900071: page("Hk0900071.html") }) };
     const { loadAct } = loader(current);
     await loadAct("Hk0900071");
-    const changed = page("Hk0900071.html").replace(
-      "в размере 216 белорусских",
-      "в размере 217 белорусских",
-    );
-    current.source = pages({ Hk0900071: changed });
+    const vectors = hashEmbedder(1024);
+    const embedded: string[] = [];
+    const embedder = makeEmbedder({
+      system: createSystemDb(db.pool),
+      embed: async (texts) => {
+        embedded.push(...texts);
+        return vectors.embed(texts);
+      },
+      clock: new FakeClock("2026-10-30T09:00:00Z"),
+      log: memoryLogger().log,
+    });
+    await embedder.run();
+    const total = await count("legal_fragment_versions");
+    embedded.length = 0;
+    current.source = pages({
+      Hk0900071: page("Hk0900071.html").replace(
+        "в размере 216 белорусских",
+        "в размере 217 белорусских",
+      ),
+    });
     expect(await loadAct("Hk0900071")).toBe("changed");
-    const statuses = await db.owner.query<{ status: string }>(
-      "select status from legal_act_snapshots",
+    // Одна новая версия: у фрагмента a209/p1.1 две версии, текущая — новая; остальные продлены.
+    expect(await count("legal_fragment_versions")).toBe(total + 1);
+    const versions = await db.owner.query<{ is_current: boolean; body: string }>(
+      "select v.is_current, v.body from legal_fragment_versions v join legal_fragments f on f.id = v.fragment_id where f.path_key = 'a209/p1.1' order by v.is_current",
     );
-    expect(statuses.rows.map((r) => r.status).toSorted()).toEqual(["applied", "pending"]);
+    expect(versions.rows.map((r) => r.is_current)).toEqual([false, true]);
+    expect(versions.rows[1]?.body).toContain("217 белорусских");
     expect((await act("Hk0900071"))?.load_state).toBe("loaded");
+    // Векторизуется только новая версия: у закрытой версии вектора нет, у остальных он сохранился.
+    await embedder.run();
+    expect(embedded).toHaveLength(1);
+    expect(embedded[0]).toContain("217 белорусских");
+    const old = await db.owner.query(
+      "select 1 from legal_fragment_embeddings e join legal_fragment_versions v on v.id = e.version_id where not v.is_current",
+    );
+    expect(old.rowCount).toBe(0);
+  });
+
+  it("новая редакция: перенумерованная статья — тот же фрагмент с новым ключом, пропавшая — версия «исключён»", async () => {
+    const current = { source: pages({ Hk0900071: page("Hk0900071.html") }) };
+    const { loadAct } = loader(current);
+    await loadAct("Hk0900071");
+    // Статья 209 стала 211 (текст тот же), пункта 7 статьи 210 в новой редакции нет совсем.
+    const html = page("Hk0900071.html");
+    const cut = html.replace(
+      /<p class="point"[^>]*>7\.\s+Если\s+в\s+налоговом\s+периоде[\s\S]*?<\/p>/u,
+      "",
+    );
+    expect(cut.length).toBeLessThan(html.length);
+    current.source = pages({ Hk0900071: cut.replaceAll("Статья 209.", "Статья 211.") });
+    expect(await loadAct("Hk0900071")).toBe("changed");
+    const keys = await db.owner.query<{ path_key: string; is_current: boolean; excluded: boolean }>(
+      "select f.path_key, v.is_current, v.excluded from legal_fragments f join legal_fragment_versions v on v.fragment_id = f.id order by 1, 2",
+    );
+    const currentKeys = keys.rows.filter((r) => r.is_current).map((r) => [r.path_key, r.excluded]);
+    expect(currentKeys).toContainEqual(["a211", false]);
+    expect(currentKeys).not.toContainEqual(["a209", false]);
+    expect(currentKeys).toContainEqual(["a210/p7", true]);
   });
 });

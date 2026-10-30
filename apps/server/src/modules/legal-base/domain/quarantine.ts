@@ -31,8 +31,8 @@ export interface SnapshotCheck {
   readonly parsed: ParsedAct;
   /** Весь текст страницы после декодирования — для проверки кодировки. */
   readonly pageText: string;
-  /** Ключи путей действующей редакции; нет — акт грузится впервые. */
-  readonly previousPaths?: ReadonlySet<string>;
+  /** Действующие версии (путь и хэш текста); нет — акт грузится впервые. Перенумерованный фрагмент не считается пропавшим. */
+  readonly previous?: readonly { readonly pathKey: string; readonly textHash: string }[];
   readonly canary?: Canary;
 }
 
@@ -48,11 +48,12 @@ export function assessSnapshot(check: SnapshotCheck): readonly QuarantineReason[
   if (replacement / Math.max(1, check.pageText.length) > 0.0005 || mojibake >= 5) {
     reasons.push("broken-encoding");
   }
-  const previous = check.previousPaths;
-  if (previous !== undefined && previous.size > 0) {
-    const now = new Set(check.parsed.fragments.map((f) => f.pathKey));
-    const lost = [...previous].filter((key) => !now.has(key)).length;
-    if (lost / previous.size > MAX_LOST_SHARE) reasons.push("fragments-lost");
+  const previous = check.previous;
+  if (previous !== undefined && previous.length > 0) {
+    const paths = new Set(check.parsed.fragments.map((f) => f.pathKey));
+    const hashes = new Set(check.parsed.fragments.map((f) => f.textHash));
+    const lost = previous.filter((p) => !paths.has(p.pathKey) && !hashes.has(p.textHash)).length;
+    if (lost / previous.length > MAX_LOST_SHARE) reasons.push("fragments-lost");
   }
   const { canary } = check;
   if (

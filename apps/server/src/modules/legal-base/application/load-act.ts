@@ -1,19 +1,21 @@
 // Загрузка одного акта (LAW-10, LAW-20, LAW-39): страница от источника → хэш → разбор на фрагменты → проверка карантина
 // и канарейки → снимок и фрагменты. Сеть — до транзакции. При карантине действующая редакция остаётся, администратор
-// получает уведомление «вероятно, изменилась вёрстка»; автоматически ничего не удаляется. Страницу, изменившуюся без
-// признаков поломки, сохраняет как `pending`: версии фрагментов по путям и тексту сопоставляет ежедневная проверка (T-036).
+// получает уведомление «вероятно, изменилась вёрстка»; автоматически ничего не удаляется. Изменившаяся страница без
+// признаков поломки применяется как новая редакция: версии фрагментов сопоставляются по пути и тексту (LAW-31, T-036).
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import type { Clock } from "@kosht/kernel";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
+import { matchVersions } from "../domain/match-versions.ts";
 import { assessSnapshot, canaryOf } from "../domain/quarantine.ts";
 import { START_CATALOG } from "../domain/start-catalog.ts";
 import {
   appliedHash,
+  applyEdition,
   applyFirstSnapshot,
-  currentPaths,
+  currentVersions,
   findAct,
   logUpdate,
   markActState,
@@ -69,14 +71,14 @@ export function makeLoadAct(d: LoadActDeps) {
 
     const label = START_CATALOG.find((e) => e.pravoId === pravoId)?.label ?? act.title;
     const { title, parsed, pageText } = parseActPage(page.html, label);
-    const previous =
-      act.currentSnapshotId === null ? undefined : await currentPaths(d.system, act.id);
+    const versions =
+      act.currentSnapshotId === null ? undefined : await currentVersions(d.system, act.id);
     const canary = canaryOf(pravoId);
     const reasons = assessSnapshot({
       title,
       parsed,
       pageText,
-      ...(previous === undefined ? {} : { previousPaths: previous }),
+      ...(versions === undefined ? {} : { previous: versions }),
       ...(canary === undefined ? {} : { canary }),
     });
     const snapshot = {
@@ -105,9 +107,16 @@ export function makeLoadAct(d: LoadActDeps) {
     }
 
     if (act.currentSnapshotId !== null) {
-      await storeUnappliedSnapshot(d.system, snapshot, "pending", null);
-      await logUpdate(d.system, { at: d.clock.now(), actId: act.id, event: "changed" });
-      d.log.info({ actId: act.id }, "law.act.changed");
+      // LAW-31: новая редакция против действующих версий — по пути и тексту; векторы достраивает legal-base.embed.
+      const plan = matchVersions(versions ?? [], parsed.fragments);
+      const result = await applyEdition(d.system, snapshot, plan, parsed.articleCount);
+      await logUpdate(d.system, {
+        at: d.clock.now(),
+        actId: act.id,
+        event: "edition-applied",
+        details: { ...result },
+      });
+      d.log.info({ actId: act.id, count: result.changed + result.added }, "law.act.changed");
       return "changed";
     }
 

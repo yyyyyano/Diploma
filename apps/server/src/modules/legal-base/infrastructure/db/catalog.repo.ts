@@ -1,8 +1,9 @@
 // Каталог актов, снимки и фрагменты (LAW-07, LAW-20, LAW-39) — только через SystemDb модуля legal-base. Запись снимка и
 // фрагментов — одна транзакция, без сети внутри: страницу читают до неё.
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq, inArray, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { ParsedFragment } from "../../domain/build-fragments.ts";
+import type { CurrentVersion, EditionPlan } from "../../domain/match-versions.ts";
 import type { CatalogEntry } from "../../domain/start-catalog.ts";
 import { aliasesOf } from "../../domain/aliases.ts";
 import { isNpa } from "../../domain/start-catalog.ts";
@@ -10,6 +11,7 @@ import {
   legalActAliases,
   legalActSnapshots,
   legalActs,
+  legalFragmentEmbeddings,
   legalFragmentVersions,
   legalFragments,
   legalUpdateLog,
@@ -122,16 +124,6 @@ export async function appliedHash(db: SystemDb, actId: string): Promise<string |
     .innerJoin(legalActSnapshots, eq(legalActSnapshots.id, legalActs.currentSnapshotId))
     .where(eq(legalActs.id, actId));
   return rows[0]?.hash;
-}
-
-/** Ключи путей действующих версий фрагментов — для проверки «пропало больше 5%» (LAW-39). */
-export async function currentPaths(db: SystemDb, actId: string): Promise<ReadonlySet<string>> {
-  const rows = await db
-    .select({ path: legalFragments.pathKey })
-    .from(legalFragments)
-    .innerJoin(legalFragmentVersions, eq(legalFragmentVersions.fragmentId, legalFragments.id))
-    .where(and(eq(legalFragments.actId, actId), eq(legalFragmentVersions.isCurrent, true)));
-  return new Set(rows.map((r) => r.path));
 }
 
 export interface SnapshotInput {
@@ -267,4 +259,150 @@ export async function seedAliases(db: SystemDb, entries: readonly CatalogEntry[]
   );
   if (values.length === 0) return;
   await db.insert(legalActAliases).values(values).onConflictDoNothing();
+}
+
+/** Действующие версии фрагментов акта — для сопоставления с новой редакцией (LAW-31). */
+export async function currentVersions(db: SystemDb, actId: string): Promise<CurrentVersion[]> {
+  return db
+    .select({
+      fragmentId: legalFragments.id,
+      versionId: legalFragmentVersions.id,
+      pathKey: legalFragments.pathKey,
+      textHash: legalFragmentVersions.textHash,
+      excluded: legalFragmentVersions.excluded,
+    })
+    .from(legalFragments)
+    .innerJoin(legalFragmentVersions, eq(legalFragmentVersions.fragmentId, legalFragments.id))
+    .where(and(eq(legalFragments.actId, actId), eq(legalFragmentVersions.isCurrent, true)));
+}
+
+export interface EditionResult {
+  readonly kept: number;
+  readonly changed: number;
+  readonly renumbered: number;
+  readonly added: number;
+  readonly excluded: number;
+}
+
+/**
+ * Применить новую редакцию (LAW-31) одной транзакцией: версии неизменённых продлеваются, изменённые — закрываются и
+ * открываются заново (вектор закрытой версии удаляется: векторы только у текущих), перенумерованные получают новый ключ,
+ * добавленные — новые фрагменты, пропавшие — версию «исключён» с прежним текстом. Векторизует новые версии отдельная задача.
+ */
+export async function applyEdition(
+  db: SystemDb,
+  snapshot: SnapshotInput,
+  plan: EditionPlan,
+  articleCount: number,
+): Promise<EditionResult> {
+  return db.transaction(async (tx) => {
+    const [saved] = await tx
+      .insert(legalActSnapshots)
+      .values({ ...snapshot, status: "applied" })
+      .onConflictDoUpdate({
+        target: [legalActSnapshots.actId, legalActSnapshots.textHash],
+        set: { status: "applied", reason: null },
+      })
+      .returning({ id: legalActSnapshots.id });
+    if (saved === undefined) throw new Error("legal_act_snapshots: снимок не сохранился.");
+    const snap = saved.id;
+    const close = async (versionIds: string[]) => {
+      if (versionIds.length === 0) return;
+      await tx
+        .update(legalFragmentVersions)
+        .set({ isCurrent: false })
+        .where(inArray(legalFragmentVersions.id, versionIds));
+      await tx
+        .delete(legalFragmentEmbeddings)
+        .where(inArray(legalFragmentEmbeddings.versionId, versionIds));
+    };
+    const open = (
+      fragmentId: string,
+      f: Pick<ParsedFragment, "searchPath" | "heading" | "body" | "textHash" | "excluded"> & {
+        kind: string;
+      },
+    ) =>
+      tx.insert(legalFragmentVersions).values({
+        fragmentId,
+        kind: f.kind,
+        searchPath: f.searchPath,
+        heading: f.heading,
+        body: f.body,
+        textHash: f.textHash,
+        excluded: f.excluded,
+        isCurrent: true,
+        firstSnapshotId: snap,
+        lastSnapshotId: snap,
+      });
+    // Продлить: текст и путь те же.
+    const keepIds = plan.keep.map((m) => m.current.versionId);
+    if (keepIds.length > 0) {
+      await tx
+        .update(legalFragmentVersions)
+        .set({ lastSnapshotId: snap })
+        .where(inArray(legalFragmentVersions.id, keepIds));
+    }
+    // Заменить и перенести: старая версия закрывается раньше, чем открывается новая (одна текущая на фрагмент).
+    await close([...plan.changed, ...plan.renumbered].map((m) => m.current.versionId));
+    // Перенумерация без конфликта ключей при сдвигах (a5→a6, a6→a7): сначала временные ключи.
+    for (const m of plan.renumbered) {
+      await tx
+        .update(legalFragments)
+        .set({ pathKey: sql`'~' || ${m.current.fragmentId}::text` })
+        .where(eq(legalFragments.id, m.current.fragmentId));
+    }
+    for (const m of [...plan.changed, ...plan.renumbered]) {
+      await tx
+        .update(legalFragments)
+        .set({ pathKey: m.next.pathKey, articleNo: m.next.articleNo, position: m.next.position })
+        .where(eq(legalFragments.id, m.current.fragmentId));
+      await open(m.current.fragmentId, m.next);
+    }
+    for (const f of plan.added) {
+      const [fragment] = await tx
+        .insert(legalFragments)
+        .values({
+          actId: snapshot.actId,
+          pathKey: f.pathKey,
+          articleNo: f.articleNo,
+          position: f.position,
+        })
+        .returning({ id: legalFragments.id });
+      if (fragment === undefined) throw new Error("legal_fragments: фрагмент не сохранился.");
+      await open(fragment.id, f);
+    }
+    // Пропавшие: версия «исключён» с прежним текстом — честный ответ «ст. N исключена».
+    await close(plan.missing.map((c) => c.versionId));
+    for (const c of plan.missing) {
+      const old = await tx
+        .select({
+          kind: legalFragmentVersions.kind,
+          searchPath: legalFragmentVersions.searchPath,
+          heading: legalFragmentVersions.heading,
+          body: legalFragmentVersions.body,
+          textHash: legalFragmentVersions.textHash,
+        })
+        .from(legalFragmentVersions)
+        .where(eq(legalFragmentVersions.id, c.versionId));
+      const row = old[0];
+      if (row !== undefined) await open(c.fragmentId, { ...row, excluded: true });
+    }
+    await tx
+      .update(legalActs)
+      .set({
+        loadState: "loaded",
+        currentSnapshotId: snap,
+        articleCount,
+        loadedAt: snapshot.fetchedAt,
+        lastProblem: null,
+      })
+      .where(eq(legalActs.id, snapshot.actId));
+    return {
+      kept: plan.keep.length,
+      changed: plan.changed.length,
+      renumbered: plan.renumbered.length,
+      added: plan.added.length,
+      excluded: plan.missing.length,
+    };
+  });
 }

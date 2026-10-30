@@ -167,6 +167,11 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, repeat('a', 64), 'csv', 'Лесбанк', 'лесбанк', '{"columns":[],"dateOrder":"dmy"}', now())`,
     ids,
   );
+  // Черновик импорта выписки (STMT-04): строка владельца, уходит вместе с аккаунтом.
+  await db.owner.query(
+    "insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready')",
+    [...ids, file.id],
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

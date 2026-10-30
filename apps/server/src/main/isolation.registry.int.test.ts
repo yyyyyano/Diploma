@@ -52,6 +52,8 @@ interface Household {
   readonly categoryId: string;
   /** Операция B на её счёте. */
   readonly transactionId: string;
+  /** Импорт выписки B (черновик). */
+  readonly importId: string;
 }
 
 /**
@@ -189,6 +191,15 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "actions.answer": { input: (b) => ({ id: b.decisionId, answer: "yes" }) },
   "explain.get": { input: (b) => ({ id: b.traceId }) },
   "files.download": { input: (b) => ({ id: b.fileId }) },
+  "tool:statement_import_status": { input: (b) => ({ id: b.importId }) },
+  "statements.start": { input: (b) => ({ fileId: b.fileId }) },
+  "statements.list": { input: () => undefined },
+  "statements.get": { input: (b) => ({ id: b.importId }) },
+  "statements.confirm": { input: (b) => ({ id: b.importId }) },
+  "statements.fixColumns": { input: (b) => ({ id: b.importId, columns: [] }) },
+  "statements.cancel": { input: (b) => ({ id: b.importId }) },
+  "statements.rollbackInfo": { input: (b) => ({ id: b.importId }) },
+  "statements.rollback": { input: (b) => ({ id: b.importId }) },
   "files.upload": {
     exempt:
       "приём файлов запроса: чужих id во входе нет, файл сохраняется в домохозяйство сессии (main/files.int.test.ts)",
@@ -366,6 +377,10 @@ async function seedHousehold(email: string): Promise<Household> {
      returning id`,
     [ids.household_id, ids.user_id, account.rows[0]?.id, `покупка ${email}`],
   );
+  const statementImport = await db.owner.query<{ id: string }>(
+    `insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready') returning id`,
+    [ids.household_id, ids.user_id, file.rows[0]?.id],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -380,6 +395,7 @@ async function seedHousehold(email: string): Promise<Household> {
     factId: fact.rows[0]?.id ?? "",
     categoryId: category.rows[0]?.id ?? "",
     transactionId: operation.rows[0]?.id ?? "",
+    importId: statementImport.rows[0]?.id ?? "",
   };
 }
 
@@ -528,6 +544,14 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "profile.facts",
       "profile.onboarding",
       "profile.setFact",
+      "statements.cancel",
+      "statements.confirm",
+      "statements.fixColumns",
+      "statements.get",
+      "statements.list",
+      "statements.rollback",
+      "statements.rollbackInfo",
+      "statements.start",
       "transactions.create",
       "transactions.explainRate",
       "transactions.get",
@@ -546,6 +570,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "read_profile_facts",
       "rename_account",
       "search_transactions",
+      "statement_import_status",
       "update_transaction",
       "upsert_profile_fact",
     ]);
@@ -563,6 +588,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.factId,
       b.categoryId,
       b.transactionId,
+      b.importId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

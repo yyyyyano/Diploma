@@ -187,7 +187,8 @@ export async function existingDedupeKeys(
     .select({ key: transactions.dedupeKey })
     .from(transactions)
     .where(and(s.own(transactions), inArray(transactions.dedupeKey, [...keys])));
-  return new Set(rows.flatMap((row) => (row.key === null ? [] : [row.key])));
+  // Ключ в условии IN — не null: строки без ключа в выборку не попадают.
+  return new Set(rows.map((row) => String(row.key)));
 }
 
 /** STMT-07: какие банковские идентификаторы операций уже есть. */
@@ -200,7 +201,7 @@ export async function existingExternalIds(
     .select({ id: transactions.externalId })
     .from(transactions)
     .where(and(s.own(transactions), inArray(transactions.externalId, [...ids])));
-  return new Set(rows.flatMap((row) => (row.id === null ? [] : [row.id])));
+  return new Set(rows.map((row) => String(row.id)));
 }
 
 /** STMT-08: переводы без пары на других счетах за окно — кандидаты в пару новому переводу. */

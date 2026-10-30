@@ -10,6 +10,8 @@ import {
   newScope,
   transactionsWithJournal,
 } from "../../../main/__fixtures__/transactions-with-journal.ts";
+import { crossTenant } from "../../../platform/db/cross-tenant.ts";
+import { findStaleDraftOwners } from "../infrastructure/db/statement-imports.repo.ts";
 import { readDocument } from "../infrastructure/parsing/read-document.ts";
 import type { FileType } from "../domain/types.ts";
 import { loadCase } from "./__fixtures__/datasets.ts";
@@ -409,5 +411,30 @@ describe("Черновики", () => {
     await imports.confirm(s, id);
     await expect(imports.confirm(s, id)).rejects.toMatchObject({ code: "CONFLICT" });
     expect(await rows("select 1 from transactions where household_id = $1")).toHaveLength(30);
+  });
+});
+
+describe("Обход брошенных черновиков", () => {
+  it("находит владельцев давних черновиков (предпросмотр, ошибка) и не трогает свежие и импортированные", async () => {
+    const { s, uploadCase, prepare, imports, confirmOf } = await setup().then((env) => ({
+      ...env,
+      confirmOf: env.imports.confirm,
+    }));
+    const stale = await prepare(uploadCase("lesbank-csv-september"));
+    const fresh = await prepare(uploadCase("lesbank-csv-october"));
+    const done = await prepare(uploadCase("lesbank-csv-changed"));
+    await confirmOf(s, done);
+    // Часы тестов — фиктивные (2026-10-28), а обход сверяет с now() базы: возраст задаём явно.
+    await db.owner.query(
+      "update statement_imports set updated_at = now() - interval '3 days' where id in ($1, $2)",
+      [stale, done],
+    );
+    await db.owner.query("update statement_imports set updated_at = now() where id = $1", [fresh]);
+    const owners = await crossTenant(db.pool, "test.stale-drafts", findStaleDraftOwners);
+    const mine = owners.filter((owner) => owner.householdId === s.scope.householdId);
+    expect(mine.map((owner) => owner.id)).toEqual([stale]);
+    expect(mine[0]).toMatchObject({ userId: s.scope.userId });
+    expect(fresh).not.toBe(stale);
+    expect(await imports.get(s, fresh)).toMatchObject({ status: "ready" });
   });
 });

@@ -226,6 +226,12 @@ describe("STMT-03, TXN-05: запись выписки", () => {
 });
 
 describe("STMT-07: проверка дублей", () => {
+  it("пустой список ключей — пустой ответ без запроса", async () => {
+    const { s, t } = await setup();
+    const found = await t.imports.knownKeys(s, { dedupeKeys: [], externalIds: [] });
+    expect(found.dedupe.size + found.external.size).toBe(0);
+  });
+
   it("известные ключи и идентификаторы находятся; чужого домохозяйства — нет", async () => {
     const { s, t, row } = await setup();
     await s.transaction((tx) =>

@@ -13,7 +13,9 @@ import type { NotificationsFacade } from "../notifications/index.ts";
 import { legalBaseTools } from "./agent/tools.ts";
 import { legalBaseRouter } from "./api/router.ts";
 import { makeEmbedder } from "./application/embed.ts";
+import { makeDemand } from "./application/demand.ts";
 import { makeLawSearch } from "./application/search.ts";
+import { loadActJob } from "./jobs/load-act.job.ts";
 import { makeLookup } from "./application/lookup.ts";
 import { makeActCheck } from "./application/act-check.ts";
 import { makeDailyCheck } from "./application/daily-check.ts";
@@ -33,6 +35,8 @@ import { createPoliteFetcher } from "./infrastructure/pravo-by/polite-fetcher.ts
 import { createPravoSource } from "./infrastructure/pravo-by/pravo-source.ts";
 import { loadStartCatalogJob } from "./jobs/load-start-catalog.job.ts";
 import {
+  DEMAND_LIMIT_PER_DAY,
+  DEMAND_WAIT_MS,
   LEGAL_BASE_SETTINGS,
   LEGAL_BASE_URL,
   LEGAL_FIXTURES_DIR,
@@ -105,8 +109,22 @@ export function createLegalBaseModule({
     log: platform.log,
   });
   const embed = embedJob(embedder);
+  // LAW-09: догрузка по требованию — задача с приоритетом, api на pravo.by сам не ходит.
+  const loadOne = loadActJob(loadAct, (s) =>
+    s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
+  );
+  const demand = makeDemand({
+    system: platform.system,
+    enqueue: (s, pravoId) => s.transaction((tx) => platform.jobs.enqueue(tx, loadOne, { pravoId })),
+    limitPerDay: () => platform.settings.get(DEMAND_LIMIT_PER_DAY),
+    waitMs: () => platform.settings.get(DEMAND_WAIT_MS),
+    clock: platform.clock,
+    log: platform.log,
+    notifications: facades.notifications,
+  });
   const search = makeLawSearch({
     system: platform.system,
+    demand,
     embedQuery: async (text) => (await facades.llm.embed(caller, [text]))[0] ?? null,
     log: platform.log,
   });
@@ -150,7 +168,7 @@ export function createLegalBaseModule({
   return defineModule({
     id: "legal-base",
     facade: {
-      /** Поиск по законам: точное обращение или гибрид, 6–10 действующих фрагментов (LAW-21). */
+      /** Поиск по законам: точное обращение (с догрузкой акта по требованию, если передан `s`) или гибрид, 6–10 фрагментов (LAW-21). */
       search: search.search,
       /** Фрагмент действующей версии по id (цитата, CHAT-10). */
       fragment: lookup.fragment,
@@ -167,7 +185,7 @@ export function createLegalBaseModule({
     router: legalBaseRouter(catalog),
     tools: Object.values(tools),
     events: [actUpdated, actRepealed],
-    jobs: [job, embed],
+    jobs: [job, embed, loadOne],
     schedules: [dailyCheckSchedule(dailyCheck)],
     subscriptions: [onSystemInitialized(platform, { identity: facades.identity, catalog, job })],
     settings: LEGAL_BASE_SETTINGS,

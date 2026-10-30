@@ -39,13 +39,15 @@ const FRAGMENT_COLUMNS = {
 } as const;
 
 /** Акты с этим кратким именем (только действующие): «нк» — два акта. */
-export async function actsByAlias(db: SystemDb, alias: string): Promise<readonly string[]> {
-  const rows = await db
-    .select({ id: legalActAliases.actId })
+export async function actsByAlias(
+  db: SystemDb,
+  alias: string,
+): Promise<readonly { id: string; pravoId: string }[]> {
+  return db
+    .select({ id: legalActAliases.actId, pravoId: legalActs.pravoId })
     .from(legalActAliases)
     .innerJoin(legalActs, eq(legalActs.id, legalActAliases.actId))
     .where(and(eq(legalActAliases.alias, alias), eq(legalActs.status, "active")));
-  return rows.map((r) => r.id);
 }
 
 /** Фрагменты статьи (и пункта, если назван) действующей версии; исключённая статья возвращается со статусом. */

@@ -85,7 +85,27 @@ export const LOADER_MAX_PAGE_BYTES = defineSetting({
   fromEnv: Number,
 });
 
+/** Сколько догрузок актов по требованию в сутки (LAW-09): дальше — карточка со ссылкой и уведомление администратору. */
+export const DEMAND_LIMIT_PER_DAY = defineSetting({
+  key: "legal-base.demand-limit-per-day",
+  schema: z.int().min(0).max(1000),
+  default: 20,
+  env: "LEGAL_DEMAND_LIMIT_PER_DAY",
+  fromEnv: Number,
+});
+
+/** Сколько `api` ждёт догрузку акта, мс (LAW-09): не дождался — отдаёт карточку со ссылкой. */
+export const DEMAND_WAIT_MS = defineSetting({
+  key: "legal-base.demand-wait-ms",
+  schema: z.int().min(0).max(120_000),
+  default: 15_000,
+  env: "LEGAL_DEMAND_WAIT_MS",
+  fromEnv: Number,
+});
+
 export const LEGAL_BASE_SETTINGS = [
+  DEMAND_LIMIT_PER_DAY,
+  DEMAND_WAIT_MS,
   LEGAL_AUTOLOAD,
   LEGAL_SOURCE,
   LEGAL_FIXTURES_DIR,

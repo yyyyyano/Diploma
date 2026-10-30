@@ -27,12 +27,25 @@ export function legalBaseTools(deps: { search: LawSearch; lookup: Lookup }) {
       input: z.object({ query: z.string().trim().min(2).max(300) }),
       output: z.object({
         mode: z.enum(["exact", "hybrid"]),
+        /** «Акт добавлен в базу только что» (LAW-09): сказать об этом в ответе. */
+        justAdded: z.boolean(),
+        /** Названные акты без текста в базе: только назвать и дать ссылку, не цитировать (LEGAL-06). */
+        cards: z.array(
+          z.object({ actId: z.string(), title: z.string(), hasText: z.boolean(), url: z.string() }),
+        ),
         fragments: z.array(Fragment),
       }),
-      execute: async (_ctx, input) => {
-        const out = await deps.search.search(input.query, MAX_LIMIT);
+      execute: async (ctx, input) => {
+        const out = await deps.search.search(input.query, { limit: MAX_LIMIT, s: ctx.s });
         return {
           mode: out.mode,
+          justAdded: out.justAdded,
+          cards: out.cards.map((c) => ({
+            actId: c.pravoId,
+            title: c.title,
+            hasText: c.hasText,
+            url: c.url,
+          })),
           fragments: out.fragments.map((f) => ({
             id: f.versionId,
             actId: f.pravoId,

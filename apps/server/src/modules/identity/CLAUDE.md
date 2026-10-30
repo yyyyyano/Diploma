@@ -20,7 +20,7 @@ AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего акк�
   id, email)` — email не совпал — `VALIDATION`, иначе `eraseUser` под scope цели из `target-user-scope.ts` (просящий —
   активный админ, перепроверка в базе); `resetUserPassword(actor, id)` (адрес ссылки — по настройкам, NFR-24) — подтверждён адрес — письмо `{ email }`,
   иначе ссылка админу `{ shown, link }`, лог и отметка `password_reset_by_admin_at`; `emailOf(s)`;
-  `loaderContact()` — контакт загрузчика законов с первого запуска (LAW-36, `system_state.loader_contact`, null — нет).
+  `loaderContact()` — контакт загрузчика законов (LAW-36, `system_state.loader_contact`); `adminScoped()` — ScopedDb первого админа для системных событий законов.
 - `contract.identity.*` — publicProc: `status`, `signIn` (частота на email; `INVALID_CREDENTIALS`; заблокирован —
   `ACCOUNT_BLOCKED` без cookie), `register` (частота на email и на всех; `EMAIL_TAKEN`; всё одной транзакцией → письмо
   → вход), `verifyEmail`, `requestPasswordReset` (ответ одинаковый для любого email), `resetPassword` (`/recovery?token=…`,

@@ -19,7 +19,9 @@ AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего акк�
   админке (`application/admin-users.ts`, ADM-30, R37): `listAccounts()` — только учётные записи; `removeUser(actor,
   id, email)` — email не совпал — `VALIDATION`, иначе `eraseUser` под scope цели из `target-user-scope.ts` (просящий —
   активный админ, перепроверка в базе); `resetUserPassword(actor, id)` (адрес ссылки — по настройкам, NFR-24) — подтверждён адрес — письмо `{ email }`,
-  иначе ссылка админу `{ shown, link }`, лог и отметка `password_reset_by_admin_at`; `emailOf(s)`.
+  иначе ссылка админу `{ shown, link }`, лог и отметка `password_reset_by_admin_at`; `emailOf(s)`;
+  `loaderContact()` — контакт загрузчика законов с первого запуска (LAW-36, `system_state.loader_contact`; null, если системы
+  нет): `legal-base` читает его в подписке на `identity.system-initialized` и сохраняет в своей настройке.
 - `contract.identity.*` — publicProc: `status`, `signIn` (частота на email; `INVALID_CREDENTIALS`; заблокирован —
   `ACCOUNT_BLOCKED` без cookie), `register` (частота на email и на всех; `EMAIL_TAKEN`; всё одной транзакцией → письмо
   → вход), `verifyEmail`, `requestPasswordReset` (ответ одинаковый для любого email), `resetPassword` (`/recovery?token=…`,
@@ -32,10 +34,14 @@ AUTH-10…12, ROLE-02, SEC-01/02, PRIV-06 (удаление своего акк�
 - Ссылки в письмах — адрес по `platform/http/link-origin.ts`; токен 32 байта, в `identity_verifications` — SHA-256,
   гасится `DELETE … RETURNING`, срок — по `Clock`. Код восстановления — Crockford base32, хэш argon2id.
 - Настройки (`settings.ts`): `identity.verify-link-hours` (24), `identity.reset-link-minutes` (60), частота `rate-*`.
-- События: `identity.system-initialized`, `identity.user-registered` (слушает `accounts`). Реестры: `sessionSource`,
+- Первый запуск: `setup` принимает необязательный `loaderContact` (email или адрес сайта; пусто — email администратора, AUTH-10)
+  и пишет его в `system_state` в той же транзакции. В событие контакт **не** кладётся: нагрузка событий — только id (OBS-04,
+  `.claude/rules/jobs-events.md`), поэтому текст критика T-034 «`{ adminUserId, loaderContact }` в нагрузке» заменён чтением
+  через фасад.
+- События: `identity.system-initialized` (слушают `llm`, `legal-base`), `identity.user-registered` (слушает `accounts`). Реестры: `sessionSource`,
   `scopeVerifier`. Таблицы (`systemTable`): `identity_users` (+ `role`, `status`, `demo`, `household_id`,
   `password_reset_by_admin_at`), `identity_sessions`, `identity_credentials`, `identity_verifications`,
-  `identity_recovery_codes`, `identity_households`, `system_state`.
+  `identity_recovery_codes`, `identity_households`, `system_state` (+ `loader_contact`).
 
 ## Зависимости
 Можно: mail, privacy (`tooling/architecture/modules.ts`). Слушает: —. `better-auth` — только `infrastructure/`; `application/` видит порт `AuthGateway`.

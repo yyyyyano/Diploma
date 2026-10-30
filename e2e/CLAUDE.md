@@ -11,7 +11,9 @@
 - `playwright.config.ts`: сборка `vite build --mode e2e --outDir dist-e2e` и стенд
   `apps/server/src/entrypoints/__fixtures__/e2e-stack.ts` на `127.0.0.1:8150` (`E2E_PORT`): api и worker на своей
   свежей базе (клон шаблона тестов), сайт отдаёт api, модели — кассета `chat/accounts` (replay с паузами записи);
-  остановка — SIGTERM (`gracefulShutdown`), стенд удаляет базу.
+  остановка — SIGTERM (`gracefulShutdown`), стенд удаляет базу. Правовая база — без сети: `LEGAL_SOURCE=fixtures` и
+  `LEGAL_FIXTURES_DIR` (сохранённые страницы `legal-base/__fixtures__/pravo-by`): после первого запуска стартовый каталог
+  грузится сам — три акта с текстом, остальные «только карточка» (NFR-11).
   Локаль ru-RU, пояс Europe/Minsk, Chromium.
 - `specs/*.spec.ts`: `gallery.spec.ts` — витрина `/dev/gallery`: axe (`wcag2a`, `wcag2aa`, `wcag21aa`,
   `wcag22aa`) с закрытыми и открытыми панелью, подтверждением, уведомлением, шторкой «Ещё»; нет горизонтальной

@@ -1,7 +1,7 @@
 // Стенд e2e (make e2e, ARCHITECTURE §12): api и worker — настоящие точки входа на своей свежей базе (клон шаблона
 // @kosht/testing/db из боевых миграций) и своём порту; сайт — сборка Vite из api (WEB_DIST_DIR). Рабочие 8140,
 // make dev и дев-база kosht не трогаются. Окружение процессов — только своё (.env и переменные разработчика стенд не
-// видит), модели — кассета chat/accounts в режиме replay. Остановка по SIGTERM/SIGINT (Playwright, gracefulShutdown): процессы — SIGTERM, затем база и временная
+// видит), модели — тестовый провайдер в режиме live (без сети и ключей). Остановка по SIGTERM/SIGINT (Playwright, gracefulShutdown): процессы — SIGTERM, затем база и временная
 // папка удаляются; упавший стенд оставит базу test_<pid>_…, её уберёт dropOrphans следующего прогона.
 //   node apps/server/src/entrypoints/__fixtures__/e2e-stack.ts <порт> <папка сайта>
 import { createTestDb } from "@kosht/testing/db";
@@ -46,10 +46,9 @@ const env: NodeJS.ProcessEnv = {
   LANGFUSE_ENABLED: "false",
   // Первый запуск ставит скачивание моделей — в стенде оно выключено (NFR-11): интернета нет.
   LLM_MODELS_DOWNLOAD: "0",
-  // Модели — кассета чата с паузами записи (виден поток), без сети и ключей (NFR-11).
-  LLM_MODE: "replay",
-  LLM_CASSETTE: resolve("apps/server/src/modules/chat/api/__cassettes__/accounts.json"),
-  LLM_CASSETTE_DELAYS: "1",
+  // Модели — тестовый провайдер (llm.mode live): детерминированные ответы без сети и ключей (NFR-11); он же читает чек
+  // с любого фото (e2e «фото чека → карточка», T-028). Кассета чата в стенде не нужна: e2e чата нет.
+  LLM_MODE: "live",
 };
 
 function start(role: "api" | "worker"): ChildProcess {

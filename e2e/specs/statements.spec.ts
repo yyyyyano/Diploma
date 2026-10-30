@@ -68,7 +68,7 @@ test("«Чеки и документы»: выписка → предпросм�
   expect(await accessibleAtBothWidths(page)).toEqual([]);
 
   // STMT-03: загрузка файла; STMT-04: разбор в worker и предпросмотр с числами сервера.
-  await page.locator('input[type="file"]').setInputFiles(CSV);
+  await page.getByLabel("Файл выписки").setInputFiles(CSV);
   const preview = page.getByRole("region", { name: "Предпросмотр импорта" });
   await expect(preview).toContainText("Нашёл 30 операций по карте •• 4821", { timeout: 60_000 });
   await expect(preview).toContainText("Остатки сходятся.");
@@ -88,7 +88,7 @@ test("«Чеки и документы»: выписка → предпросм�
   await expect(page.getByRole("listitem").filter({ hasText: "Импортирована" })).toBeVisible();
 
   // КП STMT: повторная загрузка той же выписки — всё уже было, импортировать нечего.
-  await page.locator('input[type="file"]').setInputFiles(CSV);
+  await page.getByLabel("Файл выписки").setInputFiles(CSV);
   await expect(page.getByRole("region", { name: "Предпросмотр импорта" })).toContainText(
     "30 из них уже были загружены",
     { timeout: 60_000 },

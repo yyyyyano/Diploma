@@ -3,7 +3,8 @@
 // как Groq или llama-server, а кассеты (make ai-record) пишутся с него. Сценарий чата: есть инструмент
 // list_accounts и пользователь только что спросил — вызвать его; пришёл результат инструмента — ответить текстом
 // по кускам с паузой paceMs (поток виден на сайте); иначе — короткий ответ. Ответ по схеме — «{}» (извлечение
-// тестируют на MockLanguageModelV4), эмбеддинг — хэш текста, расшифровка речи — фиксированный текст.
+// тестируют на MockLanguageModelV4), кроме чтения чека: по схеме `receipt.extract` отдаётся один и тот же синтетический чек
+// (сходится, без перепроверки) — так e2e «фото чека → карточка» идёт офлайн и детерминированно (T-028), эмбеддинг — хэш текста, расшифровка речи — фиксированный текст.
 import type {
   EmbeddingModelV4,
   LanguageModelV4,
@@ -23,6 +24,64 @@ export const ACCOUNTS_ANSWER = "Вот ваши счета: остаток ка�
 export const DEFAULT_ANSWER = "Я тестовая модель Кошта и отвечаю по сценарию.";
 export const TRANSCRIPT = "тестовая расшифровка";
 export const EMBEDDING_DIMENSIONS = 8;
+
+/** Чек, который тестовая «модель» читает с любого фото (схема receipt.extract): вымышленный, арифметика сходится. */
+export const SYNTHETIC_RECEIPT = {
+  store: "ООО «Сосновый»",
+  unp: "190123456",
+  address: "г. Минск, ул. Весенняя, 12",
+  date: "12.10.2026",
+  time: "14:37:22",
+  currency: "BYN",
+  items: [
+    {
+      name: "Молоко 3,2% 1л",
+      quantity: "2",
+      unit: "шт",
+      unitPrice: "2,49",
+      discount: null,
+      lineTotal: "4,98",
+    },
+    {
+      name: "Хлеб Нарочанский 400г",
+      quantity: "1",
+      unit: "шт",
+      unitPrice: "1,89",
+      discount: null,
+      lineTotal: "1,89",
+    },
+    {
+      name: "Бананы",
+      quantity: "1,245",
+      unit: "кг",
+      unitPrice: "4,59",
+      discount: null,
+      lineTotal: "5,71",
+    },
+  ],
+  receiptDiscount: null,
+  total: "12,58",
+  payment: "card",
+  cardLast4: "4417",
+  uid: null,
+} as const;
+
+/** Ответ на запрос по схеме: чтение чека — синтетический чек, перепроверка — «ничего не меняю», остальное — «{}». */
+function jsonAnswer(options: LanguageModelV4CallOptions): string {
+  const format = options.responseFormat;
+  const schema = format?.type === "json" ? format.schema : undefined;
+  const properties =
+    typeof schema === "object" && schema !== null && "properties" in schema
+      ? Object.keys(schema.properties as object)
+      : [];
+  if (["items", "total", "store"].every((key) => properties.includes(key))) {
+    return JSON.stringify(SYNTHETIC_RECEIPT);
+  }
+  if (["lines", "receiptDiscount"].every((key) => properties.includes(key))) {
+    return JSON.stringify({ lines: [], total: null, receiptDiscount: null });
+  }
+  return "{}";
+}
 
 type Plan =
   | { readonly kind: "tool"; readonly toolName: string }
@@ -85,7 +144,7 @@ function scriptedModel(modelId: string, paceMs: number): LanguageModelV4 {
       const content: LanguageModelV4Content[] =
         p.kind === "tool"
           ? [{ type: "tool-call", toolCallId: "call-1", toolName: p.toolName, input: "{}" }]
-          : [{ type: "text", text: p.kind === "json" ? "{}" : p.text }];
+          : [{ type: "text", text: p.kind === "json" ? jsonAnswer(options) : p.text }];
       return {
         content,
         finishReason: { unified: p.kind === "tool" ? "tool-calls" : "stop", raw: undefined },
@@ -106,7 +165,7 @@ function scriptedModel(modelId: string, paceMs: number): LanguageModelV4 {
           { type: "tool-call", toolCallId: "call-1", toolName: p.toolName, input: "{}" },
         );
       } else {
-        output = p.kind === "json" ? "{}" : p.text;
+        output = p.kind === "json" ? jsonAnswer(options) : p.text;
         parts.push({ type: "text-start", id: "text-1" });
         for (const delta of pieces(output)) parts.push({ type: "text-delta", id: "text-1", delta });
         parts.push({ type: "text-end", id: "text-1" });

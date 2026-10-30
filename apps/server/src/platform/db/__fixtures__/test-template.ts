@@ -27,6 +27,8 @@ import { appRoleGrants, appRoleOptions } from "../roles.ts";
 const REGISTRY_FIXTURE = [
   "update llm_models set enabled = (provider = 'test')",
   "delete from llm_task_chains",
+  // T-028: тестовая модель читает чек по картинке (receipt.extract: images + structured) — e2e «фото чека → карточка» идёт офлайн.
+  "update llm_models set capabilities = array_append(capabilities, 'images') where id = 'test/scripted' and not ('images' = any(capabilities))",
 ];
 
 function connectionOf(config: DbConfig): TestDbConnection {

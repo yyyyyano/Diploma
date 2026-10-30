@@ -267,6 +267,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       calendar: calendarModule.facade,
       tax: taxModule.facade,
       weekly: weeklyModule.facade,
+      explain: explainModule.facade,
     },
   });
   const xlsExportModule = createXlsExportModule({

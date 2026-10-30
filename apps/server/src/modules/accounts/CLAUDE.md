@@ -12,7 +12,7 @@ STMT-01/02/09, EXPL-01, AGT-03 («счета»), AGT-05/07, RCPT-10. Макет:
 ## Публичный API (`index.ts`)
 - Фабрика: `createAccountsModule({ platform, facades })`; платформа — `Platform`; фасады — `fxRates` (курс на сегодня,
   до транзакций), `explain` (трасса «Откуда эта цифра?»), `actions` («Отменить», решение об удалении), `identity`.
-- Фасад `AccountsFacade` (для `fin`, `transactions`, `statements`, `receipts`; `balances(s)` (T-031, FIN-22) — остатки как расчёты: `items[].inByn: Calc<Money> | null` (нет курса — `null`, счёт в `unconverted`, валюта в `missingRates`, не 0), `available` — сумма без накопительных счетов; все в транзакции вызывающего — `tx`):
+- Фасад `AccountsFacade` (для `fin`, `transactions`, `statements`, `receipts`; `balances(s)` (T-031, FIN-22) — остатки как расчёты: `items[]` — вид, название, банк, маска, остаток, `inByn: Calc<Money> | null` (нет курса — `null`, счёт в `unconverted`, валюта в `missingRates`, не 0), `available` — сумма без накопительных счетов; все в транзакции вызывающего — `tx`):
   `findOrCreate(tx, { bank, mask, currency })` → карта (банк без учёта регистра; нет — создаётся, «по операциям»);
   `applyBalanceChange(tx, { accountId, delta: Money, on })` (валюта счёта; день остатка не уходит назад; событие);
   `currencyOf(s, id)` — валюта своего счёта (чужой или нет — `NOT_FOUND`; операция пишется в валюте счёта);

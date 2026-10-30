@@ -66,6 +66,8 @@ export const TRACE_KEYS = [
   "recurring.monthlyTotal",
   "recurring.yearlyTotal",
   "recurring.monthsInYear",
+  // DASH-02: «Остальное» — сумма расходов категорий, не вошедших в шесть крупнейших.
+  "dashboard.otherCategories",
   // BUD-02: лимит и процент лимита; BUD-04…07: цель — сумма, накоплено, остаток, процент, месяцы, взнос и плановая сумма.
   "budgets.limit",
   "budgets.limitRemaining",

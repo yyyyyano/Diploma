@@ -14,6 +14,17 @@ export {
   NewAccountKind,
 } from "./accounts/accounts.contract.ts";
 export {
+  Amount,
+  DashboardAccount,
+  DashboardCategory,
+  DashboardMonth,
+  DashboardOverview,
+  DashboardPeriod,
+  DashboardUpcoming,
+  dashboardContract,
+  MAX_CATEGORY_ROWS,
+} from "./dashboard/dashboard.contract.ts";
+export {
   BudgetGoal,
   BudgetLimit,
   BudgetMonth,

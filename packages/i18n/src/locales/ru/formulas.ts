@@ -12,6 +12,9 @@ export const formulas = {
     yearlyTotal: "Итого в год",
     monthsInYear: "Месяцев в году",
   },
+  dashboard: {
+    otherCategories: "Остальные категории: сумма расходов, не вошедших в шесть крупнейших",
+  },
   budgets: {
     limit: "Лимит на месяц",
     limitRemaining: "Осталось до лимита",

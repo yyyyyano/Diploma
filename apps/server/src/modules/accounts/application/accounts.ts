@@ -53,6 +53,10 @@ export interface AccountBalances {
   readonly items: readonly {
     readonly id: string;
     readonly kind: string;
+    /** Своё название, банк и последние 4 цифры (главная показывает счёт без отдельного запроса списка). */
+    readonly name: string | null;
+    readonly bank: string | null;
+    readonly mask: string | null;
     readonly currency: string;
     readonly balance: Money;
     /** Эквивалент в BYN с трассой; нет курса — `null` (счёт помечен, не 0). */
@@ -181,6 +185,9 @@ export function makeAccounts(d: AccountsDeps) {
     const items = rows.map((row) => ({
       id: row.id,
       kind: row.kind,
+      name: row.name,
+      bank: row.bank,
+      mask: row.mask,
       currency: row.currency,
       balance: Money.of(row.balanceMinor, row.currency),
       inByn: balanceInByn(row, inputs.get(row.currency)) ?? null,

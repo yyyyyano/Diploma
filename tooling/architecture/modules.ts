@@ -382,6 +382,7 @@ export const MODULES: readonly ModuleDef[] = [
       "calendar",
       "tax",
       "weekly",
+      "explain",
     ],
     tables: [],
     publishes: [],

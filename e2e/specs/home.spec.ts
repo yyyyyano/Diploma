@@ -78,8 +78,6 @@ test("«Главная»: первые шаги, операция → цифры
   await expect(form).toBeVisible();
   await form.getByLabel("Сумма, BYN").fill("25,00");
   await form.getByLabel("Контрагент").fill("Евроопт");
-  await form.getByRole("combobox", { name: "Счёт" }).click();
-  await page.getByRole("option", { name: /Наличные/ }).click();
   await form.getByPlaceholder("Выберите категорию").click();
   await page.getByRole("option", { name: "Кафе, рестораны и доставка" }).click();
   await form.getByRole("button", { name: "Сохранить" }).click();

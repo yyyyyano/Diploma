@@ -1,7 +1,8 @@
 // Агрегаты операций (FIN-01, RCPT-09): два запроса на любое число групп — суммы по группам и число операций без курса.
 // Операция с разбивкой (`transaction_splits`) идёт по частям: часть = доля эквивалента в BYN по накопленной сумме разбивки,
 // поэтому сумма частей равна сумме операции до копейки (в BYN — ровно суммы разбивки). Слитая «чек + выписка»
-// операция одна и считается один раз. Переводы не входят; `pending` входит (в остатки — нет, это дело accounts).
+// операция одна и считается один раз; число операций группы и её основания — по операциям, а не по частям. Части
+// берутся только у операций периода. Переводы не входят; `pending` входит (в остатки — нет, это дело accounts).
 import { and, eq, gte, inArray, isNull, lte, sql, type SQL } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { transactions, transactionSplits } from "./schema.ts";
@@ -55,6 +56,7 @@ export async function groupSums(s: ScopedDb, q: AggregateQuery): Promise<GroupRo
           rows between unbounded preceding and 1 preceding), 0) as prev
       from ${transactionSplits}
       where ${s.own(transactionSplits)}
+        and transaction_id in (select id from ops)
     ),
     parts as (
       select id, type, occurred_on, merchant_key, category_code, category_id, amount_byn_minor as byn
@@ -66,11 +68,16 @@ export async function groupSums(s: ScopedDb, q: AggregateQuery): Promise<GroupRo
           - floor(ops.amount_byn_minor::numeric * sp.prev / ops.amount_minor)
       from ops join sp on sp.transaction_id = ops.id
     )
-    select ${KEY[q.groupBy]} as key, type as kind, sum(byn)::bigint::text as minor, count(*)::int as count,
-      (array_agg(id order by occurred_on, id))[1:${limit}] as ids
-    from parts
-    group by 1, type
-    order by 1, type
+    -- Операция с разбивкой — несколько частей одной группы: в число операций и в основания она входит один раз.
+    select key, kind, sum(byn)::bigint::text as minor, count(*)::int as count,
+      (array_agg(id order by first_on, id))[1:${limit}] as ids
+    from (
+      select ${KEY[q.groupBy]} as key, type as kind, id, min(occurred_on) as first_on, sum(byn) as byn
+      from parts
+      group by 1, 2, id
+    ) per_operation
+    group by key, kind
+    order by key, kind
   `);
   return result.rows.map((row) => ({
     key: row.key,

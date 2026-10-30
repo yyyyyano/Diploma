@@ -222,6 +222,66 @@ describe("RCPT-09: операция с разбивкой чека идёт по
   });
 });
 
+describe("RCPT-09: число операций группы — по операциям, а не по частям", () => {
+  async function splitOperation(
+    s: ReturnType<typeof newScope>,
+    t: ReturnType<typeof transactionsWithJournal>,
+    on: string,
+  ) {
+    const { transaction } = await t.ops.create(
+      s,
+      entry({ occurredOn: day(on), amount: Money.of(9_000, "BYN"), category: cat("groceries") }),
+      WEB,
+    );
+    await db.owner.query(
+      `insert into transaction_splits (household_id, user_id, transaction_id, position, category_code, amount_minor)
+       values ($1, $2, $3, 1, 'groceries', 3000), ($1, $2, $3, 2, 'groceries', 3000), ($1, $2, $3, 3, 'groceries', 3000)`,
+      [s.scope.householdId, s.scope.userId, transaction.id],
+    );
+    return transaction;
+  }
+
+  it("операция с тремя частями одной группы: основание одно, «ещё N» не считает части", async () => {
+    const s = newScope(db);
+    const t = transactionsWithJournal(db);
+    const split = await splitOperation(s, t, "2026-10-05");
+    const result = await t.ops.aggregate(s, { ...OCT, groupBy: "category" });
+    const trace = result.groups.find((g) => g.key === "system:groceries")?.expense.trace.inputs[0];
+    expect(trace?.value).toEqual(Money.of(9_000, "BYN"));
+    expect(trace?.refs?.map((ref) => ref.id)).toEqual([split.id]);
+    expect(trace?.note).toBeUndefined();
+
+    // Вторая, обычная операция и предел в одно основание: остаётся «ещё 1», а не «ещё 3».
+    await t.ops.create(
+      s,
+      entry({
+        occurredOn: day("2026-10-06"),
+        amount: Money.of(500, "BYN"),
+        category: cat("groceries"),
+      }),
+      WEB,
+    );
+    const limited = makeAggregate({
+      settings: { get: async () => 1 as never },
+      explain: t.explain,
+    });
+    const one = await limited.aggregate(s, { ...OCT, groupBy: "category" });
+    const limitedTrace = one.groups.find((g) => g.key === "system:groceries")?.expense.trace
+      .inputs[0];
+    expect(limitedTrace?.refs).toHaveLength(1);
+    expect(limitedTrace?.note).toBe("ещё 1 операций");
+  });
+
+  it("разбивка операции вне периода в сумму периода не входит", async () => {
+    const s = newScope(db);
+    const t = transactionsWithJournal(db);
+    await splitOperation(s, t, "2026-09-05");
+    const result = await t.ops.aggregate(s, { ...OCT, groupBy: "category" });
+    expect(result.groups).toHaveLength(0);
+    expect(result.expense.value.minor).toBe(0);
+  });
+});
+
 describe("EXPL-01: число запросов и основания", () => {
   it("тридцать категорий — столько же запросов, сколько одна (не растёт с числом групп)", async () => {
     const s = newScope(db);

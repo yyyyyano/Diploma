@@ -55,7 +55,10 @@ export function OperationForm({
   const cash = accounts.find((account) => account.kind === "cash") ?? accounts[0];
   const [type, setType] = useState<Transaction["type"]>(transaction?.type ?? "expense");
   const [direction, setDirection] = useState<"in" | "out">(transaction?.direction ?? "out");
-  const [accountId, setAccountId] = useState<string>(transaction?.accountId ?? cash?.id ?? "");
+  // Выбранный человеком счёт; пока он не выбирал, счёт — по умолчанию, и он появляется, как только пришёл список
+  // счетов (форма может открыться раньше списка): состояние, взятое из пропса при монтировании, осталось бы пустым.
+  const [chosenAccountId, setChosenAccountId] = useState<string | null>(null);
+  const accountId = chosenAccountId ?? transaction?.accountId ?? cash?.id ?? "";
   const [amount, setAmount] = useState(
     transaction === undefined ? "" : amountText(transaction.amount.minor),
   );
@@ -169,7 +172,7 @@ export function OperationForm({
             data={accounts.map((item) => ({ value: item.id, label: nameOf(item) }))}
             value={accountId}
             allowDeselect={false}
-            onChange={(value) => setAccountId(value ?? accountId)}
+            onChange={(value) => setChosenAccountId(value ?? accountId)}
           />
           <TextInput
             type="time"

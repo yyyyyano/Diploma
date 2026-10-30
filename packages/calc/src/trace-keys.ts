@@ -53,6 +53,8 @@ export const TRACE_KEYS = [
   "recurring.manualAmount",
   "recurring.monthlyAmount",
   "recurring.monthlyTotal",
+  "recurring.yearlyTotal",
+  "recurring.monthsInYear",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

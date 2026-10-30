@@ -9,6 +9,8 @@ export const formulas = {
     manualAmount: "Сумма, указанная вами",
     monthlyAmount: "Сумма в месяц",
     monthlyTotal: "Итого в месяц",
+    yearlyTotal: "Итого в год",
+    monthsInYear: "Месяцев в году",
   },
   fin: {
     freeBalance: "Свободный остаток",

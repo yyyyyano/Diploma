@@ -13,6 +13,23 @@ export {
   FxRateInfo,
   NewAccountKind,
 } from "./accounts/accounts.contract.ts";
+export {
+  MARKERS_MAX,
+  RECURRING_PERIODS,
+  RECURRING_SECTIONS,
+  recurringContract,
+  RecurringCreateInput,
+  RecurringEditInput,
+  RecurringFlow,
+  RecurringId,
+  RecurringItem,
+  RecurringList,
+  RecurringListInput,
+  RecurringPeriod,
+  RecurringSection,
+  RecurringSectionTotal,
+  RecurringState,
+} from "./recurring/recurring.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
   AI_CAPABILITIES,

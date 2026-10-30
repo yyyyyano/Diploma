@@ -31,6 +31,7 @@ export interface Notice {
   readonly kind: string;
   readonly key: string;
   readonly objectRef?: { entity: string; id: string } | undefined;
+  readonly params?: unknown;
 }
 
 export function recurringWithJournal(db: TestDb) {

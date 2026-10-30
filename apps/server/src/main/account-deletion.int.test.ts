@@ -204,6 +204,31 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, $3, true, 'mandatory', 'month', 'suggested', '2026-11-23', '{}')`,
     [...ids, recurring.rows[0]?.id],
   );
+  // Лимит и цель с взносом, ревизией и одноразовым уведомлением (BUD-01…07): строки владельца, уходят вместе с аккаунтом.
+  const limit = await db.owner.query<{ id: string }>(
+    `insert into budget_limits (household_id, user_id, category_key, limit_minor)
+     values ($1, $2, 'system:cafes', 20000) returning id`,
+    ids,
+  );
+  const goal = await db.owner.query<{ id: string }>(
+    `insert into budget_goals (household_id, user_id, name, kind, target_minor, deadline, created_on)
+     values ($1, $2, 'Отпуск', 'piggy', 300000, '2027-06-01', '2026-10-28') returning id`,
+    ids,
+  );
+  await db.owner.query(
+    `insert into budget_contributions (household_id, user_id, goal_id, amount_minor, made_on)
+     values ($1, $2, $3, 20000, '2026-10-28')`,
+    [...ids, goal.rows[0]?.id],
+  );
+  await db.owner.query(
+    `insert into budget_alerts (household_id, user_id, subject_id, alert_key) values ($1, $2, $3, '2026-10:80')`,
+    [...ids, limit.rows[0]?.id],
+  );
+  await db.owner.query(
+    `insert into budget_revisions (household_id, user_id, kind, subject_id, existed, before)
+     values ($1, $2, 'limit', $3, false, '{}')`,
+    [...ids, limit.rows[0]?.id],
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

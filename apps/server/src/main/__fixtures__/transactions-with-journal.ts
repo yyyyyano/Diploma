@@ -106,6 +106,11 @@ export function transactionsWithJournal(
 
   /** Обработчики «Отменить» других модулей (statements.rollback): регистрируются тестом после сборки. */
   const extraUndo = new Map<string, (s: ScopedDb, p: unknown) => Promise<void>>();
+  /** Обработчики «Да» других модулей (budgets.delete-limit…): регистрируются тестом после сборки. */
+  const extraConfirm = new Map<
+    string,
+    (s: ScopedDb, p: unknown) => Promise<string | undefined | void>
+  >();
   let ops: ReturnType<typeof makeOperations> | undefined;
   let accounts: ReturnType<typeof makeAccounts> | undefined;
   const ready = () => {
@@ -130,6 +135,7 @@ export function transactionsWithJournal(
         [APPLY_RULE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmApplyRule(s, p)],
         [MATCH_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmMatch(s, p)],
         [ACCOUNT_DELETE, (s: ScopedDb, p: unknown) => ready().accounts.confirmDelete(s, p)],
+        ...extraConfirm,
       ]),
     }),
   } as unknown as Platform;
@@ -246,6 +252,12 @@ export function transactionsWithJournal(
     platform: { clock, log, jobs, events, realtime },
     registerUndo: (name: string, handler: (s: ScopedDb, p: unknown) => Promise<void>) => {
       extraUndo.set(name, handler);
+    },
+    registerConfirm: (
+      name: string,
+      handler: (s: ScopedDb, p: unknown) => Promise<string | undefined | void>,
+    ) => {
+      extraConfirm.set(name, handler);
     },
     accounts,
     actions,

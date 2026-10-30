@@ -59,6 +59,9 @@ interface Household {
   readonly receiptId: string;
   /** Регулярный платёж B. */
   readonly recurringId: string;
+  /** Лимит B на категорию и его цель-копилка. */
+  readonly limitId: string;
+  readonly goalId: string;
 }
 
 /**
@@ -197,6 +200,44 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "recurring.explain": { input: (b) => ({ id: b.recurringId }) },
   "recurring.markers": { input: (b) => ({ ids: [b.transactionId] }) },
   "tool:list_recurring": { input: () => ({}) },
+  "budgets.overview": { input: () => ({}) },
+  "budgets.setLimit": {
+    input: () => ({ categoryKey: "system:taxi", limit: { minor: 10_000, currency: "BYN" } }),
+  },
+  "budgets.requestDeleteLimit": { input: (b) => ({ id: b.limitId }) },
+  "budgets.createGoal": {
+    input: () => ({
+      name: "своя",
+      kind: "piggy",
+      target: { minor: 100_000, currency: "BYN" },
+      deadline: "2027-06-01",
+    }),
+  },
+  "budgets.updateGoal": { input: (b) => ({ id: b.goalId, name: "чужая" }) },
+  "budgets.contribute": {
+    input: (b) => ({ goalId: b.goalId, amount: { minor: 100, currency: "BYN" } }),
+  },
+  "budgets.requestDeleteGoal": { input: (b) => ({ id: b.goalId }) },
+  "budgets.previewGoal": {
+    input: () => ({ target: { minor: 100_000, currency: "BYN" }, deadline: "2027-06-01" }),
+  },
+  "tool:list_budgets": { input: () => ({}) },
+  "tool:set_limit": {
+    input: () => ({ categoryKey: "system:taxi", limit: { minor: 10_000, currency: "BYN" } }),
+  },
+  "tool:create_goal": {
+    input: () => ({
+      name: "своя",
+      kind: "piggy",
+      target: { minor: 100_000, currency: "BYN" },
+      deadline: "2027-06-01",
+    }),
+  },
+  "tool:contribute_to_goal": {
+    input: (b) => ({ goalId: b.goalId, amount: { minor: 100, currency: "BYN" } }),
+  },
+  "tool:delete_limit": { input: (b) => ({ id: b.limitId }) },
+  "tool:delete_goal": { input: (b) => ({ id: b.goalId }) },
   "fin.freeBalance": { input: () => ({}) },
   "tool:get_free_balance": { input: () => ({}) },
   "tool:aggregate_transactions": {
@@ -439,6 +480,16 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'expense|b|9', 'b', $3, 'expense', 'mandatory', 'month', 'active', 9, '2026-11-09') returning id`,
     [ids.household_id, ids.user_id, `платёж ${email}`],
   );
+  const limit = await db.owner.query<{ id: string }>(
+    `insert into budget_limits (household_id, user_id, category_key, limit_minor)
+     values ($1, $2, 'system:cafes', 20000) returning id`,
+    [ids.household_id, ids.user_id],
+  );
+  const goal = await db.owner.query<{ id: string }>(
+    `insert into budget_goals (household_id, user_id, name, kind, target_minor, deadline, created_on)
+     values ($1, $2, $3, 'piggy', 300000, '2027-06-01', '2026-10-28') returning id`,
+    [ids.household_id, ids.user_id, `цель ${email}`],
+  );
   const statementImport = await db.owner.query<{ id: string }>(
     `insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready') returning id`,
     [ids.household_id, ids.user_id, file.rows[0]?.id],
@@ -464,6 +515,8 @@ async function seedHousehold(email: string): Promise<Household> {
     importId: statementImport.rows[0]?.id ?? "",
     receiptId: receipt.rows[0]?.id ?? "",
     recurringId: recurring.rows[0]?.id ?? "",
+    limitId: limit.rows[0]?.id ?? "",
+    goalId: goal.rows[0]?.id ?? "",
   };
 }
 
@@ -578,6 +631,14 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.setTimeZone",
       "admin.system",
       "admin.testAiProvider",
+      "budgets.contribute",
+      "budgets.createGoal",
+      "budgets.overview",
+      "budgets.previewGoal",
+      "budgets.requestDeleteGoal",
+      "budgets.requestDeleteLimit",
+      "budgets.setLimit",
+      "budgets.updateGoal",
       "categories.create",
       "categories.list",
       "categories.rename",
@@ -650,18 +711,24 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "add_transaction",
       "aggregate_transactions",
       "bulk_change_category",
+      "contribute_to_goal",
       "create_account",
+      "create_goal",
       "delete_account",
+      "delete_goal",
+      "delete_limit",
       "delete_transaction",
       "explain_number",
       "get_free_balance",
       "get_receipt",
       "list_accounts",
+      "list_budgets",
       "list_recurring",
       "read_profile_facts",
       "receipt_status",
       "rename_account",
       "search_transactions",
+      "set_limit",
       "statement_import_status",
       "upcoming_payments",
       "update_transaction",
@@ -684,6 +751,8 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.importId,
       b.receiptId,
       b.recurringId,
+      b.limitId,
+      b.goalId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

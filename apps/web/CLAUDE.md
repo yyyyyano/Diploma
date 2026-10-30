@@ -24,7 +24,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   нет маршрута — нет пункта (DES-15).
 - `lib/`: `api` (`client`, `orpc` — queryOptions/mutationOptions; `fetch` — в момент запроса), `events`
   (`useEventStream`, `runEventStream`, `progressQueryKey`, привязка «сущность → запросы»), `errors` (`errorCodeOf` → код для `errors:<код>`,
-  `errorParamsOf` → параметры текста, `retryAfterMinutes` всегда есть), `i18n`,
+  `errorParamsOf` → параметры текста, `retryAfterMinutes`, `name` и `date` всегда есть), `i18n`,
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
 - `entities/account` — `AccountCard` (вид, остаток и день остатка, эквивалент в BYN; ⓘ и меню — слотами страницы),

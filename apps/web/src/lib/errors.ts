@@ -13,11 +13,12 @@ export function errorCodeOf(error: unknown): ErrorCode {
 
 /**
  * Параметры текста ошибки: всё из data.params ответа; минуты ожидания есть всегда (по умолчанию 1), имя файла — у
- * ошибок загрузки (по умолчанию «файл»).
+ * ошибок загрузки (по умолчанию «файл»), день первой загрузки — у дубля чека (по умолчанию «ранее»).
  */
 export type ErrorTextParams = Record<string, string | number | boolean> & {
   readonly retryAfterMinutes: number;
   readonly name: string;
+  readonly date: string;
 };
 
 /** Параметры для подстановки в текст ошибки («через {{retryAfterMinutes}} мин.»); нет или не по схеме — умолчания. */
@@ -29,9 +30,11 @@ export function errorParamsOf(error: unknown): ErrorTextParams {
   const found = parsed.success ? parsed.data : {};
   const minutes = found["retryAfterMinutes"];
   const name = found["name"];
+  const date = found["date"];
   return {
     ...found,
     retryAfterMinutes: typeof minutes === "number" ? minutes : 1,
     name: typeof name === "string" ? name : "файл",
+    date: typeof date === "string" ? date : "ранее",
   };
 }

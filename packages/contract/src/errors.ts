@@ -44,6 +44,8 @@ export const ERRORS = {
   TOO_MANY_FILES: { status: 413, retryable: false },
   /** Чек уже загружен: тот же УИ или тот же магазин, день, время и итог (RCPT-04); в параметрах — когда и какой чек. */
   RECEIPT_DUPLICATE: { status: 409, retryable: false },
+  /** Фото чека не удалось прочитать: повреждено, слишком большое по пикселям или не картинка (RCPT-01, SEC-03). */
+  RECEIPT_UNREADABLE: { status: 422, retryable: false },
   /** Выписку не удалось прочитать: повреждена, слишком сложная или небезопасная (STMT-04, SEC-03). */
   STATEMENT_UNREADABLE: { status: 422, retryable: false },
   RATE_LIMITED: { status: 429, retryable: true },

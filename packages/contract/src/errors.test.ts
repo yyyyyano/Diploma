@@ -21,6 +21,7 @@ describe("каталог ошибок", () => {
       FILE_TYPE_NOT_ALLOWED: 415,
       TOO_MANY_FILES: 413,
       RECEIPT_DUPLICATE: 409,
+      RECEIPT_UNREADABLE: 422,
       STATEMENT_UNREADABLE: 422,
       RATE_LIMITED: 429,
       INTERNAL: 500,

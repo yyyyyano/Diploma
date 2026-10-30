@@ -18,18 +18,29 @@ describe("параметры текста ошибки", () => {
     const error = new ORPCError("RATE_LIMITED", {
       data: { requestId: "req-1", params: { retryAfterMinutes: 5 } },
     });
-    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 5, name: "файл" });
+    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 5, name: "файл", date: "ранее" });
   });
 
   it("имя файла из ответа об ошибке загрузки подставляется в текст", () => {
     const error = new ORPCError("FILE_TYPE_NOT_ALLOWED", {
       data: { requestId: "req-1", params: { name: "выписка.pdf" } },
     });
-    expect(errorParamsOf(error)).toEqual({ retryAfterMinutes: 1, name: "выписка.pdf" });
+    expect(errorParamsOf(error)).toEqual({
+      retryAfterMinutes: 1,
+      name: "выписка.pdf",
+      date: "ранее",
+    });
   });
 
-  it("нет параметров, не та форма или не ошибка сервера — минуты и имя файла по умолчанию", () => {
-    const fallback = { retryAfterMinutes: 1, name: "файл" };
+  it("день первой загрузки из ответа о дубле чека подставляется в текст: «уже загружен 12.10»", () => {
+    const error = new ORPCError("RECEIPT_DUPLICATE", {
+      data: { requestId: "req-1", params: { date: "12.10", receiptId: "r-1" } },
+    });
+    expect(errorParamsOf(error)).toMatchObject({ date: "12.10" });
+  });
+
+  it("нет параметров, не та форма или не ошибка сервера — минуты, имя файла и день по умолчанию", () => {
+    const fallback = { retryAfterMinutes: 1, name: "файл", date: "ранее" };
     expect(errorParamsOf(new ORPCError("CONFLICT"))).toEqual(fallback);
     expect(
       errorParamsOf(new ORPCError("CONFLICT", { data: { params: { nested: { a: 1 } } } })),

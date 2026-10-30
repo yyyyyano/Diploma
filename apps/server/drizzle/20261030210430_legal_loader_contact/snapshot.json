@@ -1,0 +1,117 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "118d3124-145d-433b-b2fb-9ea5327668ae",
+  "prevIds": ["dc422a7c-eec4-4bc6-9673-5beb0eddfa37"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "system_state", "loader_contact"],
+      "writes": [
+        "s|col|public.system_state.loader_contact",
+        "n|col|public.system_state.loader_contact",
+        "e|col|public.system_state.loader_contact"
+      ],
+      "reads": ["n|tbl|public.system_state", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "stopped_on"],
+      "writes": [
+        "s|col|public.legal_loader_state.stopped_on",
+        "n|col|public.legal_loader_state.stopped_on",
+        "e|col|public.legal_loader_state.stopped_on"
+      ],
+      "reads": ["n|tbl|public.legal_loader_state", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "cycle_day"],
+      "writes": [
+        "s|col|public.legal_loader_state.cycle_day",
+        "n|col|public.legal_loader_state.cycle_day",
+        "e|col|public.legal_loader_state.cycle_day"
+      ],
+      "reads": ["n|tbl|public.legal_loader_state", "n|sch|public"]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "stopped_until"],
+      "writes": [
+        "s|col|public.legal_loader_state.stopped_until",
+        "n|col|public.legal_loader_state.stopped_until",
+        "e|col|public.legal_loader_state.stopped_until"
+      ],
+      "reads": ["n|tbl|public.legal_loader_state", "n|sch|public"]
+    },
+    {
+      "statementType": "drop_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "cycle_started_at"],
+      "writes": [
+        "s|col|public.legal_loader_state.cycle_started_at",
+        "n|col|public.legal_loader_state.cycle_started_at",
+        "e|col|public.legal_loader_state.cycle_started_at"
+      ],
+      "reads": ["n|tbl|public.legal_loader_state", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "system_state",
+        "name": "loader_contact",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_loader_state",
+        "name": "stopped_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_loader_state",
+        "name": "cycle_day",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"legal_loader_state\",\"stopped_until\"]"
+    },
+    {
+      "op": "drop",
+      "key": "columns\u0000[\"public\",\"legal_loader_state\",\"cycle_started_at\"]"
+    }
+  ]
+}

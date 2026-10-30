@@ -120,6 +120,8 @@ export const systemState = systemTable(
     id: integer().primaryKey(),
     initialized: boolean().notNull().default(false),
     initializedAt: moment(),
+    /** Контакт оператора загрузчика законов с экрана первого запуска (AUTH-10, LAW-36); дальше им владеет legal-base. */
+    loaderContact: text(),
   },
   (t) => [check("system_state_singleton_check", sql`${t.id} = 1`)],
 );

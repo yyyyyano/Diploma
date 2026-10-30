@@ -7,6 +7,7 @@ import {
   boolean,
   check,
   customType,
+  date,
   index,
   integer,
   jsonb,
@@ -183,12 +184,14 @@ export const legalLoaderState = systemTable(
     lastRequestAt: moment(),
     /** Следующий запрос — не раньше этого момента: пауза выбирается случайно в 3–5 с при каждом запросе. */
     nextRequestAt: moment(),
-    stoppedUntil: moment(),
-    /** Код причины остановки: LOADER_CONTACT_EMPTY, LOADER_BLOCKED, LOADER_TOO_MANY_ERRORS. */
+    /** День остановки цикла (403/429, много ошибок): до следующих суток по поясу системы запросов нет (LAW-38). */
+    stoppedOn: date({ mode: "string" }),
+    /** Код причины остановки: LOADER_BLOCKED, LOADER_TOO_MANY_ERRORS (пустой контакт — не состояние, а проверка). */
     stopReason: text(),
     robotsTxt: text(),
     robotsFetchedAt: moment(),
-    cycleStartedAt: moment(),
+    /** День, к которому относятся счётчики цикла: в новый день они обнуляются. */
+    cycleDay: date({ mode: "string" }),
     cycleRequests: integer().notNull().default(0),
     cycleErrors: integer().notNull().default(0),
   },

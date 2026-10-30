@@ -1,14 +1,67 @@
-# Синтетическая копия правил из research/legal-sources-research.md (живой файл не сохранялся).
-User-agent: *
+# Источник: https://pravo.by/robots.txt · сохранено 2026-10-30 (живой файл)
+User-Agent: *
+Allow: /bitrix/components/
+Allow: /bitrix/cache/
+Allow: /bitrix/js/
+Allow: /bitrix/templates/
+Allow: /bitrix/panel/
+Host: https://pravo.by
+Sitemap: https://pravo.by/sitemap.xml
 Disallow: /bitrix/
-Disallow: /search/
+Disallow: /*show_include_exec_time=
+Disallow: /*show_page_exec_time=
+Disallow: /*show_sql_stat=
+Disallow: /*bitrix_include_areas=
+Disallow: /*clear_cache=
+Disallow: /*clear_cache_session=
+Disallow: /*ADD_TO_COMPARE_LIST
+Disallow: /*ORDER_BY
+Disallow: /*PAGEN
+Disallow: /*?print=
+Disallow: /*&print=
+Disallow: /*print_course=
+Disallow: /*?action=
+Disallow: /*&action=
+Disallow: /*register=
+Disallow: /*forgot_password=
+Disallow: /*change_password=
+Disallow: /*login=
+Disallow: /*logout=
+Disallow: /*auth=
+Disallow: /*backurl=
+Disallow: /*back_url=
+Disallow: /*BACKURL=
+Disallow: /*BACK_URL=
+Disallow: /*back_url_admin=
+Disallow: /*?utm_source=
+Disallow: /gosudarstvo-i-pravo/spravochnik-organizatsiy/rukovodstvo-v-otdelnom-okne/ #справочник организаций
+Disallow: /gosudarstvo-i-pravo/spravochnik-organizatsiy/kak-iskat/ #справочник организаций
+Disallow: /gosudarstvo-i-pravo/spravochnik-organizatsiy/*   #справочник организаций
+Disallow: /novosti/infografika-prava/infografika/infografika.php #песочница
+Disallow: /novosti/novosti.php #песочница
+Disallow: /novosti/infografika-prava/infografika/ #песочница
+Disallow: /local/components/cit/bdsr.text/
 Disallow: /upload/docs/op/
+Disallow: /search/
+Disallow: */index.php
+Disallow: /*?bxajaxid=
+Disallow: /*&bxajaxid=
+Disallow: /*?view_result=
+Disallow: /*&view_result=
+Disallow: /*.aspx*
+Disallow: /o-portale/materialy-smi-o-portale/* #сми о портале
+Disallow: /*paging
+Disallow: /*nav-bdsr=page-
+Disallow: /pravovaya-informatsiya/bank-sudebnykh-resheniy/poisk/?* #поисковая выдача БД СР
 Disallow: /natsionalnyy-reestr/poisk-v-reestre/?*
 Disallow: /pravovaya-informatsiya/pravovye-akty-po-temam/poisk-v-tbd/?*
+Disallow: /bank-dannykh-proektov-zakonov-respubliki-belarus/poisk-v-banke-dannykh-proektov-zakonov-respubliki-belarus/?*
+Clean-param: p1&p5&p2 /document/
+Clean-param: add&source /document/
+Clean-param: p0&p1 /natsionalnyy-reestr/novye-postupleniya/
+Clean-param: p0&p1 /ofitsialnoe-opublikovanie/novye-postupleniya/
+Clean-param: date_from&date_to /pravovaya-informatsiya/bank-sudebnykh-resheniy/novye-postupleniya/
+Clean-param: p2 /pravovaya-informatsiya/pravovye-akty-po-temam/poisk-v-reestre/
 Disallow: /pravovaya-informatsiya/bank-sudebnykh-resheniy/
-Disallow: *?print=
-Disallow: *?action=
-Disallow: *paging
-Disallow: *.aspx*
-Disallow: */index.php
-Clean-param: p0&p1
+Aloww: /register-of-digital-indicators/$
+Disallow: /register-of-digital-indicators/poisk-v-reestre/

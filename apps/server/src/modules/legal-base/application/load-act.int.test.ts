@@ -8,6 +8,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createSystemDb } from "../../../platform/db/system-db.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
+import { withChangedLayout } from "../__fixtures__/layout-changed.ts";
 import { START_CATALOG } from "../domain/start-catalog.ts";
 import { seedActs } from "../infrastructure/db/catalog.repo.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
@@ -93,7 +94,16 @@ describe("LAW-10, LAW-20: первая загрузка акта", () => {
     const excluded = await db.owner.query<{ path_key: string }>(
       "select f.path_key from legal_fragments f join legal_fragment_versions v on v.fragment_id = f.id where v.excluded",
     );
-    expect(excluded.rows.map((r) => r.path_key)).toEqual(["a20"]);
+    expect(excluded.rows).toEqual([]);
+  });
+
+  it("НК: исключённые статьи 113 и 140 хранятся со статусом «исключена»", async () => {
+    const { loadAct } = loader({ source: pages({ Hk0900071: page("Hk0900071.html") }) });
+    await loadAct("Hk0900071");
+    const excluded = await db.owner.query<{ path_key: string }>(
+      "select f.path_key from legal_fragments f join legal_fragment_versions v on v.fragment_id = f.id where v.excluded order by 1",
+    );
+    expect(excluded.rows.map((r) => r.path_key)).toEqual(["a113", "a140"]);
   });
 
   it("повторная загрузка той же страницы ничего не меняет", async () => {
@@ -132,7 +142,7 @@ describe("LAW-39: карантин и канарейки", () => {
     await loadAct("H10200090");
     const before = await act("H10200090");
     const fragmentsBefore = await count("legal_fragments");
-    current.source = pages({ H10200090: page("H10200090.layout-changed.html") });
+    current.source = pages({ H10200090: withChangedLayout(page("H10200090.html")) });
     expect(await loadAct("H10200090")).toBe("quarantined");
     const after = await act("H10200090");
     expect(after?.load_state).toBe("quarantined");
@@ -157,10 +167,8 @@ describe("LAW-39: карантин и канарейки", () => {
   });
 
   it("первая загрузка с не той статьёй числа у канарейки (50 вместо 51) тоже в карантине, фрагментов нет", async () => {
-    const without = page("H10200090.html").replace(
-      /<p class="article" id="51">[\s\S]*?<\/p>\s*<p class="point" id="1">[^<]*<\/p>/u,
-      "",
-    );
+    // Статья 48 перестала быть статьёй: у канарейки 51 статья, здесь 50.
+    const without = page("H10200090.html").replace("Статья 48.", "Сорок восьмая.");
     const { loadAct, notified } = loader({ source: pages({ H10200090: without }) });
     expect(await loadAct("H10200090")).toBe("quarantined");
     expect((await act("H10200090"))?.last_problem).toContain("canary-mismatch");
@@ -170,7 +178,7 @@ describe("LAW-39: карантин и канарейки", () => {
 
   it("повторная доставка той же сломанной страницы не плодит снимки, а уведомление идемпотентно по ключу", async () => {
     const { loadAct, notified } = loader({
-      source: pages({ H10200090: page("H10200090.layout-changed.html") }),
+      source: pages({ H10200090: withChangedLayout(page("H10200090.html")) }),
     });
     await loadAct("H10200090");
     await loadAct("H10200090");
@@ -182,7 +190,10 @@ describe("LAW-39: карантин и канарейки", () => {
     const current = { source: pages({ Hk0900071: page("Hk0900071.html") }) };
     const { loadAct } = loader(current);
     await loadAct("Hk0900071");
-    const changed = page("Hk0900071.html").replace("Плательщики", "Налогоплательщики");
+    const changed = page("Hk0900071.html").replace(
+      "в размере 216 белорусских",
+      "в размере 217 белорусских",
+    );
     current.source = pages({ Hk0900071: changed });
     expect(await loadAct("Hk0900071")).toBe("changed");
     const statuses = await db.owner.query<{ status: string }>(

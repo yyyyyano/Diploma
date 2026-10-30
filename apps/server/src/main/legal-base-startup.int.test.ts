@@ -71,9 +71,9 @@ describe("AUTH-10, LAW-10: стартовый каталог после перв
       "select pravo_id, load_state, article_count from legal_acts where load_state = 'loaded' order by pravo_id",
     );
     expect(acts.rows).toEqual([
-      { pravo_id: "C21300569", load_state: "loaded", article_count: 4 },
+      { pravo_id: "C21300569", load_state: "loaded", article_count: 12 },
       { pravo_id: "H10200090", load_state: "loaded", article_count: 51 },
-      { pravo_id: "Hk0900071", load_state: "loaded", article_count: 4 },
+      { pravo_id: "Hk0900071", load_state: "loaded", article_count: 7 },
     ]);
   });
 

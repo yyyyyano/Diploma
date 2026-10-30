@@ -4,17 +4,17 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "1b0ae886d7ae8936",
+      "fingerprint": "bcaebe2f68b01795",
       "parts": [
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "stream-start",
             "warnings": []
           }
         },
         {
-          "delayMs": 5,
+          "delayMs": 2,
           "part": {
             "type": "tool-input-start",
             "id": "call-1",
@@ -37,7 +37,7 @@
           }
         },
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "tool-call",
             "toolCallId": "call-1",
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 12,
+          "delayMs": 4,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -61,6 +61,12 @@
                 "total": 1,
                 "text": 1
               }
+            },
+            "providerMetadata": {
+              "kosht": {
+                "model": "test/scripted",
+                "unavailable": []
+              }
             }
           }
         }
@@ -68,7 +74,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "efe4f21f92843f63",
+      "fingerprint": "419eff7b879e777e",
       "parts": [
         {
           "delayMs": 0,
@@ -78,7 +84,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "text-start",
             "id": "text-1"
@@ -101,7 +107,7 @@
           }
         },
         {
-          "delayMs": 303,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -125,7 +131,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -149,7 +155,7 @@
           }
         },
         {
-          "delayMs": 305,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -164,7 +170,7 @@
           }
         },
         {
-          "delayMs": 0,
+          "delayMs": 1,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -178,6 +184,12 @@
               "outputTokens": {
                 "total": 13,
                 "text": 13
+              }
+            },
+            "providerMetadata": {
+              "kosht": {
+                "model": "test/scripted",
+                "unavailable": []
               }
             }
           }

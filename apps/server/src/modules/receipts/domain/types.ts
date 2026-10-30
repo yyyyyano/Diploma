@@ -46,3 +46,14 @@ export type Mismatch =
       readonly printedMinor: number;
     }
   | { readonly kind: "total"; readonly reason: "unreadable" };
+
+/** Состояние чека: «распознаётся» → «сходится» или «требует проверки»; «не вышло» — ошибка чтения или дубль (RCPT-04, RCPT-07). */
+export type ReceiptStatus = "processing" | "ok" | "needs-review" | "failed";
+
+/** Этап распознавания для карточки (RCPT-02): «Читаю чек…» → «Проверяю арифметику…» → «Перепроверка строки 2…». */
+export type ReceiptStage = "reading" | "checking" | "rechecking";
+
+/** Расхождение для хранения: без наименований и текста с чека (OBS-04) — только вид, номер строки и копейки. */
+export type StoredMismatch = Mismatch;
+
+export type PaymentMethod = "cash" | "card";

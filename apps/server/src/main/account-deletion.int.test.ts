@@ -172,6 +172,19 @@ async function seedUser(email: string): Promise<Seeded> {
     "insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready')",
     [...ids, file.id],
   );
+  // Чек с позицией и историей проверки (RCPT-03, RCPT-06): строки владельца, уходят вместе с аккаунтом.
+  const receipt = await db.owner.query<{ id: string }>(
+    "insert into receipts (household_id, user_id, file_id, status) values ($1, $2, $3, 'ok') returning id",
+    [...ids, file.id],
+  );
+  await db.owner.query(
+    "insert into receipt_items (household_id, user_id, receipt_id, position, name, normalized_name) values ($1, $2, $3, 1, 'Молоко 1л', 'Молоко')",
+    [...ids, receipt.rows[0]?.id],
+  );
+  await db.owner.query(
+    "insert into receipt_attempts (household_id, user_id, receipt_id, attempt, ok) values ($1, $2, $3, 0, true)",
+    [...ids, receipt.rows[0]?.id],
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

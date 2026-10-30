@@ -62,6 +62,10 @@ test("первый запуск → администратор → вход → 
 
   await page.getByRole("textbox", { name: "Email администратора" }).fill(admin.email);
   await page.getByLabel("Пароль", { exact: true }).fill(admin.password);
+  // LAW-36: контакт загрузчика законов — необязательное поле (по умолчанию email); в стенде сети нет, значение условное.
+  await page
+    .getByRole("textbox", { name: "Контакт для загрузчика законов" })
+    .fill("https://example.test/operator");
   await page.getByRole("button", { name: "Создать администратора" }).click();
 
   // AUTH-05: код восстановления администратора — один раз; «Продолжить» — после «сохранил».
@@ -77,6 +81,12 @@ test("первый запуск → администратор → вход → 
   // экран говорит, где его запустить; войти можно сразу.
   await expect(page.getByRole("heading", { level: 1, name: "Готовим систему" })).toBeVisible();
   await expect(page.getByText(/Скачивание ещё не начато/)).toBeVisible();
+  // LAW-10 (T-034): стартовый каталог загружается сам — из сохранённых страниц, без сети; ждём состояние, а не время.
+  await expect(page.getByRole("heading", { level: 2, name: "Правовая база" })).toBeVisible();
+  await expect(page.getByText("Загружены все акты стартового каталога.")).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.getByText("Загружено 28 из 28 актов")).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("button", { name: "Войти" }).click();
 

@@ -2,6 +2,7 @@
 // (.claude/rules/testing.md), нет файла — «текста нет» (как 404 на pravo.by), ID вне правила реквизитов не читается.
 import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { LocalDate } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { ActTextNotFound } from "../../application/ports.ts";
 import { createFixturesSource } from "./fixtures-source.ts";
@@ -49,5 +50,12 @@ describe("LegalSource из сохранённых страниц", () => {
   it("акта без страницы нет — «текста нет»; чужой ID не читается", async () => {
     await expect(source.fetchActText("H99999999")).rejects.toBeInstanceOf(ActTextNotFound);
     await expect(source.fetchActText("../etc/passwd")).rejects.toBeInstanceOf(RangeError);
+  });
+
+  it("LAW-12: «Новые поступления» — сохранённая страница; LAW-14: рубрик нет, пока нет файла", async () => {
+    expect((await source.fetchArrivals(LocalDate.parse("2026-10-29"))).html).toContain(
+      "Новые поступления",
+    );
+    expect(await source.fetchActRubrics("H10200090")).toBeNull();
   });
 });

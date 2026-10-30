@@ -8,6 +8,15 @@ const fixture = (name: string): string =>
   readFileSync(new URL(`../../__fixtures__/pravo-by/${name}`, import.meta.url), "utf8");
 
 describe("карточка акта pravo.by", () => {
+  it("LAW-13: строка «вид акта, орган, дата и номер» читается как есть — по ней узнают орган", () => {
+    expect(parseCard(fixture("card-H10800369.html")).kindLine).toBe(
+      "Закон Республики Беларусь от 8 июля 2008 г. № 369-З",
+    );
+    expect(parseCard(fixture("card-C20200778.html")).kindLine).toContain(
+      "Постановление Совета Министров",
+    );
+  });
+
   it("ПСМ № 778: название, дата вступления в силу, 7 изменяющих актов с ключами «номер|дата»", () => {
     const card = parseCard(fixture("card-C20200778.html"));
     expect(card.title).toContain("О мерах по реализации Закона");

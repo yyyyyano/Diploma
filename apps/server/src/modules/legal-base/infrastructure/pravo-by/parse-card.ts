@@ -14,6 +14,8 @@ export interface CardChange {
 
 export interface ParsedCard {
   readonly title: string;
+  /** «Закон Республики Беларусь от 8 июля 2008 г. № 369-З» — вид, орган принятия, дата и номер (LAW-13: орган, вид акта). */
+  readonly kindLine: string;
   readonly inForceOn: string | null;
   /** День утраты силы («Дата ограничения действия»); null — акт действует. */
   readonly repealedOn: string | null;
@@ -80,6 +82,7 @@ export function parseCard(html: string): ParsedCard {
   const tail = marker < 0 ? "" : full.slice(marker);
   return {
     title: fields.get("Название акта") ?? "",
+    kindLine: fields.get("Вид акта, орган принятия, дата и номер принятия (издания)") ?? "",
     inForceOn: isoOfDotted(fields.get("Дата вступления в силу") ?? ""),
     repealedOn: isoOfDotted(fields.get("Дата ограничения действия") ?? ""),
     changes: changesIn(tail),

@@ -22,6 +22,19 @@ export interface RegistrySource {
   headActText(pravoId: string): Promise<{ readonly contentLength: number | null }>;
 }
 
+/** Новые поступления и рубрики Национального реестра (LAW-12, LAW-14). */
+export interface DiscoverySource {
+  /** Страница «Новые поступления» за один день (`p0=p1=ДД.ММ.ГГГГ`). */
+  fetchArrivals(day: LocalDate): Promise<SourcePage>;
+  /** Страница рубрик ЕПК акта (`guid=11031`); нет страницы (акт не из тематических банков) — null. */
+  fetchActRubrics(pravoId: string): Promise<SourcePage | null>;
+}
+
+/** Страницы ведомственных сайтов (LAW-15): та же вежливость, пауза и robots — отдельно на каждый хост. */
+export interface AgencySource {
+  fetchAgencyPage(url: string): Promise<SourcePage>;
+}
+
 /** Код остановки загрузчика: показывается администратору текстом из словаря i18n. */
 export type LoaderStopReason = "LOADER_CONTACT_EMPTY" | "LOADER_BLOCKED" | "LOADER_TOO_MANY_ERRORS";
 

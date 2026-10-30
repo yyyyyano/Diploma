@@ -5,6 +5,7 @@ import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import {
   ActTextNotFound,
+  type DiscoverySource,
   type LegalSource,
   type RegistrySource,
   type SourcePage,
@@ -14,7 +15,7 @@ import { PRAVO_ID } from "./pravo-source.ts";
 export function createFixturesSource(deps: {
   readonly dir: () => Promise<string>;
   readonly now: () => Date;
-}): LegalSource & RegistrySource {
+}): LegalSource & RegistrySource & DiscoverySource {
   async function read(name: string): Promise<string> {
     try {
       return await readFile(join(await deps.dir(), name), "utf8");
@@ -36,6 +37,20 @@ export function createFixturesSource(deps: {
     async fetchActCard(pravoId): Promise<SourcePage> {
       check(pravoId);
       return { html: await read(`card-${pravoId}.html`), fetchedAt: deps.now() };
+    },
+    // Единственная сохранённая страница «Новых поступлений» (29.10.2026) отдаётся за любой день: тестам нужна вёрстка, не дата.
+    async fetchArrivals(): Promise<SourcePage> {
+      return { html: await read("novye-postupleniya.html"), fetchedAt: deps.now() };
+    },
+    // Рубрики ЕПК с живого pravo.by не сохранены (фикстуры — решение пользователя): файл `rubrics-<ID>.html`, нет файла — рубрик нет.
+    async fetchActRubrics(pravoId): Promise<SourcePage | null> {
+      check(pravoId);
+      try {
+        return { html: await read(`rubrics-${pravoId}.html`), fetchedAt: deps.now() };
+      } catch (error) {
+        if (error instanceof ActTextNotFound) return null;
+        throw error;
+      }
     },
     async headActText(pravoId) {
       check(pravoId);

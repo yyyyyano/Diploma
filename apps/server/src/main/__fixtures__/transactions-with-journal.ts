@@ -36,6 +36,7 @@ import {
 } from "../../modules/transactions/application/handlers.ts";
 import { makeImportBatch } from "../../modules/transactions/application/import-batch.ts";
 import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
+import { countEditedInImport } from "../../modules/transactions/infrastructure/db/transactions.repo.ts";
 import { fillRatesJob } from "../../modules/transactions/jobs/fill-rates.job.ts";
 import { categorizeJob } from "../../modules/transactions/jobs/categorize.job.ts";
 
@@ -90,6 +91,8 @@ export function transactionsWithJournal(
     },
   };
 
+  /** Обработчики «Отменить» других модулей (statements.rollback): регистрируются тестом после сборки. */
+  const extraUndo = new Map<string, (s: ScopedDb, p: unknown) => Promise<void>>();
   let ops: ReturnType<typeof makeOperations> | undefined;
   let accounts: ReturnType<typeof makeAccounts> | undefined;
   const ready = () => {
@@ -103,6 +106,7 @@ export function transactionsWithJournal(
       undo: new Map([
         [RESTORE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.restore(s, p)],
         [ACCOUNT_RESTORE, (s: ScopedDb, p: unknown) => ready().accounts.restore(s, p)],
+        ...extraUndo,
       ]),
       confirm: new Map<string, (s: ScopedDb, p: unknown) => Promise<string | undefined | void>>([
         [DELETE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmDelete(s, p)],
@@ -195,9 +199,27 @@ export function transactionsWithJournal(
     jobs: jobRefs,
   });
 
+  // Фасад transactions для statements — тем же составом, что отдаёт module.ts.
+  const transactionsFacade = {
+    importBatch: imports.importBatch,
+    deleteImport: imports.deleteImport,
+    knownKeys: imports.knownKeys,
+    transferCandidates: imports.transferCandidates,
+    purchaseCandidates: imports.purchaseCandidates,
+    countEditedInImport,
+    requestMarkTransfer: ops.requestMarkTransfer,
+  };
+
   return {
     ops,
     imports,
+    transactionsFacade,
+    merchants,
+    fxRates,
+    platform: { clock, log, jobs, events, realtime },
+    registerUndo: (name: string, handler: (s: ScopedDb, p: unknown) => Promise<void>) => {
+      extraUndo.set(name, handler);
+    },
     accounts,
     actions,
     explain,

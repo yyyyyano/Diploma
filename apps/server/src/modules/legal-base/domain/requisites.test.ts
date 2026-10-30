@@ -1,7 +1,6 @@
-// LAW-11: ссылки в тексте актов переводятся в ID pravo.by по правилу реквизитов (проверено на ID стартового каталога).
-import { readFileSync } from "node:fs";
+// LAW-11: ссылки в тексте актов переводятся в ID pravo.by по правилу реквизитов (проверено на ID стартового каталога);
+// на настоящем тексте ПСМ № 569 — `application/catalog-growth.int.test.ts`.
 import { describe, expect, it } from "vitest";
-import { readActPage } from "../infrastructure/pravo-by/read-page.ts";
 import { requisitesIn } from "./requisites.ts";
 
 describe("LAW-11: реквизиты → ID pravo.by", () => {
@@ -47,20 +46,5 @@ describe("LAW-11: реквизиты → ID pravo.by", () => {
   it("повторная ссылка на тот же акт не дублируется", () => {
     const text = "Законом от 8 июля 2008 г. № 369-З и снова Законом от 8 июля 2008 г. № 369-З";
     expect(requisitesIn(text)).toHaveLength(1);
-  });
-
-  it("настоящий текст ПСМ № 569: находит Закон о государственных пособиях из стартового каталога, без повторов", () => {
-    const html = readFileSync(
-      new URL("../__fixtures__/pravo-by/C21300569.html", import.meta.url),
-      "utf8",
-    );
-    const text = readActPage(html)
-      .paragraphs.filter((p) => p.cls !== "changeadd")
-      .map((p) => p.text)
-      .join("\n");
-    const ids = requisitesIn(text).map((r) => r.pravoIds[0]);
-    expect(ids).toContain("H11200007");
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(id).toMatch(/^(H1|V1|P3|C2|HK)\d{7}$/u);
   });
 });

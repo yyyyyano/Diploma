@@ -281,6 +281,44 @@ describe("фасад для transactions и statements", () => {
     ]);
   });
 
+  it("STMT-02: остаток из выписки — абсолютный, с датой; старая выписка его не перебивает; откат возвращает прежний", async () => {
+    const s = scoped();
+    const { accounts } = accountsWithJournal();
+    const key = { bank: "Лесбанк", mask: "4821", currency: "BYN" };
+    expect(await accounts.findCard(s, key)).toBeUndefined();
+    const id = await s.transaction((tx) => accounts.findOrCreate(tx, key));
+    expect(await accounts.findCard(s, { ...key, bank: "ЛЕСБАНК" })).toBe(id);
+    const set = (minor: number, on: string, force = false) =>
+      s.transaction((tx) =>
+        accounts.setStatementBalance(tx, {
+          accountId: id,
+          balance: Money.of(minor, "BYN"),
+          on: LocalDate.parse(on),
+          force,
+        }),
+      );
+    // Новая карта создана «сегодня»: выписка за прошлый месяц без force остаток не ставит.
+    expect(await set(150_000, "2026-09-30")).toBeUndefined();
+    const before = await set(150_000, "2026-09-30", true);
+    expect(before).toMatchObject({ balanceMinor: 0, balanceSource: "operations" });
+    expect((await accounts.list(s)).items[0]).toMatchObject({
+      balance: { minor: 150_000 },
+      balanceOn: "2026-09-30",
+      balanceSource: "statement",
+    });
+    // Выписка за более ранний период остаток не перебивает; за более поздний — ставит.
+    expect(await set(90_000, "2026-08-31")).toBeUndefined();
+    expect(await set(150_000, "2026-10-31")).toBeDefined();
+    await set(150_000, "2026-09-30", true);
+    expect((await accounts.list(s)).items[0]).toMatchObject({ balance: { minor: 150_000 } });
+    if (before === undefined) throw new Error("нет снимка до");
+    await s.transaction((tx) => accounts.restoreBalance(tx, id, before));
+    expect((await accounts.list(s)).items[0]).toMatchObject({
+      balance: { minor: 0 },
+      balanceSource: "operations",
+    });
+  });
+
   it("STMT-02: изменение остатка — по операциям, дата остатка не уходит назад; чужая валюта — ошибка программы", async () => {
     const s = scoped();
     const { accounts, published } = accountsWithJournal();

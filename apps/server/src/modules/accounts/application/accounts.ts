@@ -48,6 +48,21 @@ export const DELETE_HANDLER = "accounts.delete";
 
 export type Channel = "web" | "telegram";
 
+/** Остаток счёта «до» импорта выписки: по нему откат возвращает остаток, день и источник (STMT-11). */
+export interface BalanceSnapshot {
+  readonly balanceMinor: number;
+  readonly balanceOn: string;
+  readonly balanceSource: string;
+}
+
+function snapshotOf(row: AccountRow): BalanceSnapshot {
+  return {
+    balanceMinor: row.balanceMinor,
+    balanceOn: row.balanceOn,
+    balanceSource: row.balanceSource,
+  };
+}
+
 export interface AccountsDeps {
   readonly platform: Pick<Platform, "clock" | "events" | "realtime" | "log">;
   readonly actions: Pick<ActionsFacade, "record" | "propose">;
@@ -385,6 +400,59 @@ export function makeAccounts(d: AccountsDeps) {
     await changed(tx, [row.id], true);
   }
 
+  /** Фасад (statements, STMT-01): карта банка без создания — для предпросмотра, где счёта может ещё не быть. */
+  async function findCard(
+    s: ScopedDb,
+    key: { bank: string; mask: string; currency: string },
+  ): Promise<AccountId | undefined> {
+    const id = await findByBankMask(s, key);
+    return id === undefined ? undefined : AccountId.parse(id);
+  }
+
+  /**
+   * Фасад (statements, STMT-02): остаток из выписки на день `on` — абсолютный, а не сдвиг. Выписка старше уже известного
+   * остатка его не перебивает (`undefined`). Возвращает остаток «до» — по нему откат импорта возвращает состояние.
+   */
+  async function setStatementBalance(
+    tx: ScopedDb,
+    change: { accountId: string; balance: Money; on: LocalDate; force?: boolean },
+  ): Promise<BalanceSnapshot | undefined> {
+    const row = await lockOwn(tx, change.accountId);
+    if (row.currency !== change.balance.currency) {
+      throw new RangeError("Остаток выписки — в валюте счёта.");
+    }
+    if (change.force !== true && change.on < row.balanceOn) return undefined;
+    const before = snapshotOf(row);
+    await updateAccount(
+      tx,
+      row.id,
+      { balanceMinor: change.balance.minor, balanceOn: change.on, balanceSource: "statement" },
+      clock.now(),
+    );
+    await changed(tx, [row.id], true);
+    return before;
+  }
+
+  /** Фасад (statements, STMT-11): вернуть остаток, день и источник, какими они были до импорта. */
+  async function restoreBalance(
+    tx: ScopedDb,
+    accountId: string,
+    snapshot: BalanceSnapshot,
+  ): Promise<void> {
+    const row = await lockOwn(tx, accountId);
+    await updateAccount(
+      tx,
+      row.id,
+      {
+        balanceMinor: snapshot.balanceMinor,
+        balanceOn: snapshot.balanceOn,
+        balanceSource: snapshot.balanceSource,
+      },
+      clock.now(),
+    );
+    await changed(tx, [row.id], true);
+  }
+
   /** Фасад (transactions): валюта своего счёта — операция пишется в валюте счёта; чужой или нет — NOT_FOUND. */
   async function currencyOf(s: ScopedDb, id: string): Promise<string> {
     return (await itemRow(s, id)).currency;
@@ -419,6 +487,9 @@ export function makeAccounts(d: AccountsDeps) {
     confirmDelete,
     restore,
     findOrCreate,
+    findCard,
+    setStatementBalance,
+    restoreBalance,
     applyBalanceChange,
     currencyOf,
     cash,

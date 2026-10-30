@@ -2,6 +2,7 @@
 // стартовый каталог (T-034). Поиск — T-035, ежедневное обновление — T-036, пополнение каталога — T-037. Источник текстов
 // — порт LegalSource: pravo.by (PoliteFetcher) или сохранённые страницы (тесты и стенд e2e, настройка `legal-base.source`).
 import { setTimeout as sleep } from "node:timers/promises";
+import { z } from "zod";
 import {
   defineModule,
   type ModuleDeps,
@@ -24,15 +25,21 @@ import { ChangeProposal } from "./domain/change-proposal.ts";
 import { actRepealed, actUpdated } from "./events.ts";
 import { pendingChangesOf } from "./infrastructure/db/changes.repo.ts";
 import { findAct } from "./infrastructure/db/catalog.repo.ts";
+import { makeCatalogGrowth } from "./application/catalog-growth.ts";
+import { TOPICS, type Topic } from "./domain/topics.ts";
+import { catalogGrowthSchedule } from "./jobs/catalog-growth.schedule.ts";
 import { dailyCheckSchedule } from "./jobs/daily-check.schedule.ts";
 import { embedJob } from "./jobs/embed.job.ts";
 import { makeLoadAct } from "./application/load-act.ts";
-import type { LegalSource, RegistrySource } from "./application/ports.ts";
+import type { DiscoverySource, LegalSource, RegistrySource } from "./application/ports.ts";
 import { makeStartCatalog } from "./application/start-catalog.ts";
 import { makeLoaderStore } from "./infrastructure/db/loader.repo.ts";
 import { createFixturesSource } from "./infrastructure/pravo-by/fixtures-source.ts";
-import { createPoliteFetcher } from "./infrastructure/pravo-by/polite-fetcher.ts";
-import { createPravoSource } from "./infrastructure/pravo-by/pravo-source.ts";
+import {
+  createPoliteFetcher,
+  type PoliteFetcher,
+} from "./infrastructure/pravo-by/polite-fetcher.ts";
+import { createAgencySource, createPravoSource } from "./infrastructure/pravo-by/pravo-source.ts";
 import { loadStartCatalogJob } from "./jobs/load-start-catalog.job.ts";
 import {
   DEMAND_LIMIT_PER_DAY,
@@ -49,6 +56,10 @@ import {
 } from "./settings.ts";
 import { onSystemInitialized } from "./subscriptions/on-system-initialized.ts";
 
+const TopicAnswer = z.object({ topic: z.enum([...TOPICS, "none"]) });
+const TOPIC_INSTRUCTIONS =
+  "Classify a Belarusian legal act by its title only. Answer with exactly one topic id: taxes; consumer (purchases and consumer rights); housing; banking (banks, loans, deposits, cards); work (employment, salary); benefits (state benefits, pensions, privileges, family capital); contracts (contracts, insurance, transport); education-health (paid education and medicine); family (alimony, inheritance); fines (administrative fines). Answer none if the act is not about money or property rights of citizens. Use only the title.";
+
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface LegalBaseFacades {
   readonly llm: LlmFacade;
@@ -61,23 +72,32 @@ export function createLegalBaseModule({
   facades,
 }: ModuleDeps<LegalBaseFacades, SystemPlatform>) {
   const store = makeLoaderStore(platform.system);
-  const fetcher = createPoliteFetcher({
-    fetch: (input, init) => fetch(input, init),
-    clock: platform.clock,
-    sleep: (ms, signal) => sleep(ms, undefined, signal === undefined ? {} : { signal }),
-    random: () => Math.random(),
-    contact: () => platform.settings.get(LOADER_CONTACT),
-    settings: async () => ({
-      pauseMinMs: await platform.settings.get(LOADER_PAUSE_MIN_MS),
-      pauseMaxMs: await platform.settings.get(LOADER_PAUSE_MAX_MS),
-      timeoutMs: await platform.settings.get(LOADER_TIMEOUT_MS),
-      maxPageBytes: await platform.settings.get(LOADER_MAX_PAGE_BYTES),
-    }),
-    store,
-    log: platform.log,
-  });
+  // Вежливый загрузчик на каждый сайт: у pravo.by и у каждого ведомственного хоста (LAW-15) своя пауза, robots и остановка цикла.
+  const fetchers = new Map<string, PoliteFetcher>();
+  const fetcherFor = (host: string): PoliteFetcher => {
+    const known = fetchers.get(host);
+    if (known !== undefined) return known;
+    const made = createPoliteFetcher({
+      fetch: (input, init) => fetch(input, init),
+      clock: platform.clock,
+      sleep: (ms, signal) => sleep(ms, undefined, signal === undefined ? {} : { signal }),
+      random: () => Math.random(),
+      contact: () => platform.settings.get(LOADER_CONTACT),
+      settings: async () => ({
+        pauseMinMs: await platform.settings.get(LOADER_PAUSE_MIN_MS),
+        pauseMaxMs: await platform.settings.get(LOADER_PAUSE_MAX_MS),
+        timeoutMs: await platform.settings.get(LOADER_TIMEOUT_MS),
+        maxPageBytes: await platform.settings.get(LOADER_MAX_PAGE_BYTES),
+      }),
+      store: host === "pravo.by" ? store : makeLoaderStore(platform.system, host),
+      log: platform.log,
+    });
+    fetchers.set(host, made);
+    return made;
+  };
+  const fetcher = fetcherFor("pravo.by");
   // NFR-11: тесты и стенд e2e берут сохранённые страницы, а не сеть; боевой источник — pravo.by через вежливый загрузчик.
-  const source = async (): Promise<LegalSource & RegistrySource> =>
+  const source = async (): Promise<LegalSource & RegistrySource & DiscoverySource> =>
     (await platform.settings.get(LEGAL_SOURCE)) === "fixtures"
       ? createFixturesSource({
           dir: () => platform.settings.get(LEGAL_FIXTURES_DIR),
@@ -160,6 +180,29 @@ export function createLegalBaseModule({
     log: platform.log,
     notifications: facades.notifications,
   });
+  // LAW-14, LAW-17: модель определяет тему только спорных актов, по одному заголовку (данных пользователя нет, PRIV-09).
+  const growth = makeCatalogGrowth({
+    system: platform.system,
+    source,
+    agencies: createAgencySource({ fetcherFor }),
+    loadAct,
+    actCheck,
+    classify: async (title): Promise<Topic | null> => {
+      const answer = await facades.llm.extract(caller, {
+        task: "law.topic",
+        schema: TopicAnswer,
+        instructions: TOPIC_INSTRUCTIONS,
+        document: title,
+        promptVersion: "law-topic-v1",
+      });
+      return answer.topic === "none" ? null : answer.topic;
+    },
+    embedder,
+    settings: platform.settings,
+    clock: platform.clock,
+    log: platform.log,
+    notifications: facades.notifications,
+  });
   const job = loadStartCatalogJob(catalog, (s) =>
     s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
   );
@@ -177,6 +220,8 @@ export function createLegalBaseModule({
       /** Прогресс векторного индекса для админки (T-039): `modelReady` — ответил ли самотест модели. */
       vectorProgress: embedder.progress,
       /** Принятые, но не вступившие изменения акта (LAW-32): статьи — проверенные дословно, пусто — предупреждение на уровне акта. */
+      /** Журнал спроса (LAW-15): тема вопроса, на который база ответила «в моей базе нет», и ID подходящих актов; текста вопроса нет. */
+      recordDemand: growth.recordDemand,
       pendingChanges: async (pravoId: string) => {
         const act = await findAct(platform.system, pravoId);
         return act === undefined ? [] : pendingChangesOf(platform.system, act.id);
@@ -186,7 +231,7 @@ export function createLegalBaseModule({
     tools: Object.values(tools),
     events: [actUpdated, actRepealed],
     jobs: [job, embed, loadOne],
-    schedules: [dailyCheckSchedule(dailyCheck)],
+    schedules: [dailyCheckSchedule(dailyCheck), catalogGrowthSchedule(growth)],
     subscriptions: [onSystemInitialized(platform, { identity: facades.identity, catalog, job })],
     settings: LEGAL_BASE_SETTINGS,
   });

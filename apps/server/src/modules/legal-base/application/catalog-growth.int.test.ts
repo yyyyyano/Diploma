@@ -401,6 +401,28 @@ describe("LAW-11, LAW-13, LAW-14, LAW-17: граф ссылок", () => {
     expect(t.calls.classified).toEqual([]);
   });
 
+  it("настоящая страница рубрик (90-З, рубрика в комментарии) определяет тему: 04.01.14 → потребители", async () => {
+    const t = setup({
+      cards: {
+        P30600075: card(
+          "О защите прав",
+          "Указ Президента Республики Беларусь от 1 февраля 2006 г. № 75",
+        ),
+      },
+      withText: ["P30600075"],
+      rubricPages: { P30600075: fixture("rubrics-H10200090.html") },
+    });
+    await db.owner.query(
+      "insert into legal_candidates (pravo_id, source) values ('P30600075', 'link-graph')",
+    );
+    await t.growth.evaluate();
+    expect(await candidate("P30600075")).toMatchObject({
+      status: "added",
+      reason: "index",
+      topic: "consumer",
+    });
+  });
+
   it("с текстом, но рубрики нет — очередь «предложенные», а не индекс; подсказка темы — по заголовку", async () => {
     const t = setup({
       cards: {

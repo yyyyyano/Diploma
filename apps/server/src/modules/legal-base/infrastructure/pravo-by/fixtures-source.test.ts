@@ -12,7 +12,7 @@ const NOW = new Date("2026-10-30T09:00:00Z");
 const source = createFixturesSource({ dir: async () => DIR, now: () => NOW });
 
 describe("фикстуры pravo.by", () => {
-  it("в первой строке каждой — адрес источника на pravo.by и дата сохранения 2026-10-30", () => {
+  it("в первой строке каждой — адрес источника на pravo.by и дата сохранения 2026-10-30 или 2026-10-31", () => {
     const files = readdirSync(DIR).filter((name) => !name.endsWith(".ts"));
     expect(files.toSorted()).toEqual([
       "C21300569.html",
@@ -22,12 +22,13 @@ describe("фикстуры pravo.by", () => {
       "card-H10800369.html",
       "novye-postupleniya.html",
       "robots.txt",
+      "rubrics-H10200090.html",
     ]);
     for (const name of files) {
       const first = readFileSync(`${DIR}/${name}`, "utf8").split("\n", 1)[0] ?? "";
       expect([
         name,
-        /Источник: https:\/\/pravo\.by\/\S+ · сохранено 2026-10-30/u.test(first),
+        /Источник: https:\/\/pravo\.by\/\S+ · сохранено 2026-10-3[01]/u.test(first),
       ]).toEqual([name, true]);
     }
   });
@@ -52,10 +53,11 @@ describe("LegalSource из сохранённых страниц", () => {
     await expect(source.fetchActText("../etc/passwd")).rejects.toBeInstanceOf(RangeError);
   });
 
-  it("LAW-12: «Новые поступления» — сохранённая страница; LAW-14: рубрик нет, пока нет файла", async () => {
+  it("LAW-12: «Новые поступления» — сохранённая страница; LAW-14: рубрики — сохранённая страница 90-З, у остальных актов их нет", async () => {
     expect((await source.fetchArrivals(LocalDate.parse("2026-10-29"))).html).toContain(
       "Новые поступления",
     );
-    expect(await source.fetchActRubrics("H10200090")).toBeNull();
+    expect(await source.fetchActRubrics("H10200090")).not.toBeNull();
+    expect(await source.fetchActRubrics("H11200007")).toBeNull();
   });
 });

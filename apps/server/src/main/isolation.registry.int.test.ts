@@ -57,6 +57,8 @@ interface Household {
   readonly importId: string;
   /** Чек B (с позицией). */
   readonly receiptId: string;
+  /** Регулярный платёж B. */
+  readonly recurringId: string;
 }
 
 /**
@@ -175,6 +177,27 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   },
   "llm.models": { input: () => undefined },
   "llm.setPreferredModel": { input: () => ({ modelId: null }) },
+  "recurring.list": { input: () => ({}) },
+  "recurring.confirm": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.exclude": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.end": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.resume": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.stillComing": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.edit": {
+    input: (b) => ({ id: b.recurringId, amount: { minor: 100, currency: "BYN" } }),
+  },
+  "recurring.create": {
+    input: () => ({
+      name: "чужой",
+      section: "other",
+      amount: { minor: 100, currency: "BYN" },
+      period: "month",
+    }),
+  },
+  "recurring.explain": { input: (b) => ({ id: b.recurringId }) },
+  "recurring.markers": { input: (b) => ({ ids: [b.transactionId] }) },
+  "tool:list_recurring": { input: () => ({}) },
+  "tool:upcoming_payments": { input: () => ({ days: 30 }) },
   "accounts.list": { input: () => undefined },
   "accounts.create": { input: () => ({ kind: "deposit", currency: "BYN" }) },
   "accounts.rename": { input: (b) => ({ id: b.accountId, name: "чужой" }) },
@@ -405,6 +428,12 @@ async function seedHousehold(email: string): Promise<Household> {
      returning id`,
     [ids.household_id, ids.user_id, account.rows[0]?.id, `покупка ${email}`],
   );
+  const recurring = await db.owner.query<{ id: string }>(
+    `insert into recurring_items (household_id, user_id, series_key, merchant_key, name, flow, section, period, state,
+       anchor_day, next_expected_on)
+     values ($1, $2, 'expense|b|9', 'b', $3, 'expense', 'mandatory', 'month', 'active', 9, '2026-11-09') returning id`,
+    [ids.household_id, ids.user_id, `платёж ${email}`],
+  );
   const statementImport = await db.owner.query<{ id: string }>(
     `insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready') returning id`,
     [ids.household_id, ids.user_id, file.rows[0]?.id],
@@ -429,6 +458,7 @@ async function seedHousehold(email: string): Promise<Household> {
     transactionId: operation.rows[0]?.id ?? "",
     importId: statementImport.rows[0]?.id ?? "",
     receiptId: receipt.rows[0]?.id ?? "",
+    recurringId: recurring.rows[0]?.id ?? "",
   };
 }
 
@@ -583,6 +613,16 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "receipts.list",
       "receipts.start",
       "receipts.updateItems",
+      "recurring.confirm",
+      "recurring.create",
+      "recurring.edit",
+      "recurring.end",
+      "recurring.exclude",
+      "recurring.explain",
+      "recurring.list",
+      "recurring.markers",
+      "recurring.resume",
+      "recurring.stillComing",
       "statements.cancel",
       "statements.confirm",
       "statements.fixColumns",
@@ -609,11 +649,13 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "explain_number",
       "get_receipt",
       "list_accounts",
+      "list_recurring",
       "read_profile_facts",
       "receipt_status",
       "rename_account",
       "search_transactions",
       "statement_import_status",
+      "upcoming_payments",
       "update_transaction",
       "upsert_profile_fact",
     ]);
@@ -633,6 +675,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.transactionId,
       b.importId,
       b.receiptId,
+      b.recurringId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

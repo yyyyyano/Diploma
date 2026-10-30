@@ -162,6 +162,8 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       categories: categoriesModule.facade,
       profile: profileModule.facade,
       notifications: notificationsModule.facade,
+      actions: actionsModule.facade,
+      explain: explainModule.facade,
     },
   });
   const legalBaseModule = createLegalBaseModule({

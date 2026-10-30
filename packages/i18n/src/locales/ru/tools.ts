@@ -14,5 +14,7 @@ export const tools = {
   update_transaction: "Меняю операцию…",
   delete_transaction: "Готовлю удаление операций…",
   bulk_change_category: "Готовлю смену категории…",
+  list_recurring: "Смотрю регулярные платежи…",
+  upcoming_payments: "Смотрю ближайшие платежи…",
   statement_import_status: "Проверяю, как идёт разбор выписки…",
 } as const;

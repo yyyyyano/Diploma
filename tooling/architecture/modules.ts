@@ -234,7 +234,7 @@ export const MODULES: readonly ModuleDef[] = [
     tier: 2,
     spec: "REC-01…05",
     responsibility: "поиск регулярных, ожидаемые даты, «возможно прекращён», подписки",
-    dependsOn: ["transactions", "categories", "profile", "notifications"],
+    dependsOn: ["transactions", "categories", "profile", "notifications", "actions", "explain"],
     tables: ["user"],
     publishes: ["recurring.changed"],
   },

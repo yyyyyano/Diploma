@@ -26,7 +26,7 @@ PROF-01…06, AGT-03 («профиль»), AGT-06 (ответ — факт), AUT
 - Инструменты агента (`agent/tools.ts`, набор `core`): `read_profile_facts` (`read`, `keys?`), `upsert_profile_fact`
   (`write`, источник «чат», `undoToken`).
 - Отмена: обработчик `profile.restore { revisionId }` — факт снова такой, каким был до действия (не было — снова нет).
-- Значения фактов — `FactValue` контракта (по ключу); тема — по ключу (`domain/facts.ts`), у заметки — своя.
+- Значения фактов — `FactValue` контракта (по ключу; `income.regular` и `obligations.regular` — «предположения» от `recurring`, T-030, сумма в месяц); тема — по ключу (`domain/facts.ts`), у заметки — своя.
 - Таблицы (`userOwnedTable`): `profile_facts` (ключ, тема, значение jsonb, источник, ссылка, статус, день записи,
   `deleted_at` — удалённый факт помечается, чтобы «Отменить» его вернул); `profile_fact_revisions` (состояние «до
   действия», `ownedFk` на факт); `profiles` (признак «анкета пройдена или пропущена» — не `localStorage`).

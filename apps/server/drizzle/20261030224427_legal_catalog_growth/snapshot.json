@@ -1,0 +1,795 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "52ab0eea-6af2-41de-9145-51d519d8a2bc",
+  "prevIds": ["8814595c-077d-407e-a358-c000dccf16a6"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "legal_candidates"],
+      "writes": [
+        "s|tbl|public.legal_candidates",
+        "n|tbl|public.legal_candidates",
+        "e|tbl|public.legal_candidates",
+        "n|rel|public.legal_candidates",
+        "n|type|public.legal_candidates",
+        "n|rel|public.legal_candidates_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "legal_demand_log"],
+      "writes": [
+        "s|tbl|public.legal_demand_log",
+        "n|tbl|public.legal_demand_log",
+        "e|tbl|public.legal_demand_log",
+        "n|rel|public.legal_demand_log",
+        "n|type|public.legal_demand_log",
+        "n|rel|public.legal_demand_log_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "legal_growth_marks"],
+      "writes": [
+        "s|tbl|public.legal_growth_marks",
+        "n|tbl|public.legal_growth_marks",
+        "e|tbl|public.legal_growth_marks",
+        "n|rel|public.legal_growth_marks",
+        "n|type|public.legal_growth_marks",
+        "n|rel|public.legal_growth_marks_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "drop_check",
+      "statementTarget": ["table", "public", "legal_loader_state"],
+      "writes": [
+        "s|ck|public.legal_loader_state.legal_loader_state_singleton_check",
+        "n|ck|public.legal_loader_state.legal_loader_state_singleton_check",
+        "e|ck|public.legal_loader_state.legal_loader_state_singleton_check",
+        "n|con|public.legal_loader_state.legal_loader_state_singleton_check"
+      ],
+      "reads": [
+        "n|tbl|public.legal_loader_state",
+        "n|sch|public",
+        "e|col|public.legal_loader_state.id"
+      ]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "topic"],
+      "writes": [
+        "s|col|public.legal_acts.topic",
+        "n|col|public.legal_acts.topic",
+        "e|col|public.legal_acts.topic"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "topic_source"],
+      "writes": [
+        "s|col|public.legal_acts.topic_source",
+        "n|col|public.legal_acts.topic_source",
+        "e|col|public.legal_acts.topic_source"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "links_scanned_snapshot_id"],
+      "writes": [
+        "s|col|public.legal_acts.links_scanned_snapshot_id",
+        "n|col|public.legal_acts.links_scanned_snapshot_id",
+        "e|col|public.legal_acts.links_scanned_snapshot_id"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "text_checked_at"],
+      "writes": [
+        "s|col|public.legal_acts.text_checked_at",
+        "n|col|public.legal_acts.text_checked_at",
+        "e|col|public.legal_acts.text_checked_at"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "host"],
+      "writes": [
+        "s|col|public.legal_loader_state.host",
+        "n|col|public.legal_loader_state.host",
+        "e|col|public.legal_loader_state.host"
+      ],
+      "reads": ["n|tbl|public.legal_loader_state", "n|sch|public"]
+    },
+    {
+      "statementType": "alter_column",
+      "statementTarget": ["column", "public", "legal_loader_state", "id"],
+      "writes": [
+        "s|colprop|public.legal_loader_state.id.identity",
+        "s|colprop|public.legal_loader_state.id.default",
+        "s|colprop|public.legal_loader_state.id.notNull"
+      ],
+      "reads": [
+        "n|tbl|public.legal_loader_state",
+        "n|sch|public",
+        "n|col|public.legal_loader_state.id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "legal_candidates", "legal_candidates_pravo_id_idx"],
+      "writes": [
+        "s|idx|public.legal_candidates_pravo_id_idx",
+        "n|idx|public.legal_candidates_pravo_id_idx",
+        "e|idx|public.legal_candidates_pravo_id_idx",
+        "n|rel|public.legal_candidates_pravo_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.legal_candidates",
+        "n|sch|public",
+        "n|col|public.legal_candidates.pravo_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "legal_candidates", "legal_candidates_status_idx"],
+      "writes": [
+        "s|idx|public.legal_candidates_status_idx",
+        "n|idx|public.legal_candidates_status_idx",
+        "e|idx|public.legal_candidates_status_idx",
+        "n|rel|public.legal_candidates_status_idx"
+      ],
+      "reads": [
+        "n|tbl|public.legal_candidates",
+        "n|sch|public",
+        "n|col|public.legal_candidates.status",
+        "n|col|public.legal_candidates.created_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "legal_demand_log", "legal_demand_log_at_idx"],
+      "writes": [
+        "s|idx|public.legal_demand_log_at_idx",
+        "n|idx|public.legal_demand_log_at_idx",
+        "e|idx|public.legal_demand_log_at_idx",
+        "n|rel|public.legal_demand_log_at_idx"
+      ],
+      "reads": ["n|tbl|public.legal_demand_log", "n|sch|public", "n|col|public.legal_demand_log.at"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "legal_loader_state", "legal_loader_state_host_idx"],
+      "writes": [
+        "s|idx|public.legal_loader_state_host_idx",
+        "n|idx|public.legal_loader_state_host_idx",
+        "e|idx|public.legal_loader_state_host_idx",
+        "n|rel|public.legal_loader_state_host_idx"
+      ],
+      "reads": [
+        "n|tbl|public.legal_loader_state",
+        "n|sch|public",
+        "n|col|public.legal_loader_state.host"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "legal_candidates",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "legal_demand_log",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "legal_growth_marks",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "topic",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "topic_source",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "links_scanned_snapshot_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "text_checked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "pravo_id",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "title",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "kind_line",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "registry_no",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "source",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'found'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "reason",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "has_text",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "topic",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "topic_source",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "found_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "decided_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "topic",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "pravo_ids",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_growth_marks",
+        "name": "key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_growth_marks",
+        "name": "day",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_growth_marks",
+        "name": "at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_loader_state",
+        "name": "host",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'pravo.by'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "legal_candidates_pravo_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "pravo_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "legal_candidates_status_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "status",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "created_at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "legal_demand_log_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_loader_state",
+        "name": "legal_loader_state_host_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "host",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "legal_candidates_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_log",
+        "name": "legal_demand_log_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_growth_marks",
+        "name": "legal_growth_marks_pkey",
+        "columns": ["key"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_candidates",
+        "name": "legal_candidates_status_check",
+        "value": "\"status\" in ('found','queued','rejected','dropped','added','event')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "drop",
+      "key": "checks\u0000[\"public\",\"legal_loader_state\",\"legal_loader_state_singleton_check\"]"
+    },
+    {
+      "op": "alter",
+      "key": "columns\u0000[\"public\",\"legal_loader_state\",\"id\"]",
+      "set": {
+        "identity": {
+          "type": "byDefault",
+          "name": "legal_loader_state_id_seq",
+          "increment": "1",
+          "startWith": "2",
+          "minValue": "1",
+          "maxValue": "2147483647",
+          "cache": 1,
+          "cycle": false
+        }
+      }
+    }
+  ]
+}

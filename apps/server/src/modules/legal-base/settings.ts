@@ -3,6 +3,8 @@
 // остальное в админке — T-039.
 import { z } from "zod";
 import { defineSetting } from "../../platform/settings/settings.ts";
+import { DEFAULT_TITLE_PATTERNS } from "./domain/relevance.ts";
+import { DEFAULT_EPK_TOPICS, TOPICS } from "./domain/topics.ts";
 
 /**
  * Загружать ли правовую базу сама: по умолчанию да — после первого запуска (LAW-10). Тесты и стенд e2e выключают
@@ -103,7 +105,58 @@ export const DEMAND_WAIT_MS = defineSetting({
   fromEnv: Number,
 });
 
+/** «Новые акты: добавлять автоматически / только предлагать» (LAW-12, LAW-17): «только предлагать» отправляет в очередь. */
+export const NEW_ACTS_MODE = defineSetting({
+  key: "legal-base.new-acts-mode",
+  schema: z.enum(["auto", "suggest"]),
+  default: "auto" as "auto" | "suggest",
+});
+
+/** Сколько кандидатов за один ночной проход проверяется с запросами к pravo.by (остальные — на следующую ночь, LAW-35). */
+export const GROWTH_BATCH = defineSetting({
+  key: "legal-base.growth-batch",
+  schema: z.int().min(1).max(500),
+  default: 60,
+});
+
+/** Сколько недель повторять проверку «появился ли текст» у новых актов без текста (LAW-13 п. 4, LAW-17). */
+export const TEXT_CHECK_WEEKS = defineSetting({
+  key: "legal-base.text-check-weeks",
+  schema: z.int().min(0).max(52),
+  default: 8,
+});
+
+/** Шаблоны заголовков для отсева кадровых, наградных, разовых и территориальных актов (LAW-13 п. 2; редактор — T-039). */
+export const FILTER_TITLE_PATTERNS = defineSetting({
+  key: "legal-base.filter-title-patterns",
+  schema: z.array(z.string().max(300)).max(200),
+  default: [...DEFAULT_TITLE_PATTERNS],
+});
+
+/** Таблица «рубрика ЕПК (префикс) → тема» (LAW-14; редактор — T-039). */
+export const EPK_TOPICS = defineSetting({
+  key: "legal-base.epk-topics",
+  schema: z.record(z.string().max(20), z.enum(TOPICS)),
+  default: { ...DEFAULT_EPK_TOPICS },
+});
+
+/**
+ * Страницы ведомственных сайтов, с которых раз в месяц собираются ссылки на pravo.by (LAW-15). Адреса задаёт администратор
+ * (T-039): страницы с нужными ссылками на живых сайтах не проверены, поэтому по умолчанию список пуст.
+ */
+export const AGENCY_PAGES = defineSetting({
+  key: "legal-base.agency-pages",
+  schema: z.array(z.url({ protocol: /^https?$/ }).max(300)).max(50),
+  default: [] as string[],
+});
+
 export const LEGAL_BASE_SETTINGS = [
+  NEW_ACTS_MODE,
+  GROWTH_BATCH,
+  TEXT_CHECK_WEEKS,
+  FILTER_TITLE_PATTERNS,
+  EPK_TOPICS,
+  AGENCY_PAGES,
   DEMAND_LIMIT_PER_DAY,
   DEMAND_WAIT_MS,
   LEGAL_AUTOLOAD,

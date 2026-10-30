@@ -75,6 +75,14 @@ export const legalActs = publicTable(
     cardCheckedAt: moment(),
     /** Код причины последней ошибки или карантина (без текста страницы, OBS-04). */
     lastProblem: text(),
+    /** Тема акта (LAW-14): одна из 10 тем «Кошта», пусто — не определена; откуда — `topicSource`. */
+    topic: text(),
+    /** Откуда тема: `epk` (рубрики), `organ`, `title`, `model`, `admin`. */
+    topicSource: text(),
+    /** Снимок, из текста которого уже извлечены ссылки на другие акты (граф ссылок, LAW-11): новая редакция — новый разбор. */
+    linksScannedSnapshotId: uuid(),
+    /** Когда у акта без текста в последний раз проверяли, не появился ли текст (новые поступления: раз в неделю, LAW-17). */
+    textCheckedAt: moment(),
     createdAt: moment().notNull().defaultNow(),
   },
   (t) => [
@@ -175,14 +183,16 @@ export const legalFragmentVersions = publicTable(
 );
 
 /**
- * Состояние загрузчика (LAW-35…38): одна строка id = 1. Время последнего запроса переживает перезапуск (пауза 3–5 с),
+ * Состояние загрузчика (LAW-35…38): одна строка на хост, у pravo.by id = 1. Время последнего запроса переживает перезапуск (пауза 3–5 с),
  * остановка цикла — до `stoppedUntil`, кэш robots.txt — раз в сутки. Контакт оператора (LAW-36) — настройкой
  * `legal-base.loader-contact`, здесь его нет: в логи и журналы он не попадает (OBS-04).
  */
 export const legalLoaderState = systemTable(
   "legal_loader_state",
   {
-    id: integer().primaryKey(),
+    id: integer().primaryKey().generatedByDefaultAsIdentity({ startWith: 2 }),
+    /** Сайт, к которому относится строка: пауза, остановка цикла, robots.txt — отдельно на хост (LAW-15, LAW-35). */
+    host: text().notNull().default("pravo.by"),
     lastRequestAt: moment(),
     /** Следующий запрос — не раньше этого момента: пауза выбирается случайно в 3–5 с при каждом запросе. */
     nextRequestAt: moment(),
@@ -197,7 +207,7 @@ export const legalLoaderState = systemTable(
     cycleRequests: integer().notNull().default(0),
     cycleErrors: integer().notNull().default(0),
   },
-  (t) => [check("legal_loader_state_singleton_check", sql`${t.id} = 1`)],
+  (t) => [uniqueIndex("legal_loader_state_host_idx").on(t.host)],
 );
 
 /** Журнал запросов загрузчика (LAW-40): адрес без параметров поиска, код ответа, размер, время. */
@@ -319,3 +329,75 @@ export const legalDemandLoads = publicTable(
   },
   (t) => [index("legal_demand_loads_at_idx").on(t.at)],
 );
+
+/** Состояния кандидата в каталог (LAW-12, LAW-15, LAW-17). */
+export const CANDIDATE_STATES = [
+  "found",
+  "queued",
+  "rejected",
+  "dropped",
+  "added",
+  "event",
+] as const;
+export type CandidateState = (typeof CANDIDATE_STATES)[number];
+
+/**
+ * Кандидаты в каталог (LAW-11, LAW-12, LAW-15): найдены (`found`, ждут проверки фильтрами), в очереди администратора
+ * (`queued`), отклонены им (`rejected` — повторно не предлагаются), отсеяны фильтрами (`dropped`, причина — код), добавлены
+ * (`added`) или оказались изменяющим актом (`event`: внеплановая проверка изменяемых актов, а не запись каталога).
+ */
+export const legalCandidates = systemTable(
+  "legal_candidates",
+  {
+    id: id(),
+    pravoId: text().notNull(),
+    title: text(),
+    /** «Постановление Министерства … от … № …»: вид акта и орган. */
+    kindLine: text(),
+    /** Номер в Национальном реестре: первое число — раздел (15–18 — местные акты). */
+    registryNo: text(),
+    source: text().notNull(),
+    status: text().notNull().default("found"),
+    /** Код причины: отсева фильтром или «почему в очередь» (`no-topic`, `suggest-only`, `manual-decision`). */
+    reason: text(),
+    hasText: boolean(),
+    topic: text(),
+    topicSource: text(),
+    foundOn: date({ mode: "string" }),
+    createdAt: moment().notNull().defaultNow(),
+    decidedAt: moment(),
+  },
+  (t) => [
+    uniqueIndex("legal_candidates_pravo_id_idx").on(t.pravoId),
+    index("legal_candidates_status_idx").on(t.status, t.createdAt),
+    check(
+      "legal_candidates_status_check",
+      sql`${t.status} in ('found','queued','rejected','dropped','added','event')`,
+    ),
+  ],
+);
+
+/**
+ * Журнал спроса (LAW-15): тема вопроса, на который база ответила «в моей базе нет», и ID подходящих актов каталога.
+ * Текста вопроса здесь нет и быть не может (PRIV): только тема из 10 и ID актов.
+ */
+export const legalDemandLog = systemTable(
+  "legal_demand_log",
+  {
+    id: id(),
+    at: moment().notNull(),
+    topic: text().notNull(),
+    pravoIds: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+  },
+  (t) => [index("legal_demand_log_at_idx").on(t.at)],
+);
+
+/** Отметки проходов пополнения (последний обработанный день «Новых поступлений», недельная сводка, месячный обход ведомств). */
+export const legalGrowthMarks = systemTable("legal_growth_marks", {
+  key: text().primaryKey(),
+  day: date({ mode: "string" }),
+  at: moment(),
+});

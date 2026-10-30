@@ -78,3 +78,26 @@ describe("LAW-38: состояние цикла", () => {
     expect(state.robotsFetchedAt?.getTime()).toBe(T0.getTime());
   });
 });
+
+describe("LAW-15: ведомственные сайты — пауза, остановка и robots отдельно на хост", () => {
+  const agency = (host: string) => makeLoaderStore(createSystemDb(db.pool), host);
+  const base = new Date("2026-11-10T09:00:00Z");
+
+  it("слот одного сайта не задерживает другой: у каждого хоста своя очередь", async () => {
+    await agency("www.nalog.gov.by").reserveSlot(base, 5000);
+    const other = await agency("nbrb.by").reserveSlot(new Date(base.getTime() + 1000), 5000);
+    expect(other.getTime()).toBe(base.getTime() + 1000);
+    const same = await agency("www.nalog.gov.by").reserveSlot(
+      new Date(base.getTime() + 1000),
+      5000,
+    );
+    expect(same.getTime()).toBe(base.getTime() + 5000);
+  });
+
+  it("остановка цикла и robots.txt одного хоста не видны другому", async () => {
+    await agency("www.nalog.gov.by").stop(day("2026-11-10"), "LOADER_BLOCKED");
+    await agency("www.nalog.gov.by").saveRobots("Disallow: /", base);
+    expect(await agency("nbrb.by").read()).toMatchObject({ stoppedOn: null, robotsTxt: null });
+    expect(await store().read()).toMatchObject({ stoppedOn: null });
+  });
+});

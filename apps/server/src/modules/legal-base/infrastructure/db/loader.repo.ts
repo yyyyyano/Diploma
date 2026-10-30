@@ -13,7 +13,7 @@ import type {
 } from "../../application/ports.ts";
 import { legalFetchLog, legalLoaderState } from "./schema.ts";
 
-/** Ключ консультативной блокировки очереди запросов к pravo.by (один на систему). */
+/** Ключ консультативной блокировки очереди запросов (вторая часть ключа — хост: очередь на каждый сайт своя). */
 const LOADER_LOCK_KEY = 8_340_034;
 
 const REASONS: readonly string[] = ["LOADER_BLOCKED", "LOADER_TOO_MANY_ERRORS"];
@@ -22,22 +22,32 @@ function toReason(value: string | null): LoaderStopReason | null {
   return value !== null && REASONS.includes(value) ? (value as LoaderStopReason) : null;
 }
 
-export function makeLoaderStore(db: SystemDb): LoaderStore {
+/**
+ * Состояние загрузчика для одного сайта: у каждого хоста своя строка — своя пауза, остановка цикла и robots.txt (LAW-15:
+ * ведомственные сайты — тот же порядок вежливых запросов, но отдельно на хост). По умолчанию — pravo.by (строка id = 1).
+ */
+export function makeLoaderStore(db: SystemDb, host = "pravo.by"): LoaderStore {
+  let ensured: Promise<unknown> | undefined;
+  /** Строка хоста заводится при первом обращении (pravo.by создаёт миграция). */
+  const ensure = () =>
+    (ensured ??= db.insert(legalLoaderState).values({ host }).onConflictDoNothing());
   async function row() {
+    await ensure();
     return one(
-      await db.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1)),
+      await db.select().from(legalLoaderState).where(eq(legalLoaderState.host, host)),
       "legal_loader_state",
     );
   }
 
   return {
     async reserveSlot(now, pauseMs) {
+      await ensure();
       return db.transaction(async (tx) => {
-        await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY})`);
+        await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY}, hashtext(${host}))`);
         const rows = await tx
           .select({ next: legalLoaderState.nextRequestAt })
           .from(legalLoaderState)
-          .where(eq(legalLoaderState.id, 1));
+          .where(eq(legalLoaderState.host, host));
         const next = rows[0]?.next ?? null;
         const slot = next !== null && next.getTime() > now.getTime() ? next : now;
         await tx
@@ -46,7 +56,7 @@ export function makeLoaderStore(db: SystemDb): LoaderStore {
             lastRequestAt: slot,
             nextRequestAt: new Date(slot.getTime() + pauseMs),
           })
-          .where(eq(legalLoaderState.id, 1));
+          .where(eq(legalLoaderState.host, host));
         return slot;
       });
     },
@@ -65,24 +75,27 @@ export function makeLoaderStore(db: SystemDb): LoaderStore {
     },
 
     async stop(day, reason) {
+      await ensure();
       await db
         .update(legalLoaderState)
         .set({ stoppedOn: day, stopReason: reason })
-        .where(eq(legalLoaderState.id, 1));
+        .where(eq(legalLoaderState.host, host));
     },
 
     async resume() {
+      await ensure();
       await db
         .update(legalLoaderState)
         .set({ stoppedOn: null, stopReason: null })
-        .where(eq(legalLoaderState.id, 1));
+        .where(eq(legalLoaderState.host, host));
     },
 
     async saveRobots(text, at) {
+      await ensure();
       await db
         .update(legalLoaderState)
         .set({ robotsTxt: text, robotsFetchedAt: at })
-        .where(eq(legalLoaderState.id, 1));
+        .where(eq(legalLoaderState.host, host));
     },
 
     async record(entry: RequestRecord, day: LocalDate) {
@@ -100,9 +113,9 @@ export function makeLoaderStore(db: SystemDb): LoaderStore {
         return { requests: r.cycleRequests, errors: r.cycleErrors };
       }
       return db.transaction(async (tx) => {
-        await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY})`);
+        await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY}, hashtext(${host}))`);
         const current = one(
-          await tx.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1)),
+          await tx.select().from(legalLoaderState).where(eq(legalLoaderState.host, host)),
           "legal_loader_state",
         );
         const sameDay = current.cycleDay === day;
@@ -111,7 +124,7 @@ export function makeLoaderStore(db: SystemDb): LoaderStore {
         await tx
           .update(legalLoaderState)
           .set({ cycleDay: day, cycleRequests: requests, cycleErrors: errors })
-          .where(eq(legalLoaderState.id, 1));
+          .where(eq(legalLoaderState.host, host));
         return { requests, errors };
       });
     },

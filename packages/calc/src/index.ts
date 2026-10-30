@@ -23,6 +23,14 @@ export {
   type Occurrence,
   type RecurringPeriod,
 } from "./recurring/recurring-amounts.ts";
+export { limitPercent, percentOf, reachedThresholds } from "./budgets/limits.ts";
+export {
+  goalBehind,
+  goalPercent,
+  goalPlanned,
+  monthsLeft,
+  recommendedContribution,
+} from "./budgets/goals.ts";
 export { categoryTotal, groupSum, totalOf, type GroupSum } from "./transactions/aggregate.ts";
 export {
   freeBalance,

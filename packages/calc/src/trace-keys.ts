@@ -66,6 +66,18 @@ export const TRACE_KEYS = [
   "recurring.monthlyTotal",
   "recurring.yearlyTotal",
   "recurring.monthsInYear",
+  // BUD-02: лимит и процент лимита; BUD-04…07: цель — сумма, накоплено, остаток, процент, месяцы, взнос и плановая сумма.
+  "budgets.limit",
+  "budgets.limitPercent",
+  "budgets.goalTarget",
+  "budgets.goalSaved",
+  "budgets.goalRemaining",
+  "budgets.goalPercent",
+  "budgets.goalMonthsLeft",
+  "budgets.goalContribution",
+  "budgets.goalPlanned",
+  "budgets.goalElapsedDays",
+  "budgets.goalTotalDays",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

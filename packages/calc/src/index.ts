@@ -30,7 +30,7 @@ export {
   type FreeBalanceInput,
   type FreeBalanceResult,
 } from "./fin/free-balance.ts";
-export { FREE_BALANCE_MONTHS, historyMonths, historyWindow } from "./fin/history.ts";
+export { FREE_BALANCE_MONTHS, historyMonths, historyWindow, monthEnd } from "./fin/history.ts";
 export { forecastBalances, type ExpectedPayment, type ForecastDay } from "./fin/forecast.ts";
 export {
   avg,

@@ -1,6 +1,6 @@
 // FIN-20: «по данным за N мес.» — полные месяцы истории и окно расчёта.
 import { describe, expect, it } from "vitest";
-import { FREE_BALANCE_MONTHS, historyMonths, historyWindow } from "./history.ts";
+import { FREE_BALANCE_MONTHS, historyMonths, historyWindow, monthEnd } from "./history.ts";
 
 describe("FIN-20: сколько месяцев истории", () => {
   it("первая операция в июле, сегодня 28.10 — три полных месяца (июль, август, сентябрь)", () => {
@@ -32,5 +32,13 @@ describe("FIN-20: окно расчёта", () => {
   });
   it("через границу года: январь, два месяца — ноябрь и декабрь", () => {
     expect(historyWindow("2026-01-15", 2)).toEqual({ from: "2025-11-01", to: "2025-12-31" });
+  });
+});
+
+describe("FIN-22: конец месяца", () => {
+  it("октябрь — 31-е, февраль високосного — 29-е, апрель — 30-е", () => {
+    expect(monthEnd("2026-10-28")).toBe("2026-10-31");
+    expect(monthEnd("2028-02-10")).toBe("2028-02-29");
+    expect(monthEnd("2026-04-01")).toBe("2026-04-30");
   });
 });

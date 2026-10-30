@@ -30,6 +30,14 @@ export {
   RecurringSectionTotal,
   RecurringState,
 } from "./recurring/recurring.contract.ts";
+export {
+  FreeBalance,
+  FreeBalanceReason,
+  finContract,
+  OBLIGATION_GROUPS,
+  ObligationGroup,
+  ObligationRow,
+} from "./fin/fin.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
   AI_CAPABILITIES,

@@ -83,6 +83,7 @@ describe("дерево процедур", () => {
       "recurring.create",
       "recurring.explain",
       "recurring.markers",
+      "fin.freeBalance",
       "categories.list",
       "categories.create",
       "categories.rename",

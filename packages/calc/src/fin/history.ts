@@ -45,3 +45,9 @@ export function historyWindow(
   const current = monthIndex(today);
   return { from: dayOf(current - months, 1), to: dayOf(current - 1, daysInMonth(current - 1)) };
 }
+
+/** Последний день месяца, в котором лежит `day` (прогноз FIN-22 идёт до конца месяца). */
+export function monthEnd(day: string): LocalDate {
+  const index = monthIndex(day);
+  return dayOf(index, daysInMonth(index));
+}

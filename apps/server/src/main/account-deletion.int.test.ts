@@ -141,6 +141,12 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, $3, uuidv7(), 'created', 'web', 1)`,
     [...ids, operation.rows[0]?.id],
   );
+  // Разбивка операции по категориям (RCPT-09): строка владельца, уходит вместе с аккаунтом.
+  await db.owner.query(
+    `insert into transaction_splits (household_id, user_id, transaction_id, position, category_code, amount_minor)
+     values ($1, $2, $3, 1, 'interest', 10000)`,
+    [...ids, operation.rows[0]?.id],
+  );
   const preference = await stack.call("local", "/notifications/preferences", {
     cookie: user.cookie,
     body: { kind: "goal", channel: "web", enabled: false },

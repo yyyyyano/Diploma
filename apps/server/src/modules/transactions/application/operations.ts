@@ -4,6 +4,7 @@ import { makeBackground } from "./background.ts";
 import { makeBulk } from "./bulk.ts";
 import type { Deps, JobRefs } from "./deps.ts";
 import { makeLedger } from "./ledger.ts";
+import { makeReceiptOps } from "./receipt-ops.ts";
 import { makePrepare } from "./prepare.ts";
 import { makeRead } from "./read.ts";
 import { makeRemove } from "./remove.ts";
@@ -26,6 +27,7 @@ export function makeOperations(d: Deps, base: ReturnType<typeof makeBase>, jobs:
     ...makeRead(d, parts),
     ...makeWrite(d, parts, rule),
     ...makeRemove(d, parts),
+    ...makeReceiptOps(d, parts),
     ...makeRestore(d, parts, rule),
     requestChangeCategory: bulk.requestChangeCategory,
     requestMarkTransfer: bulk.requestMarkTransfer,

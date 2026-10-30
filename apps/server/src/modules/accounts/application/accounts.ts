@@ -33,6 +33,7 @@ import {
   createUnknownCardIfMissing,
   deleteAccount,
   findByBankMask,
+  findByMask,
   findRevision,
   findService,
   insertAccount,
@@ -401,6 +402,15 @@ export function makeAccounts(d: AccountsDeps) {
     return id === undefined ? undefined : AccountId.parse(id);
   }
 
+  /** Фасад (transactions, RCPT-10): карта по последним цифрам чека; нет или несколько — undefined (тогда «Карта, не указана»). */
+  async function findCardByMask(
+    s: ScopedDb,
+    key: { mask: string; currency: string },
+  ): Promise<AccountId | undefined> {
+    const id = await findByMask(s, key);
+    return id === undefined ? undefined : AccountId.parse(id);
+  }
+
   /**
    * Фасад (statements, STMT-02): остаток из выписки на день `on` — абсолютный, а не сдвиг. Выписка старше уже известного
    * остатка его не перебивает (`undefined`), если не `force` (счёт создан этим же импортом: остатка «новее» у него нет, а
@@ -485,6 +495,7 @@ export function makeAccounts(d: AccountsDeps) {
     restore,
     findOrCreate,
     findCard,
+    findCardByMask,
     setStatementBalance,
     revertStatementBalance,
     applyBalanceChange,

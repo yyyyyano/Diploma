@@ -122,6 +122,19 @@ export async function findByBankMask(
   return rows[0]?.id;
 }
 
+/** RCPT-10: карта по последним цифрам и валюте без банка (на чеке его нет); если таких карт несколько — undefined. */
+export async function findByMask(
+  s: ScopedDb,
+  key: { mask: string; currency: string },
+): Promise<string | undefined> {
+  const rows = await s.db
+    .select({ id: accounts.id })
+    .from(accounts)
+    .where(and(s.own(accounts), eq(accounts.mask, key.mask), eq(accounts.currency, key.currency)))
+    .limit(2);
+  return rows.length === 1 ? rows[0]?.id : undefined;
+}
+
 export interface NewAccount {
   readonly kind: string;
   readonly name: string | null;

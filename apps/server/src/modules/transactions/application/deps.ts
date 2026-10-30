@@ -12,7 +12,10 @@ import type { Prepare } from "./prepare.ts";
 
 export interface Deps {
   readonly platform: Pick<Platform, "clock" | "log" | "jobs" | "events" | "realtime">;
-  readonly accounts: Pick<AccountsFacade, "currencyOf" | "cash" | "applyBalanceChange">;
+  readonly accounts: Pick<
+    AccountsFacade,
+    "currencyOf" | "cash" | "applyBalanceChange" | "unknownCard" | "findCardByMask"
+  >;
   readonly categories: Pick<
     CategoriesFacade,
     "list" | "byRules" | "categorize" | "setUserRule" | "userRule" | "removeUserRule"

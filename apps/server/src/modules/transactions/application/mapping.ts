@@ -44,6 +44,9 @@ export function toDto(row: TransactionRow): Transaction {
     transferPairId: row.transferPairId === null ? null : TransactionId.parse(row.transferPairId),
     refundOfId: row.refundOfId === null ? null : TransactionId.parse(row.refundOfId),
     importId: row.importId,
+    receiptId: row.receiptId,
+    pending: row.pending,
+    needsReview: row.needsReview,
     version: row.version,
   };
 }

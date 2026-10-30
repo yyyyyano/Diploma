@@ -60,6 +60,8 @@ export function makeRead(d: Deps, parts: Parts) {
       ...(input.amountFrom === undefined ? {} : { amountFromMinor: input.amountFrom }),
       ...(input.amountTo === undefined ? {} : { amountToMinor: input.amountTo }),
       ...(input.source === undefined ? {} : { source: input.source }),
+      ...(input.hasReceipt === undefined ? {} : { hasReceipt: input.hasReceipt }),
+      ...(input.needsReview === undefined ? {} : { needsReview: input.needsReview }),
     };
     const { rows, total } = await listPage(s, filter, input.page, input.pageSize);
     return { items: rows.map(toDto), page: input.page, pageSize: input.pageSize, total };

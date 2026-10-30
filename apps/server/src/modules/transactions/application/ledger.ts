@@ -51,9 +51,12 @@ function movement(row: TransactionRow): Movement {
 export function makeLedger(d: LedgerDeps) {
   /** STMT-02: остатки счетов сдвигаются на разницу «после − до»; день остатка — самый поздний из затронутых. */
   async function shiftBalances(tx: ScopedDb, changes: readonly Change[]): Promise<void> {
+    // RCPT-10: «ожидает выписки» остаток счёта не меняет — ни при создании, ни при слиянии с операцией банка.
+    const moving = (row: TransactionRow | undefined) =>
+      row === undefined || row.pending ? [] : [movement(row)];
     const deltas = balanceDeltas(
-      changes.flatMap((c) => (c.before === undefined ? [] : [movement(c.before)])),
-      changes.flatMap((c) => (c.after === undefined ? [] : [movement(c.after)])),
+      changes.flatMap((c) => moving(c.before)),
+      changes.flatMap((c) => moving(c.after)),
     );
     const days = new Map<string, string>();
     for (const change of changes) {

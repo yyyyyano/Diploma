@@ -72,6 +72,11 @@ export function createTransactionsModule({
       purchaseCandidates: imports.purchaseCandidates,
       countEditedInImport,
       requestMarkTransfer: ops.requestMarkTransfer,
+      recordFromReceipt: ops.recordFromReceipt,
+      updateFromReceipt: ops.updateFromReceipt,
+      setReceiptReviewed: ops.setReceiptReviewed,
+      removeForReceipt: ops.removeForReceipt,
+      operationOfReceipt: ops.operationOfReceipt,
     },
     router: transactionsRouter(ops),
     events: [transactionsChanged],
@@ -91,6 +96,7 @@ export function createTransactionsModule({
 /**
  * Что модуль даёт соседям: запись выписки (T-026) — `importBatch(tx, { importId, rows })`, `deleteImport(tx, importId)`,
  * проверка дублей `knownKeys`, кандидаты в пару перевода и покупки возврата, `countEditedInImport`,
- * `requestMarkTransfer(s, ids, channel)` — «Да/Нет» для спорных переводов; агрегаты пачками и запись из чека — T-027, T-031.
+ * `requestMarkTransfer(s, ids, channel)` — «Да/Нет» для спорных переводов; чеки (T-028): `recordFromReceipt`,
+ * `updateFromReceipt`, `setReceiptReviewed`, `removeForReceipt`, `operationOfReceipt`; агрегаты пачками — T-031.
  */
 export type TransactionsFacade = ReturnType<typeof createTransactionsModule>["facade"];

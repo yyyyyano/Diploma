@@ -4,7 +4,7 @@
 
 ## Назначение
 Операции, переводы и возвраты, сопоставление чек ↔ выписка, массовые действия, агрегации пачками; остаток счёта
-пересчитывает фасад `accounts` (STMT-02). Сделано: таблица и фильтры, ввод, правка и удаление с «Отменить», карточка с историей, массовые действия, запись выписки.
+пересчитывает фасад `accounts` (STMT-02). Сделано: таблица и фильтры, ввод, правка и удаление с «Отменить», карточка с историей, массовые действия, запись выписки, операция от чека с разбивкой (T-028).
 
 ## Требования SPEC
 TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (применить к прошлым).
@@ -12,16 +12,15 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
 - Фабрика: `createTransactionsModule({ platform, facades })`. Фасад (`statements`): `importBatch(tx, { importId, rows })` (`importId` есть и в DTO операции, STMT-10) — выписка
   пачкой (`import_id`, `external_id`, `dedupe_key`; пара перевода, «Наличные» для снятия, покупка возврата; одно
   `transactions.changed`), `deleteImport`, `knownKeys`, `transferCandidates`, `purchaseCandidates`, `countEditedInImport`,
-  `requestMarkTransfer`. Форма будущего (ARCHITECTURE §4.3,
-  §15): агрегаты — **только пачками**, `aggregate(s, { period, groupBy })` → `{ key, total: Money, count }`; запись
-  чужими модулями — фасадом с `tx`.
+  `requestMarkTransfer`; чеки (`application/receipt-ops.ts`): `recordFromReceipt(tx, …)` (наличные — со счёта «Наличные»; карта — `pending`
+  на счёте по цифрам или «Карта, не указана», остаток не меняет; `transaction_splits` — разбивка по категориям), `updateFromReceipt`,
+  `setReceiptReviewed`, `removeForReceipt` (слитую с банковской только отвязывает), `operationOfReceipt`. Агрегаты — только пачками (T-031).
 - Контракт `contract.transactions.*` (authed, канал отмены — web, источник — «вручную»): `list` (страница + размер ≤ 100
-  + `total`; фильтры — период, счёт, категория, тип, сумма в BYN, источник, текст; сортировка день → время → `id`),
+  + `total`; фильтры — период, счёт, категория, тип, сумма в BYN, источник, текст, `hasReceipt`, `needsReview`; сортировка день → время → `id`),
   `get` (карточка: `rate`, `history`), `create`/`update` (→ `{ transaction, undoToken, applyToPast }`), `requestDelete`, `requestChangeCategory`,
   `requestMarkTransfer` (`ids` → `{ decisionId }`), `explainRate` (→ `traceId`; курса нет — `UNAVAILABLE`).
-- Сценарии — файлы `application/`: `read`, `write`, `remove`, `restore` («Отменить»), `bulk` (массовые решения и их
-  «Да»), `rule` (правило из исправления), `background` (курс, модель); общее — `ledger` (ревизии, остатки, событие),
-  `prepare` (категория, контрагент, курс), `handlers` (имена обработчиков).
+- Сценарии — файлы `application/`: `read`, `write`, `remove`, `restore` («Отменить»), `bulk` («Да»), `rule`, `background`
+  (курс, модель), `receipt-ops`; общее — `ledger` (ревизии, остатки без `pending`, событие), `prepare`, `handlers`.
 - Запись: валюта — валюта счёта (иное `VALIDATION`), счёт не указан — «Наличные»; расход уводит деньги со счёта, доход и
   возврат приводят, у перевода направление выбирают; категория — выбрана (`user`), иначе `categories.byRules`, непокрытое
   — «Прочее» (`fallback`) и задача `categorize`; BYN — `fxRates.convert` до транзакции, курса нет — `amountInByn: null` и
@@ -41,9 +40,10 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
   возвращает прежнее — `rule.previous`) и предлагает `applyToPast` — прошлые не выбранные вами вручную. Задачи (`jobs/`):
   `fill-rates` (повторяемая `UNAVAILABLE`), `categorize`.
 - Таблицы (`userOwnedTable`, `user-data.ts`): `transactions` (счёт, тип, направление, день и время, сумма и валюта, BYN и
-  id курса, описание, контрагент и ключ, категория и источник, источник операции, пара, покупка, версия) и
-  `transaction_revisions` (пачка, действие, канал, состояние «до»; без FK — история удалённой остаётся). Составные FK —
-  руками в миграции `*_transactions`: счёт и категория `RESTRICT`, пара и покупка `SET NULL (колонка)`; `import_id` без FK.
+  id курса, описание, контрагент и ключ, категория и источник, источник операции, пара, покупка, `receipt_id`, `pending`,
+  `needs_review`, версия), `transaction_revisions` (пачка, действие, канал, состояние «до»; без FK) и `transaction_splits`
+  (категория и сумма, сумма частей = сумме операции). Составные FK — руками в миграциях: счёт и категория `RESTRICT`, пара и
+  покупка `SET NULL (колонка)`; `import_id` и `receipt_id` без FK.
 
 ## Зависимости
 Можно: accounts, categories, merchants, fx-rates, actions, explain, notifications (`tooling/architecture/modules.ts`). Слушает: —.

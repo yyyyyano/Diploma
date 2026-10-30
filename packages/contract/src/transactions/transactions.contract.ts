@@ -63,6 +63,12 @@ export const Transaction = z.strictObject({
   refundOfId: TransactionId.nullable(),
   /** Импорт выписки, из которого пришла операция (STMT-10: из карточки открывают импорт и файл); иначе null. */
   importId: z.uuid().nullable(),
+  /** Чек операции (RCPT-11: из карточки открывают чек и фото); у остальных null. */
+  receiptId: z.uuid().nullable(),
+  /** «Ожидает выписки» (RCPT-10): предварительная операция от чека по карте — в тратах есть, остаток не меняет. */
+  pending: z.boolean(),
+  /** Чек операции «требует проверки» (TXN-01). */
+  needsReview: z.boolean(),
   version: z.int().min(1),
 });
 export type Transaction = z.infer<typeof Transaction>;
@@ -124,6 +130,14 @@ export const TransactionListInput = z
     amountFrom: Numeric.optional(),
     amountTo: Numeric.optional(),
     source: TransactionSource.optional(),
+    /** Только операции с чеком (true) или без него (false). */
+    hasReceipt: z
+      .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
+      .optional(),
+    /** Только операции с чеком, который требует проверки (TXN-01). */
+    needsReview: z
+      .union([z.boolean(), z.enum(["true", "false"]).transform((v) => v === "true")])
+      .optional(),
   })
   .refine((input) => input.categoryCode === undefined || input.categoryId === undefined, {
     message: "categoryCode и categoryId — не вместе",

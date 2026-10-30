@@ -1,14 +1,29 @@
 // Запросы к transactions и transaction_revisions: первый аргумент — s: ScopedDb, у каждого обращения свой s.own
 // (ADR-0006). Строки, которые меняет действие, читаем FOR UPDATE в порядке id — два одновременных действия над
 // пересекающимися операциями идут по очереди и не блокируют друг друга крест-накрест.
-import { and, asc, desc, eq, gte, inArray, lte, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 import type { InsertValue, Patch, ScopedDb } from "../../../../platform/db/scoped-db.ts";
-import { transactionRevisions, transactions } from "./schema.ts";
+import { transactionRevisions, transactionSplits, transactions } from "./schema.ts";
 
 export type TransactionRow = typeof transactions.$inferSelect;
 export type NewTransaction = InsertValue<typeof transactions>;
 export type RevisionRow = typeof transactionRevisions.$inferSelect;
 export type NewRevision = InsertValue<typeof transactionRevisions>;
+export type SplitRow = typeof transactionSplits.$inferSelect;
+export type NewSplit = Omit<InsertValue<typeof transactionSplits>, "transactionId">;
 
 /** Фильтры списка (TXN-02): всё необязательно, условия складываются по «и». */
 export interface ListFilter {
@@ -25,6 +40,8 @@ export interface ListFilter {
   readonly amountFromMinor?: number;
   readonly amountToMinor?: number;
   readonly source?: string;
+  readonly hasReceipt?: boolean;
+  readonly needsReview?: boolean;
 }
 
 function where(s: ScopedDb, f: ListFilter): SQL {
@@ -55,6 +72,10 @@ function where(s: ScopedDb, f: ListFilter): SQL {
   if (f.amountFromMinor !== undefined) conditions.push(gte(t.amountBynMinor, f.amountFromMinor));
   if (f.amountToMinor !== undefined) conditions.push(lte(t.amountBynMinor, f.amountToMinor));
   if (f.source !== undefined) conditions.push(eq(t.source, f.source));
+  if (f.hasReceipt !== undefined) {
+    conditions.push(f.hasReceipt ? isNotNull(t.receiptId) : isNull(t.receiptId));
+  }
+  if (f.needsReview !== undefined) conditions.push(eq(t.needsReview, f.needsReview));
   return and(...conditions) ?? s.own(t);
 }
 
@@ -267,4 +288,36 @@ export async function countEditedInImport(s: ScopedDb, importId: string): Promis
     );
   // count(*) всегда возвращает ровно одну строку.
   return rows.reduce((total, row) => total + row.n, 0);
+}
+
+/** Операция от чека (RCPT-08, TXN-10): по id чека; нет — undefined. */
+export async function findByReceipt(
+  s: ScopedDb,
+  receiptId: string,
+): Promise<TransactionRow | undefined> {
+  const rows = await s.db
+    .select()
+    .from(transactions)
+    .where(and(s.own(transactions), eq(transactions.receiptId, receiptId)))
+    .limit(1);
+  return rows[0];
+}
+
+/** Разбивка операции по категориям (RCPT-09): заменяется целиком. */
+export async function replaceSplits(
+  s: ScopedDb,
+  transactionId: string,
+  splits: readonly NewSplit[],
+): Promise<void> {
+  await s.delete(transactionSplits, eq(transactionSplits.transactionId, transactionId));
+  if (splits.length === 0) return;
+  await s.insert(transactionSplits).values(splits.map((split) => ({ ...split, transactionId })));
+}
+
+export async function listSplits(s: ScopedDb, transactionId: string): Promise<SplitRow[]> {
+  return s.db
+    .select()
+    .from(transactionSplits)
+    .where(and(s.own(transactionSplits), eq(transactionSplits.transactionId, transactionId)))
+    .orderBy(asc(transactionSplits.position));
 }

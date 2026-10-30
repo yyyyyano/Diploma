@@ -15,8 +15,20 @@
 // что сделано, канал, состояние операции до действия (before) и версия после. FK на операцию нет намеренно: история и
 // снимок удалённой операции переживают её удаление — по ним «Отменить» возвращает удалённое.
 import { sql } from "drizzle-orm";
-import { bigint, check, date, index, integer, jsonb, text, time, uuid } from "drizzle-orm/pg-core";
-import { userOwnedTable } from "../../../../platform/db/tables.ts";
+import {
+  bigint,
+  boolean,
+  check,
+  date,
+  index,
+  integer,
+  jsonb,
+  text,
+  time,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { ownedFk, userOwnedTable } from "../../../../platform/db/tables.ts";
 
 export const transactions = userOwnedTable(
   "transactions",
@@ -51,6 +63,12 @@ export const transactions = userOwnedTable(
     externalId: text(),
     /** Ключ дубля STMT-07: счёт, день, время, сумма, описание и порядковый номер среди одинаковых; у выписки. */
     dedupeKey: text(),
+    /** Чек, из которого операция (RCPT-08, RCPT-10, TXN-10); у остальных — null. Без FK: чек — в receipts. */
+    receiptId: uuid(),
+    /** «Ожидает выписки» (RCPT-10): предварительная операция от чека по карте — в тратах учитывается, остаток счёта не меняет. */
+    pending: boolean().notNull().default(false),
+    /** Чек операции «требует проверки» (TXN-01): признак в списке и фильтр. */
+    needsReview: boolean().notNull().default(false),
     version: integer().notNull().default(1),
   },
   (t) => [
@@ -87,6 +105,9 @@ export const transactions = userOwnedTable(
     index("transactions_import_idx")
       .on(t.householdId, t.importId)
       .where(sql`${t.importId} is not null`),
+    index("transactions_receipt_idx")
+      .on(t.householdId, t.receiptId)
+      .where(sql`${t.receiptId} is not null`),
     index("transactions_rate_missing_idx")
       .on(t.householdId, t.id)
       .where(sql`${t.amountBynMinor} is null`),
@@ -122,5 +143,30 @@ export const transactionRevisions = userOwnedTable(
     ),
     index("transaction_revisions_transaction_idx").on(t.householdId, t.transactionId, t.createdAt),
     index("transaction_revisions_batch_idx").on(t.householdId, t.batchId),
+  ],
+);
+
+/**
+ * Разбивка операции по категориям (RCPT-09, TXN-10): у операции от чека — сумма по категориям позиций, у слитой с
+ * выпиской — разбивка из чека. Агрегации (T-031) распределяют траты по ней, а не по категории операции. Сумма частей
+ * равна сумме операции. FK на категории — руками в миграции (чужая схема недоступна), как у transactions.
+ */
+export const transactionSplits = userOwnedTable(
+  "transaction_splits",
+  {
+    transactionId: uuid().notNull(),
+    position: integer().notNull(),
+    categoryCode: text(),
+    categoryId: uuid(),
+    amountMinor: bigint({ mode: "number" }).notNull(),
+  },
+  (t) => [
+    check("transaction_splits_amount_check", sql`${t.amountMinor} > 0`),
+    check(
+      "transaction_splits_category_check",
+      sql`num_nonnulls(${t.categoryCode}, ${t.categoryId}) = 1`,
+    ),
+    uniqueIndex("transaction_splits_position_idx").on(t.householdId, t.transactionId, t.position),
+    ...ownedFk(t, t.transactionId, transactions, { onDelete: "cascade" }),
   ],
 );

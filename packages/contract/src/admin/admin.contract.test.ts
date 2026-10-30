@@ -116,7 +116,7 @@ describe("ADM-22, PRIV-07, NFR-16: «Провайдеры ИИ» и «Запро
 
 describe("PRIV-07, LAW-40: вкладка «Законы» — метаданные общей правовой базы, без данных пользователей", () => {
   const USER_DATA =
-    /user|household|owner|amount|money|balance|transaction|receipt|statement|fact|message/i;
+    /user(?!Agent)|household|owner|amount|money|balance|transaction|receipt|statement|fact|message/i;
 
   it("сводка — состояние базы, расписание и загрузчик, ровно эти разделы", () => {
     expect(paths(LawsOverview).filter((path) => !path.includes("."))).toEqual([

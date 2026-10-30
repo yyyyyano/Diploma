@@ -53,7 +53,9 @@ const SECTION = /^(РАЗДЕЛ|ПОДРАЗДЕЛ)\s+([IVXLCDM\d]+(?:[⁰¹²³
 const PART = /^(ОБЩАЯ|ОСОБЕННАЯ)\s+ЧАСТЬ\s*$/su;
 // \b в JS не видит кириллицу как слово: границу задаём явно.
 const APPENDIX = /^ПРИЛОЖЕНИЕ(?:\s|$)/u;
-const POINT = /^(\d+(?:\.\d+)*)\.\s+(.*)$/su;
+/** Строки-разделители («_____», «—————») между текстом и сносками: не текст акта. */
+const SEPARATOR = /^[_—–\-\s]{5,}$/u;
+const POINT = /^(\d+(?:[⁰¹²³⁴⁵⁶⁷⁸⁹]+|\.\d+)*)\.\s+(.*)$/su;
 const SUBPOINT = /^(\d+)\)\s+(.*)$/su;
 const EXCLUDED = /^(?:исключен[аоы]?|утратил[аои]? силу)\.?$/iu;
 /** Вспомогательные абзацы шапки: название, номер и дата, гриф — не тело акта. */
@@ -65,6 +67,10 @@ const HEADER_CLASSES = new Set([
   "number",
   "capr",
   "zagrazdel",
+  // Перечень изменяющих актов и сноска о ссылках перед текстом — не нормы (карточка акта хранит их отдельно, T-036).
+  "changei",
+  "changeadd",
+  "comment",
 ]);
 
 /** «216¹» → «216.1»: ключ статьи с надстрочным номером (ADR-0007). */
@@ -95,7 +101,10 @@ interface SubPoint {
   lines: string[];
 }
 interface Point {
+  /** Ключ номера: `22.2` для «22²». */
   readonly no: string;
+  /** Номер как напечатан: «22²» — для пути поиска. */
+  readonly label: string;
   lines: string[];
   readonly subs: SubPoint[];
 }
@@ -180,7 +189,20 @@ export function buildFragments(paragraphs: readonly RawParagraph[], act: ActLabe
   function emitPoint(p: Point, keyBase: string, path: string, articleNo: string | null): void {
     const full = pointText(p);
     const split = full.length > FRAGMENT_LIMIT_CHARS && p.subs.length > 0;
-    const label = `п. ${p.no}`;
+    const label = `п. ${p.label}`;
+    if (full.length > FRAGMENT_LIMIT_CHARS && p.subs.length === 0) {
+      // Длинный пункт без подпунктов (перечни, таблицы): режем по абзацам, чтобы фрагмент оставался цитируемой единицей.
+      chunk(p.lines).forEach((body, i) =>
+        push(i === 0 ? keyBase : `${keyBase}/c${String(i + 1)}`, {
+          articleNo,
+          kind: "norm",
+          searchPath: `${path} › ${label}`,
+          heading: null,
+          body,
+        }),
+      );
+      return;
+    }
     push(keyBase, {
       articleNo,
       kind: "norm",
@@ -293,12 +315,12 @@ export function buildFragments(paragraphs: readonly RawParagraph[], act: ActLabe
 
   for (const raw of paragraphs) {
     const text = raw.text;
-    if (text === "") continue;
-    if (appendix !== undefined && !APPENDIX.test(text)) {
+    if (text === "" || SEPARATOR.test(text)) continue;
+    if (appendix !== undefined && raw.cls !== "append1" && !APPENDIX.test(text)) {
       appendix.lines.push(text);
       continue;
     }
-    if (APPENDIX.test(text)) {
+    if (raw.cls === "append1" || APPENDIX.test(text)) {
       flushArticle();
       flushStandalone();
       startStructure();
@@ -355,7 +377,12 @@ export function buildFragments(paragraphs: readonly RawParagraph[], act: ActLabe
     if (article !== undefined) {
       const last = article.points.at(-1);
       if (pointMatch !== null) {
-        article.points.push({ no: pointMatch[1] ?? "", lines: [text], subs: [] });
+        article.points.push({
+          no: articleKey(pointMatch[1] ?? ""),
+          label: pointMatch[1] ?? "",
+          lines: [text],
+          subs: [],
+        });
       } else if (subMatch !== null && last !== undefined) {
         last.subs.push({ no: subMatch[1] ?? "", lines: [text] });
       } else if (last === undefined) {
@@ -369,7 +396,12 @@ export function buildFragments(paragraphs: readonly RawParagraph[], act: ActLabe
     if (pointMatch !== null) {
       flushStandalone();
       startStructure();
-      standalone = { no: pointMatch[1] ?? "", lines: [text], subs: [] };
+      standalone = {
+        no: articleKey(pointMatch[1] ?? ""),
+        label: pointMatch[1] ?? "",
+        lines: [text],
+        subs: [],
+      };
       articleCount += 1;
       continue;
     }

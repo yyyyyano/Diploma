@@ -152,4 +152,65 @@ describe("LAW-20: фрагменты акта", () => {
     const parsed = buildFragments([p("Просто текст без структуры.")], act);
     expect(parsed.hasStructure).toBe(false);
   });
+
+  it("пункт с надстрочным номером «28¹.» — отдельный фрагмент с ключом 28.1 и путём «п. 28¹»", () => {
+    const result = buildFragments(
+      [
+        p("Статья 208. Доходы", "article"),
+        p(`28. ${long(300)}`, "point"),
+        p(`28¹. ${long(300)}`, "point"),
+      ],
+      act,
+    );
+    expect(result.fragments.map((f) => f.pathKey)).toEqual(["a208", "a208/p28", "a208/p28.1"]);
+    expect(result.fragments[2]?.searchPath).toBe("НК (Особенная часть) › Статья 208 › п. 28¹");
+  });
+
+  it("длинный пункт без подпунктов режется по абзацам на куски не длиннее предела", () => {
+    const parsed = buildFragments(
+      [
+        p("Статья 5. Перечень", "article"),
+        p("1. Перечень включает:", "point"),
+        ...Array.from({ length: 30 }, () => p(long(25))),
+      ],
+      act,
+    );
+    const keys = parsed.fragments.map((f) => f.pathKey);
+    expect(keys.slice(0, 3)).toEqual(["a5", "a5/p1", "a5/p1/c2"]);
+    expect(parsed.fragments.every((f) => f.body.length <= FRAGMENT_LIMIT_CHARS)).toBe(true);
+  });
+
+  it("приложение начинается с абзаца класса append1 («Приложение 2» не заглавными), разделители «_____» отбрасываются", () => {
+    const parsed = buildFragments(
+      [
+        p("Статья 1. Цель", "article"),
+        p("Текст статьи."),
+        p("______________________________", "snoskiline"),
+        p("Приложение 2", "append1"),
+        p("к Кодексу", "append"),
+        p("Ставки налога", "titlep"),
+      ],
+      act,
+    );
+    expect(parsed.fragments.map((f) => f.kind)).toEqual(["norm", "appendix"]);
+    expect(parsed.fragments[0]?.body).toBe("Статья 1. Цель\nТекст статьи.");
+    expect(parsed.fragments[1]?.body).toBe("Приложение 2\nк Кодексу\nСтавки налога");
+  });
+
+  it("перечень изменяющих актов и сноска перед текстом — не нормы и не вступление", () => {
+    const parsed = buildFragments(
+      [
+        p("Закон от 1 января 2002 г. № 90-З"),
+        p("Изменения и дополнения:", "changei"),
+        p("Закон от 4 января 2003 г. № 183-З", "changeadd"),
+        p("*При применении ссылки на Кодекс…", "comment"),
+        p("Статья 1. Цель", "article"),
+      ],
+      act,
+    );
+    expect(parsed.fragments.map((f) => f.body)).toEqual([
+      "Закон от 1 января 2002 г. № 90-З",
+      "Статья 1. Цель",
+    ]);
+  });
 });

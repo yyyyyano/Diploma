@@ -22,6 +22,8 @@ export function collapseSpaces(text: string): string {
 export function readActPage(html: string): ReadPage {
   const $ = cheerio.load(html);
   $("script, style, noscript").remove();
+  // «ГЛАВА 14<br>НАЛОГ…»: перенос строки — пробел, иначе номер главы слипается с названием.
+  $("br").replaceWith(" ");
   $("sup").each((_, el) => {
     const digits = $(el).text().replace(/\D/gu, "");
     $(el).replaceWith(
@@ -40,6 +42,7 @@ export function readActPage(html: string): ReadPage {
   });
   const title =
     collapseSpaces($("p.titlek").first().text()) ||
+    collapseSpaces($("p.title").first().text()) ||
     collapseSpaces($("h1").first().text()) ||
     collapseSpaces($("title").first().text());
   return { title, paragraphs, pageText: collapseSpaces($.root().text()) };

@@ -1,0 +1,14 @@
+# Синтетическая копия правил из research/legal-sources-research.md (живой файл не сохранялся).
+User-agent: *
+Disallow: /bitrix/
+Disallow: /search/
+Disallow: /upload/docs/op/
+Disallow: /natsionalnyy-reestr/poisk-v-reestre/?*
+Disallow: /pravovaya-informatsiya/pravovye-akty-po-temam/poisk-v-tbd/?*
+Disallow: /pravovaya-informatsiya/bank-sudebnykh-resheniy/
+Disallow: *?print=
+Disallow: *?action=
+Disallow: *paging
+Disallow: *.aspx*
+Disallow: */index.php
+Clean-param: p0&p1

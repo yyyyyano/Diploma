@@ -218,3 +218,30 @@ describe("AGT-07: delete_transaction — только решение «Да/Не
     ]);
   });
 });
+
+describe("FIN-01: aggregate_transactions", () => {
+  it("итоги периода по категориям с traceId; вход — плоский (группировка enum), без владельца", async () => {
+    const { tools, ctx } = await setup();
+    await tools.add.execute(ctx(), tools.add.input.parse(ADD));
+    const input = tools.aggregate.input.parse({
+      from: "2026-10-01",
+      to: "2026-10-31",
+      group_by: "category",
+    });
+    const output = tools.aggregate.output.parse(await tools.aggregate.execute(ctx(), input));
+    expect(output).toMatchObject({
+      expense: { minor: 1_500, currency: "BYN" },
+      income: { minor: 0 },
+      missingRates: 0,
+      truncated: false,
+    });
+    expect(output.groups).toHaveLength(1);
+  });
+
+  it("день не по формату — VALIDATION, а не сбой программы", async () => {
+    const { tools, ctx } = await setup();
+    await expect(
+      tools.aggregate.execute(ctx(), { from: "вчера", to: "2026-10-31", group_by: "month" }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+});

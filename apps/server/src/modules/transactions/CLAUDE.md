@@ -18,7 +18,7 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
   TXN-10/11): `matchReceipt(s, receiptId)` и `matchBankOps(s, ids)` — кандидат: расход выписки на ту же сумму (допуск), окно ±2 дня; один
   уверенный (контрагент справочника или похожее название) — связь сама + уведомление `receipt-match` с «Это разные покупки», иначе один
   вопрос «одна покупка?» (`actions`, `MATCH_HANDLER`); `linkReceipt`/`unlinkReceipt` (контракт, с «Отменить»). Слитая операция хранит снимок чека
-  (`merged_receipt`, и прежние категорию и разбивку операции выписки): разрыв возвращает чек и операцию выписки как были; `match_declined` — пары, которые не предлагают снова. Настройки `match-*`. Агрегаты — T-031. История для `recurring` (T-030): `recurringHistory(s, { from, to })` — доходы и расходы с контрагентом и эквивалентом в BYN, без переводов, возвратов и `pending`; событие `transactions.changed` экспортируется из `index.ts` для подписчиков.
+  (`merged_receipt`, и прежние категорию и разбивку операции выписки): разрыв возвращает чек и операцию выписки как были; `match_declined` — пары, которые не предлагают снова. Настройки `match-*`. Агрегаты (T-031, `application/aggregate.ts`, `infrastructure/db/aggregate.repo.ts`): `aggregate(s, { from, to, groupBy: category | month | counterparty })` → группы с `Calc` (расходы = покупки − возвраты, доходы; переводы не входят; сумма группы — SQL `SUM` в bigint, узел трассы с `refs` до `explain.max-refs` и пояснением «ещё N операций»; операции без курса не входят, их число — `missingRates`; `pending` входит; операция с разбивкой чека (`transaction_splits`) идёт по частям, слитая — один раз) — два запроса на любое число групп; `aggregateWithTraces` (с `traceId`, `explain.saveMany`), `firstOperationOn(s)`. История для `recurring` (T-030): `recurringHistory(s, { from, to })` — доходы и расходы с контрагентом и эквивалентом в BYN, без переводов, возвратов и `pending`; событие `transactions.changed` экспортируется из `index.ts` для подписчиков.
 - Контракт `contract.transactions.*` (authed, канал отмены — web, источник — «вручную»): `list` (страница + размер ≤ 100
   + `total`; фильтры — период, счёт, категория, тип, сумма в BYN, источник, текст, `hasReceipt`, `needsReview`; сортировка день → время → `id`),
   `get` (карточка: `rate`, `history`), `create`/`update` (→ `{ transaction, undoToken, applyToPast }`), `requestDelete`, `requestChangeCategory`,
@@ -31,9 +31,9 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
 - Версия растёт с каждой правкой человека; `expectedVersion` и «Отменить» сверяют её (`CONFLICT`); фон версию не трогает
   (канал `system`). События: `transactions.changed { ids }` — пачка действия, в его транзакции; `transactions.merged { ids }` — слияние.
 - Инструменты (`agent/tools.ts`, набор `core`): `search_transactions` (`read`, ≤ 50 строк + `total`), `add_transaction`,
-  `update_transaction` (`write` + `undoToken`, источник «ассистент»), `bulk_change_category`, `delete_transaction`
+  `update_transaction` (`write` + `undoToken`, источник «ассистент»), `aggregate_transactions` (`read`, суммы периода с `traceId`, ≤ 50 групп), `bulk_change_category`, `delete_transaction`
   (`destructive`: только решение). Входы плоские (id — 36 знаков, день «ГГГГ-ММ-ДД», копейки): префикс агента ≤ 3 000
-  токенов (`agent-prefix.int.test.ts`, сейчас 2 768), строгий разбор — в `execute`; категорию выбирает сервер.
+  токенов (`agent-prefix.int.test.ts`; выводы системы `income.regular`, `obligations.regular`, `finance.freeBalance` в схеме `profile`-инструментов агента нет — иначе префикс больше 3 000), строгий разбор — в `execute`; категорию выбирает сервер.
 - Отмена `transactions.restore { batchId, rule? }` (создание — удаляет, правка — возвращает «до», удаление — воссоздаёт
   с тем же `id`; пачку, которую правили позже, — `CONFLICT`); подтверждения (`handlers.ts`): `delete`, `bulk-category`,
   `bulk-transfer`, `apply-rule`, `match` — каждое отдаёт undoToken «Отменить» сразу после «Да». CAT-05: ручная смена категории

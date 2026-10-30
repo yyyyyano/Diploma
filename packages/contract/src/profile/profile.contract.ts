@@ -99,6 +99,12 @@ const commonValues = [
   // PROF-03, REC-04: регулярный доход и обязательные платежи в месяц — вывод из регулярных платежей («предположение»).
   z.strictObject({ key: z.literal("income.regular"), amount: Money.schema }),
   z.strictObject({ key: z.literal("obligations.regular"), amount: Money.schema }),
+  // FIN-20: свободный остаток в месяц «по данным за N мес.» — вывод `fin` («предположение»).
+  z.strictObject({
+    key: z.literal("finance.freeBalance"),
+    amount: Money.schema,
+    months: z.int().min(1).max(12),
+  }),
   // Свой факт («Плачу за кружок 60 BYN в месяц»): тема и подпись — от человека.
   z.strictObject({
     key: z.literal("note"),
@@ -122,6 +128,13 @@ export const FactValue = z.discriminatedUnion("key", [
 ]);
 export type FactValue = z.infer<typeof FactValue>;
 
+/** Ключи, которые выводит система (PROF-03): человек правит их на странице, агент через инструмент — нет. */
+export const DERIVED_FACT_KEYS = [
+  "income.regular",
+  "obligations.regular",
+  "finance.freeBalance",
+] as const;
+
 /** Ключ факта. */
 export const FACT_KEYS = [
   "employment",
@@ -138,6 +151,7 @@ export const FACT_KEYS = [
   "income.salary",
   "income.regular",
   "obligations.regular",
+  "finance.freeBalance",
   "note",
 ] as const satisfies readonly FactValue["key"][];
 export const FactKey = z.enum(FACT_KEYS);

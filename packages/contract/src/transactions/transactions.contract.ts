@@ -209,6 +209,44 @@ export type UpdateResult = z.infer<typeof UpdateResult>;
 /** Сколько операций за один раз можно выбрать для удаления и массовых действий (T-022). */
 export const MAX_BULK = 500;
 
+/** FIN-01: по чему группировать агрегаты операций. */
+export const AggregateGroupBy = z.enum(["category", "month", "counterparty"]);
+export type AggregateGroupBy = z.infer<typeof AggregateGroupBy>;
+
+/** Агрегаты за период (инструмент `aggregate_transactions`, расчёты fin, budgets, dashboard). */
+export const AggregateInput = z.strictObject({
+  from: LocalDate.schema,
+  to: LocalDate.schema,
+  groupBy: AggregateGroupBy,
+});
+
+/**
+ * Группа: ключ (`system:<код>` / `custom:<id>` для категорий, `ГГГГ-ММ` для месяцев, ключ контрагента), расходы за вычетом
+ * возвратов (могут быть отрицательными — возвратов больше покупок), доходы и traceId расчёта расходов.
+ */
+export const AggregateGroup = z.strictObject({
+  key: z.string(),
+  expense: Money.schema,
+  income: Money.schema,
+  traceId: TraceId,
+});
+
+/** FIN-01: итоги периода в BYN без переводов; операции без курса НБРБ в сумму не входят — их число в `missingRates`. */
+export const TransactionAggregate = z.strictObject({
+  from: LocalDate.schema,
+  to: LocalDate.schema,
+  groupBy: AggregateGroupBy,
+  income: Money.schema,
+  incomeTraceId: TraceId,
+  expense: Money.schema,
+  expenseTraceId: TraceId,
+  missingRates: RowCount,
+  groups: z.array(AggregateGroup).max(100),
+  /** Групп больше, чем показано (остальные отброшены по порядку ключа). */
+  truncated: z.boolean(),
+});
+export type TransactionAggregate = z.infer<typeof TransactionAggregate>;
+
 export const transactionsContract = {
   /** TXN-02: страница операций с фильтрами; последний ключ сортировки — id. */
   list: oc

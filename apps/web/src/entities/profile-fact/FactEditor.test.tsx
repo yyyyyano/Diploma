@@ -59,6 +59,20 @@ describe("PROF-05: значения форм", () => {
     }
   });
 
+  it("FIN-20: свободный остаток — сумма правится, «по данным за N мес.» остаётся", () => {
+    const fact = {
+      ...base,
+      topic: "income",
+      value: { key: "finance.freeBalance", amount: { minor: 84_000, currency: "BYN" }, months: 2 },
+      evaluation: null,
+    } as ProfileFact;
+    expect(toInput("finance.freeBalance", { ...draftOf(fact), amount: "900,00" })).toEqual({
+      key: "finance.freeBalance",
+      amount: { minor: 90_000, currency: "BYN" },
+      months: 2,
+    });
+  });
+
   it("да/нет без выбора — не сохраняется; учёт нуждающихся с датой", () => {
     expect(toInput("largeFamily", draftOf(undefined))).toBeUndefined();
     expect(

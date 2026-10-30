@@ -73,6 +73,12 @@ export function factValueNode(t: ProfileT, fact: ProfileFact): ReactNode {
     case "income.regular":
     case "obligations.regular":
       return <Money value={value.amount} />;
+    case "finance.freeBalance":
+      return (
+        <>
+          <Money value={value.amount} /> {t("value.byMonths", { count: value.months })}
+        </>
+      );
     case "note":
       return value.text;
   }

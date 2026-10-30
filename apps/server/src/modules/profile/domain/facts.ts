@@ -21,6 +21,7 @@ export function topicOf(value: FactValue): FactTopic {
       return "benefits";
     case "income.salary":
     case "income.regular":
+    case "finance.freeBalance":
       return "income";
     case "obligations.regular":
       return "obligations";

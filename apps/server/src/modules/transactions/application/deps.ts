@@ -25,7 +25,7 @@ export interface Deps {
   readonly merchants: Pick<MerchantsFacade, "resolve" | "similarity">;
   readonly fxRates: Pick<FxRatesFacade, "convert" | "rateOn">;
   readonly actions: Pick<ActionsFacade, "record" | "propose">;
-  readonly explain: Pick<ExplainFacade, "save">;
+  readonly explain: Pick<ExplainFacade, "save" | "saveMany">;
   readonly notifications: Pick<NotificationsFacade, "notify">;
   readonly settings: Pick<Settings, "get">;
 }

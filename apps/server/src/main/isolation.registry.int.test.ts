@@ -197,6 +197,9 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "recurring.explain": { input: (b) => ({ id: b.recurringId }) },
   "recurring.markers": { input: (b) => ({ ids: [b.transactionId] }) },
   "tool:list_recurring": { input: () => ({}) },
+  "tool:aggregate_transactions": {
+    input: () => ({ from: "2026-10-01", to: "2026-10-31", group_by: "category" }),
+  },
   "tool:upcoming_payments": { input: () => ({ days: 30 }) },
   "accounts.list": { input: () => undefined },
   "accounts.create": { input: () => ({ kind: "deposit", currency: "BYN" }) },
@@ -642,6 +645,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "transactions.unlinkReceipt",
       "transactions.update",
       "add_transaction",
+      "aggregate_transactions",
       "bulk_change_category",
       "create_account",
       "delete_account",

@@ -1,7 +1,7 @@
 // Инструменты агента модуля transactions (AGT-03 «операции», AGT-05, AGT-07, ADR-0009): описание — по-английски и
 // коротко, вход без владельца (данные — только ctx.s), выход — карточки из @kosht/contract. Поиск — read; добавить и
 // изменить — сразу с undoToken; удалить — только ожидающее решение (destructive), исполняет его «Да» человека.
-// Агрегации (суммы, средние, по категориям) — в T-031, здесь их нет намеренно.
+// Агрегации (суммы по категориям, месяцам, контрагентам) — `aggregate_transactions` (T-031), числа считает calc.
 //
 // Входные схемы — плоские и лёгкие (id — строка в 36 знаков, день — «ГГГГ-ММ-ДД», сумма — число копеек): префикс агента
 // (подсказка + инструменты набора core) ограничен 3 000 токенов (CONSTRAINTS), а полные схемы контракта (uuid и дата
@@ -14,6 +14,7 @@ import {
   RowCount,
   SystemCategoryCode,
   Transaction,
+  TransactionAggregate,
   TransactionId,
   TransactionType,
   UndoToken,
@@ -29,7 +30,8 @@ import { CATEGORY_HANDLER, DELETE_HANDLER } from "../application/handlers.ts";
 const Change = z.strictObject({ transaction: Transaction, undoToken: UndoToken });
 
 const Id = z.string().length(36);
-const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+// Строгий разбор дня — в execute (`LocalDate`); в схеме только длина: регулярка в JSON-схеме дороже в токенах.
+const Day = z.string().length(10);
 
 /** Разбор строки схемой контракта: не по схеме — `VALIDATION` (ассистент поправит вызов), а не сбой программы. */
 function parsed<S extends z.ZodType>(schema: S, value: unknown): z.output<S> {
@@ -55,12 +57,31 @@ function minor(value: number): number {
 
 export function transactionsTools(ops: Operations) {
   return {
+    aggregate: defineTool({
+      name: "aggregate_transactions",
+      toolset: "core",
+      kind: "read",
+      description:
+        "Income and expense totals in BYN for a period by category, month or counterparty (no transfers; refunds reduce expenses).",
+      input: z.object({
+        from: Day,
+        to: Day,
+        group_by: z.enum(["category", "month", "counterparty"]),
+      }),
+      output: TransactionAggregate,
+      execute: async (ctx, input) =>
+        ops.aggregateWithTraces(ctx.s, {
+          from: parsed(LocalDate.schema, input.from),
+          to: parsed(LocalDate.schema, input.to),
+          groupBy: input.group_by,
+        }),
+    }),
     search: defineTool({
       name: "search_transactions",
       toolset: "core",
       kind: "read",
       description:
-        "Find the user's transactions, newest first. Filters are optional; amounts are BYN minor units (kopecks). Returns up to `limit` rows and the total count.",
+        "Find transactions, newest first; filters optional; amounts in kopecks. Returns up to `limit` rows and the total.",
       input: z.strictObject({
         query: z.string().max(100).optional(),
         from: Day.optional(),
@@ -96,7 +117,7 @@ export function transactionsTools(ops: Operations) {
       toolset: "core",
       kind: "write",
       description:
-        "Record a transaction now. Amount in minor units, positive. Account defaults to cash (BYN); currency must be the account's. The category is chosen automatically. Returns it with an undo token.",
+        "Record a transaction. Amount in kopecks, positive. Default account: cash (BYN). Category is chosen automatically. Returns an undo token.",
       input: z.strictObject({
         type: TransactionType,
         amountMinor: z.number(),
@@ -129,7 +150,7 @@ export function transactionsTools(ops: Operations) {
       toolset: "core",
       kind: "write",
       description:
-        "Change one transaction by id: amount (minor units), date, merchant, note or built-in category. Returns it with an undo token.",
+        "Change a transaction by id (amount, date, merchant, note, category). Returns an undo token.",
       input: z.strictObject({
         id: Id,
         amountMinor: z.number().optional(),
@@ -168,7 +189,7 @@ export function transactionsTools(ops: Operations) {
       toolset: "core",
       kind: "destructive",
       description:
-        "Ask the user to confirm moving transactions (by id) to a built-in category. Nothing changes until the user says yes.",
+        "Ask to move transactions to a category. Nothing changes until the user says yes.",
       input: z.strictObject({
         ids: z.array(Id).min(1).max(50),
         categoryCode: z.string().max(20),
@@ -189,8 +210,7 @@ export function transactionsTools(ops: Operations) {
       name: "delete_transaction",
       toolset: "core",
       kind: "destructive",
-      description:
-        "Ask the user to confirm deleting transactions by id. Nothing is deleted until the user says yes.",
+      description: "Ask to delete transactions. Nothing is deleted until the user says yes.",
       input: z.strictObject({ ids: z.array(Id).min(1).max(50) }),
       propose: async (ctx, input) => ({
         action: DELETE_HANDLER,

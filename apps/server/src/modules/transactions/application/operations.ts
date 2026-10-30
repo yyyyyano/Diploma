@@ -1,6 +1,7 @@
 // Сценарии операций одним набором для роутера, инструментов и корня модуля (сценарий = файл — см. соседей: read, write,
 // remove, restore, background); здесь они только собираются из общих частей.
 import { makeBackground } from "./background.ts";
+import { makeAggregate } from "./aggregate.ts";
 import { makeBulk } from "./bulk.ts";
 import type { Deps, JobRefs } from "./deps.ts";
 import { makeLedger } from "./ledger.ts";
@@ -25,6 +26,7 @@ export function makeOperations(d: Deps, base: ReturnType<typeof makeBase>, jobs:
   const bulk = makeBulk(d, parts);
   const rule = makeRule(d, bulk);
   return {
+    ...makeAggregate(d),
     ...makeRead(d, parts),
     ...makeWrite(d, parts, rule),
     ...makeRemove(d, parts),

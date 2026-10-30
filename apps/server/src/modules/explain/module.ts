@@ -7,6 +7,7 @@ import {
   type Platform,
 } from "../../platform/module/define-module.ts";
 import { explainNumberTool } from "./agent/tools.ts";
+import { MAX_REFS } from "./settings.ts";
 import { explainRouter } from "./api/router.ts";
 import { makeExplanations } from "./application/explanations.ts";
 import { explainUserData } from "./user-data.ts";
@@ -21,6 +22,7 @@ export function createExplainModule({ platform }: ModuleDeps<ExplainFacades, Pla
     facade: explanations,
     router: explainRouter(explanations),
     tools: [explainNumberTool(explanations)],
+    settings: [MAX_REFS],
     userData: explainUserData,
   });
 }

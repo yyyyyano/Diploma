@@ -27,6 +27,7 @@ export const profile = {
     "income.salary": "Зарплата «на руки»",
     "income.regular": "Регулярный доход в месяц",
     "obligations.regular": "Обязательные платежи в месяц",
+    "finance.freeBalance": "Свободный остаток в месяц",
     note: "Свой факт",
   },
   employment: {
@@ -61,6 +62,10 @@ export const profile = {
     unknown: "Подскажу, где это проверить",
   },
   value: {
+    byMonths_one: "по данным за {{count}} мес.",
+    byMonths_few: "по данным за {{count}} мес.",
+    byMonths_many: "по данным за {{count}} мес.",
+    byMonths_other: "по данным за {{count}} мес.",
     yes: "Да",
     no: "Нет",
     has: "Есть",

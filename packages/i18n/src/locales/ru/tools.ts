@@ -9,6 +9,7 @@ export const tools = {
   create_account: "Добавляю счёт…",
   rename_account: "Переименовываю счёт…",
   delete_account: "Готовлю удаление счёта…",
+  aggregate_transactions: "Считаю суммы по периоду…",
   search_transactions: "Ищу операции…",
   add_transaction: "Записываю операцию…",
   update_transaction: "Меняю операцию…",

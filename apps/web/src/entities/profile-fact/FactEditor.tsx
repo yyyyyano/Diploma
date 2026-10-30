@@ -44,6 +44,8 @@ interface Draft {
   readonly date: string;
   readonly name: string;
   readonly amount: string;
+  /** «По данным за N мес.» у свободного остатка (FIN-20): правка суммы месяцы не меняет. */
+  readonly months: number;
   readonly children: readonly ChildDraft[];
   readonly topic: string;
   readonly label: string;
@@ -51,6 +53,7 @@ interface Draft {
 }
 
 const EMPTY: Draft = {
+  months: 1,
   flag: null,
   types: [],
   statuses: [],
@@ -91,9 +94,14 @@ export function draftOf(fact: ProfileFact | undefined): Draft {
       return { ...EMPTY, flag: value.value ? "yes" : "no", date: value.until ?? "" };
     case "income.salary":
     case "income.regular":
-    case "obligations.regular": {
+    case "obligations.regular":
+    case "finance.freeBalance": {
       const parts = formatMoneyParts(value.amount);
-      return { ...EMPTY, amount: `${parts.negative ? "-" : ""}${parts.amount}` };
+      return {
+        ...EMPTY,
+        amount: `${parts.negative ? "-" : ""}${parts.amount}`,
+        ...(value.key === "finance.freeBalance" ? { months: value.months } : {}),
+      };
     }
     case "note":
       return { ...EMPTY, topic: value.topic, label: value.label, text: value.text };
@@ -129,6 +137,7 @@ export function toInput(key: FactKey, draft: Draft): FactValueInput | undefined 
     "income.salary": { key, amount: parseMoney(draft.amount, "BYN") },
     "income.regular": { key, amount: parseMoney(draft.amount, "BYN") },
     "obligations.regular": { key, amount: parseMoney(draft.amount, "BYN") },
+    "finance.freeBalance": { key, amount: parseMoney(draft.amount, "BYN"), months: draft.months },
     note: { key, topic: draft.topic, label: draft.label, text: draft.text },
   };
   const parsed = FactValueInput.safeParse(raw[key]);
@@ -251,7 +260,8 @@ export function FactEditor({
         )}
         {(factKey === "income.salary" ||
           factKey === "income.regular" ||
-          factKey === "obligations.regular") && (
+          factKey === "obligations.regular" ||
+          factKey === "finance.freeBalance") && (
           <TextInput
             label={t("editor.amount")}
             inputMode="decimal"

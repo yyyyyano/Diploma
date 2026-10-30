@@ -42,6 +42,8 @@ export const ERRORS = {
   FILE_TYPE_NOT_ALLOWED: { status: 415, retryable: false },
   /** Загрузка: файлов за раз больше предела (SEC-03). */
   TOO_MANY_FILES: { status: 413, retryable: false },
+  /** Чек уже загружен: тот же УИ или тот же магазин, день, время и итог (RCPT-04); в параметрах — когда и какой чек. */
+  RECEIPT_DUPLICATE: { status: 409, retryable: false },
   /** Выписку не удалось прочитать: повреждена, слишком сложная или небезопасная (STMT-04, SEC-03). */
   STATEMENT_UNREADABLE: { status: 422, retryable: false },
   RATE_LIMITED: { status: 429, retryable: true },

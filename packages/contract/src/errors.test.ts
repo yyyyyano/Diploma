@@ -20,6 +20,7 @@ describe("каталог ошибок", () => {
       FILE_TOO_LARGE: 413,
       FILE_TYPE_NOT_ALLOWED: 415,
       TOO_MANY_FILES: 413,
+      RECEIPT_DUPLICATE: 409,
       STATEMENT_UNREADABLE: 422,
       RATE_LIMITED: 429,
       INTERNAL: 500,
@@ -71,7 +72,7 @@ describe("pickErrors — карта ошибок oRPC из кодов катал
   });
 
   it("кода нет в каталоге — не компилируется, а в обход типов — ошибка", () => {
-    // @ts-expect-error — RECEIPT_DUPLICATE ещё не в каталоге: новый код сначала добавляют в errors.ts
-    expect(() => pickErrors("RECEIPT_DUPLICATE")).toThrow(RangeError);
+    // @ts-expect-error — NO_SUCH_CODE нет в каталоге: новый код сначала добавляют в errors.ts
+    expect(() => pickErrors("NO_SUCH_CODE")).toThrow(RangeError);
   });
 });

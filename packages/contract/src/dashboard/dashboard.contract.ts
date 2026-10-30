@@ -82,6 +82,8 @@ export const DashboardOverview = z.strictObject({
   }),
   /** Динамика: шесть месяцев, последний — месяц конца периода, по возрастанию. */
   months: z.array(DashboardMonth).max(12),
+  /** Дней до конца месяца периода для подписи «осталось … на N дней» у лимитов. */
+  daysLeft: z.int().min(0),
   limits: z.array(BudgetLimit),
   goals: z.array(BudgetGoal),
   /** Свободный остаток — всегда за три полных месяца, независимо от периода. */

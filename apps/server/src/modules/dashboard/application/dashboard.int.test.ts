@@ -127,6 +127,7 @@ describe("DASH-02, BUD-02, REC-03: лимиты, цели и ближайшие 
   it("лимит «Кафе» и копилка приходят с процентом и traceId; ближайшие платежи — расходы на 30 дней вперёд, не больше пяти", async () => {
     const { b, s } = await withHistory();
     const view = await b.dashboard.view(s, {});
+    expect(view.daysLeft).toBe(4);
     expect(view.limits).toHaveLength(1);
     expect(view.limits[0]).toMatchObject({ categoryKey: "system:cafes", limit: byn(50_000) });
     expect(view.limits[0]?.traceId).toBeTruthy();

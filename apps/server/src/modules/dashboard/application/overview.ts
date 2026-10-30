@@ -176,6 +176,7 @@ export function makeOverview(d: Deps) {
         income: { amount: m.income.value, traceId: monthTraces[index]?.income ?? incomeTrace },
         expense: { amount: m.expense.value, traceId: monthTraces[index]?.expense ?? expenseTrace },
       })),
+      daysLeft: budgets.daysLeft,
       limits: budgets.limits,
       goals: budgets.goals,
       freeBalance: {

@@ -16,6 +16,8 @@ import { makeThresholds } from "../../modules/budgets/application/thresholds.ts"
 import { DELETE_GOAL_HANDLER } from "../../modules/budgets/application/goals.ts";
 import { DELETE_LIMIT_HANDLER } from "../../modules/budgets/application/limits.ts";
 import type { Deps } from "../../modules/budgets/application/deps.ts";
+import { makeOverview as makeDashboard } from "../../modules/dashboard/application/overview.ts";
+import type { Deps as DashboardDeps } from "../../modules/dashboard/application/deps.ts";
 import { recurringWithJournal } from "./recurring-with-journal.ts";
 
 export { clock, newScope } from "./recurring-with-journal.ts";
@@ -49,7 +51,19 @@ export function budgetsWithJournal(db: TestDb) {
     ]);
   }
 
+  // dashboard (T-033): те же настоящие соседи, лимиты и цели — настоящие сценарии budgets выше.
+  const dashboard = makeDashboard({
+    platform: r.t.platform,
+    accounts: r.t.accounts,
+    transactions: { aggregate: r.t.ops.aggregate },
+    fin: { freeBalance: r.fin.calculate },
+    budgets: { overview: overview.view },
+    recurring: { upcoming: r.read.upcoming },
+    explain: r.t.explain,
+  } as unknown as DashboardDeps);
+
   return {
+    dashboard,
     r,
     deps,
     overview,

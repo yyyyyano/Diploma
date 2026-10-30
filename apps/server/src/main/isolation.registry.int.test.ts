@@ -201,6 +201,7 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "recurring.markers": { input: (b) => ({ ids: [b.transactionId] }) },
   "tool:list_recurring": { input: () => ({}) },
   "budgets.overview": { input: () => ({}) },
+  "dashboard.overview": { input: () => ({}) },
   "budgets.setLimit": {
     input: () => ({ categoryKey: "system:taxi", limit: { minor: 10_000, currency: "BYN" } }),
   },
@@ -646,6 +647,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "chat.history",
       "chat.send",
       "chat.stop",
+      "dashboard.overview",
       "explain.get",
       "files.download",
       "fin.freeBalance",

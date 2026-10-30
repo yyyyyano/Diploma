@@ -381,6 +381,17 @@ function ImportPanel({
       <p className={classes.summary}>
         {summary} {s.duplicates > 0 && t("documents:preview.duplicates", { count: s.duplicates })}
       </p>
+      <p className={classes.badges}>
+        <span className={classes.badge}>
+          {t("documents:preview.badges.new", { count: s.newCount })}
+        </span>
+        <span className={classes.badge}>
+          {t("documents:preview.badges.duplicates", { count: s.duplicates })}
+        </span>
+        <span className={classes.badge}>
+          {t("documents:preview.badges.skipped", { count: s.skipped })}
+        </span>
+      </p>
       <ul className={classes.notes}>
         {s.newCount === 0 && s.status === "ready" && <li>{t("documents:preview.nothingNew")}</li>}
         {s.balance !== null && s.balance.status === "ok" && (
@@ -472,6 +483,7 @@ function ImportPanel({
             <Button variant="subtle" onClick={onCancel} loading={busy}>
               {t("documents:preview.cancel")}
             </Button>
+            <span className={classes.fileKept}>{t("documents:preview.fileKept")}</span>
           </>
         )}
         {s.status === "imported" && (

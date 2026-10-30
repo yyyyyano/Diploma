@@ -145,6 +145,15 @@ describe("STMT-04, STMT-07: предпросмотр импорта", () => {
       "Нашёл 47 операций по карте •• 4821 за 01.09.2026–30.09.2026. 12 из них уже были загружены.",
     );
     expect(within(panel).getByText("Остатки сходятся.")).toBeInTheDocument();
+    // Макет statement-preview: плашки итогов и обещание STMT-10 про исходный файл.
+    expect(within(panel).getByText("Новых: 35")).toBeInTheDocument();
+    expect(within(panel).getByText("Уже были: 12")).toBeInTheDocument();
+    expect(within(panel).getByText("Ошибок: 0")).toBeInTheDocument();
+    expect(
+      within(panel).getByText(
+        "Исходный файл сохранится — его можно будет открыть из любой операции.",
+      ),
+    ).toBeInTheDocument();
     // Сырое описание → контрагент → категория; дубль и перевод помечены.
     expect(within(panel).getByText(/EVROTORG T-0042/)).toBeInTheDocument();
     expect(within(panel).getByText("Евроопт")).toBeInTheDocument();

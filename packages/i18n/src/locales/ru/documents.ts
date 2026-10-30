@@ -51,6 +51,12 @@ export const documents = {
   },
   preview: {
     title: "Предпросмотр импорта",
+    badges: {
+      new: "Новых: {{count}}",
+      duplicates: "Уже были: {{count}}",
+      skipped: "Ошибок: {{count}}",
+    },
+    fileKept: "Исходный файл сохранится — его можно будет открыть из любой операции.",
     withCard: "Нашёл {{operations}} по карте •• {{mask}} за {{from}}–{{to}}.",
     noCard: "Нашёл {{operations}} за {{from}}–{{to}}.",
     noPeriod: "Нашёл {{operations}}.",

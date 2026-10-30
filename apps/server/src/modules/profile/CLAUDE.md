@@ -15,7 +15,7 @@ PROF-01…06, AGT-03 («профиль»), AGT-06 (ответ — факт), AUT
 - Фасад `ProfileFacade`: `getFacts(s, keys, onDate)` → `ProfileFact[]` (только действующие, с оценкой на дату вопроса —
   возраст детей, `childrenUnder18`, срок молодого специалиста, PROF-06); `upsertDerivedFact(s, { value, source:
   statements|system, sourceRef? })` → id или `undefined` («предположение», PROF-03; подтверждённое человеком не
-  перетирает); `recordAnswer(s, { value, messageId, channel })` → `{ fact, undoToken }` (источник «чат», PROF-04).
+  перетирает; удалённый человеком факт не оживляет — `undefined`); `recordAnswer(s, { value, messageId, channel })` → `{ fact, undoToken }` (источник «чат», PROF-04).
   Словарь имён для маскирования (PRIV-03, T-024): `knownNamesSource` модуля (`application/known-names.ts`) — имена детей из
   действующих фактов «дети»; шлюз `llm` склоняет их и меняет метками перед облаком (`platform.knownNames`).
 - Событие `profile.facts-changed { ids }` (`events.ts`) — на каждое изменение, пачкой (анкета — одно событие).

@@ -182,6 +182,37 @@ describe("PROF-03: выводы системы — «предположение�
   });
 });
 
+describe("PROF-05: удалённый человеком вывод системы не оживает", () => {
+  it("человек удалил предположение «регулярный доход» — новый вывод его не возвращает; «Отменить» удаления возвращает", async () => {
+    const s = scoped();
+    const { facts, actions } = factsWithJournal();
+    const value = (minor: number) => ({
+      key: "income.regular" as const,
+      amount: { minor, currency: "BYN" },
+    });
+    const id = await facts.upsertDerivedFact(s, { value: value(240_000), source: "system" });
+    const undoToken = await facts.remove(s, id ?? "", "web");
+    expect(
+      await facts.upsertDerivedFact(s, { value: value(250_000), source: "system" }),
+    ).toBeUndefined();
+    expect((await facts.list(s)).facts).toEqual([]);
+    await actions.undo(s, undoToken);
+    expect((await facts.list(s)).facts).toMatchObject([
+      { id, value: { amount: { minor: 240_000 } } },
+    ]);
+  });
+
+  it("предположения, которого не было, вывод по-прежнему создаёт", async () => {
+    const s = scoped();
+    const { facts } = factsWithJournal();
+    const id = await facts.upsertDerivedFact(s, {
+      value: { key: "obligations.regular", amount: { minor: 100, currency: "BYN" } },
+      source: "system",
+    });
+    expect(id).toBeDefined();
+  });
+});
+
 describe("PROF-04, КП PROF: ответ на дозапрос запоминается фактом «чат»", () => {
   it("«да, мы с женой на учёте с 2019 года» → «учёт нуждающихся: да, с 2019», источник — чат и сообщение", async () => {
     const s = scoped();

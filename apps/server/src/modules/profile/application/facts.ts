@@ -97,7 +97,11 @@ export function makeFacts(d: FactsDeps) {
    */
   async function write(
     tx: ScopedDb,
-    input: Write & { readonly id?: string; readonly keepConfirmed?: boolean },
+    input: Write & {
+      readonly id?: string;
+      readonly keepConfirmed?: boolean;
+      readonly keepDeleted?: boolean;
+    },
   ): Promise<{ factId: string; revisionId: string } | undefined> {
     const now = clock.now();
     const today = clock.today();
@@ -112,6 +116,8 @@ export function makeFacts(d: FactsDeps) {
     }
     const live = current !== undefined && current.deletedAt === null;
     if (input.keepConfirmed === true && live && current?.status === "confirmed") return undefined;
+    // PROF-05: удалённый человеком факт вывод системы не оживляет — «удалённый факт больше не используется».
+    if (input.keepDeleted === true && current !== undefined && !live) return undefined;
     const next = {
       value,
       topic: topicOf(value),
@@ -264,6 +270,7 @@ export function makeFacts(d: FactsDeps) {
         sourceRef: input.sourceRef ?? null,
         status: "assumed",
         keepConfirmed: true,
+        keepDeleted: true,
       });
       if (change === undefined) return undefined;
       await changed(tx, [change.factId]);

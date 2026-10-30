@@ -59,7 +59,7 @@ describe("STMT-04: импорт выписки через API", () => {
         });
         const body = (await response.json()) as { summary: { status: string } };
         if (body.summary.status !== "ready") throw new Error(body.summary.status);
-        return body as {
+        return body as unknown as {
           summary: {
             found: number;
             newCount: number;

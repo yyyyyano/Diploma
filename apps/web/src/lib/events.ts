@@ -54,8 +54,8 @@ export interface EventStreamOptions {
  * вид сигнала, чек до своей задачи), — безопасное умолчание: перезапрос всех.
  */
 const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
-  account: () => [orpc.accounts.key(), orpc.fin.key()],
-  transaction: () => [orpc.transactions.key(), orpc.fin.key()],
+  account: () => [orpc.accounts.key(), orpc.fin.key(), orpc.budgets.key()],
+  transaction: () => [orpc.transactions.key(), orpc.fin.key(), orpc.budgets.key()],
   category: () => [orpc.categories.key()],
   notification: () => [orpc.notifications.key()],
   "statement-import": () => [orpc.statements.key()],
@@ -64,6 +64,8 @@ const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
   "chat-message": () => [orpc.chat.key()],
   "data-export": () => [orpc.privacy.key()],
   recurring: () => [orpc.recurring.key(), orpc.fin.key()],
+  budget: () => [orpc.budgets.key()],
+  goal: () => [orpc.budgets.key()],
 };
 
 function apply(event: SiteEvent, queryClient: QueryClient): void {

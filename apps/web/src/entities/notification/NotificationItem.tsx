@@ -2,8 +2,8 @@
 // словаря по виду, день, кнопки действия. «Да / Нет» — прямо в actions.answer по decisionId, «Отменить» — в
 // actions.undo по undoToken, «Показать» — ссылка на объект. Нажатие на любую кнопку отмечает уведомление прочитанным.
 import type { UserNotification } from "@kosht/contract";
-import { formatRelativeDay } from "@kosht/i18n";
-import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
+import { formatMoney, formatRelativeDay } from "@kosht/i18n";
+import { DEFAULT_TIME_ZONE, LocalDate, Money } from "@kosht/kernel";
 import { Button } from "@mantine/core";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -22,6 +22,7 @@ import {
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
+import { categoryRefOf, useCategoryLookup } from "../category/index.ts";
 import classes from "./NotificationItem.module.css";
 
 const ICONS: Readonly<Record<UserNotification["kind"], LucideIcon>> = {
@@ -90,7 +91,28 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
   };
   const { decisionId, undoToken } = notification;
   // Подстановки текстов с параметрами (receipt-match: магазин и дни); без параметров в записи — пустые.
+  const lookup = useCategoryLookup();
   const params = { store: "", date: "", bankDate: "", ...notification.params };
+  const num = (key: string) => Number(notification.params[key] ?? 0);
+  // BUD-03, BUD-07: текст лимита и цели — по параметрам; деньги в параметрах — копейки, категорию называет справочник.
+  let textKey = `notifications:kinds.${notification.kind}.text`;
+  if (notification.kind === "limit") {
+    const ref = categoryRefOf(String(notification.params["category"] ?? ""));
+    textKey = `notifications:kinds.limit.${num("threshold") >= 100 ? "text100" : "text80"}`;
+    Object.assign(params, {
+      category: ref === undefined ? "" : lookup.nameOf(ref),
+      spent: formatMoney(Money.of(num("spent"), "BYN")),
+      limit: formatMoney(Money.of(num("limit"), "BYN")),
+    });
+  } else if (notification.kind === "goal") {
+    const reason = String(notification.params["reason"] ?? "");
+    const variants: Record<string, string> = {
+      half: "textHalf",
+      done: "textDone",
+      behind: "textBehind",
+    };
+    textKey = `notifications:kinds.goal.${variants[reason] ?? "text"}`;
+  }
   return (
     <article className={classes.item} data-unread={!notification.read}>
       <span className={classes.icon} data-kind={notification.kind}>
@@ -105,7 +127,7 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
             // TXN-10: автоматическая привязка чека и вопрос «одна покупка?» — один вид, два текста (кнопки у них разные).
             notification.kind === "receipt-match" && undoToken !== null
               ? t("notifications:kinds.receipt-match.textLinked", params)
-              : t(`notifications:kinds.${notification.kind}.text`, params)
+              : t(textKey as never, params)
           }
         </p>
         <p className={classes.time}>

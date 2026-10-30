@@ -191,9 +191,9 @@ export const budgetsContract = {
     .input(IdOf(GoalId))
     .output(z.strictObject({ decisionId: DecisionId }))
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
-  /** Рекомендуемый взнос до создания цели (BUD-05). */
+  /** Рекомендуемый взнос до создания цели (BUD-05); POST — сумма во входе вложенная, строка запроса сделала бы её текстом. */
   previewGoal: oc
-    .route({ method: "GET", path: "/budgets/goal/preview" })
+    .route({ method: "POST", path: "/budgets/goal/preview" })
     .input(PreviewGoalInput)
     .output(GoalPreview)
     .errors(pickErrors("UNAUTHORIZED", "VALIDATION")),

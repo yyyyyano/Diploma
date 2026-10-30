@@ -7,3 +7,4 @@ export {
   type CategoryPickerProps,
 } from "./CategoryPicker.tsx";
 export { CategoryBadge, useCategoryLookup } from "./CategoryBadge.tsx";
+export { categoryRefOf } from "./category-key.ts";

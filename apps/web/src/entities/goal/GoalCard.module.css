@@ -1,0 +1,187 @@
+/* Карточка цели (design/screens/Budget.dc.html .goal): заголовок, суммы, полоса, совет по взносу, взносы копилки. */
+.goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-12);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sub {
+  margin: var(--s-2) 0 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.amounts {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.saved {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.of {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.unknown {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.percent {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.bar {
+  display: block;
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: var(--r-pill);
+  appearance: none;
+  overflow: hidden;
+  background: var(--line);
+}
+
+.bar::-webkit-progress-bar {
+  background: var(--line);
+  border-radius: var(--r-pill);
+}
+
+.bar::-webkit-progress-value {
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+
+.bar::-moz-progress-bar {
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+
+.advice {
+  padding: var(--s-12) var(--s-14);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.adviceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+}
+
+.adviceText {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fits {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: var(--s-6) 0 0;
+  font-size: 13px;
+  color: var(--income);
+}
+
+.fits[data-fits="false"] {
+  color: var(--warn);
+}
+
+.fits[data-fits="null"] {
+  color: var(--ink-2);
+}
+
+.behind {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--warn);
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.contributions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.contributionsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.contributionsTitle {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.contribution {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--s-8) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}

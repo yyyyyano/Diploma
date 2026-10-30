@@ -163,12 +163,15 @@
   `FORBIDDEN`), `jobs.scope-rejected` в логе, без повтора; ошибка — `failed` с кодом, повтор только для `retryable`.
   Реестр `start({ jobs, schedules?, sweeps? })`: в `worker` расписания и обходы — очереди `short` с
   `schedule(имя, cron, null, { tz: deps.timeZone(), missed: "once" })`; пояс — настройка `clock.time-zone`,
-  читается при старте (смена — после перезапуска `worker`).
+  читается при старте (смена — после перезапуска `worker`). Расписание с `liveCron` (cron из настройки, T-039) `worker`
+  сверяет раз в `rescheduleEveryMs` (30 с) и при смене перерегистрирует тем же `schedule(...)` без перезапуска;
+  настройку не прочитали — идёт запасной `cron` (`jobs.cron-unreadable`), невалидный cron — прежний остаётся
+  (`jobs.reschedule-failed`); `overview()` показывает текущий cron.
 - В тестах сценариев вместо `createJobs` — `InlineJobs` из `@kosht/testing` (выполняет сразу; форму сверяет
   `inline-jobs.test.ts`).
 - `periods.ts` — `pendingPeriods(watermark, today, stepDays)`: закончившиеся периоды после водяного знака (текущий —
   нет); без водяного знака — только последний закончившийся.
-- `schedule.ts` — `defineSchedule({ name, cron, stepDays, handle(ctx, periods) })` (расписание платформы, без scope)
+- `schedule.ts` — `defineSchedule({ name, cron, liveCron?, stepDays, handle(ctx, periods) })` (расписание платформы, без scope)
   и `runSchedule`: водяной знак из `background_job_run` → `pendingPeriods` → обработчик → новый водяной знак только
   после успеха; итог `idle | completed | retry | failed`.
 - `sweep.ts` — `defineSweep({ name, cron, find, job, payload(row) })` и `runSweep`: `crossTenant(pool, name, find)`

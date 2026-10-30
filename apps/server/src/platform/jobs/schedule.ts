@@ -20,8 +20,13 @@ export interface ScheduleContext {
 export interface ScheduleDef {
   /** Имя очереди и ключ водяного знака: `<модуль>.<что>`. */
   readonly name: string;
-  /** cron по поясу настройки clock.time-zone (NFR-23). */
+  /** cron по поясу настройки clock.time-zone (NFR-23); у расписания с `liveCron` — запасной, если настройка не читается. */
   readonly cron: string;
+  /**
+   * cron из настройки, которую администратор меняет без перезапуска (T-039: время ежедневной проверки законов). Worker
+   * сверяет его с зарегистрированным раз в `rescheduleEveryMs` и при смене перерегистрирует расписание в pg-boss.
+   */
+  readonly liveCron?: () => Promise<string>;
   /** Длина периода в днях: 1 — сутки, 7 — неделя. */
   readonly stepDays: number;
   /** Обработать закончившиеся периоды по порядку; идемпотентен (упавший прогон повторится с теми же). */

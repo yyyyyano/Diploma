@@ -3,7 +3,7 @@
 import type { Scope } from "@kosht/kernel";
 import { FakeClock, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import { migrateFixtures } from "../db/__fixtures__/fixture-db.ts";
 import { fxReceipts } from "../db/__fixtures__/schema.ts";
@@ -40,6 +40,7 @@ async function startJobs(
   registry: JobsRegistry,
   verify: ScopeVerifier,
   timeZone = "Europe/Minsk",
+  rescheduleEveryMs?: number,
 ) {
   const scopes = createScopeVerifierRegistry();
   scopes.register(verify);
@@ -52,6 +53,7 @@ async function startJobs(
     scopes,
     timeZone: async () => timeZone,
     pollingIntervalSeconds: 0.5,
+    ...(rescheduleEveryMs === undefined ? {} : { rescheduleEveryMs }),
   });
   await runtime.start(registry);
   running.push(runtime);
@@ -440,6 +442,74 @@ describe("NFR-22, NFR-23: расписания и обходы ведёт worker
       ["test.nightly"],
     );
     expect(rows).toEqual([{ timezone: "Asia/Tokyo", cron: "0 3 * * *", missed: "once" }]);
+  });
+
+  it("cron из настройки: смена времени перерегистрирует расписание без перезапуска, невалидный cron прежнее оставляет", async () => {
+    let cron = "0 4 * * *";
+    const schedule = defineSchedule({
+      name: "test.live-cron",
+      cron: "0 3 * * *",
+      liveCron: async () => cron,
+      stepDays: 1,
+      handle: async () => {},
+    });
+    const { runtime, logs } = await startJobs(
+      "worker",
+      { jobs: [], schedules: [schedule] },
+      async () => true,
+      "Europe/Minsk",
+      50,
+    );
+    const registered = async () =>
+      (
+        await db.owner.query<{ cron: string }>("select cron from pgboss.schedule where name = $1", [
+          "test.live-cron",
+        ])
+      ).rows[0]?.cron;
+    // Старт — с cron из настройки, а не с запасного.
+    expect(await registered()).toBe("0 4 * * *");
+    expect((await runtime.overview()).schedules).toContainEqual({
+      name: "test.live-cron",
+      cron: "0 4 * * *",
+      lastRun: null,
+    });
+
+    cron = "15 2 * * *";
+    await vi.waitFor(async () => expect(await registered()).toBe("15 2 * * *"));
+    expect((await runtime.overview()).schedules).toContainEqual({
+      name: "test.live-cron",
+      cron: "15 2 * * *",
+      lastRun: null,
+    });
+
+    cron = "это не cron";
+    await vi.waitFor(() =>
+      expect(logs.lines().some((l) => l["msg"] === "jobs.reschedule-failed")).toBe(true),
+    );
+    expect(await registered()).toBe("15 2 * * *");
+  });
+
+  it("настройку cron не удалось прочитать — расписание идёт по запасному cron, worker не падает", async () => {
+    const schedule = defineSchedule({
+      name: "test.live-cron-broken",
+      cron: "0 3 * * *",
+      liveCron: async () => {
+        throw new Error("настройки недоступны");
+      },
+      stepDays: 1,
+      handle: async () => {},
+    });
+    const { logs } = await startJobs(
+      "worker",
+      { jobs: [], schedules: [schedule] },
+      async () => true,
+    );
+    const { rows } = await db.owner.query<{ cron: string }>(
+      "select cron from pgboss.schedule where name = $1",
+      ["test.live-cron-broken"],
+    );
+    expect(rows).toEqual([{ cron: "0 3 * * *" }]);
+    expect(logs.lines().some((l) => l["msg"] === "jobs.cron-unreadable")).toBe(true);
   });
 
   it("обход fx_receipts находит владельцев (id, householdId, userId) и ставит задачу каждому под его scope", async () => {

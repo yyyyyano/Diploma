@@ -75,6 +75,8 @@ export interface JobsDeps {
   timeZone(): Promise<TimeZone>;
   /** Как часто worker спрашивает новые задачи, с (по умолчанию 2; тесты — 0.5). */
   readonly pollingIntervalSeconds?: number;
+  /** Как часто worker сверяет `liveCron` расписаний с зарегистрированным, мс (по умолчанию 30 000; тесты — меньше). */
+  readonly rescheduleEveryMs?: number;
 }
 
 /** Что раскладывает по очередям корень композиции (реестры модулей — T-007). */
@@ -93,6 +95,7 @@ export interface JobsRuntime extends Jobs {
 }
 
 const DEFAULT_POLLING_SECONDS = 2;
+const DEFAULT_RESCHEDULE_MS = 30_000;
 /** Сколько задач удалять за раз при удалении аккаунта. */
 const DISCARD_BATCH = 1000;
 
@@ -101,8 +104,30 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
   const system = createSystemDb(pool);
   const queues = new Map<string, JobDef>();
   /** Расписания и обходы процесса — имена и cron, для обзора (во всех ролях). */
-  let timed: readonly { readonly name: string; readonly cron: string }[] = [];
+  let timed: readonly {
+    readonly name: string;
+    readonly cron: string;
+    readonly liveCron?: () => Promise<string>;
+  }[] = [];
   let boss: PgBoss | undefined;
+  let watcher: NodeJS.Timeout | undefined;
+  /** Сверка `liveCron` в полёте: `stop()` дожидается её, чтобы не перерегистрировать расписание в закрытый pg-boss. */
+  let reschedulePass: Promise<void> | undefined;
+
+  /** Текущий cron расписания: из настройки, а не читается — запасной из объявления (сбой в лог, прогон не падает). */
+  async function cronOf(timer: {
+    readonly name: string;
+    readonly cron: string;
+    readonly liveCron?: () => Promise<string>;
+  }): Promise<string> {
+    if (timer.liveCron === undefined) return timer.cron;
+    try {
+      return await timer.liveCron();
+    } catch (error) {
+      log.warn({ err: error, job: timer.name }, "jobs.cron-unreadable");
+      return timer.cron;
+    }
+  }
 
   async function send(
     scope: ScopedDb["scope"],
@@ -173,7 +198,8 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
         failures: await recentFailures(system, OVERVIEW_LIMIT),
         schedules: await Promise.all(
           timed.map(async (timer) => ({
-            ...timer,
+            name: timer.name,
+            cron: await cronOf(timer),
             lastRun: (await lastRunOf(system, timer.name)) ?? null,
           })),
         ),
@@ -183,7 +209,13 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
     async start(registry) {
       if (boss !== undefined) throw new Error("Очередь задач уже запущена.");
       const timers = [...(registry.schedules ?? []), ...(registry.sweeps ?? [])];
-      timed = timers.map((timer) => ({ name: timer.name, cron: timer.cron }));
+      timed = timers.map((timer) => ({
+        name: timer.name,
+        cron: timer.cron,
+        ...("liveCron" in timer && timer.liveCron !== undefined
+          ? { liveCron: timer.liveCron }
+          : {}),
+      }));
       const sweepJobs = (registry.sweeps ?? []).map((sweep) => sweep.job);
       for (const job of [...registry.jobs, ...sweepJobs]) {
         const known = queues.get(job.name);
@@ -234,6 +266,7 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
           ...(registry.schedules ?? []).map((schedule) => ({
             name: schedule.name,
             cron: schedule.cron,
+            ...(schedule.liveCron === undefined ? {} : { liveCron: schedule.liveCron }),
             run: async (item: Job<unknown>) =>
               SCHEDULE_STATUS[
                 await runSchedule(
@@ -263,6 +296,8 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
             },
           })),
         ];
+        /** Что зарегистрировано в pg-boss сейчас: сверка `liveCron` перерегистрирует расписание только при смене. */
+        const registered = new Map<string, string>();
         for (const tick of ticks) {
           await instance.createQueue(tick.name, { policy: "short", retryLimit: 2 });
           await instance.work(tick.name, work, async (batch) =>
@@ -275,7 +310,33 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
               })),
             ),
           );
-          await instance.schedule(tick.name, tick.cron, null, { tz: timeZone, missed: "once" });
+          const cron = await cronOf(tick);
+          await instance.schedule(tick.name, cron, null, { tz: timeZone, missed: "once" });
+          registered.set(tick.name, cron);
+        }
+        const live = ticks.filter((tick) => tick.liveCron !== undefined);
+        if (live.length > 0) {
+          // NFR-22: время расписания меняет администратор (api-процесс) — worker подхватывает его без перезапуска.
+          const pass = async (): Promise<void> => {
+            for (const tick of live) {
+              const cron = await cronOf(tick);
+              if (cron === registered.get(tick.name)) continue;
+              try {
+                await instance.schedule(tick.name, cron, null, { tz: timeZone, missed: "once" });
+                registered.set(tick.name, cron);
+                log.info({ job: tick.name }, "jobs.rescheduled");
+              } catch (error) {
+                // Невалидный cron не должен ронять worker: прежнее расписание остаётся, сверка повторится.
+                log.error({ err: error, job: tick.name }, "jobs.reschedule-failed");
+              }
+            }
+          };
+          watcher = setInterval(() => {
+            reschedulePass ??= pass().finally(() => {
+              reschedulePass = undefined;
+            });
+          }, deps.rescheduleEveryMs ?? DEFAULT_RESCHEDULE_MS);
+          watcher.unref();
         }
       }
       log.info({ role, count: queues.size + timers.length }, "jobs.started");
@@ -283,6 +344,9 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
 
     async stop() {
       if (boss === undefined) return;
+      if (watcher !== undefined) clearInterval(watcher);
+      watcher = undefined;
+      await reschedulePass;
       await stopBoss(boss);
       boss = undefined;
     },
@@ -293,6 +357,7 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
 interface Tick {
   readonly name: string;
   readonly cron: string;
+  readonly liveCron?: () => Promise<string>;
   run(item: Job<unknown>): Promise<JobResult["status"]>;
 }
 

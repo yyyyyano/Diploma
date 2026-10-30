@@ -13,6 +13,7 @@ export const ENTRIES = {
   bot: "src/entrypoints/bot.ts",
   migrate: "src/main/migrate-cli.ts",
   "statement-parse.worker": "src/modules/statements/infrastructure/parsing/parse.worker.ts",
+  "receipt-prepare.worker": "src/modules/receipts/infrastructure/image/prepare.worker.ts",
 } as const;
 
 export default defineConfig(

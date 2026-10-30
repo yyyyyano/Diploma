@@ -48,19 +48,11 @@ export const DELETE_HANDLER = "accounts.delete";
 
 export type Channel = "web" | "telegram";
 
-/** Остаток счёта «до» импорта выписки: по нему откат возвращает остаток, день и источник (STMT-11). */
-export interface BalanceSnapshot {
-  readonly balanceMinor: number;
+/** Поправка остатка по выписке (STMT-02) и день с источником до неё: по ним откат импорта возвращает состояние (STMT-11). */
+export interface BalanceAdjustment {
+  readonly adjustmentMinor: number;
   readonly balanceOn: string;
   readonly balanceSource: string;
-}
-
-function snapshotOf(row: AccountRow): BalanceSnapshot {
-  return {
-    balanceMinor: row.balanceMinor,
-    balanceOn: row.balanceOn,
-    balanceSource: row.balanceSource,
-  };
 }
 
 export interface AccountsDeps {
@@ -411,18 +403,19 @@ export function makeAccounts(d: AccountsDeps) {
 
   /**
    * Фасад (statements, STMT-02): остаток из выписки на день `on` — абсолютный, а не сдвиг. Выписка старше уже известного
-   * остатка его не перебивает (`undefined`). Возвращает остаток «до» — по нему откат импорта возвращает состояние.
+   * остатка его не перебивает (`undefined`), если не `force` (счёт создан этим же импортом: остатка «новее» у него нет, а
+   * день создания — сегодняшний). Возвращает поправку (выписка − остаток до неё) и день с источником «до»: по ним откат
+   * импорта убирает ровно эту поправку, не затирая операции, внесённые позже.
    */
   async function setStatementBalance(
     tx: ScopedDb,
     change: { accountId: string; balance: Money; on: LocalDate; force?: boolean },
-  ): Promise<BalanceSnapshot | undefined> {
+  ): Promise<BalanceAdjustment | undefined> {
     const row = await lockOwn(tx, change.accountId);
     if (row.currency !== change.balance.currency) {
       throw new RangeError("Остаток выписки — в валюте счёта.");
     }
     if (change.force !== true && change.on < row.balanceOn) return undefined;
-    const before = snapshotOf(row);
     await updateAccount(
       tx,
       row.id,
@@ -430,23 +423,27 @@ export function makeAccounts(d: AccountsDeps) {
       clock.now(),
     );
     await changed(tx, [row.id], true);
-    return before;
+    return {
+      adjustmentMinor: change.balance.minor - row.balanceMinor,
+      balanceOn: row.balanceOn,
+      balanceSource: row.balanceSource,
+    };
   }
 
-  /** Фасад (statements, STMT-11): вернуть остаток, день и источник, какими они были до импорта. */
-  async function restoreBalance(
+  /** Фасад (statements, STMT-11): убрать поправку выписки; день и источник остатка — как до импорта. */
+  async function revertStatementBalance(
     tx: ScopedDb,
     accountId: string,
-    snapshot: BalanceSnapshot,
+    adjustment: BalanceAdjustment,
   ): Promise<void> {
     const row = await lockOwn(tx, accountId);
     await updateAccount(
       tx,
       row.id,
       {
-        balanceMinor: snapshot.balanceMinor,
-        balanceOn: snapshot.balanceOn,
-        balanceSource: snapshot.balanceSource,
+        balanceMinor: row.balanceMinor - adjustment.adjustmentMinor,
+        balanceOn: adjustment.balanceOn,
+        balanceSource: adjustment.balanceSource,
       },
       clock.now(),
     );
@@ -489,7 +486,7 @@ export function makeAccounts(d: AccountsDeps) {
     findOrCreate,
     findCard,
     setStatementBalance,
-    restoreBalance,
+    revertStatementBalance,
     applyBalanceChange,
     currencyOf,
     cash,

@@ -17,8 +17,8 @@ STMT-01/02/09, EXPL-01, AGT-03 («счета»), AGT-05/07, RCPT-10. Макет:
   `applyBalanceChange(tx, { accountId, delta: Money, on })` (валюта счёта; день остатка не уходит назад; событие);
   `currencyOf(s, id)` — валюта своего счёта (чужой или нет — `NOT_FOUND`; операция пишется в валюте счёта);
   `findCard(s, key)` — карта без создания (предпросмотр импорта); `setStatementBalance(tx, { accountId, balance, on, force? })` —
-  остаток из выписки (абсолютный, STMT-02; старше известного не перебивает, кроме `force` для счёта этого же импорта) → остаток
-  «до» или `undefined`; `restoreBalance(tx, accountId, snapshot)` — откат импорта (STMT-11);
+  остаток из выписки (абсолютный, STMT-02; старше известного не перебивает, кроме `force` для счёта этого же импорта) →
+  поправка и день «до» или `undefined`; `revertStatementBalance(tx, accountId, поправка)` — откат импорта (STMT-11);
   `cash(tx)` — «Наличные» в BYN; `unknownCard(tx)` — «Карта, не указана» (создаётся при первом обращении, RCPT-10).
 - Контракт `contract.accounts.*` (все authed, канал отмены — web): `list` → `{ onDate, items, totals }` (остаток в валюте
   счёта, день и источник остатка, эквивалент в BYN и курс НБРБ на сегодня; итоги `total`/`available` в BYN или `null`

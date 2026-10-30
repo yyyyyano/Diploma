@@ -281,7 +281,7 @@ describe("фасад для transactions и statements", () => {
     ]);
   });
 
-  it("STMT-02: остаток из выписки — абсолютный, с датой; старая выписка его не перебивает; откат возвращает прежний", async () => {
+  it("STMT-02: остаток из выписки — абсолютный, с днём; старая выписка его не перебивает; откат убирает только поправку", async () => {
     const s = scoped();
     const { accounts } = accountsWithJournal();
     const key = { bank: "Лесбанк", mask: "4821", currency: "BYN" };
@@ -297,24 +297,32 @@ describe("фасад для transactions и statements", () => {
           force,
         }),
       );
+    const shift = (minor: number) =>
+      s.transaction((tx) =>
+        accounts.applyBalanceChange(tx, {
+          accountId: id,
+          delta: Money.of(minor, "BYN"),
+          on: LocalDate.parse("2026-10-28"),
+        }),
+      );
     // Новая карта создана «сегодня»: выписка за прошлый месяц без force остаток не ставит.
     expect(await set(150_000, "2026-09-30")).toBeUndefined();
-    const before = await set(150_000, "2026-09-30", true);
-    expect(before).toMatchObject({ balanceMinor: 0, balanceSource: "operations" });
+    await shift(-30_000);
+    const applied = await set(150_000, "2026-09-30", true);
+    expect(applied).toMatchObject({ adjustmentMinor: 180_000, balanceSource: "operations" });
     expect((await accounts.list(s)).items[0]).toMatchObject({
       balance: { minor: 150_000 },
       balanceOn: "2026-09-30",
       balanceSource: "statement",
     });
-    // Выписка за более ранний период остаток не перебивает; за более поздний — ставит.
+    // Выписка за более ранний период остаток не перебивает.
     expect(await set(90_000, "2026-08-31")).toBeUndefined();
-    expect(await set(150_000, "2026-10-31")).toBeDefined();
-    await set(150_000, "2026-09-30", true);
-    expect((await accounts.list(s)).items[0]).toMatchObject({ balance: { minor: 150_000 } });
-    if (before === undefined) throw new Error("нет снимка до");
-    await s.transaction((tx) => accounts.restoreBalance(tx, id, before));
+    // После импорта внесена операция: откат поправки её не затирает.
+    await shift(-1_000);
+    if (applied === undefined) throw new Error("нет поправки");
+    await s.transaction((tx) => accounts.revertStatementBalance(tx, id, applied));
     expect((await accounts.list(s)).items[0]).toMatchObject({
-      balance: { minor: 0 },
+      balance: { minor: -31_000 },
       balanceSource: "operations",
     });
   });

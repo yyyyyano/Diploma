@@ -39,7 +39,7 @@ export function createAccountsModule({ platform, facades }: ModuleDeps<AccountsF
       findOrCreate: accounts.findOrCreate,
       findCard: accounts.findCard,
       setStatementBalance: accounts.setStatementBalance,
-      restoreBalance: accounts.restoreBalance,
+      revertStatementBalance: accounts.revertStatementBalance,
       applyBalanceChange: accounts.applyBalanceChange,
       currencyOf: accounts.currencyOf,
       cash: accounts.cash,

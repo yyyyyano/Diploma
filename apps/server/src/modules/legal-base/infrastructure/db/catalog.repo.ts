@@ -4,8 +4,10 @@ import { and, count, eq, inArray } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { ParsedFragment } from "../../domain/build-fragments.ts";
 import type { CatalogEntry } from "../../domain/start-catalog.ts";
+import { aliasesOf } from "../../domain/aliases.ts";
 import { isNpa } from "../../domain/start-catalog.ts";
 import {
+  legalActAliases,
   legalActSnapshots,
   legalActs,
   legalFragmentVersions,
@@ -251,4 +253,18 @@ export async function logUpdate(
     event: entry.event,
     details: entry.details ?? {},
   });
+}
+
+/** Краткие имена актов каталога (LAW-21): начальный набор для известных актов; повтор безопасен. */
+export async function seedAliases(db: SystemDb, entries: readonly CatalogEntry[]): Promise<void> {
+  const acts = await db.select({ id: legalActs.id, pravoId: legalActs.pravoId }).from(legalActs);
+  const idOf = new Map(acts.map((a) => [a.pravoId, a.id]));
+  const values = entries.flatMap((e) =>
+    aliasesOf(e.pravoId).flatMap((alias) => {
+      const actId = idOf.get(e.pravoId);
+      return actId === undefined ? [] : [{ actId, alias }];
+    }),
+  );
+  if (values.length === 0) return;
+  await db.insert(legalActAliases).values(values).onConflictDoNothing();
 }

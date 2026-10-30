@@ -17,6 +17,7 @@ import {
   markActState,
   findAct,
   seedActs,
+  seedAliases,
 } from "../infrastructure/db/catalog.repo.ts";
 import { LEGAL_AUTOLOAD, LOADER_CONTACT } from "../settings.ts";
 import type { LoadAct } from "./load-act.ts";
@@ -50,6 +51,7 @@ export function makeStartCatalog(d: StartCatalogDeps) {
   /** Завести 28 актов стартового каталога (идемпотентно). */
   async function seed(): Promise<void> {
     await seedActs(d.system, START_CATALOG, "start-catalog");
+    await seedAliases(d.system, START_CATALOG);
   }
 
   /** Загрузить оставшиеся акты по одному; ошибка, которая лечится временем, — AppError UNAVAILABLE (повтор задачи). */

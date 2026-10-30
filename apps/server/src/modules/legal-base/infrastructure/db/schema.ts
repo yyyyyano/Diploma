@@ -7,6 +7,7 @@ import {
   boolean,
   check,
   customType,
+  halfvec,
   date,
   index,
   integer,
@@ -28,6 +29,9 @@ const moment = () => timestamp({ withTimezone: true });
 const bytea = customType<{ data: Buffer; driverData: Buffer }>({
   dataType: () => "bytea",
 });
+
+/** tsvector: колонка, которую считает база (генерируемая), в приложении читается только через SQL поиска. */
+const tsvector = customType<{ data: string }>({ dataType: () => "tsvector" });
 
 /** Состояние загрузки акта: ждёт, загружен, только карточка, карантин (LAW-39), ошибка. */
 export const ACT_LOAD_STATES = ["pending", "loaded", "card-only", "quarantined", "failed"] as const;
@@ -147,6 +151,10 @@ export const legalFragmentVersions = publicTable(
     /** Исключённая статья хранится, чтобы честно отвечать «ст. N исключена» (LAW-20). */
     excluded: boolean().notNull().default(false),
     isCurrent: boolean().notNull().default(true),
+    /** Полнотекстовый вектор `russian`, ё → е (ADR-0007): путь и текст; считает база, поиск сразу после разбора (LAW-22). */
+    searchTsv: tsvector("search_tsv").generatedAlwaysAs(
+      sql`to_tsvector('russian', translate(lower(search_path || ' ' || body), 'ё', 'е'))`,
+    ),
     firstSnapshotId: uuid()
       .notNull()
       .references(() => legalActSnapshots.id),
@@ -220,4 +228,45 @@ export const legalUpdateLog = systemTable(
       .default(sql`'{}'::jsonb`),
   },
   (t) => [index("legal_update_log_at_idx").on(t.at)],
+);
+
+/** Краткие имена актов для точного обращения «ст. 210 НК» (LAW-21): нормализованный алиас → акт; редактор — T-039. */
+export const legalActAliases = publicTable(
+  "legal_act_aliases",
+  {
+    id: id(),
+    actId: uuid()
+      .notNull()
+      .references(() => legalActs.id),
+    /** Нижний регистр, ё → е, одиночные пробелы: «закона о защите прав потребителей». */
+    alias: text().notNull(),
+  },
+  (t) => [uniqueIndex("legal_act_aliases_alias_idx").on(t.alias, t.actId)],
+);
+
+/** Модель эмбеддингов: имя и версия при каждом векторе (LAW-23); смена модели — фоновая переиндексация. */
+export const legalEmbeddingModels = publicTable("legal_embedding_models", {
+  id: id(),
+  name: text().notNull(),
+  version: text().notNull(),
+  dimensions: integer().notNull(),
+  /** Активная модель одна: по ней строятся запросы и индекс. */
+  active: boolean().notNull().default(false),
+  createdAt: moment().notNull().defaultNow(),
+});
+
+/** Вектор текущей версии фрагмента (ADR-0007: halfvec, косинус); у неактуальных версий векторов нет. */
+export const legalFragmentEmbeddings = publicTable(
+  "legal_fragment_embeddings",
+  {
+    versionId: uuid()
+      .primaryKey()
+      .references(() => legalFragmentVersions.id),
+    modelId: uuid()
+      .notNull()
+      .references(() => legalEmbeddingModels.id),
+    embedding: halfvec({ dimensions: 1024 }).notNull(),
+    embeddedAt: moment().notNull(),
+  },
+  (t) => [index("legal_fragment_embeddings_model_idx").on(t.modelId)],
 );

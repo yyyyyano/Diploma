@@ -19,7 +19,7 @@ DASH-01…04 (период, состав, переходы в операции, 
 - Взнос в копилку — `entities/goal` (`ContributeDialog`, `budgets.contribute`) с «Отменить» (`UndoActionToast`). Живые обновления: `transaction`, `account`, `budget`, `goal`, `recurring`, `profile-fact` → `orpc.dashboard.key()`.
 
 ## Компоненты
-Свои: `HomePage` (страница; вход `HomePageLazy` — отдельный чанк, чтобы страница не попала в первую загрузку), `PeriodBar`, `model/period.ts`. Из `entities`: `goal` (`GoalCard` compact), `action`,
+Свои: `HomePage` (страница; вход экрана отдаёт её через `lazyPage` (`lib/lazy-page.tsx`) — отдельный чанк, чтобы страница не попала в первую загрузку), `PeriodBar`, `model/period.ts`. Из `entities`: `goal` (`GoalCard` compact), `action`,
 `category`, `explanation`, `account` (`useAccountName`). Из `ui`: `StatCard`, `Money`, `WhyButton`, `LimitBar`, `DonutChart`, `ColumnChart`, `EmptyState`, `SkeletonCard`.
 
 ## Отличия от макета (с причиной)

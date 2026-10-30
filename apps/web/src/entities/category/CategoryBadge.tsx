@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { CategoryIcon } from "../../ui/index.ts";
 import classes from "./CategoryBadge.module.css";
-import { categoryName, refKey } from "./CategoryPicker.tsx";
+import { categoryName, refKey } from "./category-key.ts";
 
 /** Категории домохозяйства по ссылке: название, значок, цвет, вид. */
 export function useCategoryLookup() {

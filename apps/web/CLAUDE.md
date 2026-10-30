@@ -64,3 +64,9 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `account`, `receipt`, `transaction`, `category`, `notification`, `profile-fact`, `chat-message`, `data-export`, `recurring`, `budget`, `goal`; запросы `dashboard` обновляются по всем, что меняет числа главной); сущности, которой там
   нет, — все запросы (безопасное умолчание); новая сущность сигнала — строка в `ENTITY_QUERIES`. На `UNAUTHORIZED` не
   переподключается.
+- Бюджет первой загрузки (CONSTRAINTS, `bundle-size.mjs`): `validateSearch` и `loader` остаются в главном бандле, поэтому
+  вход экрана (`features/<x>/index.ts`), из которого маршрут берёт схему адреса, отдаёт страницу через `lazyPage`
+  (`lib/lazy-page.tsx`) — иначе страница с формами и Mantine едет в первую загрузку (замер: 366,5 → 286,6 КБ gzip).
+  `"sideEffects"` в `package.json` перечисляет только CSS и модули, подключаемые голым `import "…"` (тема, шрифты):
+  без него Rollup не отбрасывает неиспользуемые реэкспорты баррелей. Общий код сущностей не должен тянуть тяжёлое
+  (`categoryName`/`refKey` лежат в `category-key.ts`, а не в `CategoryPicker`).

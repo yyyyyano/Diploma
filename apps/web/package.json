@@ -2,6 +2,11 @@
   "name": "@kosht/web",
   "private": true,
   "type": "module",
+  "sideEffects": [
+    "*.css",
+    "./src/ui/theme/index.ts",
+    "./src/ui/theme/fonts.ts"
+  ],
   "scripts": {
     "generate": "tsr generate",
     "typecheck": "tsc -p tsconfig.json",

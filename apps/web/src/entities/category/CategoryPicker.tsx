@@ -12,23 +12,13 @@ import {
 import { Button, Group, Modal, Select, Stack, TextInput } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import type { TFunction } from "i18next";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf } from "../../lib/errors.ts";
 import { CategoryIcon } from "../../ui/index.ts";
 import classes from "./CategoryPicker.module.css";
-
-/** Значение выбора строкой: «system:taxi», «custom:<id>». */
-export function refKey(ref: CategoryRef): string {
-  return ref.type === "system" ? `system:${ref.code}` : `custom:${ref.id}`;
-}
-
-/** Название категории: встроенной — из словаря по коду, своей — как назвал человек. */
-export function categoryName(t: TFunction<"categories">, item: CategoryItem): string {
-  return item.ref.type === "system" ? t(`system.${item.ref.code}`) : (item.name ?? "");
-}
+import { categoryName, refKey } from "./category-key.ts";
 
 export interface CategoryPickerProps {
   readonly kind: CategoryKind;

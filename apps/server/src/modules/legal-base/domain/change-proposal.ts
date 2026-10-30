@@ -1,6 +1,7 @@
 // Изменяющий акт (LAW-32): модель предлагает, какие статьи акта он меняет и когда вступает в силу, а программа принимает
 // предложение, только если статьи и дата ДОСЛОВНО есть в тексте изменяющего акта (P3: модель текста права не выдумывает).
 import { z } from "zod";
+import { requisitesIn } from "./requisites.ts";
 
 export const ChangeProposal = z.object({
   /** Номера статей изменяемого акта: «209», «216.1». */
@@ -67,16 +68,7 @@ export function verifyProposal(
   return { articles, inForceOn };
 }
 
-const KINDS: readonly (readonly [RegExp, string])[] = [
-  [/^закон(?:\s|$)/iu, "H1"],
-  [/^указ(?:\s|$)/iu, "P3"],
-  [/^постановление совета министров/iu, "C2"],
-];
-
 /** ID изменяющего акта на pravo.by по правилу реквизитов (LAW-11): Закон № 134-З 2026 → H12600134; иное — null. */
 export function pravoIdOf(description: string): string | null {
-  const kind = KINDS.find(([re]) => re.test(description.trim()))?.[1];
-  const m = /от\s+\d{1,2}\s+[а-яё]+\s+(\d{4})\s*г\.\s*№\s*(\d+)/iu.exec(description);
-  if (kind === undefined || m === null) return null;
-  return `${kind}${(m[1] ?? "").slice(2)}${(m[2] ?? "").padStart(5, "0")}`;
+  return requisitesIn(description)[0]?.pravoIds[0] ?? null;
 }

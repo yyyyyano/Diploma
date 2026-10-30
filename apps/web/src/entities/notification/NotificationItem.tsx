@@ -89,6 +89,8 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
     if (!notification.read) onRead(notification.id);
   };
   const { decisionId, undoToken } = notification;
+  // Подстановки текстов с параметрами (receipt-match: магазин и дни); без параметров в записи — пустые.
+  const params = { store: "", date: "", bankDate: "", ...notification.params };
   return (
     <article className={classes.item} data-unread={!notification.read}>
       <span className={classes.icon} data-kind={notification.kind}>
@@ -99,13 +101,12 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
           {!notification.read && (
             <span className={classes.srOnly}>{t("notifications:unread")}: </span>
           )}
-          {t(
+          {
             // TXN-10: автоматическая привязка чека и вопрос «одна покупка?» — один вид, два текста (кнопки у них разные).
             notification.kind === "receipt-match" && undoToken !== null
-              ? "notifications:kinds.receipt-match.textLinked"
-              : `notifications:kinds.${notification.kind}.text`,
-            notification.params,
-          )}
+              ? t("notifications:kinds.receipt-match.textLinked", params)
+              : t(`notifications:kinds.${notification.kind}.text`, params)
+          }
         </p>
         <p className={classes.time}>
           <time dateTime={notification.createdAt}>{dayOf(notification.createdAt)}</time>

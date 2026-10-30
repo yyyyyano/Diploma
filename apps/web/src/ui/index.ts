@@ -19,6 +19,7 @@ export {
   SkeletonList,
   SkeletonText,
 } from "./components/Skeletons.tsx";
+export { Steps, type StepItem, type StepState, type StepsProps } from "./components/Steps.tsx";
 export { StatCard, type StatCardProps } from "./components/StatCard.tsx";
 export { StatusBadge, type StatusBadgeProps, type StatusTone } from "./components/StatusBadge.tsx";
 export { UNDO_TOAST_MS, UndoToast, type UndoToastProps } from "./components/UndoToast.tsx";

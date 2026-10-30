@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_app/documents")({
   loader: ({ context }) => context.queryClient.prefetchQuery(orpc.statements.list.queryOptions()),
   component: function DocumentsRoute() {
     const search = Route.useSearch();
-    // Другой импорт по ссылке (STMT-10) — страница с нуля: открытый импорт берётся из адреса при монтировании.
-    return <DocumentsPage key={search.import ?? ""} search={search} />;
+    // Другой импорт (STMT-10) или чек (RCPT-11) по ссылке — страница с нуля: открытое берётся из адреса при монтировании.
+    return <DocumentsPage key={`${search.import ?? ""}${search.open ?? ""}`} search={search} />;
   },
 });

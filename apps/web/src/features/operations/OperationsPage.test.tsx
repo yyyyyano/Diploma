@@ -70,6 +70,27 @@ describe("DES-16: состояния экрана «Операции»", () => {
     expect(within(wbRow as HTMLElement).getByText("курс не получен")).toBeInTheDocument();
   });
 
+  it("TXN-01, RCPT-10: у операций от чека — «Требует проверки», «Ожидает выписки» и «Есть чек»", async () => {
+    const receiptId = "0199f0a0-0000-7000-8000-000000000f01";
+    server.use(
+      ...baseHandlers(),
+      list(() =>
+        page([
+          { ...coffee, id: T1, merchantName: "Сосновый", receiptId, needsReview: true },
+          { ...steam, id: T2, merchantName: "Зелёная ветка", receiptId, pending: true },
+          { ...noRate, id: T3, merchantName: "Листок", receiptId },
+        ]),
+      ),
+    );
+    renderPage();
+    const rows = await screen.findAllByRole("row");
+    const of = (name: string) =>
+      rows.find((row) => within(row).queryByText(name) !== null) as HTMLElement;
+    expect(within(of("Сосновый")).getByText("Требует проверки")).toBeInTheDocument();
+    expect(within(of("Зелёная ветка")).getByText("Ожидает выписки")).toBeInTheDocument();
+    expect(within(of("Листок")).getByText("Есть чек")).toBeInTheDocument();
+  });
+
   it("пусто без фильтров — «Операций пока нет» и «Добавить операцию»", async () => {
     server.use(
       ...baseHandlers(),

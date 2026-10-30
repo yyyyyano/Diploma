@@ -10,6 +10,7 @@ export const shell = {
   moreLabel: "Ещё разделы",
   moreTitle: "Все разделы",
   logout: "Выйти",
+  scan: "Сканировать чек",
   groups: {
     money: "Деньги",
     law: "Право и выгода",

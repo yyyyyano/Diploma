@@ -16,10 +16,13 @@
 
 /* Угол верхней панели: колокольчик справа на уровне заголовка; PageHeader оставляет под него место. */
 .withCorner {
-  --k-corner: calc(var(--s-40) + var(--s-24));
+  --k-corner: calc(var(--s-40) + var(--s-24) + var(--s-40) + var(--s-12));
 }
 
 .corner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
   position: absolute;
   top: var(--s-18);
   right: var(--s-32);

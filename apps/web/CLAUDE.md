@@ -28,7 +28,7 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
   `session` (`createApiSession`, `sessionQuery`/`SESSION_QUERY_KEY`, `currentUser`, `requireUser`, `requireRole`,
   `signOut` → `queryClient.clear()`), `nav`.
 - `entities/account` — `AccountCard` (вид, остаток и день остатка, эквивалент в BYN; ⓘ и меню — слотами страницы),
-  `useAccountName`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»);
+  `useAccountName`; `entities/recovery-code` — `RecoveryCode` (показ кода один раз, «Скопировать»); `entities/receipt` — `ReceiptStatusBadge`, `PendingBadge`, форматы количества и копеек (RCPT-07);
   `entities/explanation` — `ExplanationSheet` (панель «Откуда эта цифра?» по `traceId`: `explain.get`, справа или
   шторкой на телефоне), `ExplanationView`, `formulaLabel`, `refHref`; `entities/action` — `UndoActionToast`
   (`actions.undo`), `DecisionDialog` (`actions.decision`/`answer`, вопрос — `decisionText` по ключу `decisions.<вид>`; `onAnswered(status,
@@ -61,6 +61,6 @@ entities → ui / lib` (ADR-0014, ARCHITECTURE §10). Денег не счита
 - Боевая сборка (`vite build`) перегенерирует `routeTree.gen.ts` без `dev.*`; следующий `make typecheck` вернёт их.
 - `useQuery` не хранит `undefined`: гость в кэше сессии — `null`.
 - Поток `events.stream` на `changed` перезапрашивает запросы только своей сущности (`ENTITY_QUERIES` в `lib/events.ts`:
-  `account`, `transaction`, `category`, `notification`, `profile-fact`, `chat-message`, `data-export`); сущности, которой там
+  `account`, `receipt`, `transaction`, `category`, `notification`, `profile-fact`, `chat-message`, `data-export`); сущности, которой там
   нет, — все запросы (безопасное умолчание); новая сущность сигнала — строка в `ENTITY_QUERIES`. На `UNAUTHORIZED` не
   переподключается.

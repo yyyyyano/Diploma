@@ -109,7 +109,10 @@ describe("NFR-21: клиент events.stream", () => {
     const queryClient = cacheWithData();
     const controller = new AbortController();
     scripted(
-      [() => sse({ event: "message", data: { type: "changed", entity: "receipt", id: ID } })],
+      [
+        () =>
+          sse({ event: "message", data: { type: "changed", entity: "calendar-event", id: ID } }),
+      ],
       controller,
     );
     await runEventStream({

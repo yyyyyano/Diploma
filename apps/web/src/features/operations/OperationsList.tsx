@@ -11,7 +11,7 @@ import { CategoryBadge } from "../../entities/category/index.ts";
 import { TransactionAmount } from "../../entities/transaction/index.ts";
 import { cx } from "../../ui/cx.ts";
 import { StatusBadge } from "../../ui/index.ts";
-import { ArrowLeftRight, Undo2 } from "lucide-react";
+import { ArrowLeftRight, Clock, Receipt, TriangleAlert, Undo2 } from "lucide-react";
 import classes from "./OperationsList.module.css";
 
 export interface OperationsListProps {
@@ -55,6 +55,21 @@ function Badges({ item }: { readonly item: Transaction }) {
   return (
     <span className={classes.category}>
       <CategoryBadge category={item.category} />
+      {item.pending && (
+        <StatusBadge tone="neutral" icon={Clock}>
+          {t("badge.pending")}
+        </StatusBadge>
+      )}
+      {item.needsReview && (
+        <StatusBadge tone="warn" icon={TriangleAlert}>
+          {t("badge.needsReview")}
+        </StatusBadge>
+      )}
+      {item.receiptId !== null && !item.needsReview && !item.pending && (
+        <StatusBadge tone="ok" icon={Receipt}>
+          {t("badge.receipt")}
+        </StatusBadge>
+      )}
       {item.type === "refund" && (
         <StatusBadge tone="ok" icon={Undo2}>
           {t("badge.refund")}

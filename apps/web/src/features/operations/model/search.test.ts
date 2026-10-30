@@ -64,4 +64,16 @@ describe("TXN-02: адрес экрана «Операции»", () => {
     expect(amountMinor("  ")).toBeUndefined();
     expect(toListInput(OperationsSearch.parse({ page: "2" }), 5)).toMatchObject({ page: 5 });
   });
+
+  it("TXN-01: фильтр «С чеком» и «Чек требует проверки» — hasReceipt и needsReview во входе списка", () => {
+    const withReceipt = OperationsSearch.parse({ receipt: "with" });
+    expect(toListInput(withReceipt)).toEqual({ page: 1, pageSize: 50, hasReceipt: true });
+    expect(hasFilters(withReceipt)).toBe(true);
+    expect(toListInput(OperationsSearch.parse({ receipt: "review" }))).toEqual({
+      page: 1,
+      pageSize: 50,
+      needsReview: true,
+    });
+    expect(OperationsSearch.parse({ receipt: "что-то" }).receipt).toBeUndefined();
+  });
 });

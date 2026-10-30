@@ -1,8 +1,10 @@
 // Каркас раздела пользователя (DES-15, ARCHITECTURE §10.1): меню — из реестра маршрутов (staticData.nav) под роль
 // текущей сессии, поток живых обновлений, выход с очисткой кэша, колокольчик уведомлений в углу (NOTIF-01).
-// «Сканировать чек» и плавающая кнопка ассистента появятся с модулями чеков и чата (T-028, T-043).
+// «Сканировать чек» — в углу каркаса рядом с колокольчиком (RCPT-01, T-028); плавающая кнопка ассистента — с чатом (T-043).
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { ActionIcon } from "@mantine/core";
+import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
+import { Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { NotificationBell } from "../../features/notifications/index.ts";
 import { useEventStream } from "../../lib/events.ts";
@@ -50,7 +52,26 @@ export function AppShell() {
 
   return (
     <AppFrame
-      {...(user ? { corner: <NotificationBell admin={user.role === "admin"} /> } : {})}
+      {...(user
+        ? {
+            corner: (
+              <>
+                <ActionIcon
+                  component={Link}
+                  to="/documents"
+                  variant="default"
+                  size={44}
+                  radius="xl"
+                  aria-label={t("scan")}
+                  title={t("scan")}
+                >
+                  <Camera size={20} aria-hidden />
+                </ActionIcon>
+                <NotificationBell admin={user.role === "admin"} />
+              </>
+            ),
+          }
+        : {})}
       side={
         <SideNav
           homeHref="/"

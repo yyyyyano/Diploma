@@ -110,6 +110,19 @@ export function OperationsToolbar({ search, accounts, onChange, onReset }: Opera
           value={search.source ?? null}
           onChange={(value) => set({ source: SOURCES.find((source) => source === value) })}
         />
+        <Select
+          aria-label={t("filters.receiptLabel")}
+          placeholder={t("filters.receipt")}
+          clearable
+          data={[
+            { value: "with", label: t("filters.receiptWith") },
+            { value: "review", label: t("filters.receiptReview") },
+          ]}
+          value={search.receipt ?? null}
+          onChange={(value) =>
+            set({ receipt: value === "with" || value === "review" ? value : undefined })
+          }
+        />
       </div>
       <div className={classes.filters}>
         <TextInput

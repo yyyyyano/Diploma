@@ -42,6 +42,8 @@ export const OperationsSearch = z.object({
   min: z.string().max(20).optional().catch(undefined),
   max: z.string().max(20).optional().catch(undefined),
   source: TransactionSource.optional().catch(undefined),
+  /** Только операции с чеком (TXN-01) или с чеком, который требует проверки. */
+  receipt: z.enum(["with", "review"]).optional().catch(undefined),
   /** Открытая карточка операции. */
   op: TransactionId.optional().catch(undefined),
 });
@@ -71,6 +73,8 @@ export function toListInput(search: OperationsSearch, page?: number): Transactio
     ...(min === undefined ? {} : { amountFrom: Math.abs(min) }),
     ...(max === undefined ? {} : { amountTo: Math.abs(max) }),
     ...(search.source === undefined ? {} : { source: search.source }),
+    ...(search.receipt === "with" ? { hasReceipt: true } : {}),
+    ...(search.receipt === "review" ? { needsReview: true } : {}),
   };
 }
 
@@ -85,6 +89,7 @@ export function hasFilters(search: OperationsSearch): boolean {
     search.category !== undefined ||
     search.min !== undefined ||
     search.max !== undefined ||
-    search.source !== undefined
+    search.source !== undefined ||
+    search.receipt !== undefined
   );
 }

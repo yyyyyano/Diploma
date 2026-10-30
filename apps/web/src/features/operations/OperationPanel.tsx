@@ -17,6 +17,7 @@ import { moneyKindOf } from "../../entities/transaction/index.ts";
 import { orpc } from "../../lib/api.ts";
 import { EmptyState, Money, SkeletonText, WhyButton } from "../../ui/index.ts";
 import classes from "./OperationPanel.module.css";
+import { ReceiptLink } from "./ReceiptLink.tsx";
 
 export interface OperationPanelProps {
   readonly id: string;
@@ -158,6 +159,7 @@ export function OperationPanel({
         </div>
       )}
       {transaction.importId !== null && <StatementSource importId={transaction.importId} />}
+      <ReceiptLink transaction={transaction} />
       <h4 className={classes.historyTitle}>{t("panel.history")}</h4>
       <ul className={classes.history}>
         {history.map((entry, index) => (

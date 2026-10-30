@@ -1,7 +1,7 @@
 // «Чеки и документы» (design/screens/Documents.dc.html, STMT-03, STMT-04, STMT-07, STMT-11, NFR-21, P5): загрузка выписки,
 // предпросмотр импорта («Нашёл 47 операций по карте •• 4821 за 01.09–30.09. 12 из них уже были загружены»: числа считает
 // сервер), «Импортировать N» / «Исправить колонки» / «Отмена», откат с подтверждением и список выписок. Ход разбора —
-// события потока (statement-import): страница перезапрашивает импорт сама. Четыре состояния (DES-16). Блок чеков — T-028.
+// события потока (statement-import): страница перезапрашивает импорт сама. Четыре состояния (DES-16). Блок чеков — `receipts/ReceiptsSection` (T-028).
 import type { ColumnRole, ImportDetail, ImportSummary } from "@kosht/contract";
 import { formatDate, formatMoney } from "@kosht/i18n";
 import { Button, Modal, NativeSelect, Stack } from "@mantine/core";
@@ -16,6 +16,7 @@ import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { progressQueryKey, type Progress } from "../../lib/events.ts";
 import { ConfirmDialog, EmptyState, Money, PageHeader, SkeletonCard } from "../../ui/index.ts";
 import classes from "./DocumentsPage.module.css";
+import { ReceiptsSection } from "./receipts/ReceiptsSection.tsx";
 import type { DocumentsSearch } from "./model/search.ts";
 
 const ROLES: readonly ColumnRole[] = [
@@ -44,6 +45,7 @@ export function DocumentsPage({ search = {} }: { readonly search?: DocumentsSear
   const input = useRef<HTMLInputElement>(null);
   const list = useQuery(orpc.statements.list.queryOptions());
   const [openId, setOpenId] = useState<string | null>(search.import ?? null);
+  const [receiptId, setReceiptId] = useState<string | null>(search.open ?? null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [toast, setToast] = useState<{ token: string; message: string } | null>(null);
@@ -172,6 +174,7 @@ export function DocumentsPage({ search = {} }: { readonly search?: DocumentsSear
         }
       />
       <div className={classes.body}>
+        <ReceiptsSection openId={receiptId} onOpen={setReceiptId} />
         <p className={classes.hint}>{t("documents:upload.hint")}</p>
         {notice !== null && (
           <p className={classes.error} role="alert">

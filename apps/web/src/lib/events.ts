@@ -59,6 +59,7 @@ const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
   category: () => [orpc.categories.key()],
   notification: () => [orpc.notifications.key()],
   "statement-import": () => [orpc.statements.key()],
+  receipt: () => [orpc.receipts.key()],
   "profile-fact": () => [orpc.profile.key()],
   "chat-message": () => [orpc.chat.key()],
   "data-export": () => [orpc.privacy.key()],

@@ -1,0 +1,56 @@
+/* Шаги проверки: ряд этапов, у каждого — иконка состояния; цвета — только токены темы. */
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-9) var(--s-18);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  color: var(--ink-3);
+}
+
+.mark {
+  display: inline-flex;
+}
+
+.done {
+  color: var(--income);
+}
+
+.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.spin {
+  animation: steps-spin 1s linear infinite;
+}
+
+@keyframes steps-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Движение — по желанию человека: при prefers-reduced-motion иконка «идёт» стоит на месте. */
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

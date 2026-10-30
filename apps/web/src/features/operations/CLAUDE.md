@@ -22,13 +22,16 @@ AGT-07 (удаление после «Да»); состояния — DES-16; д
   в карточке отвечает `applyToPast` → вопрос «Да, применить к N» (CAT-05).
 - STMT-10: операция из выписки (`importId`) — карточка «Загружено из файла» (`statements.get`) ведёт на
   `/documents?import=<id>`, «Исходный файл» — `/api/files/<fileId>`.
+- Чеки (T-028/T-029): признаки в строке — «Требует проверки» (`needsReview`), «Ожидает выписки» (`pending`), «Есть чек»; фильтр «Чек»
+  (`receipt=with|review` → `hasReceipt` / `needsReview`); карточка — `ReceiptLink`: ссылка `/documents?open=<чек>`, «Разорвать связь»
+  (`unlinkReceipt`) и «Связать с чеком» (`linkReceipt`, выбор из `receipts.list`) — оба с «Отменить» (`UndoActionToast`).
 - Адрес: `page`, `q`, `type`, `from`, `to`, `account`, `category` (`system:<код>` / `custom:<id>`), `min`, `max` (BYN
-  текстом), `source`, `op` (открытая карточка). Контекст ассистента: `staticData.page = "operations"`.
+  текстом), `source`, `receipt`, `op` (открытая карточка). Контекст ассистента: `staticData.page = "operations"`.
 - Живые обновления: `events.stream` (`transaction`, `account`, `category`) → перезапрос только своих запросов.
 
 ## Компоненты
 Свои: `OperationsPage`, `OperationsToolbar` (поиск с паузой 300 мс, тип, категория, счёт, источник, период, сумма),
-`OperationsTable`/`OperationsCards` (с галочками), `BulkBar`, `BulkCategoryDialog`, `OperationForm`, `OperationPanel`. Из `entities`: `account`,
+`OperationsTable`/`OperationsCards` (с галочками), `BulkBar`, `BulkCategoryDialog`, `OperationForm`, `OperationPanel`, `ReceiptLink`. Из `entities`: `account`,
 `category` (`CategoryPicker`, `CategoryBadge`), `transaction` (`TransactionAmount`), `action`, `explanation`. Из `ui`:
 `PageHeader`, `Sheet`, `EmptyState`, `Money`, `WhyButton`, `StatusBadge`; Mantine `Modal`, `Pagination`.
 

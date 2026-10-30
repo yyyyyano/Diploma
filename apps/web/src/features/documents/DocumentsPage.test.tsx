@@ -71,6 +71,7 @@ const detail = {
 
 function mock(items: readonly unknown[], current: object = detail) {
   server.use(
+    http.get("*/api/receipts", () => HttpResponse.json({ items: [] })),
     http.get("*/api/statements/imports", () => HttpResponse.json({ items })),
     http.get("*/api/statements/imports/:id", () => HttpResponse.json(current)),
   );

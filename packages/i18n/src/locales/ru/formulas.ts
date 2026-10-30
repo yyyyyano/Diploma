@@ -3,6 +3,13 @@
 export const formulas = {
   /** Подпись ключа, которого нет в словаре (новый расчёт без подписи — ошибка теста, а не пустая строка). */
   unknown: "Слагаемое расчёта",
+  recurring: {
+    occurrence: "Платёж по операции",
+    averageAmount: "Средняя сумма платежа",
+    manualAmount: "Сумма, указанная вами",
+    monthlyAmount: "Сумма в месяц",
+    monthlyTotal: "Итого в месяц",
+  },
   fin: {
     freeBalance: "Свободный остаток",
     averageIncome: "Средний регулярный доход",

@@ -16,6 +16,13 @@ export {
   type ReceiptValidation,
   type TotalValidation,
 } from "./receipts/validate-receipt.ts";
+export {
+  monthlyAmount,
+  monthlyTotal,
+  recurringAverage,
+  type Occurrence,
+  type RecurringPeriod,
+} from "./recurring/recurring-amounts.ts";
 export { freeBalance, type FreeBalanceInput } from "./fin/free-balance.ts";
 export {
   avg,

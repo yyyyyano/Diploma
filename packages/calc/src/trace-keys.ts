@@ -47,6 +47,12 @@ export const TRACE_KEYS = [
   "receipts.categoryDiscount",
   "receipts.categorySplit",
   "receipts.unrecognizedRemainder",
+  // REC-02, REC-04: регулярный платёж — операция-основание, средняя сумма, сумма в месяц и итог раздела.
+  "recurring.occurrence",
+  "recurring.averageAmount",
+  "recurring.manualAmount",
+  "recurring.monthlyAmount",
+  "recurring.monthlyTotal",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

@@ -21,7 +21,7 @@
 - Показатели: `fin/` — `freeBalance` (FIN-20, ключ `fin.freeBalance`; входы — `fin.averageIncome`,
   `fin.obligation.<группа>`); `fx/` — `toByn(key, amount, rate)` (STMT-09: сумма × курс ÷ масштаб до копейки,
   половина от нуля; курс — целым в десятитысячных, узлы `fx.rate` со ссылкой `fxRate` и `fx.scale`; BYN — та же трасса).
-  `statements/` — `balanceChainDifference` (STMT-04: остаток на конец − (остаток на начало + операции со знаком счёта);
+  `recurring/` — `recurringAverage` (REC-02: среднее по операциям-основаниям, `refs` — операции), `monthlyAmount` (REC-04: неделя × 52 ÷ 12, квартал ÷ 3, год ÷ 12), `monthlyTotal` (итог раздела, пустой — 0 BYN); `statements/` — `balanceChainDifference` (STMT-04: остаток на конец − (остаток на начало + операции со знаком счёта);
   ноль — цепочка сходится, иначе импорт «проверьте»); `receipts/` — `validateReceipt` (RCPT-05: строка «количество × цена − скидка =
   сумма строки» и итог «сумма строк − скидки на чек = итог», допуск — во входе; результат — спорные строки с единицы,
   расчётные суммы и разницы как `Calc<Money>` с трассой `receipts.*`), `splitByCategory` (RCPT-09: итог чека по категориям позиций,

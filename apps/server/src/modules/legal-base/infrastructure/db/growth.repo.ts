@@ -137,6 +137,19 @@ export async function queueCandidate(
   return rows.length === 1;
 }
 
+/** Акт, добавленный без текста, получил текст, но тема не определена: решение — администратору (очередь). */
+export async function requeueCandidate(
+  db: SystemDb,
+  pravoId: string,
+  reason: string,
+  at: Date,
+): Promise<void> {
+  await db
+    .update(legalCandidates)
+    .set({ status: "queued", reason, hasText: true, decidedAt: at })
+    .where(eq(legalCandidates.pravoId, pravoId));
+}
+
 export interface NewAct {
   readonly pravoId: string;
   readonly title: string;

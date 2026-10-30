@@ -36,6 +36,12 @@ describe("LAW-12: страница «Новые поступления»", () =>
     expect(local.every((e) => Number(e.registryNo?.split("-")[0]) >= 15)).toBe(true);
   });
 
+  it("число актов читается из своего элемента, даже если рядом без пробела стоит другое число", () => {
+    const html =
+      '<body><p>Количество зарегистрированных правовых актов: 1</p><dl><dt>6-2/56393<br/>(29.10.2026)</dt><dd><p><a href="/document/?guid=3961&amp;p0=C22600551">Название</a><br/>Постановление</p></dd></dl></body>';
+    expect(parseArrivals(html).declared).toBe(1);
+  });
+
   it("страница иной вёрстки даёт пустой разбор без числа — вызывающий это замечает", () => {
     expect(parseArrivals("<html><body><p>Технические работы</p></body></html>")).toEqual({
       entries: [],

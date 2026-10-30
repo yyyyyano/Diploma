@@ -40,8 +40,14 @@ export function parseArrivals(html: string): ParsedArrivals {
       registryNo: registryNo === null ? null : registryNo[0].replace(/\s+/gu, ""),
     });
   });
-  const counter = /Количество\s+зарегистрированных\s+правовых\s+актов:\s*(\d+)/u.exec(
-    collapseSpaces($("body").text()),
-  );
-  return { entries, declared: counter === null ? null : Number(counter[1]) };
+  // Число читаем из самого элемента-счётчика: в общем тексте страницы оно могло бы слипнуться с соседним числом.
+  let declared: number | null = null;
+  $("body *").each((_, el) => {
+    if (declared !== null || $(el).children().length > 0) return;
+    const m = /Количество\s+зарегистрированных\s+правовых\s+актов:\s*(\d+)/u.exec(
+      collapseSpaces($(el).text()),
+    );
+    if (m !== null) declared = Number(m[1]);
+  });
+  return { entries, declared };
 }

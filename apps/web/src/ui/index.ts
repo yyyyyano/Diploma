@@ -5,7 +5,9 @@ export {
   type CategoryIconName,
   type CategoryIconProps,
 } from "./components/CategoryIcon.tsx";
+export { ColumnChart, type Column, type ColumnChartProps } from "./components/ColumnChart.tsx";
 export { ConfirmDialog, type ConfirmDialogProps } from "./components/ConfirmDialog.tsx";
+export { DonutChart, type DonutChartProps, type DonutSegment } from "./components/DonutChart.tsx";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState.tsx";
 export { Formula, type FormulaProps, type FormulaRow } from "./components/Formula.tsx";
 export {
@@ -30,3 +32,4 @@ export { StatCard, type StatCardProps } from "./components/StatCard.tsx";
 export { StatusBadge, type StatusBadgeProps, type StatusTone } from "./components/StatusBadge.tsx";
 export { UNDO_TOAST_MS, UndoToast, type UndoToastProps } from "./components/UndoToast.tsx";
 export { WhyButton, type WhyButtonProps } from "./components/WhyButton.tsx";
+export { CATEGORY_COLORS, type CategoryColorKey } from "./theme/category-colors.ts";

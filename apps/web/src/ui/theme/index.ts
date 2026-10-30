@@ -1,5 +1,6 @@
 // Тема дизайн-системы: стили подключаются один раз в app (порядок: Mantine → шрифты → токены → набор → основа).
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "./fonts.ts";
 import "./tokens.css";
 import "./kit.css";

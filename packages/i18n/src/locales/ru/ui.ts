@@ -1,5 +1,6 @@
 // Подписи дизайн-системы apps/web/src/ui (design/DESIGN.md §4): то, что компонент говорит сам, а не страница.
 export const ui = {
+  chart: { category: "Категория", amount: "Сумма" },
   why: {
     /** aria-label кнопки ⓘ: название числа подставляет страница. */
     label: "Откуда эта цифра: {{subject}}",

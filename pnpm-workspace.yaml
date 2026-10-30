@@ -34,8 +34,10 @@ catalog:
   "@opentelemetry/sdk-trace-node": 2.12.0
   # Сайт (ADR-0013): Mantine 9 — все пакеты строго одной версии.
   "@mantine/core": 9.7.3
+  "@mantine/dates": 9.7.3
   "@mantine/form": 9.7.3
   "@mantine/hooks": 9.7.3
+  dayjs: 1.11.23
   "@orpc/client": 1.16.1
   "@orpc/contract": 1.16.1
   "@orpc/openapi": 1.16.1

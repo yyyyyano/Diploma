@@ -32,6 +32,40 @@ const card = (pravoId: string, kind: ActKind, label: string, title: string): Cat
   hasText: false,
 });
 
+/**
+ * Группа витрины «База законов» для актов стартового каталога (LAW-07, тема «из каталога», LAW-17): 10 тем LAW-01 и
+ * «Персональные данные» (Закон № 99-З — исключение LAW-01). Разъяснения Пленума — отдельная группа по виду акта.
+ */
+export const START_GROUPS: Readonly<Record<string, string>> = {
+  Hk0200166: "taxes",
+  Hk0900071: "taxes",
+  H10200090: "consumer",
+  C20200778: "consumer",
+  C21800935: "consumer",
+  C22600134: "consumer",
+  Hk1200428: "housing",
+  P32500095: "housing",
+  HK0000441: "banking",
+  H10800369: "banking",
+  HK9900296: "work",
+  H11200007: "benefits",
+  C21300569: "benefits",
+  P31900345: "benefits",
+  C21500128: "benefits",
+  V19201596: "benefits",
+  HK9800218: "contracts",
+  H12400344: "contracts",
+  P32500108: "contracts",
+  P31900140: "contracts",
+  Hk1100243: "education-health",
+  V19302435: "education-health",
+  C20900182: "education-health",
+  HK9900278: "family",
+  HK2100091: "fines",
+  HK2100092: "fines",
+  H12100099: "privacy",
+};
+
 export const START_CATALOG: readonly CatalogEntry[] = [
   text(
     "Hk0200166",

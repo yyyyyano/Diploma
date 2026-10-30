@@ -71,7 +71,16 @@ export {
   ObligationRow,
 } from "./fin/fin.contract.ts";
 export {
+  LAW_GROUPS,
+  LawActView,
+  LawCatalog,
+  LawFragmentView,
+  LawGroup,
+  LawListItem,
+  LawPendingChange,
+  LawStatus,
   LawsStartupProgress,
+  LawTocEntry,
   legalBaseContract,
   LoaderStopReason,
 } from "./legal-base/legal-base.contract.ts";

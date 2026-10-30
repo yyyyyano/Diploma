@@ -184,6 +184,22 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "tool:law_act_card": {
     exempt: "карточка акта по ID pravo.by — общие данные правовой базы, домохозяйства нет",
   },
+  "legalBase.catalog": {
+    exempt:
+      "публичная «База законов» (publicProc, LEGAL-11): общие данные правовой базы, данных пользователя нет",
+  },
+  "legalBase.act": {
+    exempt:
+      "публичная «База законов» (publicProc, LEGAL-11): общие данные правовой базы, данных пользователя нет",
+  },
+  "legalBase.fragments": {
+    exempt:
+      "публичная «База законов» (publicProc, LEGAL-11): общие данные правовой базы, данных пользователя нет",
+  },
+  "legalBase.resolve": {
+    exempt:
+      "публичная «База законов» (publicProc, LEGAL-11): общие данные правовой базы, данных пользователя нет",
+  },
   "legalBase.startupProgress": {
     exempt:
       "прогресс загрузки стартового каталога законов (localOnly): общие данные правовой базы, домохозяйства и данных пользователя нет",

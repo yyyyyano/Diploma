@@ -18,6 +18,7 @@ import { makeDemand } from "./application/demand.ts";
 import { makeLawSearch } from "./application/search.ts";
 import { loadActJob } from "./jobs/load-act.job.ts";
 import { makeLookup } from "./application/lookup.ts";
+import { makeReader } from "./application/reader.ts";
 import { makeActCheck } from "./application/act-check.ts";
 import { makeDailyCheck } from "./application/daily-check.ts";
 import { makeSystemEvents } from "./application/system-events.ts";
@@ -207,6 +208,7 @@ export function createLegalBaseModule({
     s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
   );
   const lookup = makeLookup({ system: platform.system });
+  const reader = makeReader({ system: platform.system });
   const tools = legalBaseTools({ search, lookup });
   return defineModule({
     id: "legal-base",
@@ -227,7 +229,7 @@ export function createLegalBaseModule({
         return act === undefined ? [] : pendingChangesOf(platform.system, act.id);
       },
     },
-    router: legalBaseRouter(catalog),
+    router: legalBaseRouter(catalog, reader),
     tools: Object.values(tools),
     events: [actUpdated, actRepealed],
     jobs: [job, embed, loadOne],

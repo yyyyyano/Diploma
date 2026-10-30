@@ -6,7 +6,7 @@ import type { ParsedFragment } from "../../domain/build-fragments.ts";
 import type { CurrentVersion, EditionPlan } from "../../domain/match-versions.ts";
 import type { CatalogEntry } from "../../domain/start-catalog.ts";
 import { aliasesOf } from "../../domain/aliases.ts";
-import { isNpa } from "../../domain/start-catalog.ts";
+import { isNpa, START_GROUPS } from "../../domain/start-catalog.ts";
 import {
   legalActAliases,
   legalActSnapshots,
@@ -66,9 +66,18 @@ export async function seedActs(
         hasText: e.hasText,
         source,
         loadState: e.hasText ? "pending" : "card-only",
+        topic: START_GROUPS[e.pravoId] ?? null,
+        topicSource: START_GROUPS[e.pravoId] === undefined ? null : "catalog",
       })),
     )
-    .onConflictDoNothing({ target: legalActs.pravoId });
+    // Известные акты не трогаются; пустая тема дополняется группой каталога (витрина «База законов» группирует по теме).
+    .onConflictDoUpdate({
+      target: legalActs.pravoId,
+      set: {
+        topic: sql`coalesce(${legalActs.topic}, excluded.topic)`,
+        topicSource: sql`coalesce(${legalActs.topicSource}, excluded.topic_source)`,
+      },
+    });
 }
 
 export async function findAct(db: SystemDb, pravoId: string): Promise<ActRow | undefined> {

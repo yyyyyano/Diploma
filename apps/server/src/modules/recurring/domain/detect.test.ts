@@ -5,7 +5,7 @@ import { detect, DEFAULT_DETECT, type HistoryOp } from "./detect.ts";
 
 const d = (text: string) => LocalDate.parse(text);
 let counter = 0;
-function op(over: Partial<HistoryOp> & { on: string }): HistoryOp {
+function op(over: Omit<Partial<HistoryOp>, "on"> & { on: string }): HistoryOp {
   counter += 1;
   return {
     id: `op-${counter}`,

@@ -20,7 +20,12 @@ export const formulas = {
       communication: "Связь, интернет и ТВ",
       loan: "Кредиты и займы",
       subscriptions: "Подписки и онлайн-сервисы",
+      rent: "Аренда жилья",
+      other: "Другие обязательные платежи",
     },
+    forecastBalance: "Прогноз остатка на день",
+    expectedIncome: "Ожидаемое поступление",
+    expectedPayment: "Ожидаемый платёж",
   },
   fx: {
     rate: "Курс НБРБ, BYN",
@@ -37,6 +42,10 @@ export const formulas = {
     amount: "Сумма операции",
     amountInByn: "Сумма в BYN по курсу НБРБ на день операции",
     balanceDelta: "Изменение остатка счёта",
+    income: "Доходы за период",
+    expense: "Расходы за период",
+    categoryTotal: "Расходы категории: покупки минус возвраты",
+    refund: "Возвраты",
   },
   statements: {
     openingBalance: "Остаток на начало периода по выписке",

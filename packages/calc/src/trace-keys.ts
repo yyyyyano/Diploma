@@ -9,6 +9,17 @@ export const TRACE_KEYS = [
   "fin.obligation.communication",
   "fin.obligation.loan",
   "fin.obligation.subscriptions",
+  "fin.obligation.rent",
+  "fin.obligation.other",
+  // FIN-22: прогноз остатка по дням — остаток дня, ожидаемое поступление и ожидаемый платёж.
+  "fin.forecastBalance",
+  "fin.expectedIncome",
+  "fin.expectedPayment",
+  // FIN-01: суммы операций — доходы, расходы, итог категории, возврат.
+  "transactions.income",
+  "transactions.expense",
+  "transactions.categoryTotal",
+  "transactions.refund",
   // STMT-09: эквивалент в BYN — курс НБРБ (в десятитысячных) и масштаб (за сколько единиц валюты).
   "fx.rate",
   "fx.scale",

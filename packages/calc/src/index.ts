@@ -23,7 +23,15 @@ export {
   type Occurrence,
   type RecurringPeriod,
 } from "./recurring/recurring-amounts.ts";
-export { freeBalance, type FreeBalanceInput } from "./fin/free-balance.ts";
+export { categoryTotal, groupSum, totalOf, type GroupSum } from "./transactions/aggregate.ts";
+export {
+  freeBalance,
+  freeBalanceForMonths,
+  type FreeBalanceInput,
+  type FreeBalanceResult,
+} from "./fin/free-balance.ts";
+export { FREE_BALANCE_MONTHS, historyMonths, historyWindow } from "./fin/history.ts";
+export { forecastBalances, type ExpectedPayment, type ForecastDay } from "./fin/forecast.ts";
 export {
   avg,
   mul,

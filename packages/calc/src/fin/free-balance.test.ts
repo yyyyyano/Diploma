@@ -3,7 +3,7 @@ import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { node } from "../calc.ts";
 import { TRACE_KEYS } from "../trace-keys.ts";
-import { freeBalance } from "./free-balance.ts";
+import { freeBalance, freeBalanceForMonths } from "./free-balance.ts";
 
 const byn = (key: string, minor: number) => node(key, Money.of(minor, "BYN"));
 
@@ -53,5 +53,24 @@ describe("EXPL-01: ключ трассы свободного остатка —
       freeBalance({ averageIncome: income, averageObligations: [] }).trace.key,
     );
     expect(TRACE_KEYS).toContain(income.trace.key);
+  });
+});
+
+describe("FIN-20: история меньше трёх месяцев", () => {
+  const input = {
+    averageIncome: byn("fin.averageIncome", 240_000),
+    averageObligations: [byn("fin.obligation.loan", 120_000)],
+  };
+  it("два месяца истории — свободный остаток с пометкой «по данным за 2 мес.»", () => {
+    const result = freeBalanceForMonths(2, input);
+    expect(result.months).toBe(2);
+    expect(result.balance?.value.minor).toBe(120_000);
+  });
+  it("ни одного полного месяца — null и причина insufficient-history, а не 0", () => {
+    expect(freeBalanceForMonths(0, input)).toEqual({
+      months: 0,
+      balance: null,
+      reason: "insufficient-history",
+    });
   });
 });

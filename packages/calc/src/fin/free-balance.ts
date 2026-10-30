@@ -17,3 +17,17 @@ export interface FreeBalanceInput {
 export function freeBalance(input: FreeBalanceInput): Calc<Money> {
   return sub("fin.freeBalance", input.averageIncome, input.averageObligations);
 }
+
+/** Результат FIN-20 с историей: за сколько месяцев посчитано; нет истории — `null` и причина, а не ноль. */
+export type FreeBalanceResult =
+  | { readonly months: number; readonly balance: Calc<Money>; readonly reason?: undefined }
+  | { readonly months: 0; readonly balance: null; readonly reason: "insufficient-history" };
+
+/**
+ * FIN-20: «по данным за N мес.» — N полных месяцев истории (не больше трёх). Нет ни одного полного месяца —
+ * свободного остатка нет (`null`, `insufficient-history`): ноль выглядел бы как «денег не остаётся».
+ */
+export function freeBalanceForMonths(months: number, input: FreeBalanceInput): FreeBalanceResult {
+  if (months <= 0) return { months: 0, balance: null, reason: "insufficient-history" };
+  return { months, balance: freeBalance(input) };
+}

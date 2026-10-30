@@ -14,6 +14,7 @@ import type { ProfileFacade } from "../profile/index.ts";
 import type { TransactionsFacade } from "../transactions/index.ts";
 import { recurringTools } from "./agent/tools.ts";
 import { recurringRouter } from "./api/router.ts";
+import { makeCatchUp } from "./application/catch-up.ts";
 import { makeDecisions, RESTORE_HANDLER } from "./application/decisions.ts";
 import { makeSyncFacts } from "./application/facts.ts";
 import { makeMissed } from "./application/missed.ts";
@@ -49,9 +50,9 @@ export function createRecurringModule({
     explain: facades.explain,
   };
   const syncFacts = makeSyncFacts(deps);
-  const read = makeRead(deps);
-  const decisions = makeDecisions(deps, syncFacts);
   const recompute = makeRecompute(deps, syncFacts);
+  const read = makeRead(deps, makeCatchUp(recompute));
+  const decisions = makeDecisions(deps, syncFacts);
   const checkMissed = makeMissed(deps, syncFacts);
   const tools = recurringTools(read, () => platform.clock.today());
   const missedJob = checkMissedJob(checkMissed);

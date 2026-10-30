@@ -22,6 +22,7 @@ REC-01…05, PROF-03 (факты), AGT-03 («планирование»), P5. М
 - Состояния: `active | suggested | maybe-ended | ended | excluded`; разделы — Доходы, Обязательные (`utilities`, `rent`, `telecom`,
   `loans`), Подписки (`subscriptions`), Другие (в свободный остаток не входят, найденное там — `suggested`). Поправленное человеком
   (`user_fixed`: раздел, период, день, сумма) поиск не перетирает; исключённое и прекращённое не оживает.
+- История до T-030: первое чтение `list` пустого домохозяйства в процессе запускает один пересчёт (`application/catch-up.ts`, без новой операции).
 - Пересчёт: подписка `transactions.changed` → `application/recompute.ts` (один запрос истории за 13 мес., схлопывание
   `jobKey(scope, "recurring.recompute")` + 2 с; перечитывает всё, нагрузке не верит). «Возможно прекращён» (REC-05): обход
   `recurring.check-missed-sweep` (`04:10`, `missed: "once"`) → задача `recurring.check-missed { itemId }`; уведомление `recurring-missed`

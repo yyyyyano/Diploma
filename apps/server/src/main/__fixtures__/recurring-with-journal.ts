@@ -14,6 +14,7 @@ import {
 } from "./transactions-with-journal.ts";
 import { makeFacts } from "../../modules/profile/application/facts.ts";
 import { generateHistory } from "../../../../../tooling/synth/history/history.ts";
+import { makeCatchUp } from "../../modules/recurring/application/catch-up.ts";
 import { makeDecisions, RESTORE_HANDLER } from "../../modules/recurring/application/decisions.ts";
 import { makeSyncFacts } from "../../modules/recurring/application/facts.ts";
 import { makeMissed } from "../../modules/recurring/application/missed.ts";
@@ -56,9 +57,9 @@ export function recurringWithJournal(db: TestDb) {
     explain: t.explain,
   } as unknown as Deps;
   const syncFacts = makeSyncFacts(deps);
-  const read = makeRead(deps);
-  const decisions = makeDecisions(deps, syncFacts);
   const recompute = makeRecompute(deps, syncFacts);
+  const read = makeRead(deps, makeCatchUp(recompute));
+  const decisions = makeDecisions(deps, syncFacts);
   const checkMissed = makeMissed(deps, syncFacts);
   t.registerUndo(RESTORE_HANDLER, decisions.restore);
   t.registerUndo("profile.restore", facts.restore);

@@ -26,12 +26,16 @@ export interface UpcomingPayment {
 /** Не больше стольких шагов вперёд: недельный платёж на год — 52. */
 const MAX_STEPS = 400;
 
-export function makeRead(d: Pick<Deps, "platform" | "explain">) {
+export function makeRead(
+  d: Pick<Deps, "platform" | "explain">,
+  ensureComputed: (s: ScopedDb) => Promise<void> = async () => {},
+) {
   /** Платежи без исключённых, на дату `onDate` (просрочка считается от неё); `sections` — только эти разделы. */
   async function list(
     s: ScopedDb,
     input: { sections?: readonly Section[]; onDate: LocalDate },
   ): Promise<RecurringEntry[]> {
+    await ensureComputed(s);
     const rows = await listItems(s);
     return rows
       .filter((row) => row.state !== "excluded")

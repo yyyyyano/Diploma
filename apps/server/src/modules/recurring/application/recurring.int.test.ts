@@ -4,7 +4,7 @@
 import { RecurringId } from "@kosht/contract";
 import { LocalDate } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { crossTenant } from "../../../platform/db/cross-tenant.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { findActiveDetected } from "../infrastructure/db/recurring.repo.ts";
@@ -434,5 +434,27 @@ describe("ROLE-01: изоляция", () => {
     });
     await expect(r.read.explain(stranger, id)).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(await r.read.list(stranger, { onDate: LocalDate.parse(TODAY) })).toEqual([]);
+  }, 60_000);
+});
+
+describe("REC-01: история, загруженная до модуля", () => {
+  it("операции лежат без поиска — первое чтение платежей находит их без новой операции", async () => {
+    clock.set(`${TODAY}T09:00:00Z`);
+    const r = recurringWithJournal(db);
+    const s = r.s();
+    await r.seed(s, r.generateHistory({ seed: 7, today: TODAY }).operations);
+    // Операции записаны, поиск не запускался (событие transactions.changed «потеряно» — история старше модуля).
+    const list = await r.read.list(s, { onDate: LocalDate.parse(TODAY) });
+    expect(list).toHaveLength(10);
+  }, 60_000);
+
+  it("пересчёт — один на домохозяйство: пустое чтение больше не ищет заново", async () => {
+    clock.set(`${TODAY}T09:00:00Z`);
+    const r = recurringWithJournal(db);
+    const s = r.s();
+    const spy = vi.spyOn(r.t.transactionsFacade, "recurringHistory");
+    expect(await r.read.list(s, { onDate: LocalDate.parse(TODAY) })).toEqual([]);
+    expect(await r.read.list(s, { onDate: LocalDate.parse(TODAY) })).toEqual([]);
+    expect(spy).toHaveBeenCalledTimes(1);
   }, 60_000);
 });

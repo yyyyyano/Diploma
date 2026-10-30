@@ -21,6 +21,7 @@ import { profile } from "./locales/ru/profile.ts";
 import { categories } from "./locales/ru/categories.ts";
 import { operations } from "./locales/ru/operations.ts";
 import { documents } from "./locales/ru/documents.ts";
+import { recurring } from "./locales/ru/recurring.ts";
 
 export const NAMESPACES = [
   "common",
@@ -44,6 +45,7 @@ export const NAMESPACES = [
   "categories",
   "operations",
   "documents",
+  "recurring",
 ] as const;
 
 export type Namespace = (typeof NAMESPACES)[number];
@@ -75,6 +77,7 @@ export const resources = {
     categories,
     operations,
     documents,
+    recurring,
   },
 } as const satisfies Record<Language, Record<Namespace, object>>;
 
@@ -99,6 +102,7 @@ declare module "i18next" {
     categories: typeof categories;
     operations: typeof operations;
     documents: typeof documents;
+    recurring: typeof recurring;
     decisions: typeof decisions;
     notifications: typeof notifications;
   }

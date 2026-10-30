@@ -66,6 +66,7 @@ export const operations = {
     receipt: "Есть чек",
     needsReview: "Требует проверки",
     pending: "Ожидает выписки",
+    regular: "Регулярный",
   },
   pagination: {
     label: "Страницы",

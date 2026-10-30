@@ -96,7 +96,10 @@ function fakeFetch(replies: (url: string) => Reply) {
         });
         const reply = replies(url);
         if (reply === "timeout") throw new DOMException("timeout", "TimeoutError");
-        return new Response(reply.body ?? "", { status: reply.status, headers: reply.headers });
+        return new Response(reply.body ?? "", {
+          status: reply.status,
+          ...(reply.headers === undefined ? {} : { headers: reply.headers }),
+        });
       }) as typeof fetch;
     },
   };

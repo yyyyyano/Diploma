@@ -57,13 +57,13 @@ export function makeLoadAct(d: LoadActDeps) {
         hasText: false,
       });
       await logUpdate(d.system, { at: d.clock.now(), actId: act.id, event: "text-not-found" });
-      d.log.info({ actId: act.id }, "legal-base.act.text-not-found");
+      d.log.info({ actId: act.id }, "law.act.text-not-found");
       return "card-only";
     }
 
     const textHash = createHash("sha256").update(page.html).digest("hex");
     if ((await appliedHash(d.system, act.id)) === textHash) {
-      d.log.info({ actId: act.id }, "legal-base.act.unchanged");
+      d.log.info({ actId: act.id }, "law.act.unchanged");
       return "unchanged";
     }
 
@@ -100,14 +100,14 @@ export function makeLoadAct(d: LoadActDeps) {
         key: `${pravoId}:${textHash.slice(0, 12)}`,
         params: { pravoId },
       });
-      d.log.warn({ actId: act.id, reason: reasons.join(".") }, "legal-base.act.quarantined");
+      d.log.warn({ actId: act.id, reason: reasons.join(".") }, "law.act.quarantined");
       return "quarantined";
     }
 
     if (act.currentSnapshotId !== null) {
       await storeUnappliedSnapshot(d.system, snapshot, "pending", null);
       await logUpdate(d.system, { at: d.clock.now(), actId: act.id, event: "changed" });
-      d.log.info({ actId: act.id }, "legal-base.act.changed");
+      d.log.info({ actId: act.id }, "law.act.changed");
       return "changed";
     }
 
@@ -118,7 +118,7 @@ export function makeLoadAct(d: LoadActDeps) {
       event: "loaded",
       details: { fragments: parsed.fragments.length, articles: parsed.articleCount },
     });
-    d.log.info({ actId: act.id, count: parsed.fragments.length }, "legal-base.act.loaded");
+    d.log.info({ actId: act.id, count: parsed.fragments.length }, "law.act.loaded");
     return "applied";
   };
 }

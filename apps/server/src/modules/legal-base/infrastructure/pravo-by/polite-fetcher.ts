@@ -4,8 +4,8 @@
 // 403/429 или более 20% ошибок. Время — только Clock, ожидание — порт sleep (тесты двигают FakeClock).
 // Контакт в лог и журнал не пишется (OBS-04): он только в заголовке User-Agent.
 import type { Clock } from "@kosht/kernel";
-import robotsParser from "robots-parser";
 import type { Logger } from "../../../../platform/logging/logger.ts";
+import { parseRobots } from "./robots.ts";
 import {
   LoaderStopped,
   PageTooLarge,
@@ -160,11 +160,11 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     if (status !== null && status >= 500) outcome = "http-5xx";
     const transient = outcome === "network" || outcome === "http-5xx";
     const isError = transient || status === 403 || status === 429;
-    if (status === 403 || status === 429) outcome = `http-${String(status)}`;
+    if (status === 403 || status === 429) outcome = status === 403 ? "http-403" : "http-429";
     await finish(url, started, status, bytes?.byteLength ?? null, outcome, isError);
     if (status === 403 || status === 429) {
       await store.stop(clock.today(), "LOADER_BLOCKED");
-      log.warn({ status }, "legal-base.loader.blocked");
+      log.warn({ httpStatus: status }, "law.loader.blocked");
       throw new LoaderStopped("LOADER_BLOCKED");
     }
     if (transient || response === undefined || bytes === undefined)
@@ -192,7 +192,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     const { requests, errors } = await store.record(entry, clock.today());
     if (requests >= MIN_REQUESTS_FOR_SHARE && errors / requests > MAX_ERROR_SHARE) {
       await store.stop(clock.today(), "LOADER_TOO_MANY_ERRORS");
-      log.warn({ count: errors, total: requests }, "legal-base.loader.too-many-errors");
+      log.warn({ count: errors, total: requests }, "law.loader.too-many-errors");
       throw new LoaderStopped("LOADER_TOO_MANY_ERRORS");
     }
   }
@@ -201,7 +201,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
   async function ready(): Promise<string> {
     const contact = (await deps.contact()).trim();
     if (contact === "") {
-      log.warn({}, "legal-base.loader.contact-empty");
+      log.warn({}, "law.loader.contact-empty");
       throw new LoaderStopped("LOADER_CONTACT_EMPTY");
     }
     const state = await store.read();
@@ -235,7 +235,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
       text = got.status === 200 ? got.body : "";
       await store.saveRobots(text, clock.now());
     }
-    return robotsParser(new URL("/robots.txt", site).href, text);
+    return parseRobots(new URL("/robots.txt", site).href, text);
   }
 
   async function requestWithRetries(
@@ -249,7 +249,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
       let result = await attempt(target, userAgent, settings, signal);
       for (const delay of RETRY_LADDER_MS) {
         if (!("transient" in result)) break;
-        log.info({ ms: delay }, "legal-base.loader.retry");
+        log.info({ ms: delay }, "law.loader.retry");
         await deps.sleep(delay, signal);
         result = await attempt(target, userAgent, settings, signal);
       }

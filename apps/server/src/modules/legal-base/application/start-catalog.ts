@@ -80,7 +80,7 @@ export function makeStartCatalog(d: StartCatalogDeps) {
             lastProblem: problemOf(error),
           });
         }
-        d.log.warn({ code: problemOf(error) }, "legal-base.start-catalog.act-failed");
+        d.log.warn({ code: problemOf(error) }, "law.start-catalog.act-failed");
         failed += 1;
       }
       await ctx.progress(Math.round(((index + 1) / ids.length) * 100));

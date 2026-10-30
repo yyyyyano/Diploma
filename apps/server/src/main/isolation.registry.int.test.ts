@@ -174,6 +174,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "admin.sendTestMail": { input: () => undefined },
   "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
   "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
+  "legalBase.startupProgress": {
+    exempt:
+      "прогресс загрузки стартового каталога законов (localOnly): общие данные правовой базы, домохозяйства и данных пользователя нет",
+  },
   "llm.localModelsProgress": {
     exempt:
       "прогресс скачивания локальных моделей (localOnly): байты и состояние системной задачи, домохозяйства и данных пользователя нет",

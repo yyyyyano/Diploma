@@ -30,11 +30,11 @@ export type SessionUser = z.infer<typeof SessionUser>;
 /** Контакт оператора загрузчика законов (LAW-36): email или адрес сайта — он попадает в User-Agent запросов к pravo.by. */
 export const LoaderContact = z.union([Email, z.url({ protocol: /^https?$/ }).max(200)]);
 
-/** Первый запуск: контакт загрузчика необязателен — по умолчанию email администратора (AUTH-10). */
+/** Первый запуск: контакт загрузчика необязателен (нет или пусто) — по умолчанию email администратора (AUTH-10). */
 export const SetupInput = z.strictObject({
   email: Email,
   password: NewPassword,
-  loaderContact: LoaderContact.optional(),
+  loaderContact: z.union([LoaderContact, z.literal("")]).optional(),
 });
 export const SignInInput = z.strictObject({ email: Email, password: Password });
 

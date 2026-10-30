@@ -2,12 +2,13 @@
 // не короче 12 символов (SEC-01; макет пишет «10» — прав SPEC). Форма — на схеме контракта SetupInput. Успех — шаг
 // «Сохраните код восстановления» (код показывается один раз), затем вход с пометкой «Администратор создан»; система уже
 // настроена (CONFLICT) или вход не локальный (NOT_FOUND) — на вход: экран показывается один раз и только на этом
-// компьютере. Шаг «Подготовка системы» (T-034, T-024) и контакт загрузчика законов (LAW-36, T-034) — с их задачами.
-import { SetupInput } from "@kosht/contract";
+// компьютере. Шаг «Готовим систему» — прогресс локальных моделей (NFR-25) и правовой базы (LAW-10); контакт загрузчика законов
+// (LAW-36) — необязательное поле, по умолчанию email администратора.
+import { SetupInput, type LawsStartupProgress } from "@kosht/contract";
 import { Button, Checkbox, PasswordInput, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { formatFileSize } from "@kosht/i18n";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ChevronRight, Lock, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -23,7 +24,7 @@ export function SetupPage() {
   const navigate = useNavigate();
   const form = useForm({
     mode: "uncontrolled",
-    initialValues: { email: "", password: "" },
+    initialValues: { email: "", password: "", loaderContact: "" },
     validate: schemaResolver(SetupInput, { sync: true }),
   });
   const toLogin = (created: boolean) =>
@@ -99,7 +100,15 @@ export function SetupPage() {
               <form
                 className={classes.form}
                 noValidate
-                onSubmit={form.onSubmit((values) => setup.mutate(values))}
+                onSubmit={form.onSubmit((values) =>
+                  setup.mutate({
+                    email: values.email,
+                    password: values.password,
+                    ...(values.loaderContact.trim() === ""
+                      ? {}
+                      : { loaderContact: values.loaderContact.trim() }),
+                  }),
+                )}
               >
                 <div className={classes.grid}>
                   <TextInput
@@ -127,6 +136,21 @@ export function SetupPage() {
                     }
                   />
                 </div>
+                <TextInput
+                  size="md"
+                  label={t("setup:loaderContact")}
+                  placeholder={t("setup:loaderContactPlaceholder")}
+                  description={t("setup:loaderContactHint")}
+                  inputWrapperOrder={["label", "input", "description", "error"]}
+                  autoComplete="off"
+                  key={form.key("loaderContact")}
+                  {...form.getInputProps("loaderContact")}
+                  error={
+                    form.errors["loaderContact"] === undefined
+                      ? undefined
+                      : t("setup:loaderContactInvalid")
+                  }
+                />
                 <p className={classes.note}>
                   <ShieldCheck size={18} strokeWidth={1.8} aria-hidden />
                   {t("setup:privacy")}
@@ -163,6 +187,11 @@ function PrepareStep({ onContinue }: { readonly onContinue: () => void }) {
     }),
   );
   const data = progress.data;
+  const laws = useQuery(
+    orpc.legalBase.startupProgress.queryOptions({
+      refetchInterval: (query) => (query.state.data?.state === "ready" ? false : 2000),
+    }),
+  );
   return (
     <div className={classes.card}>
       <div className={classes.heading}>
@@ -200,6 +229,9 @@ function PrepareStep({ onContinue }: { readonly onContinue: () => void }) {
           </p>
         )}
       </section>
+      {(laws.isError || (laws.data !== undefined && laws.data.state !== "off")) && (
+        <LawsTask progress={laws} />
+      )}
       <div className={classes.actions}>
         <Button
           size="md"
@@ -210,5 +242,44 @@ function PrepareStep({ onContinue }: { readonly onContinue: () => void }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** «Загружено 14 из 28 актов» (LAW-10): стартовый каталог законов; остановку загрузчика объясняем и обещаем продолжение. */
+function LawsTask({ progress }: { readonly progress: UseQueryResult<LawsStartupProgress> }) {
+  const { t } = useTranslation("setup");
+  const data = progress.data;
+  return (
+    <section className={classes.task} aria-labelledby="setup-laws">
+      <h2 id="setup-laws" className={classes.taskTitle}>
+        {t("prepare.laws")}
+      </h2>
+      {progress.isError && <output className={classes.note}>{t("prepare.error")}</output>}
+      {data?.state === "waiting" && <p className={classes.hint}>{t("prepare.lawsWaiting")}</p>}
+      {data !== undefined && data.total > 0 && (
+        <>
+          <progress
+            className={classes.bar}
+            value={data.done}
+            max={Math.max(1, data.total)}
+            aria-label={t("prepare.lawsProgressLabel")}
+          />
+          <p className={classes.note}>
+            {t("prepare.lawsProgress", { done: data.done, total: data.total })}
+          </p>
+        </>
+      )}
+      {data?.state === "loading" && <p className={classes.hint}>{t("prepare.lawsNote")}</p>}
+      {data?.state === "ready" && <p className={classes.hint}>{t("prepare.lawsDone")}</p>}
+      {data !== undefined && data.problems > 0 && data.state !== "stopped" && (
+        <p className={classes.hint}>{t("prepare.lawsProblems", { count: data.problems })}</p>
+      )}
+      {data?.state === "stopped" && data.stopReason !== null && (
+        <p className={classes.error} role="alert">
+          <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+          {t(`prepare.lawsStopped.${data.stopReason}`)}
+        </p>
+      )}
+    </section>
   );
 }

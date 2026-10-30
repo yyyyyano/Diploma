@@ -22,6 +22,12 @@ export type SetupDeps = Pick<SystemPlatform, "system" | "scoped" | "events" | "c
   readonly issueRecoveryCode: (db: IdentityDb, userId: string) => Promise<{ code: string }>;
 };
 
+/** Контакт загрузчика: заданный на экране или, если поле пусто, email администратора (AUTH-10). */
+function loaderContactOf(input: { email: string; loaderContact?: string | undefined }): string {
+  const given = input.loaderContact?.trim();
+  return given === undefined || given === "" ? input.email.toLowerCase() : given;
+}
+
 export function makeSetup(d: SetupDeps) {
   return async function setup(input: {
     email: string;
@@ -33,13 +39,7 @@ export function makeSetup(d: SetupDeps) {
     const ids = await newUserIds(d.system);
     const s = newUserScope(d, ids);
     const recoveryCode = await s.transaction(async (tx) => {
-      if (
-        !(await claimInitialization(
-          tx.db,
-          d.clock.now(),
-          input.loaderContact ?? input.email.toLowerCase(),
-        ))
-      )
+      if (!(await claimInitialization(tx.db, d.clock.now(), loaderContactOf(input))))
         throw new AppError("CONFLICT");
       await insertUser(tx.db, {
         ...ids,

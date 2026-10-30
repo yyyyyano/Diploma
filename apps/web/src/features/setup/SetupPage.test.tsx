@@ -45,6 +45,13 @@ async function submit(email: string, password: string) {
   await userEvent.click(screen.getByRole("button", { name: "Создать администратора" }));
 }
 
+function lawsProgress(
+  state: "off" | "waiting" | "loading" | "ready" | "stopped",
+  extra: { done?: number; total?: number; problems?: number; stopReason?: string } = {},
+) {
+  return { state, done: 0, total: 0, problems: 0, stopReason: null, ...extra };
+}
+
 const conflict = {
   defined: true,
   code: "CONFLICT",
@@ -79,6 +86,7 @@ describe("AUTH-10: экран первого запуска", () => {
       http.get("*/api/llm/local-models-progress", () =>
         HttpResponse.json({ state: "absent", bytesDone: 0, bytesTotal: 4_400_000_000 }),
       ),
+      http.get("*/api/legal-base/startup-progress", () => HttpResponse.json(lawsProgress("off"))),
     );
     const router = renderSetup();
     await submit("admin@example.test", "пароль-администратора");
@@ -110,8 +118,12 @@ describe("AUTH-10: экран первого запуска", () => {
   });
 
   describe("NFR-25, AUTH-10: шаг «Готовим систему» — прогресс локальных моделей", () => {
-    async function toPrepare(progress: () => Response | Promise<Response>) {
+    async function toPrepare(
+      progress: () => Response | Promise<Response>,
+      laws: () => Response | Promise<Response> = () => HttpResponse.json(lawsProgress("off")),
+    ) {
       server.use(
+        http.get("*/api/legal-base/startup-progress", laws),
         http.post("*/api/identity/setup", () =>
           HttpResponse.json({ ok: true, recoveryCode: "KQ7M-4XPD-9TJC-2HWR" }),
         ),
@@ -159,6 +171,101 @@ describe("AUTH-10: экран первого запуска", () => {
       await toPrepare(() => HttpResponse.error());
       expect(await screen.findByText(/не мешает войти/)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    });
+  });
+
+  describe("LAW-10, LAW-36: правовая база на экране первого запуска", () => {
+    const models = () => HttpResponse.json({ state: "ready", bytesDone: 1, bytesTotal: 1 });
+
+    async function toPrepareWithLaws(laws: () => Response | Promise<Response>) {
+      server.use(
+        http.post("*/api/identity/setup", () =>
+          HttpResponse.json({ ok: true, recoveryCode: "KQ7M-4XPD-9TJC-2HWR" }),
+        ),
+        http.get("*/api/llm/local-models-progress", models),
+        http.get("*/api/legal-base/startup-progress", laws),
+      );
+      renderSetup();
+      await submit("admin@example.test", "пароль-администратора");
+      await userEvent.click(
+        await screen.findByRole("checkbox", { name: "Я сохранил(а) код в надёжном месте" }),
+      );
+      await userEvent.click(screen.getByRole("button", { name: "Продолжить" }));
+      await screen.findByRole("heading", { name: "Готовим систему" });
+    }
+
+    it("поле «Контакт для загрузчика законов» уходит на сервер; пустое — не отправляется", async () => {
+      const bodies: unknown[] = [];
+      server.use(
+        http.post("*/api/identity/setup", async ({ request }) => {
+          bodies.push(await request.json());
+          return HttpResponse.json(conflict, { status: 409 });
+        }),
+      );
+      renderSetup();
+      await userEvent.type(
+        await screen.findByRole("textbox", { name: "Контакт для загрузчика законов" }),
+        "https://example.test/operator",
+      );
+      await submit("admin@example.test", "пароль-администратора");
+      expect(await screen.findByText("Вход")).toBeInTheDocument();
+      expect(bodies).toEqual([
+        {
+          email: "admin@example.test",
+          password: "пароль-администратора",
+          loaderContact: "https://example.test/operator",
+        },
+      ]);
+    });
+
+    it("контакт не email и не адрес сайта — подсказка у поля, запроса нет", async () => {
+      renderSetup();
+      await userEvent.type(
+        await screen.findByRole("textbox", { name: "Контакт для загрузчика законов" }),
+        "не контакт",
+      );
+      await submit("admin@example.test", "пароль-администратора");
+      expect(await screen.findByText(/Введите email или адрес сайта/)).toBeInTheDocument();
+    });
+
+    it("«Загружено 14 из 28 актов» — полоса и пояснение про паузу", async () => {
+      await toPrepareWithLaws(() =>
+        HttpResponse.json(lawsProgress("loading", { done: 14, total: 28 })),
+      );
+      const bar = await screen.findByRole("progressbar", {
+        name: "Правовая база: загружено актов",
+      });
+      expect(bar).toHaveAttribute("value", "14");
+      expect(bar).toHaveAttribute("max", "28");
+      expect(screen.getByText("Загружено 14 из 28 актов")).toBeInTheDocument();
+      expect(screen.getByText(/с паузой — так требует вежливый обход/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Войти" })).toBeEnabled();
+    });
+
+    it("всё загружено — так и сказано", async () => {
+      await toPrepareWithLaws(() =>
+        HttpResponse.json(lawsProgress("ready", { done: 28, total: 28 })),
+      );
+      expect(
+        await screen.findByText("Загружены все акты стартового каталога."),
+      ).toBeInTheDocument();
+    });
+
+    it("загрузчик остановлен — причина человеческим текстом и обещание продолжить", async () => {
+      await toPrepareWithLaws(() =>
+        HttpResponse.json(
+          lawsProgress("stopped", { done: 5, total: 28, stopReason: "LOADER_BLOCKED" }),
+        ),
+      );
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "загрузка остановлена до завтра и продолжится сама",
+      );
+    });
+
+    it("автозагрузка выключена — раздела «Правовая база» нет", async () => {
+      await toPrepareWithLaws(() => HttpResponse.json(lawsProgress("off")));
+      await screen.findByText("Локальные модели");
+      expect(screen.queryByRole("heading", { name: "Правовая база" })).not.toBeInTheDocument();
     });
   });
 });

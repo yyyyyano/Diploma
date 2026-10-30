@@ -1,5 +1,5 @@
 // Чтение для «Базы законов» (LEGAL-11): каталог, оглавление и части текста акта — только SystemDb модуля, только чтение.
-import { and, asc, count, eq, isNotNull, notLike, sql } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull, ne, notLike, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import {
   legalActSnapshots,
@@ -46,6 +46,7 @@ export async function catalogRows(db: SystemDb): Promise<CatalogRow[]> {
     .from(legalActs)
     .leftJoin(legalActSnapshots, eq(legalActSnapshots.id, legalActs.currentSnapshotId))
     .leftJoin(pending, eq(pending.actId, legalActs.id))
+    .where(ne(legalActs.status, "excluded"))
     .orderBy(asc(legalActs.title));
   return rows;
 }

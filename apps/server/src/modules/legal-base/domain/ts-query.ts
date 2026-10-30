@@ -2,7 +2,6 @@
 // `to_tsquery('russian', …)`. Сначала «И» (точнее), при нехватке — «ИЛИ». В строку попадают только буквы и цифры:
 // операторы ставит этот код, текст пользователя в запрос не вставляется.
 import { normalizeAlias } from "./reference.ts";
-import { COLLOQUIAL_TERMS } from "./synonyms.ts";
 
 /** Служебные слова вопроса: поиску они мешают. */
 const STOP = new Set([
@@ -50,16 +49,23 @@ function words(text: string): string[] {
 }
 
 /** Группа «слово или его юридический термин»: `(зарплата | (заработная & плата))`. */
-function group(word: string): string {
-  const terms = (COLLOQUIAL_TERMS[word] ?? []).map((t) => `(${words(t).join(" & ")})`);
+function group(word: string, colloquial: Colloquial): string {
+  const terms = (colloquial[word] ?? []).map((t) => `(${words(t).join(" & ")})`);
   return terms.length === 0 ? word : `(${[word, ...terms].join(" | ")})`;
 }
 
 export type TsMode = "and" | "or";
 
+/** Словарь «бытовое → юридическое» (LAW-21): слово запроса → юридические термины; читается из таблицы админки. */
+export type Colloquial = Readonly<Record<string, readonly string[]>>;
+
 /** Строка запроса или null, если в вопросе нет значимых слов. */
-export function buildTsQuery(question: string, mode: TsMode): string | null {
+export function buildTsQuery(
+  question: string,
+  mode: TsMode,
+  colloquial: Colloquial,
+): string | null {
   const list = [...new Set(words(question))];
   if (list.length === 0) return null;
-  return list.map(group).join(mode === "and" ? " & " : " | ");
+  return list.map((word) => group(word, colloquial)).join(mode === "and" ? " & " : " | ");
 }

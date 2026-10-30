@@ -41,6 +41,7 @@ import {
   type CandidateRow,
 } from "../infrastructure/db/growth.repo.ts";
 import { logUpdate, markActState } from "../infrastructure/db/catalog.repo.ts";
+import { organTopics } from "../infrastructure/db/dictionaries.repo.ts";
 import { parseArrivals } from "../infrastructure/pravo-by/parse-arrivals.ts";
 import type { ParsedCard } from "../infrastructure/pravo-by/parse-card.ts";
 import { pravoLinksIn } from "../infrastructure/pravo-by/parse-links.ts";
@@ -311,7 +312,7 @@ export function makeCatalogGrowth(d: GrowthDeps) {
           ? null
           : topicOfRubrics(parseRubrics(page.html), await d.settings.get(EPK_TOPICS));
     }
-    const hint = topicOfTitle(title) ?? topicOfOrgan(kindLine);
+    const hint = topicOfTitle(title) ?? topicOfOrgan(kindLine, await organTopics(d.system));
     if (epk !== null) return { topic: epk, suggested: epk, source: "epk" };
     if (hint !== null) {
       // Акт с текстом без рубрики остаётся «без темы» (LAW-14): орган и заголовок — лишь подсказка администратору.

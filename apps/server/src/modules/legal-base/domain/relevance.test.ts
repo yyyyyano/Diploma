@@ -1,7 +1,13 @@
 // LAW-13: дешёвые фильтры без модели; LAW-12: изменяющий акт — не запись каталога; LAW-14: тема по рубрикам ЕПК.
 import { describe, expect, it } from "vitest";
 import { DEFAULT_TITLE_PATTERNS, isAmendingTitle, prefilter } from "./relevance.ts";
-import { DEFAULT_EPK_TOPICS, topicOfOrgan, topicOfRubrics, topicOfTitle } from "./topics.ts";
+import {
+  DEFAULT_EPK_TOPICS,
+  DEFAULT_ORGANS,
+  topicOfOrgan,
+  topicOfRubrics,
+  topicOfTitle,
+} from "./topics.ts";
 
 const check = (title: string, pravoId = "P32600400", registryNo: string | null = "3-2/22715") =>
   prefilter({ pravoId, title, registryNo }, DEFAULT_TITLE_PATTERNS);
@@ -84,11 +90,13 @@ describe("LAW-14: тема акта", () => {
     expect(
       topicOfOrgan(
         "Постановление Министерства по налогам и сборам Республики Беларусь от 1 июня 2026 г. № 5",
+        DEFAULT_ORGANS,
       ),
     ).toBe("taxes");
     expect(
       topicOfOrgan(
         "Постановление Национального статистического комитета Республики Беларусь от 12 октября 2026 г. № 76",
+        DEFAULT_ORGANS,
       ),
     ).toBeNull();
   });

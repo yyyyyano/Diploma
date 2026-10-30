@@ -10,7 +10,6 @@ import type { Logger } from "../../../platform/logging/logger.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
 import { matchVersions } from "../domain/match-versions.ts";
 import { assessSnapshot, canaryOf } from "../domain/quarantine.ts";
-import { START_CATALOG } from "../domain/start-catalog.ts";
 import {
   appliedHash,
   applyEdition,
@@ -21,6 +20,7 @@ import {
   markActState,
   storeQuarantinedSnapshot,
 } from "../infrastructure/db/catalog.repo.ts";
+import { startCatalogLabels } from "../infrastructure/db/dictionaries.repo.ts";
 import { parseActPage } from "../infrastructure/pravo-by/parse-act.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
 
@@ -69,7 +69,7 @@ export function makeLoadAct(d: LoadActDeps) {
       return "unchanged";
     }
 
-    const label = START_CATALOG.find((e) => e.pravoId === pravoId)?.label ?? act.title;
+    const label = (await startCatalogLabels(d.system)).get(pravoId) ?? act.title;
     const { title, parsed, pageText } = parseActPage(page.html, label);
     const versions =
       act.currentSnapshotId === null ? undefined : await currentVersions(d.system, act.id);

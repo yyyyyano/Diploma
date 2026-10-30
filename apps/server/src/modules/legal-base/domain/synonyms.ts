@@ -1,6 +1,7 @@
 // Курируемый словарь «бытовое → юридическое» (LAW-21 шаг 2): слово из запроса дополняется юридическим термином, чтобы
-// полнотекстовый поиск нашёл «заработная плата» по «зарплата». Редактор — в админке (T-039). Ключи — нормализованные.
-export const COLLOQUIAL_TERMS: Readonly<Record<string, readonly string[]>> = {
+// полнотекстовый поиск нашёл «заработная плата» по «зарплата». Умолчание: миграция кладёт его в
+// `legal_colloquial_terms`, дальше правит админка (T-039). Ключи — нормализованные.
+export const DEFAULT_COLLOQUIAL_TERMS: Readonly<Record<string, readonly string[]>> = {
   зарплата: ["заработная плата"],
   зарплату: ["заработная плата"],
   зарплаты: ["заработная плата"],
@@ -23,8 +24,11 @@ export const COLLOQUIAL_TERMS: Readonly<Record<string, readonly string[]>> = {
 };
 
 /** Добавить к словам запроса юридические термины; исходные слова остаются. */
-export function expandColloquial(words: readonly string[]): string[] {
+export function expandColloquial(
+  words: readonly string[],
+  terms: Readonly<Record<string, readonly string[]>>,
+): string[] {
   const out = [...words];
-  for (const word of words) for (const term of COLLOQUIAL_TERMS[word] ?? []) out.push(term);
+  for (const word of words) for (const term of terms[word] ?? []) out.push(term);
   return out;
 }

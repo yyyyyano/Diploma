@@ -1,6 +1,6 @@
 // Темы «Кошта» (LAW-01: 10 областей) и словари определения темы без модели (LAW-13, LAW-14): рубрики Единого правового
 // классификатора (ЕПК) → тема, орган, принявший акт → тема, слова заголовка → тема. Таблицы — умолчания: админка хранит свои
-// копии в настройках (`legal-base.epk-topics`, T-039), код их только применяет.
+// копии (настройка `legal-base.epk-topics`, таблица `legal_organ_topics`; T-039), код их только применяет.
 export const TOPICS = [
   "taxes",
   "consumer",
@@ -64,23 +64,37 @@ export function topicOfRubrics(
   return best?.topic ?? null;
 }
 
-/** «Свои» органы (LAW-13 п. 5) с темой, к которой они относятся; порядок — от узких к общим. */
-const ORGANS: readonly (readonly [RegExp, Topic])[] = [
-  [/министерств\p{L}*\s+по\s+налогам\s+и\s+сборам/iu, "taxes"],
-  [/министерств\p{L}*\s+финансов/iu, "taxes"],
-  [/национальн\p{L}*\s+банк/iu, "banking"],
-  [/антимонопольного\s+регулирования\s+и\s+торговли/iu, "consumer"],
-  [/министерств\p{L}*\s+труда\s+и\s+социальной\s+защиты/iu, "work"],
-  [/министерств\p{L}*\s+здравоохранения/iu, "education-health"],
-  [/министерств\p{L}*\s+образования/iu, "education-health"],
-  [/министерств\p{L}*\s+жилищно-коммунального\s+хозяйства/iu, "housing"],
-  [/министерств\p{L}*\s+внутренних\s+дел/iu, "fines"],
-  [/министерств\p{L}*\s+транспорта\s+и\s+коммуникаций/iu, "contracts"],
+/** «Свой» орган (LAW-13 п. 5): шаблон названия (регулярное выражение, без учёта регистра) и тема. */
+export interface OrganTopic {
+  readonly pattern: string;
+  readonly topic: Topic;
+}
+
+/** Умолчание словаря органов — источник миграции `legal_organ_topics`; порядок — от узких к общим. */
+export const DEFAULT_ORGANS: readonly OrganTopic[] = [
+  { pattern: "министерств\\p{L}*\\s+по\\s+налогам\\s+и\\s+сборам", topic: "taxes" },
+  { pattern: "министерств\\p{L}*\\s+финансов", topic: "taxes" },
+  { pattern: "национальн\\p{L}*\\s+банк", topic: "banking" },
+  { pattern: "антимонопольного\\s+регулирования\\s+и\\s+торговли", topic: "consumer" },
+  { pattern: "министерств\\p{L}*\\s+труда\\s+и\\s+социальной\\s+защиты", topic: "work" },
+  { pattern: "министерств\\p{L}*\\s+здравоохранения", topic: "education-health" },
+  { pattern: "министерств\\p{L}*\\s+образования", topic: "education-health" },
+  { pattern: "министерств\\p{L}*\\s+жилищно-коммунального\\s+хозяйства", topic: "housing" },
+  { pattern: "министерств\\p{L}*\\s+внутренних\\s+дел", topic: "fines" },
+  { pattern: "министерств\\p{L}*\\s+транспорта\\s+и\\s+коммуникаций", topic: "contracts" },
 ];
 
-/** Тема по органу в строке «Постановление Министерства … от … № …»; орган не «свой» — null. */
-export function topicOfOrgan(kindLine: string): Topic | null {
-  return ORGANS.find(([re]) => re.test(kindLine))?.[1] ?? null;
+/** Тема по органу в строке «Постановление Министерства … от … № …»; орган не «свой» — null. Шаблон с ошибкой не действует. */
+export function topicOfOrgan(kindLine: string, organs: readonly OrganTopic[]): Topic | null {
+  for (const organ of organs) {
+    try {
+      if (new RegExp(organ.pattern, "iu").test(kindLine)) return organ.topic;
+    } catch {
+      // Шаблон из админки с ошибкой не должен ронять проход: он просто не действует.
+      continue;
+    }
+  }
+  return null;
 }
 
 const TITLE_WORDS: readonly (readonly [RegExp, Topic])[] = [

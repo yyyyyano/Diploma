@@ -10,7 +10,6 @@ import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { Settings } from "../../../platform/settings/settings.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
-import { START_CATALOG } from "../domain/start-catalog.ts";
 import {
   actsToLoad,
   countActs,
@@ -19,6 +18,7 @@ import {
   seedActs,
   seedAliases,
 } from "../infrastructure/db/catalog.repo.ts";
+import { aliasCount, startCatalogEntries } from "../infrastructure/db/dictionaries.repo.ts";
 import { LEGAL_AUTOLOAD, LOADER_CONTACT } from "../settings.ts";
 import type { LoadAct } from "./load-act.ts";
 import {
@@ -48,10 +48,14 @@ function problemOf(error: unknown): string {
 }
 
 export function makeStartCatalog(d: StartCatalogDeps) {
-  /** Завести 28 актов стартового каталога (идемпотентно). */
+  /**
+   * Завести акты стартового каталога из таблицы `legal_start_catalog` (идемпотентно). Краткие имена по умолчанию — только в
+   * пустой таблице: удалённое администратором имя не воскресает при повторной загрузке.
+   */
   async function seed(): Promise<void> {
-    await seedActs(d.system, START_CATALOG, "start-catalog");
-    await seedAliases(d.system, START_CATALOG);
+    const entries = await startCatalogEntries(d.system);
+    await seedActs(d.system, entries, "start-catalog");
+    if ((await aliasCount(d.system)) === 0) await seedAliases(d.system, entries);
   }
 
   /** Загрузить оставшиеся акты по одному; ошибка, которая лечится временем, — AppError UNAVAILABLE (повтор задачи). */

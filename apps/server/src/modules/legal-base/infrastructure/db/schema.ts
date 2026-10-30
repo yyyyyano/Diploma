@@ -61,6 +61,7 @@ export const legalActs = publicTable(
     isNpa: boolean().notNull().default(true),
     /** Есть ли текст на pravo.by: акты без текста хранятся карточкой (LEGAL-06). */
     hasText: boolean().notNull(),
+    /** `excluded` — администратор исключил акт (LAW-40): не показывается, не ищется, не проверяется; записи остаются. */
     status: text().notNull().default("active"),
     source: text().notNull(),
     loadState: text().notNull().default("pending"),
@@ -92,7 +93,7 @@ export const legalActs = publicTable(
       "legal_acts_load_state_check",
       sql`${t.loadState} in ('pending','loaded','card-only','quarantined','failed')`,
     ),
-    check("legal_acts_status_check", sql`${t.status} in ('active','repealed')`),
+    check("legal_acts_status_check", sql`${t.status} in ('active','repealed','excluded')`),
   ],
 );
 
@@ -400,4 +401,36 @@ export const legalGrowthMarks = systemTable("legal_growth_marks", {
   key: text().primaryKey(),
   day: date({ mode: "string" }),
   at: moment(),
+});
+
+/**
+ * Справочники администратора (LAW-40), которые раньше были константами кода: стартовый каталог, «свои» органы и словарь
+ * «бытовое → юридическое». Начальные строки кладёт миграция; дальше правит админка (`DictionaryEditor`).
+ */
+export const legalStartCatalog = systemTable("legal_start_catalog", {
+  pravoId: text().primaryKey(),
+  title: text().notNull(),
+  /** Как акт назван в пути поиска фрагментов: «НК (Особенная часть)». */
+  label: text().notNull(),
+  kind: text().notNull(),
+  hasText: boolean().notNull(),
+  /** Группа витрины «База законов» (тема LAW-01, `privacy`, `plenum`); пусто — без группы. */
+  topicGroup: text(),
+  position: integer().notNull(),
+});
+
+/** «Свои» органы (LAW-13 п. 5): шаблон названия органа → тема; первое совпадение по `position` выигрывает. */
+export const legalOrganTopics = systemTable("legal_organ_topics", {
+  pattern: text().primaryKey(),
+  topic: text().notNull(),
+  position: integer().notNull(),
+});
+
+/** Словарь «бытовое → юридическое» (LAW-21): нормализованное слово запроса → юридические термины. */
+export const legalColloquialTerms = systemTable("legal_colloquial_terms", {
+  word: text().primaryKey(),
+  terms: text()
+    .array()
+    .notNull()
+    .default(sql`'{}'::text[]`),
 });

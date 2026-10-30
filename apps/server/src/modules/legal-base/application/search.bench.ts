@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSystemDb } from "../../../platform/db/system-db.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import { hybridIds } from "../infrastructure/db/search.repo.ts";
+import { DEFAULT_COLLOQUIAL_TERMS } from "../domain/synonyms.ts";
 import { buildTsQuery } from "../domain/ts-query.ts";
 import { makeLawSearch } from "./search.ts";
 
@@ -142,7 +143,11 @@ describe("бюджеты поиска по законам (~25 тыс. фраг�
 
   it("гибрид (SQL: FTS + HNSW + RRF) — p95 не больше 200 мс", async () => {
     const vector = (await fake.embed(["обмен товар качество потребитель возврат"]))[0] ?? null;
-    const ts = buildTsQuery("обмен товар качество потребитель возврат", "or");
+    const ts = buildTsQuery(
+      "обмен товар качество потребитель возврат",
+      "or",
+      DEFAULT_COLLOQUIAL_TERMS,
+    );
     const value = await measure(() =>
       hybridIds(createSystemDb(db.pool), { tsQuery: ts, vector, limit: 10 }),
     );

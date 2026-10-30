@@ -1,6 +1,7 @@
 // Стартовый каталог (SPEC §6.19.1, LAW-10): встроенный список адресов ключевых актов на pravo.by — начальная точка,
 // дальше каталог пополняется сам (T-037). Проверено 2026-10-21: 28 актов, 23 с текстом (guid=3871) и 5 только
-// карточкой (guid=3961). Правка списка в админке — T-039; акты не из списка ссылаются на ID так же.
+// карточкой (guid=3961). Список — умолчание: миграция кладёт его в `legal_start_catalog`, дальше правит админка (T-039, LAW-40);
+// код читает таблицу, а константа служит источником миграции, тестов и стенда.
 export type ActKind = "law" | "code" | "decree" | "resolution" | "plenum";
 
 export interface CatalogEntry {
@@ -10,6 +11,8 @@ export interface CatalogEntry {
   readonly label: string;
   readonly kind: ActKind;
   readonly hasText: boolean;
+  /** Группа витрины «База законов» (тема LAW-01 или `privacy`), пусто — без группы (разъяснения Пленума — по виду акта). */
+  readonly group: string | null;
 }
 
 /** Вид акта по реквизитам: разъяснение Пленума — не НПА (LAW-04). */
@@ -23,6 +26,7 @@ const text = (pravoId: string, kind: ActKind, label: string, title: string): Cat
   label,
   kind,
   hasText: true,
+  group: null,
 });
 const card = (pravoId: string, kind: ActKind, label: string, title: string): CatalogEntry => ({
   pravoId,
@@ -30,13 +34,14 @@ const card = (pravoId: string, kind: ActKind, label: string, title: string): Cat
   label,
   kind,
   hasText: false,
+  group: null,
 });
 
 /**
  * Группа витрины «База законов» для актов стартового каталога (LAW-07, тема «из каталога», LAW-17): 10 тем LAW-01 и
  * «Персональные данные» (Закон № 99-З — исключение LAW-01). Разъяснения Пленума — отдельная группа по виду акта.
  */
-export const START_GROUPS: Readonly<Record<string, string>> = {
+const START_GROUPS: Readonly<Record<string, string>> = {
   Hk0200166: "taxes",
   Hk0900071: "taxes",
   H10200090: "consumer",
@@ -66,7 +71,7 @@ export const START_GROUPS: Readonly<Record<string, string>> = {
   H12100099: "privacy",
 };
 
-export const START_CATALOG: readonly CatalogEntry[] = [
+const ENTRIES: readonly CatalogEntry[] = [
   text(
     "Hk0200166",
     "code",
@@ -186,3 +191,8 @@ export const START_CATALOG: readonly CatalogEntry[] = [
     "Постановление Пленума Верховного Суда № 4 от 24.06.2010 (дела о защите прав потребителей)",
   ),
 ];
+
+export const START_CATALOG: readonly CatalogEntry[] = ENTRIES.map((entry) => ({
+  ...entry,
+  group: START_GROUPS[entry.pravoId] ?? null,
+}));

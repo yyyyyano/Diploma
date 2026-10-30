@@ -8,6 +8,7 @@ import type { Logger } from "../../../platform/logging/logger.ts";
 import { parseReference } from "../domain/reference.ts";
 import { buildTsQuery } from "../domain/ts-query.ts";
 import { findAct } from "../infrastructure/db/catalog.repo.ts";
+import { colloquialTerms } from "../infrastructure/db/dictionaries.repo.ts";
 import {
   actCardRow,
   actsByAlias,
@@ -134,10 +135,15 @@ export function makeLawSearch(d: LawSearchDeps) {
       vector = null;
     }
     if (vector === null) d.log.info({}, "law.search.no-vectors");
-    const andQuery = buildTsQuery(query, "and");
+    const colloquial = await colloquialTerms(d.system);
+    const andQuery = buildTsQuery(query, "and", colloquial);
     let ids = await hybridIds(d.system, { tsQuery: andQuery, vector, limit: cap });
     if (ids.length < Math.min(MIN_AND_RESULTS, cap)) {
-      ids = await hybridIds(d.system, { tsQuery: buildTsQuery(query, "or"), vector, limit: cap });
+      ids = await hybridIds(d.system, {
+        tsQuery: buildTsQuery(query, "or", colloquial),
+        vector,
+        limit: cap,
+      });
     }
     let rows = [...(await fragmentsByVersionIds(d.system, ids))];
     // Расширение по ссылкам и определениям — в пределах предела выдачи.

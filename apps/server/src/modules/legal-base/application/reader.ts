@@ -5,9 +5,9 @@ import type { LawActView, LawCatalog, LawFragmentView, LawListItem } from "@kosh
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { parseReference } from "../domain/reference.ts";
-import { START_CATALOG } from "../domain/start-catalog.ts";
-import { findAct } from "../infrastructure/db/catalog.repo.ts";
+import { findAct, isExcluded } from "../infrastructure/db/catalog.repo.ts";
 import { pendingChangesOf } from "../infrastructure/db/changes.repo.ts";
+import { startCatalogLabels } from "../infrastructure/db/dictionaries.repo.ts";
 import {
   articleText,
   articleToc,
@@ -21,7 +21,6 @@ import { actsByAlias, articleFragments, actCardRow } from "../infrastructure/db/
 
 /** Фрагментов на странице акта без статей. */
 export const PAGE_SIZE = 40;
-const SHORT_NAMES = new Map(START_CATALOG.map((e) => [e.pravoId, e.label]));
 const GROUPS = new Set([
   "taxes",
   "consumer",
@@ -41,7 +40,7 @@ const isoDay = (at: Date | null): string | null =>
 const url = (pravoId: string, guid: 3871 | 3961) =>
   `https://pravo.by/document/?guid=${String(guid)}&p0=${pravoId}`;
 
-function itemOf(r: CatalogRow): LawListItem {
+function itemOf(r: CatalogRow, names: ReadonlyMap<string, string>): LawListItem {
   const status =
     r.status === "repealed"
       ? "repealed"
@@ -54,7 +53,7 @@ function itemOf(r: CatalogRow): LawListItem {
     pravoId: r.pravoId,
     title: r.title,
     kind: r.kind,
-    shortName: SHORT_NAMES.get(r.pravoId) ?? null,
+    shortName: names.get(r.pravoId) ?? null,
     status,
     repealedOn: r.repealedOn,
     editionOn: isoDay(r.editionAt),
@@ -73,7 +72,8 @@ function itemOf(r: CatalogRow): LawListItem {
 export function makeReader(d: { readonly system: SystemDb }) {
   async function catalog(): Promise<LawCatalog> {
     const rows = await catalogRows(d.system);
-    const acts = rows.map(itemOf);
+    const names = await startCatalogLabels(d.system);
+    const acts = rows.map((r) => itemOf(r, names));
     const editions = rows.flatMap((r) => (r.editionAt === null ? [] : [r.editionAt.getTime()]));
     return {
       acts,
@@ -119,7 +119,7 @@ export function makeReader(d: { readonly system: SystemDb }) {
       }
     }
     return {
-      act: itemOf(row),
+      act: itemOf(row, await startCatalogLabels(d.system)),
       fetchedAt: (await currentFetchedAt(d.system, act.id))?.toISOString() ?? null,
       url: url(pravoId, 3871),
       cardUrl: url(pravoId, 3961),
@@ -134,7 +134,7 @@ export function makeReader(d: { readonly system: SystemDb }) {
 
   async function fragments(pravoId: string, key: string): Promise<LawFragmentView[]> {
     const act = await findAct(d.system, pravoId);
-    if (act === undefined) throw new AppError("NOT_FOUND");
+    if (act === undefined || (await isExcluded(d.system, act.id))) throw new AppError("NOT_FOUND");
     const rows = key.startsWith("p:")
       ? await loosePage(d.system, act.id, Number(key.slice(2)), PAGE_SIZE)
       : await articleText(d.system, act.id, key);

@@ -1,12 +1,12 @@
 // Каталог актов, снимки и фрагменты (LAW-07, LAW-20, LAW-39) — только через SystemDb модуля legal-base. Запись снимка и
 // фрагментов — одна транзакция, без сети внутри: страницу читают до неё.
-import { and, count, eq, inArray, sql } from "drizzle-orm";
+import { and, count, eq, inArray, ne, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { ParsedFragment } from "../../domain/build-fragments.ts";
 import type { CurrentVersion, EditionPlan } from "../../domain/match-versions.ts";
 import type { CatalogEntry } from "../../domain/start-catalog.ts";
 import { aliasesOf } from "../../domain/aliases.ts";
-import { isNpa, START_GROUPS } from "../../domain/start-catalog.ts";
+import { isNpa } from "../../domain/start-catalog.ts";
 import {
   legalActAliases,
   legalActSnapshots,
@@ -66,8 +66,8 @@ export async function seedActs(
         hasText: e.hasText,
         source,
         loadState: e.hasText ? "pending" : "card-only",
-        topic: START_GROUPS[e.pravoId] ?? null,
-        topicSource: START_GROUPS[e.pravoId] === undefined ? null : "catalog",
+        topic: e.group,
+        topicSource: e.group === null ? null : "catalog",
       })),
     )
     // Известные акты не трогаются; пустая тема дополняется группой каталога (витрина «База законов» группирует по теме).
@@ -95,6 +95,7 @@ export async function actsToLoad(db: SystemDb, source: ActSource): Promise<reado
       and(
         eq(legalActs.source, source),
         eq(legalActs.hasText, true),
+        ne(legalActs.status, "excluded"),
         inArray(legalActs.loadState, ["pending", "failed"]),
       ),
     )
@@ -430,4 +431,13 @@ export async function checkableActs(db: SystemDb): Promise<{ id: string; pravoId
       ),
     )
     .orderBy(legalActs.pravoId);
+}
+
+/** Исключён ли акт администратором (LAW-40): читалка и поиск его не отдают. */
+export async function isExcluded(db: SystemDb, actId: string): Promise<boolean> {
+  const rows = await db
+    .select({ status: legalActs.status })
+    .from(legalActs)
+    .where(eq(legalActs.id, actId));
+  return rows[0]?.status === "excluded";
 }

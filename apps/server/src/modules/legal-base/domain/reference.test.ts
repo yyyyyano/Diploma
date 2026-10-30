@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { aliasesOf } from "./aliases.ts";
 import { normalizeAlias, parseReference } from "./reference.ts";
-import { expandColloquial } from "./synonyms.ts";
+import { DEFAULT_COLLOQUIAL_TERMS, expandColloquial } from "./synonyms.ts";
 
 describe("LAW-21: точное обращение по реквизитам", () => {
   it.each([
@@ -43,7 +43,7 @@ describe("LAW-21: точное обращение по реквизитам", ()
   });
 
   it("словарь «бытовое → юридическое»: зарплата → заработная плата, исходное слово остаётся", () => {
-    expect(expandColloquial(["зарплата", "задержали"])).toEqual([
+    expect(expandColloquial(["зарплата", "задержали"], DEFAULT_COLLOQUIAL_TERMS)).toEqual([
       "зарплата",
       "задержали",
       "заработная плата",

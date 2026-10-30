@@ -1,0 +1,84 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "a9884026-ece7-4387-8fff-6291fc68f1a1",
+  "prevIds": ["17570b92-0cd1-4bc8-a149-edefc86cac6e"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "explanations", "trace_hash"],
+      "writes": [
+        "s|col|public.explanations.trace_hash",
+        "n|col|public.explanations.trace_hash",
+        "e|col|public.explanations.trace_hash"
+      ],
+      "reads": ["n|tbl|public.explanations", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "explanations", "explanations_trace_hash_idx"],
+      "writes": [
+        "s|idx|public.explanations_trace_hash_idx",
+        "n|idx|public.explanations_trace_hash_idx",
+        "e|idx|public.explanations_trace_hash_idx",
+        "n|rel|public.explanations_trace_hash_idx"
+      ],
+      "reads": [
+        "n|tbl|public.explanations",
+        "n|sch|public",
+        "n|col|public.explanations.household_id",
+        "n|col|public.explanations.trace_hash"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "explanations",
+        "name": "trace_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "explanations",
+        "name": "explanations_trace_hash_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "trace_hash",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    }
+  ]
+}

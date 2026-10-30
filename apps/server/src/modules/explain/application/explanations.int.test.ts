@@ -75,3 +75,51 @@ describe("EXPL-02: объяснение — тот самый расчёт", () 
     });
   });
 });
+
+describe("EXPL-02: saveMany без роста таблицы", () => {
+  async function rows(householdId: string): Promise<number> {
+    const { rows } = await db.owner.query<{ n: number }>(
+      "select count(*)::int as n from explanations where household_id = $1",
+      [householdId],
+    );
+    return rows[0]?.n ?? -1;
+  }
+  const explanations = () => makeExplanations({ clock: new FakeClock("2026-10-21T09:00:00Z") });
+  const calc = (minor: number) =>
+    freeBalance({ averageIncome: byn("fin.averageIncome", minor), averageObligations: [] });
+
+  it("повторное открытие того же расчёта — тот же traceId, строк не больше", async () => {
+    const scope = testScope({ user: 21, household: 21 });
+    const s = createScopedDb(db.pool, scope);
+    const [first] = await explanations().saveMany(s, [calc(240_000)]);
+    const [again] = await explanations().saveMany(s, [calc(240_000)]);
+    expect(again).toBe(first);
+    expect(await rows(scope.householdId)).toBe(1);
+  });
+
+  it("пачка: одинаковые внутри пачки склеиваются, id идут в порядке входа, разные — разные", async () => {
+    const scope = testScope({ user: 22, household: 22 });
+    const s = createScopedDb(db.pool, scope);
+    const ids = await explanations().saveMany(s, [calc(1_000), calc(2_000), calc(1_000)]);
+    expect(ids[0]).toBe(ids[2]);
+    expect(ids[0]).not.toBe(ids[1]);
+    expect(await rows(scope.householdId)).toBe(2);
+    expect((await explanations().get(s, ids[1] ?? "")).trace.value).toEqual(Money.of(2_000, "BYN"));
+  });
+
+  it("то же число у другого домохозяйства — своя строка, чужой traceId недоступен", async () => {
+    const a = createScopedDb(db.pool, testScope({ user: 23, household: 23 }));
+    const b = createScopedDb(db.pool, testScope({ user: 24, household: 24 }));
+    const [idA] = await explanations().saveMany(a, [calc(5_000)]);
+    const [idB] = await explanations().saveMany(b, [calc(5_000)]);
+    expect(idA).not.toBe(idB);
+    await expect(explanations().get(b, idA ?? "")).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("период входит в расчёт: тот же расчёт за другой период — другое объяснение", async () => {
+    const s = createScopedDb(db.pool, testScope({ user: 25, household: 25 }));
+    const [one] = await explanations().saveMany(s, [calc(7_000)], { period: september });
+    const [two] = await explanations().saveMany(s, [calc(7_000)]);
+    expect(one).not.toBe(two);
+  });
+});

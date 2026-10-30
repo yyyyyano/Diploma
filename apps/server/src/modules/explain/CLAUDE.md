@@ -11,7 +11,7 @@ EXPL-01/02, P2, AGT-03 («объяснение»).
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createExplainModule({ platform, facades })`; платформа — `Platform`; соседей нет.
-- Фасад `ExplainFacade`: `save(s, calc, { period? })` → `TraceId` (в транзакции модуля-владельца — `tx`);
+- Фасад `ExplainFacade`: `save(s, calc, { period? })` → `TraceId` (в транзакции модуля-владельца — `tx`), `saveMany(s, calcs, { period? })` → `TraceId[]` одним `INSERT … ON CONFLICT DO NOTHING` по `(household_id, trace_hash)` — sha256 канонического JSON трассы и периода: одинаковый расчёт — тот же `traceId`, таблица не растёт;
   `get(s, traceId)` → `{ id, trace, period, createdAt }`; чужой — `NOT_FOUND`.
 - Контракт `contract.explain.get` (authed) — `Explanation` (`TraceNodeSchema` рекурсивно, период или `null`).
 - Инструмент агента `explain_number` (`read`, `core`): сохранённая трасса по `traceId` из результата другого инструмента.

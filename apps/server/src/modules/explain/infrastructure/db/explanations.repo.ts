@@ -1,28 +1,53 @@
 // Запросы к explanations: первый аргумент — s: ScopedDb, у каждого обращения свой s.own(explanations).
 import type { LocalDate, Period, TraceNode } from "@kosht/kernel";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import type { StoredExplanation } from "../../domain/explanation.ts";
 import { explanations } from "./schema.ts";
 
-export async function insertExplanation(
+/**
+ * Сохранить расчёты одним INSERT … ON CONFLICT DO NOTHING по (household_id, trace_hash): такой расчёт уже есть — берётся
+ * его id, новая строка не растёт. Порядок id — как входных расчётов.
+ */
+export async function insertExplanations(
   s: ScopedDb,
-  saved: { readonly trace: TraceNode; readonly period: Period | undefined },
+  saved: readonly {
+    readonly trace: TraceNode;
+    readonly period: Period | undefined;
+    readonly hash: string;
+  }[],
   at: Date,
-): Promise<string> {
-  const rows = await s
+): Promise<string[]> {
+  if (saved.length === 0) return [];
+  const unique = [...new Map(saved.map((item) => [item.hash, item])).values()];
+  await s
     .insert(explanations)
-    .values({
-      trace: saved.trace,
-      periodFrom: saved.period?.from ?? null,
-      periodTo: saved.period?.to ?? null,
-      createdAt: at,
-      updatedAt: at,
-    })
-    .returning({ id: explanations.id });
-  const id = rows[0]?.id;
-  if (id === undefined) throw new Error("explanations: вставка не вернула id.");
-  return id;
+    .values(
+      unique.map((item) => ({
+        trace: item.trace,
+        periodFrom: item.period?.from ?? null,
+        periodTo: item.period?.to ?? null,
+        traceHash: item.hash,
+        createdAt: at,
+        updatedAt: at,
+      })),
+    )
+    .onConflictDoNothing({ target: [explanations.householdId, explanations.traceHash] });
+  const rows = await s.db
+    .select({ id: explanations.id, hash: explanations.traceHash })
+    .from(explanations)
+    .where(
+      and(
+        s.own(explanations),
+        inArray(explanations.traceHash, [...new Map(unique.map((u) => [u.hash, u.hash])).keys()]),
+      ),
+    );
+  const byHash = new Map(rows.map((row) => [row.hash, row.id]));
+  return saved.map((item) => {
+    const id = byHash.get(item.hash);
+    if (id === undefined) throw new Error("explanations: строка после вставки не найдена.");
+    return id;
+  });
 }
 
 export async function findExplanation(

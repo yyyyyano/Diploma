@@ -31,6 +31,7 @@
     "drizzle-orm": "catalog:",
     "file-type": "catalog:",
     "fuzzball": "catalog:",
+    "heic-decode": "catalog:",
     "hono": "catalog:",
     "libpg-query": "catalog:",
     "nodemailer": "catalog:",
@@ -43,7 +44,8 @@
     "unpdf": "catalog:",
     "xlsx": "file:../../vendor/xlsx-0.20.3.tgz",
     "yazl": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "zxing-wasm": "catalog:"
   },
   "devDependencies": {
     "@kosht/testing": "workspace:*",

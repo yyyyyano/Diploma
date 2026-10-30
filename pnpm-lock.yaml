@@ -326,6 +326,9 @@ catalogs:
     gpt-tokenizer:
       specifier: 4.1.0
       version: 4.1.0
+    heic-decode:
+      specifier: 2.1.0
+      version: 2.1.0
     hono:
       specifier: 4.13.13
       version: 4.13.13
@@ -404,6 +407,9 @@ catalogs:
     zod:
       specifier: 4.6.7
       version: 4.6.7
+    zxing-wasm:
+      specifier: 3.1.6
+      version: 3.1.6
 
 overrides:
   '@opentelemetry/api': 1.9.1
@@ -540,6 +546,9 @@ importers:
       fuzzball:
         specifier: 'catalog:'
         version: 2.2.6
+      heic-decode:
+        specifier: 'catalog:'
+        version: 2.1.0
       hono:
         specifier: 'catalog:'
         version: 4.13.13
@@ -579,6 +588,9 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 4.6.7
+      zxing-wasm:
+        specifier: 'catalog:'
+        version: 3.1.6(@types/emscripten@1.41.6)
     devDependencies:
       '@kosht/testing':
         specifier: workspace:*
@@ -883,6 +895,9 @@ importers:
       xlsx:
         specifier: file:../../vendor/xlsx-0.20.3.tgz
         version: file:vendor/xlsx-0.20.3.tgz
+      zxing-wasm:
+        specifier: 'catalog:'
+        version: 3.1.6(@types/emscripten@1.41.6)
 
 packages:
 
@@ -2291,6 +2306,9 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/emscripten@1.41.6':
+    resolution: {integrity: sha512-uN+9i8bFT5CUcZfyIEYDrSueACEyKGbUs5kC/72DGlZZoinh84sJfVV0i8UOJD1asdzkvLPBRrKs41kZ8MdEXg==}
+
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
@@ -3286,6 +3304,10 @@ packages:
   heap@0.2.7:
     resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
 
+  heic-decode@2.1.0:
+    resolution: {integrity: sha512-0fB3O3WMk38+PScbHLVp66jcNhsZ/ErtQ6u2lMYu/YxXgbBtl+oKOhGQHa4RpvE68k8IzbWkABzHnyAIjR758A==}
+    engines: {node: '>=8.0.0'}
+
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
 
@@ -3496,6 +3518,10 @@ packages:
   lefthook@2.2.2:
     resolution: {integrity: sha512-37fYHAhL12r1twaEV0PA5TwoIT491eTGGYjhhXxlYNMq3DSkiGZBQ++Jfk5maXj0vq52NRauLtMikBKtbNJs3Q==}
     hasBin: true
+
+  libheif-js@1.23.5:
+    resolution: {integrity: sha512-umXZPthnWZtF3iG/5mQG+AZ2V6i0UeYpo3z2CkggTEgL8dKmIIwJT6TDuAMuabXa1yTW8uJ1ZAgR+CxNTklYYw==}
+    engines: {node: '>=8.0.0'}
 
   libpg-query@18.2.0:
     resolution: {integrity: sha512-xoNEjLosxCZsDIP9DXjy9/m3g3uc3trfSg2G3hm2CEzqC/DVorogLy7sKOMxPLDRffr2eibbF7klx0ySOPjB6Q==}
@@ -4620,6 +4646,11 @@ packages:
 
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
+
+  zxing-wasm@3.1.6:
+    resolution: {integrity: sha512-mU7UNuvl+hOT+nlSOQTMHZ2tM8lRMsbjDIp5IO/+HmBl/FOq77q0OSZPJ3cm42A9c1MKU6Uve67FiGdkhsrT9g==}
+    peerDependencies:
+      '@types/emscripten': '>=1.39.6'
 
 snapshots:
 
@@ -5891,6 +5922,8 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/emscripten@1.41.6': {}
+
   '@types/estree@1.0.9': {}
 
   '@types/fontkit@2.0.9':
@@ -6547,6 +6580,10 @@ snapshots:
 
   heap@0.2.7: {}
 
+  heic-decode@2.1.0:
+    dependencies:
+      libheif-js: 1.23.5
+
   help-me@5.0.0: {}
 
   hono@4.13.13: {}
@@ -6710,6 +6747,8 @@ snapshots:
       lefthook-openbsd-x64: 2.2.2
       lefthook-windows-arm64: 2.2.2
       lefthook-windows-x64: 2.2.2
+
+  libheif-js@1.23.5: {}
 
   libpg-query@18.2.0:
     dependencies:
@@ -7726,3 +7765,8 @@ snapshots:
       yuku-core: 0.19.0
 
   zod@4.6.7: {}
+
+  zxing-wasm@3.1.6(@types/emscripten@1.41.6):
+    dependencies:
+      '@types/emscripten': 1.41.6
+      type-fest: 5.10.0

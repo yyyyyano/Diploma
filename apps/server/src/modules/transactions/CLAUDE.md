@@ -9,6 +9,7 @@
 ## Требования SPEC
 TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (применить к прошлым).
 ## Публичный API (`index.ts`)
+- DTO операции несёт `importId` (STMT-10: карточка открывает импорт и файл).
 - Фабрика: `createTransactionsModule({ platform, facades })`. Фасад (`statements`): `importBatch(tx, { importId, rows })` — выписка
   пачкой (`import_id`, `external_id`, `dedupe_key`; пара перевода, «Наличные» для снятия, покупка возврата; одно
   `transactions.changed`), `deleteImport`, `knownKeys`, `transferCandidates`, `purchaseCandidates`, `countEditedInImport`,

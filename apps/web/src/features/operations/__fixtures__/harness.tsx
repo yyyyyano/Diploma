@@ -60,6 +60,7 @@ export const coffee = {
   visibility: "personal",
   transferPairId: null,
   refundOfId: null,
+  importId: null,
   version: 1,
 };
 

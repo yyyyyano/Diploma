@@ -16,6 +16,7 @@ import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { progressQueryKey, type Progress } from "../../lib/events.ts";
 import { ConfirmDialog, EmptyState, Money, PageHeader, SkeletonCard } from "../../ui/index.ts";
 import classes from "./DocumentsPage.module.css";
+import type { DocumentsSearch } from "./model/search.ts";
 
 const ROLES: readonly ColumnRole[] = [
   "date",
@@ -36,12 +37,13 @@ type Dialog =
   | { readonly kind: "columns" }
   | { readonly kind: "rollback"; readonly transactions: number; readonly edited: number };
 
-export function DocumentsPage() {
+/** search.import — импорт, открытый по ссылке из карточки операции (STMT-10). */
+export function DocumentsPage({ search = {} }: { readonly search?: DocumentsSearch }) {
   const { t } = useTranslation(["documents", "errors", "common"]);
   const queryClient = useQueryClient();
   const input = useRef<HTMLInputElement>(null);
   const list = useQuery(orpc.statements.list.queryOptions());
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(search.import ?? null);
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [toast, setToast] = useState<{ token: string; message: string } | null>(null);

@@ -24,4 +24,5 @@ NFR-21 (ход разбора), P5 («Отменить»), AGT-07 («Да/Нет
 Из `ui`: `PageHeader`, `EmptyState`, `Money`, `ConfirmDialog`, `SkeletonCard`; Mantine `Modal`, `NativeSelect`.
 
 ## Переходы
-Нет (операции импорта видны в «Операциях»; карточка чека — T-028).
+Из карточки операции — `/documents?import=<id>` (STMT-10, `model/search.ts`): импорт открыт сразу. Операции импорта
+видны в «Операциях»; карточка чека — T-028.

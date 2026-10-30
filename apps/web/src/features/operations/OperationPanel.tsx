@@ -7,7 +7,8 @@ import { formatDate, formatScaled, formatTime } from "@kosht/i18n";
 import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
 import { Button } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { AlertTriangle, ChevronRight, Download, FileText, Pencil, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountName } from "../../entities/account/index.ts";
@@ -156,6 +157,7 @@ export function OperationPanel({
           )}
         </div>
       )}
+      {transaction.importId !== null && <StatementSource importId={transaction.importId} />}
       <h4 className={classes.historyTitle}>{t("panel.history")}</h4>
       <ul className={classes.history}>
         {history.map((entry, index) => (
@@ -181,5 +183,47 @@ function CategorySource({
     <p className={classes.note}>
       {t("operations:panel.categorySource", { source: t(`categories:source.${source}`) })}
     </p>
+  );
+}
+
+/**
+ * STMT-10: операция пришла из выписки — карточка «Загружено из файла» (op-card макета) ведёт к импорту на «Чеках и
+ * документах», «Исходный файл» отдаёт сам файл (`/api/files/<id>`, только владельцу). Импорт не загрузился — ссылки нет:
+ * карточка операции от этого не ломается.
+ */
+function StatementSource({ importId }: { readonly importId: string }) {
+  const { t } = useTranslation("operations");
+  const statement = useQuery(orpc.statements.get.queryOptions({ input: { id: importId } }));
+  const summary = statement.data?.summary;
+  if (summary === undefined) return null;
+  const name = [
+    summary.bank ?? t("panel.statement.unknownBank"),
+    summary.mask === null ? null : `•• ${summary.mask}`,
+  ]
+    .filter((part) => part !== null)
+    .join(" ");
+  const title =
+    summary.period === null
+      ? t("panel.statement.name", { name })
+      : t("panel.statement.namePeriod", {
+          name,
+          from: formatDate(summary.period.from),
+          to: formatDate(summary.period.to),
+        });
+  return (
+    <div className={classes.statement}>
+      <Link to="/documents" search={{ import: importId }} className={classes.statementCard}>
+        <FileText size={18} aria-hidden className={classes.statementIcon} />
+        <span className={classes.statementText}>
+          <span className={classes.statementLabel}>{t("panel.statement.label")}</span>
+          <span className={classes.statementName}>{title}</span>
+        </span>
+        <ChevronRight size={16} aria-hidden />
+      </Link>
+      <a className={classes.fileLink} href={`/api/files/${summary.fileId}`} download>
+        <Download size={16} aria-hidden />
+        {t("panel.statement.file")}
+      </a>
+    </div>
   );
 }

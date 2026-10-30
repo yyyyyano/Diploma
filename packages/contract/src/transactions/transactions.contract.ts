@@ -61,6 +61,8 @@ export const Transaction = z.strictObject({
   visibility: Visibility,
   transferPairId: TransactionId.nullable(),
   refundOfId: TransactionId.nullable(),
+  /** Импорт выписки, из которого пришла операция (STMT-10: из карточки открывают импорт и файл); иначе null. */
+  importId: z.uuid().nullable(),
   version: z.int().min(1),
 });
 export type Transaction = z.infer<typeof Transaction>;

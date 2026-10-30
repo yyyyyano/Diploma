@@ -76,11 +76,11 @@ function mock(items: readonly unknown[], current: object = detail) {
   );
 }
 
-function renderPage() {
+function renderPage(search: { import?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return renderWithProviders(
     <QueryClientProvider client={queryClient}>
-      <DocumentsPage />
+      <DocumentsPage search={search} />
     </QueryClientProvider>,
   );
 }
@@ -122,6 +122,16 @@ describe("DES-16: состояния экрана «Чеки и документ
     expect(item.closest("li")).toHaveTextContent("Готова к импорту");
     expect(item.closest("li")).toHaveTextContent("за 01.09.2026–30.09.2026");
     expect(item.closest("li")).toHaveTextContent("найдено 47 операций");
+  });
+});
+
+describe("STMT-10: импорт по ссылке из карточки операции", () => {
+  it("адрес ?import=<id> сразу открывает этот импорт", async () => {
+    mock([summary]);
+    renderPage({ import: ID });
+    expect(await screen.findByRole("region", { name: "Предпросмотр импорта" })).toHaveTextContent(
+      "Нашёл 47 операций по карте •• 4821",
+    );
   });
 });
 

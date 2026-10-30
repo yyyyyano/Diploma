@@ -98,6 +98,12 @@ describe("STMT-04: импорт выписки через API", () => {
       [user.householdId],
     );
     expect(operations.rows[0]?.n).toBe("30");
+    // STMT-10: операция знает свой импорт — карточка открывает импорт и исходный файл.
+    const page = (await (
+      await stack.call("local", "/transactions?page=1&pageSize=50", { cookie: user.cookie })
+    ).json()) as { items: { importId: string | null }[] };
+    expect(page.items).toHaveLength(30);
+    expect(page.items.every((item) => item.importId === id)).toBe(true);
 
     const info = await stack.call("local", `/statements/imports/${id}/rollback`, {
       cookie: user.cookie,

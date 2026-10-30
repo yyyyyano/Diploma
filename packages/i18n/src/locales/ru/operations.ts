@@ -155,6 +155,13 @@ export const operations = {
     refundOf: "Исходная покупка",
     linked: "Связана с другой операцией",
     history: "История изменений",
+    statement: {
+      label: "Загружено из файла",
+      name: "Выписка {{name}}",
+      namePeriod: "Выписка {{name}} за {{from}}–{{to}}",
+      unknownBank: "банка",
+      file: "Исходный файл",
+    },
     loadError: "Карточка не загрузилась. Закройте её и откройте ещё раз.",
   },
   history: {

@@ -43,6 +43,7 @@ export function toDto(row: TransactionRow): Transaction {
     visibility: row.visibility as Transaction["visibility"],
     transferPairId: row.transferPairId === null ? null : TransactionId.parse(row.transferPairId),
     refundOfId: row.refundOfId === null ? null : TransactionId.parse(row.refundOfId),
+    importId: row.importId,
     version: row.version,
   };
 }

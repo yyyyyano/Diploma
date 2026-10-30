@@ -23,6 +23,7 @@ import {
   T3,
   TOKEN,
   TRACE,
+  USD,
 } from "./__fixtures__/harness.tsx";
 
 describe("DES-16: состояния экрана «Операции»", () => {
@@ -331,6 +332,68 @@ describe("TXN-05: карточка операции", () => {
       within(panel).getByRole("button", { name: "Откуда эта цифра: курс НБРБ" }),
     );
     await expect.poll(() => explained).toEqual({ id: T2 });
+  });
+
+  it("STMT-10: операция из выписки — «Загружено из файла» ведёт к импорту, «Исходный файл» — к файлу", async () => {
+    const importId = "0199f0a0-0000-7000-8000-0000000000e1";
+    const fileId = "0199f0a0-0000-7000-8000-0000000000f1";
+    const imported = { ...steam, importId };
+    server.use(
+      ...baseHandlers(),
+      list(() => page([imported])),
+      card(imported, { rateE4: 29_871, scale: 1, date: "2026-10-05" }),
+      http.get(`*/api/statements/imports/${importId}`, () =>
+        HttpResponse.json({
+          summary: {
+            id: importId,
+            fileId,
+            status: "imported",
+            bank: "Альфа-Банк",
+            mask: "2208",
+            currency: "USD",
+            period: { from: "2026-10-01", to: "2026-10-20" },
+            found: 12,
+            newCount: 12,
+            duplicates: 0,
+            doubtful: 0,
+            skipped: 0,
+            method: "detected",
+            formatChanged: false,
+            balance: null,
+            warnings: [],
+            errorCode: null,
+            accountId: USD,
+            createdAt: "2026-10-20T18:00:00.000Z",
+            importedAt: "2026-10-20T18:01:00.000Z",
+          },
+          rows: [],
+          columns: null,
+        }),
+      ),
+    );
+    renderPage(`/operations?op=${T2}`);
+    const panel = await screen.findByRole("dialog", { name: "Операция" });
+    const statement = await within(panel).findByRole("link", {
+      name: /Загружено из файла.*Выписка Альфа-Банк •• 2208 за 01.10.2026–20.10.2026/,
+    });
+    expect(statement).toHaveAttribute("href", `/documents?import=${importId}`);
+    expect(within(panel).getByRole("link", { name: "Исходный файл" })).toHaveAttribute(
+      "href",
+      `/api/files/${fileId}`,
+    );
+  });
+
+  it("операция не из выписки — ссылок на импорт и файл нет", async () => {
+    server.use(
+      ...baseHandlers(),
+      list(() => page([coffee])),
+      card(coffee),
+    );
+    renderPage(`/operations?op=${T1}`);
+    const panel = await screen.findByRole("dialog", { name: "Операция" });
+    expect(await within(panel).findByText("История изменений")).toBeInTheDocument();
+    expect(within(panel).queryByText("Загружено из файла")).not.toBeInTheDocument();
+    expect(within(panel).queryByRole("link", { name: "Исходный файл" })).not.toBeInTheDocument();
   });
 
   it("валютная операция без курса — «курс НБРБ пока не получен» вместо выдуманной суммы", async () => {

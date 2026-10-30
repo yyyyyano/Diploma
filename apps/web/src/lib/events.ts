@@ -54,18 +54,23 @@ export interface EventStreamOptions {
  * вид сигнала, чек до своей задачи), — безопасное умолчание: перезапрос всех.
  */
 const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
-  account: () => [orpc.accounts.key(), orpc.fin.key(), orpc.budgets.key()],
-  transaction: () => [orpc.transactions.key(), orpc.fin.key(), orpc.budgets.key()],
+  account: () => [orpc.accounts.key(), orpc.fin.key(), orpc.budgets.key(), orpc.dashboard.key()],
+  transaction: () => [
+    orpc.transactions.key(),
+    orpc.fin.key(),
+    orpc.budgets.key(),
+    orpc.dashboard.key(),
+  ],
   category: () => [orpc.categories.key()],
   notification: () => [orpc.notifications.key()],
   "statement-import": () => [orpc.statements.key()],
   receipt: () => [orpc.receipts.key()],
-  "profile-fact": () => [orpc.profile.key(), orpc.fin.key()],
+  "profile-fact": () => [orpc.profile.key(), orpc.fin.key(), orpc.dashboard.key()],
   "chat-message": () => [orpc.chat.key()],
   "data-export": () => [orpc.privacy.key()],
-  recurring: () => [orpc.recurring.key(), orpc.fin.key()],
-  budget: () => [orpc.budgets.key()],
-  goal: () => [orpc.budgets.key()],
+  recurring: () => [orpc.recurring.key(), orpc.fin.key(), orpc.dashboard.key()],
+  budget: () => [orpc.budgets.key(), orpc.dashboard.key()],
+  goal: () => [orpc.budgets.key(), orpc.dashboard.key()],
 };
 
 function apply(event: SiteEvent, queryClient: QueryClient): void {

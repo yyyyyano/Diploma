@@ -1,0 +1,208 @@
+/* Главная (design/screens/Main.dc.html, MobileHome.dc.html): сетка карточек; ≤ 860 px — одна колонка, поля 16. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-20);
+  width: 100%;
+  max-width: 1260px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}
+
+.periodBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+  max-width: 100%;
+}
+
+.periodTitle {
+  min-width: 120px;
+  text-align: center;
+}
+
+.range {
+  flex: 1 1 170px;
+  min-width: 0;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-16);
+}
+
+@media (max-width: 1100px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-20);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  min-width: 0;
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+}
+
+.heading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.noValue {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.donutWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s-16);
+}
+
+.donutWrap > figure {
+  align-self: center;
+}
+
+.legend,
+.list,
+.whyList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendRow,
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  padding: var(--s-6) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+}
+
+.legendLink {
+  flex: 1;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.legendLink:hover {
+  text-decoration: underline;
+}
+
+.legendName,
+.rowName {
+  flex: 1;
+  min-width: 0;
+}
+
+.whyList {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.whyRow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.limit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.limitHead {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  font-weight: 600;
+}
+
+.limitAmounts {
+  margin-left: auto;
+  font-weight: 500;
+}

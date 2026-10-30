@@ -17,6 +17,36 @@ import { renderWithProviders } from "../test/render.tsx";
 import { ErrorScreen } from "./ErrorScreen.tsx";
 import { createAppRouter } from "./router.tsx";
 
+/** Главная нового пользователя (DASH-04): ни операций, ни лимитов — «первые шаги». */
+const EMPTY_HOME = {
+  period: { from: "2026-10-01", to: "2026-10-31" },
+  today: "2026-10-28",
+  hasData: false,
+  income: {
+    amount: { minor: 0, currency: "BYN" },
+    traceId: "0199f0a0-0000-7000-8000-0000000000bb",
+  },
+  expense: {
+    amount: { minor: 0, currency: "BYN" },
+    traceId: "0199f0a0-0000-7000-8000-0000000000bb",
+  },
+  missingRates: 0,
+  accounts: { total: null, items: [] },
+  categories: { rows: [], other: null },
+  months: [],
+  daysLeft: 3,
+  limits: [],
+  goals: [],
+  freeBalance: {
+    amount: null,
+    traceId: null,
+    months: 0,
+    window: null,
+    reason: "insufficient-history",
+  },
+  upcoming: [],
+};
+
 const admin: SessionUser = { name: "Ирина Ковальчук", email: "irina@example.test", role: "admin" };
 
 /** Сессия, которую можно завершить: после signOut — гость. */
@@ -147,36 +177,24 @@ describe("AUTH-10, NFR-24: стартовый маршрут «/»", () => {
     expect(router.state.location.pathname).toBe("/onboarding");
   });
 
-  it("AUTH-07: анкету прошли или пропустили — /onboarding ведёт дальше, в «Счета»", async () => {
+  it("AUTH-07: анкету прошли или пропустили — /onboarding ведёт дальше, на «Главную»", async () => {
     server.use(
       http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
-      http.get("*/api/accounts", () =>
-        HttpResponse.json({
-          onDate: "2026-10-28",
-          items: [],
-          totals: { total: null, available: null, missingRates: [] },
-        }),
-      ),
+      http.get("*/api/dashboard", () => HttpResponse.json(EMPTY_HOME)),
     );
     const { router } = renderApp("/onboarding", sessionOf(admin).session);
-    expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/accounts");
+    expect(await screen.findByRole("heading", { level: 1, name: "Главная" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/home");
   });
 
-  it("вошедший — в раздел «Счета»", async () => {
+  it("вошедший — на «Главную» (DASH-01)", async () => {
     server.use(
       http.get("*/api/profile/onboarding", () => HttpResponse.json({ status: "done" })),
-      http.get("*/api/accounts", () =>
-        HttpResponse.json({
-          onDate: "2026-10-28",
-          items: [],
-          totals: { total: null, available: null, missingRates: [] },
-        }),
-      ),
+      http.get("*/api/dashboard", () => HttpResponse.json(EMPTY_HOME)),
     );
     const { router } = renderApp("/", sessionOf(admin).session);
-    expect(await screen.findByRole("heading", { level: 1, name: "Счета" })).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/accounts");
+    expect(await screen.findByRole("heading", { level: 1, name: "Главная" })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/home");
   });
 });
 

@@ -31,7 +31,9 @@ const ICONS: Record<AccountListItem["kind"], LucideIcon> = {
 };
 
 /** Название счёта для человека: своё; иначе банк и маска; иначе вид. */
-export function useAccountName(): (account: AccountListItem) => string {
+export function useAccountName(): (
+  account: Pick<AccountListItem, "name" | "bank" | "mask" | "kind">,
+) => string {
   const { t } = useTranslation("accounts");
   return (account) => {
     if (account.name !== null) return account.name;

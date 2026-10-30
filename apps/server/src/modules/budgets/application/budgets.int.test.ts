@@ -4,7 +4,11 @@
 import { Money } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { crossTenant } from "../../../platform/db/cross-tenant.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
+import { findGoalOwners, oneRow } from "../infrastructure/db/budgets.repo.ts";
+import { checkGoalJob } from "../jobs/check-goal.job.ts";
+import { checkGoalSweep } from "../jobs/check-goal.sweep.ts";
 import {
   budgetsWithJournal,
   clock,
@@ -528,5 +532,91 @@ describe("BUD-07: уведомления о цели", () => {
     expect(b.notices.some((n) => (n.params as { reason?: string }).reason === "behind")).toBe(
       false,
     );
+  }, 30_000);
+});
+
+describe("BUD-07: ежедневный обход целей", () => {
+  it("сквозной поиск находит владельцев целей — (id, домохозяйство, пользователь) — без данных; задача — только id цели", async () => {
+    const { b, s } = fresh();
+    const mine = await b.goals.create(
+      s,
+      { name: "Отпуск", kind: "piggy", target: byn(100_000), deadline: "2027-06-01" } as never,
+      "web",
+    );
+    const other = newScope(db);
+    await b.goals.create(
+      other,
+      { name: "Чужая", kind: "piggy", target: byn(100_000), deadline: "2027-06-01" } as never,
+      "web",
+    );
+    const rows = await crossTenant(db.pool, "budgets.check-goals-sweep", findGoalOwners);
+    const owner = rows.find((row) => row.id === mine.goal.id);
+    expect(owner).toEqual({
+      id: mine.goal.id,
+      householdId: s.scope.householdId,
+      userId: s.scope.userId,
+    });
+    expect(rows.some((row) => row.householdId === other.scope.householdId)).toBe(true);
+    const sweep = checkGoalSweep(checkGoalJob(async () => 0));
+    expect(sweep).toMatchObject({ name: "budgets.check-goals-sweep", cron: "30 4 * * *" });
+    expect(sweep.payload(owner as never)).toEqual({ goalId: mine.goal.id });
+  }, 30_000);
+
+  it("строка INSERT … RETURNING обязательна: пустой ответ — ошибка программы", () => {
+    expect(() => oneRow([], "budget_goals")).toThrow("budget_goals: запрос не вернул строку.");
+    expect(oneRow([{ id: "a" }], "budget_goals")).toEqual({ id: "a" });
+  });
+});
+
+describe("BUD-05: окно «Новая цель» — взнос до записи", () => {
+  const base = { target: byn(300_000), deadline: "2027-06-01" } as never;
+
+  it("новая копилка: 429 BYN, 7 месяцев; срок в прошлом и сумма 0 — VALIDATION", async () => {
+    const { b, s } = fresh();
+    expect(await b.overview.preview(s, base)).toMatchObject({
+      monthsLeft: 7,
+      contribution: byn(42_900),
+      fitsFreeBalance: null,
+    });
+    await expect(
+      b.overview.preview(s, { ...(base as object), deadline: "2026-10-01" } as never),
+    ).rejects.toMatchObject({ params: { reason: "deadline-past" } });
+    await expect(
+      b.overview.preview(s, { target: byn(0), deadline: "2027-06-01" } as never),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+  }, 30_000);
+
+  it("по счёту: вклад с накоплением уменьшает взнос; карта и неизвестный счёт — account-kind", async () => {
+    const { b, s } = fresh();
+    const { account } = await b.r.t.accounts.create(
+      s,
+      {
+        kind: "deposit",
+        name: "Вклад",
+        bank: null,
+        mask: null,
+        currency: "BYN",
+        initialBalance: byn(100_000),
+      },
+      "web",
+    );
+    expect(
+      await b.overview.preview(s, { ...(base as object), accountId: account.id } as never),
+    ).toMatchObject({ contribution: byn(28_600) });
+    const { account: card } = await b.r.t.accounts.create(
+      s,
+      {
+        kind: "card",
+        name: "Карта",
+        bank: null,
+        mask: null,
+        currency: "BYN",
+        initialBalance: null,
+      },
+      "web",
+    );
+    await expect(
+      b.overview.preview(s, { ...(base as object), accountId: card.id } as never),
+    ).rejects.toMatchObject({ params: { reason: "account-kind" } });
   }, 30_000);
 });

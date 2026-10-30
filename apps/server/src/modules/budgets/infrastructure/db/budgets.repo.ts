@@ -22,6 +22,13 @@ export type ContributionRow = typeof budgetContributions.$inferSelect;
 export type RevisionRow = typeof budgetRevisions.$inferSelect;
 export type NewRevision = InsertValue<typeof budgetRevisions>;
 
+/** Единственная строка `INSERT … RETURNING` / `SELECT count(*)`: пусто — сбой базы, а не ответ пользователю. */
+export function oneRow<T>(rows: readonly T[], what: string): T {
+  const [row] = rows;
+  if (row === undefined) throw new Error(`${what}: запрос не вернул строку.`);
+  return row;
+}
+
 export async function listLimits(s: ScopedDb): Promise<LimitRow[]> {
   return s.db
     .select()
@@ -97,9 +104,7 @@ export async function lockGoal(s: ScopedDb, id: string): Promise<GoalRow | undef
 
 export async function insertGoal(s: ScopedDb, goal: NewGoal): Promise<string> {
   const rows = await s.insert(budgetGoals).values(goal).returning({ id: budgetGoals.id });
-  const id = rows[0]?.id;
-  if (id === undefined) throw new Error("budget_goals: вставка не вернула id.");
-  return id;
+  return oneRow(rows, "budget_goals").id;
 }
 
 export async function updateGoal(
@@ -125,9 +130,7 @@ export async function insertContribution(
     .insert(budgetContributions)
     .values(input)
     .returning({ id: budgetContributions.id });
-  const id = rows[0]?.id;
-  if (id === undefined) throw new Error("budget_contributions: вставка не вернула id.");
-  return id;
+  return oneRow(rows, "budget_contributions").id;
 }
 
 export async function deleteContribution(s: ScopedDb, id: string): Promise<void> {
@@ -139,7 +142,7 @@ export async function countContributions(s: ScopedDb, goalId: string): Promise<n
     .select({ n: sql<number>`count(*)::int` })
     .from(budgetContributions)
     .where(and(s.own(budgetContributions), eq(budgetContributions.goalId, goalId)));
-  return rows[0]?.n ?? 0;
+  return oneRow(rows, "budget_contributions").n;
 }
 
 /** Сумма взносов каждой копилки, копейки: одним запросом на все цели. */
@@ -212,9 +215,7 @@ export async function insertRevision(s: ScopedDb, revision: NewRevision): Promis
     .insert(budgetRevisions)
     .values(revision)
     .returning({ id: budgetRevisions.id });
-  const id = rows[0]?.id;
-  if (id === undefined) throw new Error("budget_revisions: вставка не вернула id.");
-  return id;
+  return oneRow(rows, "budget_revisions").id;
 }
 
 export async function findRevision(s: ScopedDb, id: string): Promise<RevisionRow | undefined> {

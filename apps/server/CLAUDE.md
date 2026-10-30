@@ -9,7 +9,7 @@
 - `make dev` (ADR-0015, режим А): `node --watch` точек входа на хосте, переменные — `.env`; сайт — Vite с прокси.
 - `make up` (режим Б): образ `docker/Dockerfile` — tsdown собирает `api.mjs`, `worker.mjs`, `bot.mjs`, `migrate.mjs`
   (`tsdown.config.ts`: сборка на точку входа, без общих чанков, `@kosht/*` внутри; рабочие файлы песочницы — отдельные
-  точки входа `<имя>.worker.mjs`, сейчас `statement-parse.worker.mjs`, `platform/sandbox`); npm-зависимости — `node_modules`
+  точки входа `<имя>.worker.mjs`, сейчас `statement-parse.worker.mjs` и `receipt-prepare.worker.mjs`, `platform/sandbox`); npm-зависимости — `node_modules`
   рядом (`pnpm deploy --prod`); в образе `/app/web` (сайт, `WEB_DIST_DIR`) и `/app/drizzle` (`MIGRATIONS_DIR`).
 - `make migrate` — `src/main/migrate-cli.ts`; `make e2e` — стенд `src/entrypoints/__fixtures__/e2e-stack.ts`.
 

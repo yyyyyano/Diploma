@@ -428,6 +428,7 @@ describe("TXN-01: DTO без служебного", () => {
         "description",
         "direction",
         "id",
+        "importId",
         "merchantName",
         "note",
         "occurredOn",

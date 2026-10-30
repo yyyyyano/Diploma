@@ -36,6 +36,12 @@ export interface RecurringEntry {
   readonly lastOccurredOn: LocalDate | null;
   readonly overdueDays: number | null;
   readonly repeats: number;
+  /** Повторы-основания (последние): операция, день и сумма в BYN — `fin` берёт из них среднее за свои месяцы. */
+  readonly occurrences: readonly {
+    readonly id: string;
+    readonly on: LocalDate;
+    readonly amount: Money;
+  }[];
   readonly categoryCode: string | null;
   readonly categoryId: string | null;
   /** Входит ли в свободный остаток (REC-04). */
@@ -94,6 +100,11 @@ export function toEntry(row: ItemRow, onDate: LocalDate): RecurringEntry {
     lastOccurredOn: row.lastOccurredOn === null ? null : LocalDate.parse(row.lastOccurredOn),
     overdueDays: late > 0 ? late : null,
     repeats: occurrences.length,
+    occurrences: occurrences.map((o) => ({
+      id: o.id,
+      on: LocalDate.parse(o.on),
+      amount: byn(o.minor),
+    })),
     categoryCode: row.categoryCode,
     categoryId: row.categoryId,
     counted: countsInFreeBalance(section, state),

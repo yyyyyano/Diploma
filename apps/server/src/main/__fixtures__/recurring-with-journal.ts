@@ -20,6 +20,9 @@ import { makeMissed } from "../../modules/recurring/application/missed.ts";
 import { makeRead } from "../../modules/recurring/application/read.ts";
 import { makeRecompute } from "../../modules/recurring/application/recompute.ts";
 import type { Deps } from "../../modules/recurring/application/deps.ts";
+import { makeForecast } from "../../modules/fin/application/forecast.ts";
+import { makeFreeBalance } from "../../modules/fin/application/free-balance.ts";
+import type { Deps as FinDeps } from "../../modules/fin/application/deps.ts";
 
 export { clock, newScope };
 
@@ -88,7 +91,19 @@ export function recurringWithJournal(db: TestDb) {
 
   const recurringEvents = () => t.published.filter((e) => e.name === "recurring.changed");
 
+  // fin (T-031): свободный остаток и прогноз на тех же настоящих соседях, recurring — настоящие сценарии выше.
+  const finDeps = {
+    platform,
+    accounts: t.accounts,
+    transactions: t.transactionsFacade,
+    recurring: { list: read.list, upcoming: read.upcoming },
+    profile: { getFacts: facts.getFacts, upsertDerivedFact: facts.upsertDerivedFact },
+    explain: t.explain,
+  } as unknown as FinDeps;
+  const fin = { ...makeFreeBalance(finDeps), ...makeForecast(finDeps) };
+
   return {
+    fin,
     t,
     s: (): ScopedDb => newScope(db),
     seed,

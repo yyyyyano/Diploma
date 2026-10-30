@@ -231,6 +231,7 @@ export function transactionsWithJournal(
     purchaseCandidates: imports.purchaseCandidates,
     countEditedInImport,
     recurringHistory,
+    firstOperationOn: ops.firstOperationOn,
     requestMarkTransfer: ops.requestMarkTransfer,
     matchReceipt: ops.matchReceipt,
     matchBankOps: ops.matchBankOps,

@@ -90,7 +90,7 @@
 }
 
 .scroll {
-  overflow-x: auto;
+  min-width: 0;
 }
 
 .table {
@@ -148,5 +148,32 @@
   .body {
     padding-left: var(--s-16);
     padding-right: var(--s-16);
+  }
+
+  /* Телефон: строка — карточкой, без горизонтальной прокрутки; шапка колонок остаётся для экранного диктора. */
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    padding: var(--s-8) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .table td {
+    padding: var(--s-4) 0;
+    border-bottom: none;
   }
 }

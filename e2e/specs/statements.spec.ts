@@ -97,7 +97,11 @@ test("«Чеки и документы»: выписка → предпросм�
   await page.getByRole("button", { name: "Отмена" }).click();
 
   // STMT-11: откат с подтверждением — окно называет число операций.
-  await page.getByRole("button", { name: "Открыть предпросмотр" }).click();
+  await page
+    .getByRole("listitem")
+    .filter({ hasText: "Импортирована" })
+    .getByRole("button", { name: "Открыть предпросмотр" })
+    .click();
   await page.getByRole("button", { name: "Откатить импорт" }).click();
   const dialog = page.getByRole("dialog", { name: "Откатить импорт?" });
   await expect(dialog).toContainText("30 операций");

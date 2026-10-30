@@ -498,7 +498,13 @@ function ColumnsDialog({
   const [roles, setRoles] = useState<ColumnRole[]>(sample === null ? [] : [...sample.roles]);
   if (sample === null) return null;
   return (
-    <Modal opened onClose={onClose} title={t("columns.title")} size="lg">
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("columns.title")}
+      size="lg"
+      closeButtonProps={{ "aria-label": t("columns.close") }}
+    >
       <Stack className={classes.columns}>
         <p className={classes.hint}>{t("columns.text")}</p>
         {roles.map((role, index) => (

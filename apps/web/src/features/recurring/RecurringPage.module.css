@@ -1,0 +1,310 @@
+/* .k-body, карточки решений .dec, разделы .sec и строки .row из design/screens/Recurring.dc.html; ≤ 860 px — поля 16,
+   строка платежа складывается в карточку. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-20);
+  width: 100%;
+  max-width: 1260px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.decisions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--s-16);
+}
+
+.decision {
+  display: flex;
+  gap: var(--s-12);
+  padding: var(--s-16);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.decisionIcon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-md);
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.decisionWarn {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.decisionBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  min-width: 0;
+}
+
+.decisionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.decisionText {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-12);
+  flex-wrap: wrap;
+}
+
+.count {
+  color: var(--ink-3);
+  font-size: 14px;
+}
+
+.section {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+  overflow: hidden;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s-12);
+  padding: var(--s-16) var(--s-20);
+  border-bottom: 1px solid var(--line);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sectionHint {
+  margin: var(--s-2) 0 0;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.sectionTotal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex: none;
+  font-weight: 600;
+}
+
+.sectionTotalSub {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(150px, 1fr) minmax(130px, 0.9fr) minmax(
+      150px,
+      1fr
+    ) auto 44px;
+  align-items: center;
+  gap: var(--s-12);
+  padding: var(--s-12) var(--s-20);
+  border-top: 1px solid var(--line);
+}
+
+.row:first-child {
+  border-top: 0;
+}
+
+.rowName {
+  display: block;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rowSub {
+  display: block;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.rowAmount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  font-weight: 600;
+}
+
+.rowAmountLine {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.late {
+  color: var(--warn);
+}
+
+.soon {
+  color: var(--brand);
+}
+
+.menuButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: var(--kit-hover);
+}
+
+.menuButton:focus-visible {
+  outline: 2px solid var(--brand);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--s-16) var(--s-20);
+  color: var(--ink-2);
+}
+
+@media (max-width: 860px) {
+  .row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name amount"
+      "period next"
+      "badge menu";
+    padding: var(--s-12) var(--s-16);
+  }
+  .rowName {
+    grid-area: name;
+  }
+}
+
+.endedRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-12);
+  flex-wrap: wrap;
+  padding: var(--s-12) var(--s-20);
+  border-top: 1px solid var(--line);
+}
+
+.how {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-12);
+  padding: var(--s-16) var(--s-20);
+}
+
+.howCard {
+  padding: var(--s-16);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.howValue {
+  margin: 0;
+  color: var(--brand);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.howText {
+  margin: var(--s-4) 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  padding: 0 var(--s-20) var(--s-16);
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.label {
+  margin: 0 0 var(--s-6);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--s-12);
+}
+
+.kinds {
+  overflow-x: auto;
+}

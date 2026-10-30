@@ -1,0 +1,68 @@
+{
+  "origin": "Мятый чек «Зелёной ветки»: складки и блики поверх текста, наклон −3°, оплата картой. Скидка на строку и скидка на весь чек.",
+  "file": "receipt.jpg",
+  "store": "ЧТУП «Зелёная ветка»",
+  "unp": "291456789",
+  "address": "г. Брест, пр. Партизанский, 3",
+  "date": "2026-10-14",
+  "time": "18:20:03",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Йогурт клубничный 2,5% 125г",
+      "quantity": "4",
+      "unit": "шт",
+      "unitPrice": "1,19",
+      "discount": "-0,60",
+      "lineTotal": "4,16",
+      "normalizedName": "Йогурт клубничный"
+    },
+    {
+      "name": "Яблоки Антоновка",
+      "quantity": "1,83",
+      "unit": "кг",
+      "unitPrice": "2,89",
+      "discount": null,
+      "lineTotal": "5,29",
+      "normalizedName": "Яблоки антоновка"
+    },
+    {
+      "name": "Картофель мытый",
+      "quantity": "2,5",
+      "unit": "кг",
+      "unitPrice": "1,29",
+      "discount": null,
+      "lineTotal": "3,23",
+      "normalizedName": "Картофель мытый"
+    },
+    {
+      "name": "Макароны спагетти 400г",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "2,15",
+      "discount": null,
+      "lineTotal": "4,30",
+      "normalizedName": "Макароны спагетти"
+    }
+  ],
+  "receiptDiscount": "-1,00",
+  "total": "15,98",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "K8E6MHSA1FBCHTNBPX2W5XTW",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 1698,
+    "expectedTotalMinor": 1598,
+    "printedTotalMinor": 1598
+  },
+  "injection": false
+}

@@ -1,0 +1,59 @@
+{
+  "origin": "Тот же магазин, чек снят под углом 4,5° и слегка размыт: QR ещё читается. Проверка подготовки фото и чтения при наклоне.",
+  "file": "receipt.jpg",
+  "store": "ООО «Сосновый»",
+  "unp": "190123456",
+  "address": "г. Минск, ул. Весенняя, 12",
+  "date": "2026-10-13",
+  "time": "09:05:41",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Молоко 3,2% 1л",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "2,49",
+      "discount": null,
+      "lineTotal": "2,49",
+      "normalizedName": "Молоко"
+    },
+    {
+      "name": "Хлеб Нарочанский 400г",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "1,89",
+      "discount": null,
+      "lineTotal": "3,78",
+      "normalizedName": "Хлеб нарочанский"
+    },
+    {
+      "name": "Яйца С1 10шт",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "4,59",
+      "discount": null,
+      "lineTotal": "4,59",
+      "normalizedName": "Яйца с1"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "10,86",
+  "payment": {
+    "method": "cash",
+    "last4": null
+  },
+  "uid": "ZU1970Z3SFT73303LWDRY5PS",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 1086,
+    "expectedTotalMinor": 1086,
+    "printedTotalMinor": 1086
+  },
+  "injection": false
+}

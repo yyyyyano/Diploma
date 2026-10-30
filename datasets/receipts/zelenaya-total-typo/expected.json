@@ -1,0 +1,59 @@
+{
+  "origin": "Все строки сходятся, а итог напечатан на 1,00 BYN больше суммы строк: расхождение итога без спорных строк; разница уйдёт в «Прочее» (RCPT-07).",
+  "file": "receipt.jpg",
+  "store": "ЧТУП «Зелёная ветка»",
+  "unp": "291456789",
+  "address": "г. Брест, пр. Партизанский, 3",
+  "date": "2026-10-17",
+  "time": "13:02:30",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Чай чёрный 100 пак",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "8,99",
+      "discount": null,
+      "lineTotal": "8,99",
+      "normalizedName": "Чай чёрный пак"
+    },
+    {
+      "name": "Макароны спагетти 400г",
+      "quantity": "3",
+      "unit": "шт",
+      "unitPrice": "2,15",
+      "discount": null,
+      "lineTotal": "6,45",
+      "normalizedName": "Макароны спагетти"
+    },
+    {
+      "name": "Яблоки Антоновка",
+      "quantity": "0,77",
+      "unit": "кг",
+      "unitPrice": "2,89",
+      "discount": null,
+      "lineTotal": "2,23",
+      "normalizedName": "Яблоки антоновка"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "27,73",
+  "payment": {
+    "method": "cash",
+    "last4": null
+  },
+  "uid": "HYE3JV33ADW9FRFXRZ9WEVKG",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": false,
+    "disputedLines": [],
+    "totalOk": false,
+    "linesSumMinor": 1767,
+    "expectedTotalMinor": 1767,
+    "printedTotalMinor": 2773
+  },
+  "injection": false
+}

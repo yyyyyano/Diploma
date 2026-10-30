@@ -1,0 +1,158 @@
+{
+  "origin": "Длинный чек из 14 строк, тёмный кадр с шумом: проверка устойчивости чтения и суммы строк с копейками округления весовых товаров.",
+  "file": "receipt.jpg",
+  "store": "ЧТУП «Зелёная ветка»",
+  "unp": "291456789",
+  "address": "г. Брест, пр. Партизанский, 3",
+  "date": "2026-10-19",
+  "time": "20:31:47",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Яблоки Антоновка",
+      "quantity": "0,345",
+      "unit": "кг",
+      "unitPrice": "2,89",
+      "discount": null,
+      "lineTotal": "1,00",
+      "normalizedName": "Яблоки антоновка"
+    },
+    {
+      "name": "Картофель мытый",
+      "quantity": "1,76",
+      "unit": "кг",
+      "unitPrice": "1,29",
+      "discount": null,
+      "lineTotal": "2,27",
+      "normalizedName": "Картофель мытый"
+    },
+    {
+      "name": "Йогурт клубничный 2,5% 125г",
+      "quantity": "6",
+      "unit": "шт",
+      "unitPrice": "1,19",
+      "discount": null,
+      "lineTotal": "7,14",
+      "normalizedName": "Йогурт клубничный"
+    },
+    {
+      "name": "Макароны спагетти 400г",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "2,15",
+      "discount": null,
+      "lineTotal": "4,30",
+      "normalizedName": "Макароны спагетти"
+    },
+    {
+      "name": "Чай чёрный 100 пак",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "8,99",
+      "discount": null,
+      "lineTotal": "8,99",
+      "normalizedName": "Чай чёрный пак"
+    },
+    {
+      "name": "Молоко 3,2% 1л",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "2,49",
+      "discount": null,
+      "lineTotal": "2,49",
+      "normalizedName": "Молоко"
+    },
+    {
+      "name": "Хлеб Нарочанский 400г",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "1,89",
+      "discount": null,
+      "lineTotal": "1,89",
+      "normalizedName": "Хлеб нарочанский"
+    },
+    {
+      "name": "Яйца С1 10шт",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "4,59",
+      "discount": null,
+      "lineTotal": "4,59",
+      "normalizedName": "Яйца с1"
+    },
+    {
+      "name": "Сыр Российский 45% 200г",
+      "quantity": "0,735",
+      "unit": "шт",
+      "unitPrice": "10,99",
+      "discount": null,
+      "lineTotal": "8,08",
+      "normalizedName": "Сыр российский"
+    },
+    {
+      "name": "Масло сливочное 82,5% 180г",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "6,79",
+      "discount": null,
+      "lineTotal": "6,79",
+      "normalizedName": "Масло сливочное"
+    },
+    {
+      "name": "Вода минеральная 1,5л",
+      "quantity": "6",
+      "unit": "шт",
+      "unitPrice": "1,39",
+      "discount": "-1,00",
+      "lineTotal": "7,34",
+      "normalizedName": "Вода минеральная"
+    },
+    {
+      "name": "Кофе молотый 250г",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "12,49",
+      "discount": null,
+      "lineTotal": "12,49",
+      "normalizedName": "Кофе молотый"
+    },
+    {
+      "name": "Мыло жидкое 500мл",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "3,89",
+      "discount": null,
+      "lineTotal": "7,78",
+      "normalizedName": "Мыло жидкое"
+    },
+    {
+      "name": "Бананы",
+      "quantity": "1,01",
+      "unit": "кг",
+      "unitPrice": "4,59",
+      "discount": null,
+      "lineTotal": "4,64",
+      "normalizedName": "Бананы"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "79,79",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "QN14TKPQC3U6KLC3KPLZ87MD",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 7979,
+    "expectedTotalMinor": 7979,
+    "printedTotalMinor": 7979
+  },
+  "injection": false
+}

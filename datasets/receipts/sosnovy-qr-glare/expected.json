@@ -1,0 +1,59 @@
+{
+  "origin": "QR напечатан, но на фото закрыт бликом и не читается: УИ приложение не получает, дубль ищется по магазину, дню, времени и итогу.",
+  "file": "receipt.jpg",
+  "store": "ООО «Сосновый»",
+  "unp": "190123456",
+  "address": "г. Минск, ул. Весенняя, 12",
+  "date": "2026-10-18",
+  "time": "16:44:09",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Сыр Российский 45% 200г",
+      "quantity": "0,5",
+      "unit": "шт",
+      "unitPrice": "10,99",
+      "discount": null,
+      "lineTotal": "5,50",
+      "normalizedName": "Сыр российский"
+    },
+    {
+      "name": "Масло сливочное 82,5% 180г",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "6,79",
+      "discount": null,
+      "lineTotal": "6,79",
+      "normalizedName": "Масло сливочное"
+    },
+    {
+      "name": "Бананы",
+      "quantity": "0,8",
+      "unit": "кг",
+      "unitPrice": "4,59",
+      "discount": null,
+      "lineTotal": "3,67",
+      "normalizedName": "Бананы"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "15,96",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "8NZT9MF6EMBV6TBLA0GMM4EW",
+  "qr": {
+    "printed": true,
+    "readable": false
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 1596,
+    "expectedTotalMinor": 1596,
+    "printedTotalMinor": 1596
+  },
+  "injection": false
+}

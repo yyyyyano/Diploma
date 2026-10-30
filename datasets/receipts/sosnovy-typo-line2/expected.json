@@ -1,0 +1,59 @@
+{
+  "origin": "Опечатка в строке 2: 3 × 2,49 напечатано как 8,47 (должно быть 7,47). Валидатор обязан назвать строку 2; итог сходится с напечатанными суммами строк (RCPT-05, КП RCPT).",
+  "file": "receipt.jpg",
+  "store": "ООО «Сосновый»",
+  "unp": "190123456",
+  "address": "г. Минск, ул. Весенняя, 12",
+  "date": "2026-10-16",
+  "time": "19:12:55",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Хлеб Нарочанский 400г",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "1,89",
+      "discount": null,
+      "lineTotal": "1,89",
+      "normalizedName": "Хлеб нарочанский"
+    },
+    {
+      "name": "Молоко 3,2% 1л",
+      "quantity": "3",
+      "unit": "шт",
+      "unitPrice": "2,49",
+      "discount": null,
+      "lineTotal": "8,47",
+      "normalizedName": "Молоко"
+    },
+    {
+      "name": "Яйца С1 10шт",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "4,59",
+      "discount": null,
+      "lineTotal": "4,59",
+      "normalizedName": "Яйца с1"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "14,95",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "EL81WL47VK6RSL686979R1BW",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": false,
+    "disputedLines": [2],
+    "totalOk": true,
+    "linesSumMinor": 1495,
+    "expectedTotalMinor": 1495,
+    "printedTotalMinor": 1495
+  },
+  "injection": false
+}

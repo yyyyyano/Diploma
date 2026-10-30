@@ -1,0 +1,50 @@
+{
+  "origin": "Электронный чек аптеки — снимок экрана в PNG без наклона и размытия, QR читается.",
+  "file": "receipt.png",
+  "store": "ООО «Аптека Листок»",
+  "unp": "390789012",
+  "address": "г. Гродно, ул. Липовая, 7",
+  "date": "2026-10-21",
+  "time": "08:30:12",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Капли для носа 15мл",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "9,75",
+      "discount": "-0,50",
+      "lineTotal": "19,00",
+      "normalizedName": "Капли для носа"
+    },
+    {
+      "name": "Мыло жидкое 500мл",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "3,89",
+      "discount": null,
+      "lineTotal": "3,89",
+      "normalizedName": "Мыло жидкое"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "22,89",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "E241JN0C3YF8K591PKGX00Y0",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 2289,
+    "expectedTotalMinor": 2289,
+    "printedTotalMinor": 2289
+  },
+  "injection": false
+}

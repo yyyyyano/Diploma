@@ -1,0 +1,59 @@
+{
+  "origin": "Снимок iPhone в HEIC: кадр хранится «лёжа», а поворот задаёт irot (декодер обязан его применить). sharp такой файл не читает, нужен heic-decode. Файл собран генератором (ffmpeg + свой контейнер HEIF), настоящего образца нет.",
+  "file": "receipt.heic",
+  "store": "ЧТУП «Зелёная ветка»",
+  "unp": "291456789",
+  "address": "г. Брест, пр. Партизанский, 3",
+  "date": "2026-10-22",
+  "time": "17:55:31",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Йогурт клубничный 2,5% 125г",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "1,19",
+      "discount": null,
+      "lineTotal": "2,38",
+      "normalizedName": "Йогурт клубничный"
+    },
+    {
+      "name": "Яблоки Антоновка",
+      "quantity": "0,91",
+      "unit": "кг",
+      "unitPrice": "2,89",
+      "discount": null,
+      "lineTotal": "2,63",
+      "normalizedName": "Яблоки антоновка"
+    },
+    {
+      "name": "Чай чёрный 100 пак",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "8,99",
+      "discount": null,
+      "lineTotal": "8,99",
+      "normalizedName": "Чай чёрный пак"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "14,00",
+  "payment": {
+    "method": "card",
+    "last4": "4417"
+  },
+  "uid": "93DS91QQGT0KT3DM1G64YCWB",
+  "qr": {
+    "printed": true,
+    "readable": true
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 1400,
+    "expectedTotalMinor": 1400,
+    "printedTotalMinor": 1400
+  },
+  "injection": false
+}

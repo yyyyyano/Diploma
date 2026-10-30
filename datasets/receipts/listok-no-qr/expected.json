@@ -1,0 +1,59 @@
+{
+  "origin": "Чек аптеки без QR (касса старого образца): УИ напечатан только строкой. Дубль такого чека ищется по магазину, дню, времени и итогу (RCPT-04).",
+  "file": "receipt.jpg",
+  "store": "ООО «Аптека Листок»",
+  "unp": "390789012",
+  "address": "г. Гродно, ул. Липовая, 7",
+  "date": "2026-10-15",
+  "time": "11:48:10",
+  "currency": "BYN",
+  "items": [
+    {
+      "name": "Витамин C 500мг 30шт",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "11,90",
+      "discount": null,
+      "lineTotal": "11,90",
+      "normalizedName": "Витамин c"
+    },
+    {
+      "name": "Пластырь бактерицидный",
+      "quantity": "2",
+      "unit": "шт",
+      "unitPrice": "2,45",
+      "discount": null,
+      "lineTotal": "4,90",
+      "normalizedName": "Пластырь бактерицидный"
+    },
+    {
+      "name": "Капли для носа 15мл",
+      "quantity": "1",
+      "unit": "шт",
+      "unitPrice": "9,75",
+      "discount": null,
+      "lineTotal": "9,75",
+      "normalizedName": "Капли для носа"
+    }
+  ],
+  "receiptDiscount": null,
+  "total": "26,55",
+  "payment": {
+    "method": "cash",
+    "last4": null
+  },
+  "uid": "980HQB5TGB8X2TU7Q8NVYAYG",
+  "qr": {
+    "printed": false,
+    "readable": false
+  },
+  "arithmetic": {
+    "ok": true,
+    "disputedLines": [],
+    "totalOk": true,
+    "linesSumMinor": 2655,
+    "expectedTotalMinor": 2655,
+    "printedTotalMinor": 2655
+  },
+  "injection": false
+}

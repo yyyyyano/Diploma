@@ -20,6 +20,11 @@ export interface JobOptions<P> {
   readonly retryDelaySeconds?: number;
   /** Задержка первого запуска, с: вместе с singletonKey схлопывает «шторм» (пересчёт после импорта). */
   readonly startAfterSeconds?: number;
+  /**
+   * Как часто worker спрашивает очередь именно этой задачи, с (не меньше 0,5 — предел pg-boss); по умолчанию — общая
+   * частота процесса (2 с). Для задач, чей результат ждёт человек (уведомление о пороге лимита ≤ 3 с, BUD-03).
+   */
+  readonly pollingIntervalSeconds?: number;
   /** Сколько обработчик может работать, с; по умолчанию 15 мин (pg-boss). */
   readonly expireInSeconds?: number;
   /**

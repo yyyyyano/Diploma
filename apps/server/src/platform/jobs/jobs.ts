@@ -217,7 +217,12 @@ export function createJobs(deps: JobsDeps): JobsRuntime {
           perJobResults: true,
         } as const;
         for (const job of queues.values()) {
-          await instance.work(job.name, work, async (batch) =>
+          // У срочной для человека задачи — своя частота опроса поверх общей (JobOptions.pollingIntervalSeconds).
+          const jobWork =
+            job.options.pollingIntervalSeconds === undefined
+              ? work
+              : { ...work, pollingIntervalSeconds: job.options.pollingIntervalSeconds };
+          await instance.work(job.name, jobWork, async (batch) =>
             Promise.all(
               batch.map((item) => runJob({ pool, system, log, clock, scopes }, job, item)),
             ),

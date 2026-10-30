@@ -250,6 +250,37 @@ function logged(logs: ReturnType<typeof memoryLogger>, msg: string): number {
   return logs.lines().filter((line) => line["msg"] === msg).length;
 }
 
+describe("BUD-03: опрос очереди — своя частота у задачи, срочной для человека", () => {
+  it("общий опрос раз в 30 с не мешает задаче с pollingIntervalSeconds: 0.5 выполниться за секунды", async () => {
+    const urgent = defineJob({
+      name: "test.urgent",
+      payload: receiptPayload,
+      options: { pollingIntervalSeconds: 0.5 },
+      handle: async () => handled.resolve(performance.now()),
+    });
+    const handled = signal<number>();
+    const scopes = createScopeVerifierRegistry();
+    scopes.register(async () => true);
+    const runtime = createJobs({
+      pool: db.pool,
+      role: "worker",
+      log: memoryLogger().log,
+      clock: new FakeClock("2026-10-21T09:00:00Z"),
+      scopes,
+      timeZone: async () => "Europe/Minsk",
+      pollingIntervalSeconds: 30,
+    });
+    await runtime.start({ jobs: [urgent] });
+    running.push(runtime);
+    const s = createScopedDb(db.pool, scopeA);
+    // Первый опрос уже прошёл вхолостую: следующий общий — через 30 с, у задачи — через 0,5 с.
+    await new Promise((resolve) => setTimeout(resolve, 1_200));
+    const queuedAt = performance.now();
+    await s.transaction((tx) => runtime.enqueue(tx, urgent, { receiptId: scopeA.userId }));
+    expect((await handled.promise) - queuedAt).toBeLessThan(2_500);
+  });
+});
+
 describe("SEC-04, ADR-0008: enqueue отвергает задачу, которую нельзя ставить", () => {
   it("ключ не через jobKey, задача не из реестра процесса, нагрузка не по схеме — ошибка, задачи нет", async () => {
     const bareKey = defineJob({

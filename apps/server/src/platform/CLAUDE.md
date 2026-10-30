@@ -157,7 +157,7 @@
   `overview()` — экран «Система» (ADM-60, OBS-07): выполняются, последние `failed`/`dropped` и расписания и обходы
   процесса с последним запуском — до `OVERVIEW_LIMIT` (20) строк, только журнал; у `InlineJobs` — пусто) и `createJobs({ pool, role, log, clock, scopes,
   pollingIntervalSeconds? })` → `JobsRuntime`: `start({ jobs })` — очереди (`createQueue`, все роли) и в `worker` —
-  `work` (`perJobResults`); `enqueue` — `send` через `fromDrizzle` на соединении tx (аудитор), `requestId` — из
+  `work` (`perJobResults`; частота опроса — общая `pollingIntervalSeconds` процесса, а у срочной для человека задачи — своя `JobOptions.pollingIntervalSeconds` ≥ 0,5: уведомление о пороге лимита ≤ 3 с, BUD-03); `enqueue` — `send` через `fromDrizzle` на соединении tx (аудитор), `requestId` — из
   контекста лога; `stop()`. Выполнение: конверт → `scopes.verify` → `makeScope` (единственное место для задач) →
   `ctx.s` → обработчик → `background_job_run`. Не прошёл конверт, владелец или нагрузка — `dropped` (`VALIDATION`,
   `FORBIDDEN`), `jobs.scope-rejected` в логе, без повтора; ошибка — `failed` с кодом, повтор только для `retryable`.

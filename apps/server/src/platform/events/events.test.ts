@@ -106,4 +106,15 @@ describe("ADR-0008: ключ схлопывания подписки", () => {
   it("одинаковые события двух домохозяйств друг друга не подавляют", () => {
     expect(key(testScope({ user: 2, household: 2 }))).not.toBe(key());
   });
+
+  it("частота опроса очереди подписки уходит в задачу; без неё — общая частота процесса", () => {
+    const urgent = defineSubscription({
+      event: changed,
+      module: "budgets",
+      options: { pollingIntervalSeconds: 0.5 },
+      handle: async () => {},
+    });
+    expect(urgent.job.options.pollingIntervalSeconds).toBe(0.5);
+    expect(subscription.job.options.pollingIntervalSeconds).toBeUndefined();
+  });
 });

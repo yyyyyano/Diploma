@@ -17,6 +17,8 @@ export interface SubscriptionOptions<P> {
   singletonKey?(payload: P, scope: Scope): string;
   /** Задержка, с: вместе с ключом схлопывает «шторм» событий. */
   readonly startAfterSeconds?: number;
+  /** Как часто worker спрашивает очередь подписки, с (≥ 0,5): обработчик, результат которого ждёт человек. */
+  readonly pollingIntervalSeconds?: number;
   /** Повторов при retryable-ошибке каталога; по умолчанию 2. */
   readonly retryLimit?: number;
 }
@@ -49,6 +51,9 @@ export function defineSubscription<P extends EventPayload>(definition: {
         ? {}
         : { startAfterSeconds: options.startAfterSeconds }),
       ...(options.retryLimit === undefined ? {} : { retryLimit: options.retryLimit }),
+      ...(options.pollingIntervalSeconds === undefined
+        ? {}
+        : { pollingIntervalSeconds: options.pollingIntervalSeconds }),
       singletonKey: (payload, scope) =>
         options.singletonKey?.(payload, scope) ?? jobKey(scope, fingerprint(payload)),
     },

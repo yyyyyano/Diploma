@@ -265,5 +265,6 @@ export async function countEditedInImport(s: ScopedDb, importId: string): Promis
     .where(
       and(s.own(transactions), eq(transactions.importId, importId), gte(transactions.version, 2)),
     );
-  return rows[0]?.n ?? 0;
+  // count(*) всегда возвращает ровно одну строку.
+  return rows.reduce((total, row) => total + row.n, 0);
 }

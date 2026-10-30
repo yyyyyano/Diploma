@@ -10,9 +10,8 @@ export type ImportPatch = Patch<typeof statementImports>;
 
 export async function insertImport(s: ScopedDb, value: NewImport): Promise<ImportRow> {
   const rows = await s.insert(statementImports).values(value).returning();
-  const row = rows[0];
-  if (row === undefined) throw new Error("statements: вставка импорта не вернула строку.");
-  return row;
+  // INSERT … RETURNING всегда возвращает вставленную строку.
+  return rows.reduce((_, row) => row);
 }
 
 /** Импорт по id (свой); чужой и неизвестный — undefined. */

@@ -27,55 +27,9 @@ import {
 import { MATCH_AMOUNT_TOLERANCE_MINOR, MATCH_SIMILARITY, MATCH_WINDOW_DAYS } from "../settings.ts";
 import type { Deps, Parts } from "./deps.ts";
 import { MATCH_HANDLER, REMERGE_HANDLER, UNMERGE_HANDLER } from "./handlers.ts";
+import { Snapshot, snapshotSplits } from "./merged-snapshot.ts";
 
 type Channel = "web" | "telegram";
-
-const SnapshotSplit = z.object({
-  categoryCode: z.string().nullable(),
-  categoryId: z.string().nullable(),
-  amountMinor: z.number(),
-});
-const snapshotSplits = (rows: readonly z.infer<typeof SnapshotSplit>[]) =>
-  rows.map(({ categoryCode, categoryId, amountMinor }) => ({
-    categoryCode,
-    categoryId,
-    amountMinor,
-  }));
-
-/** Снимок операции чека, слитой с операцией выписки: по нему разрыв возвращает чек как был. */
-const Snapshot = z.object({
-  receipt: z.object({
-    id: z.uuid(),
-    receiptId: z.uuid(),
-    accountId: z.uuid(),
-    direction: z.string(),
-    occurredOn: z.string(),
-    occurredTime: z.string().nullable(),
-    amountMinor: z.number(),
-    currency: z.string(),
-    amountBynMinor: z.number().nullable(),
-    description: z.string(),
-    merchantName: z.string().nullable(),
-    merchantKey: z.string().nullable(),
-    categoryCode: z.string().nullable(),
-    categoryId: z.string().nullable(),
-    categorySource: z.string().nullable(),
-    pending: z.boolean(),
-    needsReview: z.boolean(),
-    version: z.number(),
-    createdAt: z.string(),
-  }),
-  splits: z.array(SnapshotSplit),
-  bank: z.object({
-    categoryCode: z.string().nullable(),
-    categoryId: z.string().nullable(),
-    categorySource: z.string().nullable(),
-    // Собственная разбивка операции выписки до связи: разрыв возвращает её, а не оставляет операцию без частей.
-    // Снимки, записанные до этого поля, разбивки выписки не знали — тогда её и не было.
-    splits: z.array(SnapshotSplit).default([]),
-  }),
-});
-type Snapshot = z.infer<typeof Snapshot>;
 
 const BankPayload = z.object({ bankId: z.uuid() });
 const MergePayload = z.object({

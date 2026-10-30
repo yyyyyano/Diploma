@@ -320,6 +320,44 @@ describe("TXN-11: ручная связь и разрыв из карточки"
     expect(await parts()).toEqual(own);
   });
 
+  it("«Отменить» чек, слитый с выпиской, возвращает собственную разбивку и категорию операции выписки", async () => {
+    const { s, t, bank, receipt, get } = await setup();
+    const bankId = await bank();
+    const own = [
+      { position: 1, categoryCode: "groceries", categoryId: null, amountMinor: 3000 },
+      { position: 2, categoryCode: "household", categoryId: null, amountMinor: 1730 },
+    ];
+    await s.transaction((tx) => replaceSplits(tx, bankId, own));
+    const r = await receipt();
+    await t.ops.linkReceipt(s, { receiptId: r.receiptId, transactionId: bankId });
+    expect((await listSplits(s, bankId)).map((split) => split.amountMinor)).toEqual([4000, 730]);
+    await s.transaction((tx) => t.ops.removeForReceipt(tx, r.receiptId));
+    const parts = (await listSplits(s, bankId)).map(
+      ({ position, categoryCode, categoryId, amountMinor }) => ({
+        position,
+        categoryCode,
+        categoryId,
+        amountMinor,
+      }),
+    );
+    expect(parts).toEqual(own);
+    expect(await get(bankId)).toMatchObject({
+      receiptId: null,
+      category: { type: "system", code: "groceries" },
+      source: "statement",
+    });
+  });
+
+  it("«Отменить» слитый чек без своей разбивки у выписки — разбивка снимается, операция остаётся", async () => {
+    const { s, t, bank, receipt } = await setup();
+    const bankId = await bank();
+    const r = await receipt();
+    await t.ops.linkReceipt(s, { receiptId: r.receiptId, transactionId: bankId });
+    await s.transaction((tx) => t.ops.removeForReceipt(tx, r.receiptId));
+    expect(await listSplits(s, bankId)).toEqual([]);
+    expect((await t.ops.get(s, bankId)).transaction.receiptId).toBeNull();
+  });
+
   it("связать нельзя: платёж не расход выписки или уже с чеком, чек без операции — NOT_FOUND, разрыв без связи — CONFLICT", async () => {
     const { s, t, bank, receipt } = await setup();
     const manual = await bank({ type: "income", direction: "in" });

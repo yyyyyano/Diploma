@@ -16,6 +16,7 @@ import {
   type NewSplit,
   type TransactionRow,
 } from "../infrastructure/db/transactions.repo.ts";
+import { Snapshot } from "./merged-snapshot.ts";
 import type { Deps, Parts } from "./deps.ts";
 
 /** Категория как в строке БД: встроенная по коду или своя по id. */
@@ -177,8 +178,29 @@ export function makeReceiptOps(d: Deps, parts: Parts) {
       });
       return;
     }
-    const patch = { receiptId: null, needsReview: false };
-    await replaceSplits(tx, row.id, []);
+    // Слитая с чеком операция выписки возвращает собственные категорию и разбивку из снимка (как разрыв связи, TXN-11);
+    // без снимка (связь до T-029) — разбивка снимается, как раньше.
+    const snapshot = Snapshot.safeParse(row.mergedReceipt);
+    const own = snapshot.success ? snapshot.data.bank : undefined;
+    const patch = {
+      receiptId: null,
+      needsReview: false,
+      mergedReceipt: null,
+      ...(own === undefined
+        ? {}
+        : {
+            categoryCode: own.categoryCode,
+            categoryId: own.categoryId,
+            categorySource: own.categorySource,
+          }),
+    };
+    await replaceSplits(
+      tx,
+      row.id,
+      own === undefined
+        ? []
+        : own.splits.map((split, index) => ({ ...split, position: index + 1 })),
+    );
     await updateTransaction(tx, row.id, patch);
     await ledger.settle(tx, {
       batchId: randomUUID(),

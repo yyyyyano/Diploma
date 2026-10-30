@@ -104,7 +104,12 @@ export function readReceipt(
   });
   if (printedTotal === undefined) {
     mismatches.push({ kind: "total", reason: "unreadable" });
-  } else if (!validation.total.ok) {
+  } else if (
+    !validation.total.ok &&
+    !mismatches.some((mismatch) => mismatch.kind === "line" && mismatch.reason === "unreadable")
+  ) {
+    // Пока в какой-то строке число не разобрано, сумма строк неполна: расхождение итога ложное, модели его не называем.
+    // Разница при этом остаётся в validation и становится «нераспознанным остатком» чека (RCPT-07).
     mismatches.push({
       kind: "total",
       reason: "arithmetic",

@@ -73,6 +73,16 @@ describe("RCPT-05: чек из напечатанных значений", () =>
     ]);
   });
 
+  it("пока число строки не разобрано, расхождение итога не называется: сумма строк неполна, а разница — остаток", () => {
+    const result = read({
+      items: [item({ lineTotal: "??" }), item()],
+      receiptDiscount: null,
+      total: "2,00",
+    });
+    expect(result.mismatches).toEqual([{ kind: "line", line: 1, reason: "unreadable" }]);
+    expect(result.validation.total.difference.value.minor).toBe(100);
+  });
+
   it("нечитаемая сумма строки и нечитаемый итог называются отдельно", () => {
     const result = read({ items: [item({ lineTotal: "??" })], receiptDiscount: null, total: "??" });
     expect(result.mismatches).toEqual([

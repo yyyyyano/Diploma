@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { openSync } from "fontkit";
-import sharp from "sharp";
+import sharp, { type OverlayOptions } from "sharp";
 import { prepareZXingModule, writeBarcode } from "zxing-wasm/writer";
 import type { PrintedReceipt, ReceiptSpec } from "./receipt-model.ts";
 import { rng } from "./rng.ts";
@@ -151,7 +151,7 @@ export async function renderPaper(
       .resize(QR_SIZE, QR_SIZE, { kernel: "nearest" })
       .png()
       .toBuffer();
-    const layers: sharp.OverlayOptions[] = [
+    const layers: OverlayOptions[] = [
       { input: modules, left: Math.round((PAPER_WIDTH - QR_SIZE) / 2), top: qrTop },
     ];
     if (options.coverQr === true) {
@@ -228,7 +228,7 @@ export async function photograph(
   const base = sharp({
     create: { width: DESK.width, height: DESK.height, channels: 3, background: desk },
   });
-  const layers: sharp.OverlayOptions[] = [{ input: rotated, left, top }];
+  const layers: OverlayOptions[] = [{ input: rotated, left, top }];
   if (quality === "noisy-dark") {
     // Шум: серые пиксели из зерна поверх всего кадра.
     const noise = Buffer.alloc(DESK.width * DESK.height * 3);

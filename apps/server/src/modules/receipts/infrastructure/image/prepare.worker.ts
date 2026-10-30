@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import decodeHeic from "heic-decode";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import { prepareZXingModule, readBarcodes } from "zxing-wasm/reader";
 import { SandboxRejection } from "../../../../platform/sandbox/isolated.ts";
 import { serveIsolated } from "../../../../platform/sandbox/serve.ts";
@@ -31,7 +31,7 @@ const QR_ATTEMPTS = [
   { side: 1400, normalise: false, sharpen: true },
 ] as const;
 
-async function toSharp(input: PrepareInput): Promise<sharp.Sharp> {
+async function toSharp(input: PrepareInput): Promise<Sharp> {
   if (input.type === "heic") {
     const decoded = await decodeHeic({ buffer: input.bytes });
     if (decoded.width * decoded.height > MAX_PIXELS) throw new SandboxRejection("too-big");
@@ -48,7 +48,7 @@ async function toSharp(input: PrepareInput): Promise<sharp.Sharp> {
 }
 
 serveIsolated(async (input: PrepareInput): Promise<PreparedPhoto> => {
-  let base: sharp.Sharp;
+  let base: Sharp;
   try {
     base = await toSharp(input);
     // Читаем «заголовок» заранее: битый файл падает тут, а не посреди кодирования.

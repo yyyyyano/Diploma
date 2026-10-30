@@ -174,6 +174,16 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "admin.sendTestMail": { input: () => undefined },
   "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
   "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
+  "tool:search_law": {
+    exempt:
+      "правовая база общая для всех (publicTable): данных домохозяйства в запросе и ответе нет",
+  },
+  "tool:get_law_fragment": {
+    exempt: "фрагмент закона по id версии — общие данные правовой базы, домохозяйства нет",
+  },
+  "tool:law_act_card": {
+    exempt: "карточка акта по ID pravo.by — общие данные правовой базы, домохозяйства нет",
+  },
   "legalBase.startupProgress": {
     exempt:
       "прогресс загрузки стартового каталога законов (localOnly): общие данные правовой базы, домохозяйства и данных пользователя нет",

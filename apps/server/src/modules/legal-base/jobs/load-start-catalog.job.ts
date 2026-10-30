@@ -10,7 +10,10 @@ import type { StartCatalog } from "../application/start-catalog.ts";
 /** Сколько может работать один запуск: 28 страниц по 3–5 с плюс лесенка повторов — с запасом 6 часов. */
 const RUN_SECONDS = 6 * 3600;
 
-export function loadStartCatalogJob(catalog: Pick<StartCatalog, "run">) {
+export function loadStartCatalogJob(
+  catalog: Pick<StartCatalog, "run">,
+  afterRun: (s: Parameters<Parameters<typeof defineJob>[0]["handle"]>[0]["s"]) => Promise<void>,
+) {
   return defineJob({
     name: "legal-base.load-start-catalog",
     payload: z.object({}),
@@ -21,7 +24,13 @@ export function loadStartCatalogJob(catalog: Pick<StartCatalog, "run">) {
       // Повторная доставка события первого запуска не ставит вторую задачу, пока первая ждёт очереди.
       singletonKey: (_payload, scope) => jobKey(scope, "load-start-catalog"),
     },
-    handle: (ctx) =>
-      catalog.run({ signal: ctx.signal, progress: (percent) => ctx.progress(percent) }),
+    handle: async (ctx) => {
+      try {
+        await catalog.run({ signal: ctx.signal, progress: (percent) => ctx.progress(percent) });
+      } finally {
+        // LAW-22: загруженное доступно по реквизитам и FTS сразу, векторы достраивает отдельная задача.
+        await afterRun(ctx.s);
+      }
+    },
   });
 }

@@ -12,6 +12,8 @@ import { seedActs, seedAliases } from "../infrastructure/db/catalog.repo.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
 import { makeEmbedder } from "./embed.ts";
 import { makeLoadAct } from "./load-act.ts";
+import { legalBaseTools } from "../agent/tools.ts";
+import { makeLookup } from "./lookup.ts";
 import { makeLawSearch } from "./search.ts";
 
 const page = (name: string): string =>
@@ -168,5 +170,41 @@ describe("LAW-23: векторы фоном", () => {
     expect(before.embedded).toBe(0);
     const after = await make().run();
     expect(after.embedded).toBe(after.total);
+  });
+});
+
+describe("инструменты агента search_law, get_law_fragment, law_act_card (набор legal, чтение)", () => {
+  const tools = () =>
+    legalBaseTools({
+      search: search(async () => null),
+      lookup: makeLookup({ system: system() }),
+    });
+  const ctx = {} as never;
+
+  it("описаны как чтение набора legal", () => {
+    const list = Object.values(tools());
+    expect(list.map((t) => [t.name, t.toolset, t.kind])).toEqual([
+      ["search_law", "legal", "read"],
+      ["get_law_fragment", "legal", "read"],
+      ["law_act_card", "legal", "read"],
+    ]);
+  });
+
+  it("search_law → фрагменты со ссылкой; get_law_fragment по их id возвращает тот же текст", async () => {
+    const t = tools();
+    const found = await t.search.execute(ctx, { query: "ст. 210 НК" });
+    expect(found.mode).toBe("exact");
+    const first = found.fragments[0];
+    expect(first?.url).toContain("pravo.by/document/?guid=3871");
+    const again = await t.fragment.execute(ctx, { id: first?.id ?? "" });
+    expect(again.fragment?.text).toBe(first?.text);
+  });
+
+  it("law_act_card: акт только с карточкой — без текста, неизвестный — null", async () => {
+    const t = tools();
+    const card = await t.actCard.execute(ctx, { actId: "C20200778" });
+    expect(card.act).toMatchObject({ hasText: false, status: "active" });
+    expect(card.act?.url).toContain("guid=3961");
+    expect((await t.actCard.execute(ctx, { actId: "H99999999" })).act).toBeNull();
   });
 });

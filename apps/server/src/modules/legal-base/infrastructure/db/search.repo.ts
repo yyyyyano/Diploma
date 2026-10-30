@@ -106,17 +106,20 @@ export async function hybridIds(db: SystemDb, q: HybridQuery): Promise<readonly 
   const vector = q.vector === null ? null : `[${q.vector.join(",")}]`;
   const result = await db.execute<{ id: string }>(sql`
     with
+    q as (select to_tsquery('russian', ${q.tsQuery ?? ""}) as tsq),
     fts as (
-      select v.id,
-             row_number() over (order by ts_rank_cd(v.search_tsv, to_tsquery('russian', ${q.tsQuery ?? ""})) desc, v.id) as rnk
-      from legal_fragment_versions v
-      join legal_fragments f on f.id = v.fragment_id
-      join legal_acts a on a.id = f.act_id
-      where ${q.tsQuery === null ? sql`false` : sql`true`}
-        and v.is_current and not v.excluded and a.status = 'active'
-        and v.search_tsv @@ to_tsquery('russian', ${q.tsQuery ?? ""})
-      order by ts_rank_cd(v.search_tsv, to_tsquery('russian', ${q.tsQuery ?? ""})) desc, v.id
-      limit ${BRANCH_LIMIT}
+      select t.id, row_number() over (order by t.rk desc, t.id) as rnk
+      from (
+        select v.id, ts_rank(v.search_tsv, q.tsq) as rk
+        from q, legal_fragment_versions v
+        join legal_fragments f on f.id = v.fragment_id
+        join legal_acts a on a.id = f.act_id
+        where ${q.tsQuery === null ? sql`false` : sql`true`}
+          and v.is_current and not v.excluded and a.status = 'active'
+          and v.search_tsv @@ q.tsq
+        order by rk desc, v.id
+        limit ${BRANCH_LIMIT}
+      ) t
     ),
     vec as (
       select e.version_id as id,

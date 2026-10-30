@@ -8,9 +8,14 @@ import {
   type SystemPlatform,
 } from "../../platform/module/define-module.ts";
 import type { IdentityFacade } from "../identity/index.ts";
-import type { LlmFacade } from "../llm/index.ts";
+import { systemCaller, type LlmFacade } from "../llm/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
+import { legalBaseTools } from "./agent/tools.ts";
 import { legalBaseRouter } from "./api/router.ts";
+import { makeEmbedder } from "./application/embed.ts";
+import { makeLawSearch } from "./application/search.ts";
+import { makeLookup } from "./application/lookup.ts";
+import { embedJob } from "./jobs/embed.job.ts";
 import { makeLoadAct } from "./application/load-act.ts";
 import type { LegalSource } from "./application/ports.ts";
 import { makeStartCatalog } from "./application/start-catalog.ts";
@@ -83,15 +88,44 @@ export function createLegalBaseModule({
     notifications: facades.notifications,
     loader: store,
   });
-  const job = loadStartCatalogJob(catalog);
+  // Векторы (LAW-22, LAW-23): локальная модель цепочки `embed` через шлюз llm; нет модели — поиск без векторов, задача ждёт.
+  const caller = systemCaller("legal-base");
+  const embedder = makeEmbedder({
+    system: platform.system,
+    embed: (texts) => facades.llm.embed(caller, texts),
+    clock: platform.clock,
+    log: platform.log,
+  });
+  const embed = embedJob(embedder);
+  const search = makeLawSearch({
+    system: platform.system,
+    embedQuery: async (text) => (await facades.llm.embed(caller, [text]))[0] ?? null,
+    log: platform.log,
+  });
+  const job = loadStartCatalogJob(catalog, (s) =>
+    s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
+  );
+  const lookup = makeLookup({ system: platform.system });
+  const tools = legalBaseTools({ search, lookup });
   return defineModule({
     id: "legal-base",
+    facade: {
+      /** Поиск по законам: точное обращение или гибрид, 6–10 действующих фрагментов (LAW-21). */
+      search: search.search,
+      /** Фрагмент действующей версии по id (цитата, CHAT-10). */
+      fragment: lookup.fragment,
+      /** Карточка акта по ID pravo.by. */
+      actCard: lookup.actCard,
+      /** Прогресс векторного индекса для админки (T-039): `modelReady` — ответил ли самотест модели. */
+      vectorProgress: embedder.progress,
+    },
     router: legalBaseRouter(catalog),
-    jobs: [job],
+    tools: Object.values(tools),
+    jobs: [job, embed],
     subscriptions: [onSystemInitialized(platform, { identity: facades.identity, catalog, job })],
     settings: LEGAL_BASE_SETTINGS,
   });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined); фасад появится с поиском (T-035). */
+/** Что модуль даёт соседям: поиск по законам, фрагмент, карточка акта, прогресс векторов. */
 export type LegalBaseFacade = ReturnType<typeof createLegalBaseModule>["facade"];

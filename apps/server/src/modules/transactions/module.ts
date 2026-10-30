@@ -21,10 +21,14 @@ import {
   APPLY_RULE_HANDLER,
   CATEGORY_HANDLER,
   DELETE_HANDLER,
+  MATCH_HANDLER,
+  REMERGE_HANDLER,
   RESTORE_HANDLER,
   TRANSFER_HANDLER,
+  UNMERGE_HANDLER,
 } from "./application/handlers.ts";
-import { transactionsChanged } from "./events.ts";
+import { transactionsChanged, transactionsMerged } from "./events.ts";
+import { MATCH_AMOUNT_TOLERANCE_MINOR, MATCH_SIMILARITY, MATCH_WINDOW_DAYS } from "./settings.ts";
 import { categorizeJob } from "./jobs/categorize.job.ts";
 import { fillRatesJob } from "./jobs/fill-rates.job.ts";
 import { countEditedInImport } from "./infrastructure/db/transactions.repo.ts";
@@ -53,6 +57,8 @@ export function createTransactionsModule({
     fxRates: facades.fxRates,
     actions: facades.actions,
     explain: facades.explain,
+    notifications: facades.notifications,
+    settings: platform.settings,
   };
   const base = makeBase(deps);
   const jobs = {
@@ -77,17 +83,25 @@ export function createTransactionsModule({
       setReceiptReviewed: ops.setReceiptReviewed,
       removeForReceipt: ops.removeForReceipt,
       operationOfReceipt: ops.operationOfReceipt,
+      matchReceipt: ops.matchReceipt,
+      matchBankOps: ops.matchBankOps,
     },
     router: transactionsRouter(ops),
-    events: [transactionsChanged],
+    events: [transactionsChanged, transactionsMerged],
+    settings: [MATCH_WINDOW_DAYS, MATCH_AMOUNT_TOLERANCE_MINOR, MATCH_SIMILARITY],
     jobs: [jobs.fillRates, jobs.categorize],
     tools: [tools.search, tools.add, tools.update, tools.changeCategory, tools.remove],
-    undo: { [RESTORE_HANDLER]: ops.restore },
+    undo: {
+      [RESTORE_HANDLER]: ops.restore,
+      [UNMERGE_HANDLER]: ops.undoMerge,
+      [REMERGE_HANDLER]: ops.undoUnlink,
+    },
     confirm: {
       [DELETE_HANDLER]: ops.confirmDelete,
       [CATEGORY_HANDLER]: ops.confirmChangeCategory,
       [TRANSFER_HANDLER]: ops.confirmMarkTransfer,
       [APPLY_RULE_HANDLER]: ops.confirmApplyRule,
+      [MATCH_HANDLER]: ops.confirmMatch,
     },
     userData: transactionsUserData,
   });

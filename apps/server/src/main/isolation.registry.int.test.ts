@@ -225,6 +225,8 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
       receiptDiscount: { minor: 0, currency: "BYN" },
     }),
   },
+  "transactions.linkReceipt": { input: (b) => ({ id: b.transactionId, receiptId: b.receiptId }) },
+  "transactions.unlinkReceipt": { input: (b) => ({ id: b.transactionId }) },
   "receipts.cancel": { input: (b) => ({ id: b.receiptId }) },
   "files.upload": {
     exempt:
@@ -592,10 +594,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "transactions.create",
       "transactions.explainRate",
       "transactions.get",
+      "transactions.linkReceipt",
       "transactions.list",
       "transactions.requestChangeCategory",
       "transactions.requestDelete",
       "transactions.requestMarkTransfer",
+      "transactions.unlinkReceipt",
       "transactions.update",
       "add_transaction",
       "bulk_change_category",

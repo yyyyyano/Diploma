@@ -31,8 +31,11 @@ import {
   APPLY_RULE_HANDLER,
   CATEGORY_HANDLER,
   DELETE_HANDLER,
+  MATCH_HANDLER,
+  REMERGE_HANDLER,
   RESTORE_HANDLER,
   TRANSFER_HANDLER,
+  UNMERGE_HANDLER,
 } from "../../modules/transactions/application/handlers.ts";
 import { makeImportBatch } from "../../modules/transactions/application/import-batch.ts";
 import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
@@ -70,6 +73,13 @@ export function transactionsWithJournal(
   const published: { name: string; ids: readonly string[] }[] = [];
   const signals: { entity: string; ids: readonly string[] }[] = [];
   const enqueued: Enqueued[] = [];
+  const notices: {
+    kind: string;
+    key: string;
+    decisionId?: string;
+    undoToken?: string;
+    params?: unknown;
+  }[] = [];
   const modelCalls: string[][] = [];
   let ratesUp = true;
   const rates = options.rates ?? {};
@@ -105,6 +115,8 @@ export function transactionsWithJournal(
     actionHandlers: () => ({
       undo: new Map([
         [RESTORE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.restore(s, p)],
+        [UNMERGE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.undoMerge(s, p)],
+        [REMERGE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.undoUnlink(s, p)],
         [ACCOUNT_RESTORE, (s: ScopedDb, p: unknown) => ready().accounts.restore(s, p)],
         ...extraUndo,
       ]),
@@ -113,6 +125,7 @@ export function transactionsWithJournal(
         [CATEGORY_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmChangeCategory(s, p)],
         [TRANSFER_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmMarkTransfer(s, p)],
         [APPLY_RULE_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmApplyRule(s, p)],
+        [MATCH_HANDLER, (s: ScopedDb, p: unknown) => ready().ops.confirmMatch(s, p)],
         [ACCOUNT_DELETE, (s: ScopedDb, p: unknown) => ready().accounts.confirmDelete(s, p)],
       ]),
     }),
@@ -186,6 +199,13 @@ export function transactionsWithJournal(
     fxRates,
     actions,
     explain,
+    notifications: {
+      notify: async (_tx: ScopedDb, input: (typeof notices)[number]) => {
+        notices.push(input);
+        return randomUUID();
+      },
+    },
+    settings: { get: async (def: { default: unknown }) => def.default as never },
   } as unknown as Parameters<typeof makeBase>[0];
   const base = makeBase(deps);
   const jobRefs = {
@@ -208,6 +228,8 @@ export function transactionsWithJournal(
     purchaseCandidates: imports.purchaseCandidates,
     countEditedInImport,
     requestMarkTransfer: ops.requestMarkTransfer,
+    matchReceipt: ops.matchReceipt,
+    matchBankOps: ops.matchBankOps,
   };
 
   return {
@@ -226,6 +248,7 @@ export function transactionsWithJournal(
     categories,
     background: base.background,
     published,
+    notices,
     signals,
     enqueued,
     modelCalls,

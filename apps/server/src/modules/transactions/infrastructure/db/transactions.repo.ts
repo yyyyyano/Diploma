@@ -321,3 +321,58 @@ export async function listSplits(s: ScopedDb, transactionId: string): Promise<Sp
     .where(and(s.own(transactionSplits), eq(transactionSplits.transactionId, transactionId)))
     .orderBy(asc(transactionSplits.position));
 }
+
+export interface CandidateQuery {
+  readonly amountMinor: number;
+  readonly currency: string;
+  readonly toleranceMinor: number;
+  readonly from: string;
+  readonly to: string;
+}
+
+/**
+ * TXN-10: расходные операции выписки без чека с той же суммой (с допуском) в окне дат — кандидаты для чека. Предварительные
+ * операции чеков сюда не попадают: у них источник «чек», а не «выписка».
+ */
+export async function bankCandidates(s: ScopedDb, q: CandidateQuery): Promise<TransactionRow[]> {
+  const t = transactions;
+  return s.db
+    .select()
+    .from(t)
+    .where(
+      and(
+        s.own(t),
+        eq(t.source, "statement"),
+        eq(t.type, "expense"),
+        isNull(t.receiptId),
+        eq(t.currency, q.currency),
+        gte(t.amountMinor, q.amountMinor - q.toleranceMinor),
+        lte(t.amountMinor, q.amountMinor + q.toleranceMinor),
+        gte(t.occurredOn, q.from),
+        lte(t.occurredOn, q.to),
+      ),
+    )
+    .orderBy(asc(t.occurredOn), asc(t.id));
+}
+
+/** TXN-10: операции от чеков (наличные и «ожидает выписки») с той же суммой в окне дат — кандидаты для платежа банка. */
+export async function receiptCandidates(s: ScopedDb, q: CandidateQuery): Promise<TransactionRow[]> {
+  const t = transactions;
+  return s.db
+    .select()
+    .from(t)
+    .where(
+      and(
+        s.own(t),
+        eq(t.source, "receipt"),
+        eq(t.type, "expense"),
+        isNotNull(t.receiptId),
+        eq(t.currency, q.currency),
+        gte(t.amountMinor, q.amountMinor - q.toleranceMinor),
+        lte(t.amountMinor, q.amountMinor + q.toleranceMinor),
+        gte(t.occurredOn, q.from),
+        lte(t.occurredOn, q.to),
+      ),
+    )
+    .orderBy(asc(t.occurredOn), asc(t.id));
+}

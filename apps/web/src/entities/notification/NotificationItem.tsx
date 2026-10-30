@@ -99,7 +99,13 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
           {!notification.read && (
             <span className={classes.srOnly}>{t("notifications:unread")}: </span>
           )}
-          {t(`notifications:kinds.${notification.kind}.text`, notification.params)}
+          {t(
+            // TXN-10: автоматическая привязка чека и вопрос «одна покупка?» — один вид, два текста (кнопки у них разные).
+            notification.kind === "receipt-match" && undoToken !== null
+              ? "notifications:kinds.receipt-match.textLinked"
+              : `notifications:kinds.${notification.kind}.text`,
+            notification.params,
+          )}
         </p>
         <p className={classes.time}>
           <time dateTime={notification.createdAt}>{dayOf(notification.createdAt)}</time>
@@ -148,7 +154,9 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
                   undo.mutate({ token: undoToken });
                 }}
               >
-                {t("notifications:actions.undo")}
+                {notification.kind === "receipt-match"
+                  ? t("notifications:actions.differentPurchases")
+                  : t("notifications:actions.undo")}
               </Button>
             )}
           </div>

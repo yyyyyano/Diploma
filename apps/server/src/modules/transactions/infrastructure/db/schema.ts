@@ -69,6 +69,16 @@ export const transactions = userOwnedTable(
     pending: boolean().notNull().default(false),
     /** Чек операции «требует проверки» (TXN-01): признак в списке и фильтр. */
     needsReview: boolean().notNull().default(false),
+    /** TXN-10: операции, с которыми этот чек (или эта операция выписки) уже сопоставляли и человек сказал «разные покупки» или спросили один раз. */
+    matchDeclined: uuid()
+      .array()
+      .notNull()
+      .default(sql`'{}'::uuid[]`),
+    /**
+     * Слитая с чеком операция выписки (TXN-10): снимок операции чека, разбивки и прежней категории — по нему разрыв связи
+     * («Это разные покупки», TXN-11) возвращает чек к операции «без пары». У остальных — null.
+     */
+    mergedReceipt: jsonb(),
     version: integer().notNull().default(1),
   },
   (t) => [

@@ -23,7 +23,7 @@ STMT-03…12, SEC-03, SEC-10/11 (документы). Сделано: STMT-03…
 - Импорт (`application/imports.ts`, фасад): `start(s, fileId)` → черновик + задача `statements.parse` (worker; прогресс —
   `realtime.progress`, сущность `statement-import`), `get`, `list`, `fixColumns`, `cancel`, `confirm` (одна транзакция: счёт по
   банку + маске + валюте, `transactions.importBatch`, остаток с днём `accounts.setStatementBalance`, `rememberFormat`,
-  `actions.record` отката, `statements.imported`, одно уведомление `statement-imported`, пакет спорных переводов «Да/Нет»),
+  `actions.record` отката, `statements.imported`, одно уведомление `statement-imported`, пакет спорных переводов «Да/Нет»; после коммита — `transactions.matchBankOps`: чеки к платежам, TXN-10),
   `rollbackInfo` (сколько операций и правленных вручную), `requestRollback` (undo `statements.rollback`: операции импорта
   удаляются, поправка остатка снимается), `discard` (обход `discard-drafts.sweep.ts` раз в сутки, TTL — настройка).
 - Предпросмотр (`build-preview.ts`): тип STMT-08 (`domain/classify.ts`), контрагент (`merchants`), категория (правила → модель

@@ -73,7 +73,7 @@ export interface RecognizeDeps {
   readonly merchants: Pick<MerchantsFacade, "resolve" | "normalizeItemName">;
   readonly explain: Pick<ExplainFacade, "save">;
   readonly categories: Pick<CategoriesFacade, "categorize">;
-  readonly transactions: Pick<TransactionsFacade, "recordFromReceipt">;
+  readonly transactions: Pick<TransactionsFacade, "recordFromReceipt" | "matchReceipt">;
   readonly notifications: Pick<NotificationsFacade, "notify">;
   readonly preparer: PhotoPreparer;
   readonly jobs: { readonly recognize: JobDef<{ receiptId: string }> };
@@ -390,6 +390,15 @@ export function makeRecognize(d: RecognizeDeps) {
         await changed(tx, receiptId);
       });
       await progress(s, receiptId, 100);
+      // TXN-10: чек сохранён — ищем платёж по карте. Сбой сопоставления чек не портит: он уже учтён как есть.
+      if (planned.operation !== undefined) {
+        await d.transactions.matchReceipt(s, receiptId).catch((error: unknown) => {
+          log.warn(
+            { receiptId, code: error instanceof AppError ? error.code : "INTERNAL" },
+            "receipt.match-failed",
+          );
+        });
+      }
       log.info(
         {
           receiptId,

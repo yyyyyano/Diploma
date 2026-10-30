@@ -23,6 +23,7 @@ export const notifications = {
     yes: "Да",
     no: "Нет",
     undo: "Отменить",
+    differentPurchases: "Это разные покупки",
     answeredYes: "Готово.",
     answeredNo: "Хорошо, ничего не меняем.",
     undone: "Отменено.",
@@ -46,7 +47,9 @@ export const notifications = {
     "receipt-match": {
       title: "Чек и платёж по карте — одна покупка?",
       description: "Вопрос о сопоставлении и сообщение об автоматической привязке",
-      text: "Чек и платёж по карте похожи на одну покупку.",
+      text: "Нашёл чек из «{{store}}» от {{date}} и платёж по карте от {{bankDate}}. Это одна покупка?",
+      textLinked:
+        "Чек из «{{store}}» от {{date}} привязан к платежу по карте от {{bankDate}}: покупка учтена один раз.",
     },
     "receipt-review": {
       title: "Чек требует проверки",

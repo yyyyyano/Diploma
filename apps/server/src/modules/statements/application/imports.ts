@@ -47,7 +47,12 @@ export interface ImportDeps {
   >;
   readonly transactions: Pick<
     TransactionsFacade,
-    "importBatch" | "deleteImport" | "knownKeys" | "countEditedInImport" | "requestMarkTransfer"
+    | "importBatch"
+    | "deleteImport"
+    | "knownKeys"
+    | "countEditedInImport"
+    | "requestMarkTransfer"
+    | "matchBankOps"
   >;
   readonly actions: Pick<ActionsFacade, "record" | "undo">;
   readonly notifications: Pick<NotificationsFacade, "notify">;
@@ -236,7 +241,7 @@ export function makeImports(d: ImportDeps) {
     imported: number;
     duplicates: number;
   }> {
-    return s.transaction(async (tx) => {
+    const imported = await s.transaction(async (tx) => {
       const row = await lockImport(tx, id);
       if (row === undefined) throw new AppError("NOT_FOUND");
       const payload = row.payload;
@@ -331,8 +336,28 @@ export function makeImports(d: ImportDeps) {
         params: { count: live.length, duplicates: counts.duplicates },
       });
       log.info({ count: live.length }, "statements.imported");
-      return { undoToken, decisionId, imported: live.length, duplicates: counts.duplicates };
+      return {
+        undoToken,
+        decisionId,
+        imported: live.length,
+        duplicates: counts.duplicates,
+        ids: result.ids,
+      };
     });
+    // TXN-10: выписка записана — ищем чеки к её платежам (чек до выписки был наличной тратой, теперь привязывается).
+    // Сбой сопоставления импорт не портит: операции уже записаны и учтены.
+    await d.transactions.matchBankOps(s, imported.ids).catch((error: unknown) => {
+      log.warn(
+        { code: error instanceof AppError ? error.code : "INTERNAL" },
+        "statements.match-failed",
+      );
+    });
+    return {
+      undoToken: imported.undoToken,
+      decisionId: imported.decisionId,
+      imported: imported.imported,
+      duplicates: imported.duplicates,
+    };
   }
 
   /** Обработчик отмены в actions (STMT-11): операции импорта удаляются, остаток возвращается, импорт — «откатан». */

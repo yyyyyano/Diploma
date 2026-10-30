@@ -260,4 +260,16 @@ export const transactionsContract = {
     .input(z.strictObject({ id: TransactionId }))
     .output(z.strictObject({ traceId: TraceId }))
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND", "UNAVAILABLE")),
+  /** Связать операцию выписки с чеком вручную (TXN-11): сумма и день — из выписки, разбивка — из чека; с «Отменить». */
+  linkReceipt: oc
+    .route({ method: "POST", path: "/transactions/{id}/receipt" })
+    .input(z.strictObject({ id: TransactionId, receiptId: z.uuid() }))
+    .output(z.strictObject({ undoToken: UndoToken }))
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "NOT_FOUND", "CONFLICT")),
+  /** Разорвать связь с чеком (TXN-11, «Это разные покупки»): чек возвращается к операции «без пары»; с «Отменить». */
+  unlinkReceipt: oc
+    .route({ method: "DELETE", path: "/transactions/{id}/receipt" })
+    .input(z.strictObject({ id: TransactionId }))
+    .output(z.strictObject({ undoToken: UndoToken }))
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "NOT_FOUND", "CONFLICT")),
 };

@@ -1,0 +1,63 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e8dc1aee-2b51-472a-b4b8-3283efba6879",
+  "prevIds": ["85db8765-e55d-4092-9764-6f74ed38d5a3"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "transactions", "match_declined"],
+      "writes": [
+        "s|col|public.transactions.match_declined",
+        "n|col|public.transactions.match_declined",
+        "e|col|public.transactions.match_declined"
+      ],
+      "reads": ["n|tbl|public.transactions", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "transactions", "merged_receipt"],
+      "writes": [
+        "s|col|public.transactions.merged_receipt",
+        "n|col|public.transactions.merged_receipt",
+        "e|col|public.transactions.merged_receipt"
+      ],
+      "reads": ["n|tbl|public.transactions", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "transactions",
+        "name": "match_declined",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "transactions",
+        "name": "merged_receipt",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

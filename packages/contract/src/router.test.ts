@@ -85,6 +85,8 @@ describe("дерево процедур", () => {
       "transactions.requestChangeCategory",
       "transactions.requestMarkTransfer",
       "transactions.explainRate",
+      "transactions.linkReceipt",
+      "transactions.unlinkReceipt",
       "receipts.start",
       "receipts.list",
       "receipts.get",

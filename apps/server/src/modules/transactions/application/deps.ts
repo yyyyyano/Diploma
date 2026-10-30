@@ -1,4 +1,5 @@
 // Зависимости сценариев transactions: порты платформы и фасады соседей из dependsOn (только то, что нужно сценариям).
+import type { Settings } from "../../../platform/settings/settings.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { JobDef } from "../../../platform/jobs/define-job.ts";
 import type { AccountsFacade } from "../../accounts/index.ts";
@@ -7,6 +8,7 @@ import type { CategoriesFacade } from "../../categories/index.ts";
 import type { ExplainFacade } from "../../explain/index.ts";
 import type { FxRatesFacade } from "../../fx-rates/index.ts";
 import type { MerchantsFacade } from "../../merchants/index.ts";
+import type { NotificationsFacade } from "../../notifications/index.ts";
 import type { Ledger } from "./ledger.ts";
 import type { Prepare } from "./prepare.ts";
 
@@ -20,10 +22,12 @@ export interface Deps {
     CategoriesFacade,
     "list" | "byRules" | "categorize" | "setUserRule" | "userRule" | "removeUserRule"
   >;
-  readonly merchants: Pick<MerchantsFacade, "resolve">;
+  readonly merchants: Pick<MerchantsFacade, "resolve" | "similarity">;
   readonly fxRates: Pick<FxRatesFacade, "convert" | "rateOn">;
   readonly actions: Pick<ActionsFacade, "record" | "propose">;
   readonly explain: Pick<ExplainFacade, "save">;
+  readonly notifications: Pick<NotificationsFacade, "notify">;
+  readonly settings: Pick<Settings, "get">;
 }
 
 /** Фоновые задачи модуля: ставятся в транзакции действия (откат — задачи нет). */

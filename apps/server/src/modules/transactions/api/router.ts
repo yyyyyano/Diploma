@@ -31,5 +31,11 @@ export function transactionsRouter(ops: Operations) {
     explainRate: authed.transactions.explainRate.handler(async ({ input, context }) => ({
       traceId: await ops.explainRate(context.s, input.id),
     })),
+    linkReceipt: authed.transactions.linkReceipt.handler(({ input, context }) =>
+      ops.linkReceipt(context.s, { receiptId: input.receiptId, transactionId: input.id }),
+    ),
+    unlinkReceipt: authed.transactions.unlinkReceipt.handler(({ input, context }) =>
+      ops.unlinkReceipt(context.s, input.id),
+    ),
   };
 }

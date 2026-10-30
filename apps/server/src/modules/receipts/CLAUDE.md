@@ -32,7 +32,7 @@ RCPT-01…15, PRIV-04, SEC-11. Сделано: RCPT-01…15 (RCPT-10 — нал�
   `operation-plan.ts` (категории позиций, `splitByCategory` из calc, операция), `receipt-card.ts` (DTO), `ports.ts`. `infrastructure/image/`
   (`heic-decode`, `sharp`, `zxing-wasm` — только здесь, песочница `receipt-prepare.worker`), `infrastructure/db/`.
 - `run`: фото → поток → УИ → дубль → модель → арифметика → перепроверка (≤ N) → магазин → дубль без QR → категории позиций (вне
-  транзакции) → транзакция: чек, позиции, попытки, `explain.save`, `transactions.recordFromReceipt`, события, уведомление.
+  транзакции) → транзакция: чек, позиции, попытки, `explain.save`, `transactions.recordFromReceipt`, события, уведомление; после коммита — `transactions.matchReceipt` (TXN-10).
 
 ## Зависимости
 Можно: files, transactions, categories, merchants, llm, actions, notifications, explain (`tooling/architecture/modules.ts`). Слушает: —.

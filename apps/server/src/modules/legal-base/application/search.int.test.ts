@@ -79,6 +79,13 @@ describe("LAW-21 шаг 1: точное обращение без векторо
     expect(out.fragments.map((f) => f.pathKey)).toEqual(["a13/p3"]);
   });
 
+  it("пункта нет в статье — возвращается вся статья", async () => {
+    const out = await noModel.search("п. 99 ст. 13 Закона о защите прав потребителей");
+    expect(out.mode).toBe("exact");
+    expect(out.fragments.length).toBeGreaterThan(0);
+    expect(out.fragments.every((f) => f.articleNo === "13")).toBe(true);
+  });
+
   it("исключённая статья возвращается со статусом «исключена»", async () => {
     const out = await noModel.search("ст. 113 НК");
     expect(out.fragments[0]).toMatchObject({ pathKey: "a113", excluded: true });

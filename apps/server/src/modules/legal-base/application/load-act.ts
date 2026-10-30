@@ -19,7 +19,7 @@ import {
   findAct,
   logUpdate,
   markActState,
-  storeUnappliedSnapshot,
+  storeQuarantinedSnapshot,
 } from "../infrastructure/db/catalog.repo.ts";
 import { parseActPage } from "../infrastructure/pravo-by/parse-act.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
@@ -90,7 +90,7 @@ export function makeLoadAct(d: LoadActDeps) {
     };
 
     if (reasons.length > 0) {
-      await storeUnappliedSnapshot(d.system, snapshot, "quarantined", reasons.join(","));
+      await storeQuarantinedSnapshot(d.system, snapshot, reasons.join(","));
       await logUpdate(d.system, {
         at: d.clock.now(),
         actId: act.id,

@@ -15,6 +15,8 @@ import { legalBaseRouter } from "./api/router.ts";
 import { makeEmbedder } from "./application/embed.ts";
 import { makeLawSearch } from "./application/search.ts";
 import { makeLookup } from "./application/lookup.ts";
+import { makeDailyCheck } from "./application/daily-check.ts";
+import { dailyCheckSchedule } from "./jobs/daily-check.schedule.ts";
 import { embedJob } from "./jobs/embed.job.ts";
 import { makeLoadAct } from "./application/load-act.ts";
 import type { LegalSource } from "./application/ports.ts";
@@ -102,6 +104,14 @@ export function createLegalBaseModule({
     embedQuery: async (text) => (await facades.llm.embed(caller, [text]))[0] ?? null,
     log: platform.log,
   });
+  const dailyCheck = makeDailyCheck({
+    system: platform.system,
+    loadAct,
+    embedder,
+    clock: platform.clock,
+    log: platform.log,
+    notifications: facades.notifications,
+  });
   const job = loadStartCatalogJob(catalog, (s) =>
     s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
   );
@@ -122,6 +132,7 @@ export function createLegalBaseModule({
     router: legalBaseRouter(catalog),
     tools: Object.values(tools),
     jobs: [job, embed],
+    schedules: [dailyCheckSchedule(dailyCheck)],
     subscriptions: [onSystemInitialized(platform, { identity: facades.identity, catalog, job })],
     settings: LEGAL_BASE_SETTINGS,
   });

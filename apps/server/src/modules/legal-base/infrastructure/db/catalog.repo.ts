@@ -18,6 +18,7 @@ import {
   type ActLoadState,
   type ActSource,
 } from "./schema.ts";
+import { one } from "./rows.ts";
 
 export interface ActRow {
   readonly id: string;
@@ -135,9 +136,10 @@ export interface SnapshotInput {
 }
 
 function fragmentIdOf(byPath: ReadonlyMap<string, string>, pathKey: string): string {
-  const id = byPath.get(pathKey);
-  if (id === undefined) throw new Error("legal_fragments: id вставленного фрагмента не вернулся.");
-  return id;
+  return one(
+    [byPath.get(pathKey)].flatMap((id) => (id === undefined ? [] : [id])),
+    "legal_fragments",
+  );
 }
 
 /** Первая загрузка: снимок «применён», фрагменты и их версии, акт — «загружен». Одна транзакция. */
@@ -148,11 +150,13 @@ export async function applyFirstSnapshot(
   articleCount: number,
 ): Promise<string> {
   return db.transaction(async (tx) => {
-    const [saved] = await tx
-      .insert(legalActSnapshots)
-      .values({ ...snapshot, status: "applied" })
-      .returning({ id: legalActSnapshots.id });
-    if (saved === undefined) throw new Error("legal_act_snapshots: снимок не сохранился.");
+    const saved = one(
+      await tx
+        .insert(legalActSnapshots)
+        .values({ ...snapshot, status: "applied" })
+        .returning({ id: legalActSnapshots.id }),
+      "legal_act_snapshots",
+    );
     const BATCH = 500;
     for (let i = 0; i < fragments.length; i += BATCH) {
       const part = fragments.slice(i, i + BATCH);
@@ -197,27 +201,21 @@ export async function applyFirstSnapshot(
   });
 }
 
-/**
- * Снимок, который не применяется: карантин (LAW-39: действующая редакция остаётся) или изменённая страница, версии
- * которой сопоставит T-036 (`pending`). Тот же хэш повторно не сохраняется.
- */
-export async function storeUnappliedSnapshot(
+/** Снимок в карантине (LAW-39): действующая редакция остаётся, акт получает состояние «карантин»; тот же хэш повторно не хранится. */
+export async function storeQuarantinedSnapshot(
   db: SystemDb,
   snapshot: SnapshotInput,
-  status: "quarantined" | "pending",
-  reason: string | null,
+  reason: string,
 ): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .insert(legalActSnapshots)
-      .values({ ...snapshot, status, reason })
+      .values({ ...snapshot, status: "quarantined", reason })
       .onConflictDoNothing({ target: [legalActSnapshots.actId, legalActSnapshots.textHash] });
-    if (status === "quarantined") {
-      await tx
-        .update(legalActs)
-        .set({ loadState: "quarantined", lastProblem: reason })
-        .where(eq(legalActs.id, snapshot.actId));
-    }
+    await tx
+      .update(legalActs)
+      .set({ loadState: "quarantined", lastProblem: reason })
+      .where(eq(legalActs.id, snapshot.actId));
   });
 }
 
@@ -296,15 +294,17 @@ export async function applyEdition(
   articleCount: number,
 ): Promise<EditionResult> {
   return db.transaction(async (tx) => {
-    const [saved] = await tx
-      .insert(legalActSnapshots)
-      .values({ ...snapshot, status: "applied" })
-      .onConflictDoUpdate({
-        target: [legalActSnapshots.actId, legalActSnapshots.textHash],
-        set: { status: "applied", reason: null },
-      })
-      .returning({ id: legalActSnapshots.id });
-    if (saved === undefined) throw new Error("legal_act_snapshots: снимок не сохранился.");
+    const saved = one(
+      await tx
+        .insert(legalActSnapshots)
+        .values({ ...snapshot, status: "applied" })
+        .onConflictDoUpdate({
+          target: [legalActSnapshots.actId, legalActSnapshots.textHash],
+          set: { status: "applied", reason: null },
+        })
+        .returning({ id: legalActSnapshots.id }),
+      "legal_act_snapshots",
+    );
     const snap = saved.id;
     const close = async (versionIds: string[]) => {
       if (versionIds.length === 0) return;
@@ -359,16 +359,18 @@ export async function applyEdition(
       await open(m.current.fragmentId, m.next);
     }
     for (const f of plan.added) {
-      const [fragment] = await tx
-        .insert(legalFragments)
-        .values({
-          actId: snapshot.actId,
-          pathKey: f.pathKey,
-          articleNo: f.articleNo,
-          position: f.position,
-        })
-        .returning({ id: legalFragments.id });
-      if (fragment === undefined) throw new Error("legal_fragments: фрагмент не сохранился.");
+      const fragment = one(
+        await tx
+          .insert(legalFragments)
+          .values({
+            actId: snapshot.actId,
+            pathKey: f.pathKey,
+            articleNo: f.articleNo,
+            position: f.position,
+          })
+          .returning({ id: legalFragments.id }),
+        "legal_fragments",
+      );
       await open(fragment.id, f);
     }
     // Пропавшие: версия «исключён» с прежним текстом — честный ответ «ст. N исключена».
@@ -384,8 +386,7 @@ export async function applyEdition(
         })
         .from(legalFragmentVersions)
         .where(eq(legalFragmentVersions.id, c.versionId));
-      const row = old[0];
-      if (row !== undefined) await open(c.fragmentId, { ...row, excluded: true });
+      await open(c.fragmentId, { ...one(old, "legal_fragment_versions"), excluded: true });
     }
     await tx
       .update(legalActs)
@@ -405,4 +406,19 @@ export async function applyEdition(
       excluded: plan.missing.length,
     };
   });
+}
+
+/** Акты с текстом, которые проверяет ежедневный проход: загруженные, на карантине и с ошибкой (LAW-30). */
+export async function checkableActs(db: SystemDb): Promise<{ id: string; pravoId: string }[]> {
+  return db
+    .select({ id: legalActs.id, pravoId: legalActs.pravoId })
+    .from(legalActs)
+    .where(
+      and(
+        eq(legalActs.hasText, true),
+        eq(legalActs.status, "active"),
+        inArray(legalActs.loadState, ["loaded", "quarantined", "failed"]),
+      ),
+    )
+    .orderBy(legalActs.pravoId);
 }

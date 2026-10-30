@@ -89,7 +89,7 @@ export async function fragmentsByVersionIds(
     .innerJoin(legalActs, eq(legalActs.id, legalFragments.actId))
     .where(inArray(legalFragmentVersions.id, [...ids]));
   const byId = new Map(rows.map((r) => [r.versionId, r]));
-  return ids.flatMap((id) => byId.get(id) ?? []);
+  return ids.map((id) => byId.get(id)).filter((r): r is FragmentRow => r !== undefined);
 }
 
 export interface HybridQuery {

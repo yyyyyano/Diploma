@@ -4,10 +4,10 @@
 
 ## Назначение
 Каталог актов, вежливый загрузчик pravo.by, снимки и фрагменты, карантин (T-034); поиск и векторы (T-035); редакции (T-036);
-пополнение каталога (T-037); «База законов» (T-038).
+ежедневная проверка и версии (T-036); пополнение каталога (T-037); «База законов» (T-038).
 
 ## Требования SPEC
-LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01, 03, 04, 07, 08 (поиск), 10, 20…23, 35…39, AUTH-10.
+LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01, 03, 04, 07, 08 (поиск), 10, 20…23, 30 (часть), 31, 35…39, AUTH-10.
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createLegalBaseModule({ platform, facades })`; платформа — `SystemPlatform`; фасады — `llm` (эмбеддинги, локальная
@@ -21,6 +21,9 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01, 03, 04, 07, 08 (поис�
   Без модели эмбеддингов — реквизиты и FTS, ключ лога `law.search.no-vectors`.
 - Векторы: задача `legal-base.embed` (порции, прогресс) для действующих версий без вектора активной модели
   (`legal_embedding_models`: имя и версия); нет модели — «ждём модель», без повторов; смена модели — переиндексация.
+- Редакции (LAW-31): страница изменилась без признаков поломки → `matchVersions` (путь и текст: продлить / новая версия /
+  перенумерация по тексту / добавлен / «исключён»); закрытая версия теряет вектор, `embed` векторизует только новые.
+  Расписание `legal-base.daily-check` (04:00, `missed: once`): все загруженные акты; остановка загрузчика — `law-update-failed`.
 - Контракт `legalBase.startupProgress` (localOnly): «Загружено N из 28» на экране первого запуска.
 - Подписка на `identity.system-initialized`: контакт → настройка `legal-base.loader-contact`; 28 актов заводятся сразу; при
   `legal-base.autoload` — задача `legal-base.load-start-catalog` (по одному акту; остановка/ошибка — `UNAVAILABLE`, повтор
@@ -32,7 +35,7 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01, 03, 04, 07, 08 (поис�
   `legal_fragment_embeddings` (HNSW по первой модели); `systemTable` — `legal_loader_state`, `legal_fetch_log`, `legal_update_log`.
 
 ## Устройство
-- `domain/`: `build-fragments` (LAW-20), `quarantine` (LAW-39, канарейка 90-З — 51 статья), `start-catalog`, `reference`
+- `domain/`: `build-fragments` (LAW-20), `quarantine` (LAW-39, канарейка 90-З — 51 статья), `match-versions`, `start-catalog`, `reference`
   (разбор обращения), `aliases`, `synonyms`, `ts-query`. `infrastructure/pravo-by/`: `polite-fetcher` (слоты в БД под
   advisory-lock, robots, лесенка повторов, остановка до следующих суток), источники `pravo-source` и `fixtures-source`, `cheerio`.
 - `application/`: `load-act`, `start-catalog`, `search`, `embed`, `lookup`; `infrastructure/db/*.repo.ts` — SQL.

@@ -3,6 +3,7 @@
 // SystemDb модуля; HTTP внутри транзакций нет — слот занимается коротко, ожидание и запрос идут снаружи.
 import type { LocalDate } from "@kosht/kernel";
 import { eq, sql } from "drizzle-orm";
+import { one } from "./rows.ts";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type {
   LoaderState,
@@ -23,11 +24,10 @@ function toReason(value: string | null): LoaderStopReason | null {
 
 export function makeLoaderStore(db: SystemDb): LoaderStore {
   async function row() {
-    const rows = await db.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1));
-    const found = rows[0];
-    if (found === undefined)
-      throw new Error("legal_loader_state: строки состояния нет (миграция).");
-    return found;
+    return one(
+      await db.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1)),
+      "legal_loader_state",
+    );
   }
 
   return {
@@ -101,11 +101,13 @@ export function makeLoaderStore(db: SystemDb): LoaderStore {
       }
       return db.transaction(async (tx) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY})`);
-        const rows = await tx.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1));
-        const current = rows[0];
-        const sameDay = current?.cycleDay === day;
-        const requests = (sameDay ? (current?.cycleRequests ?? 0) : 0) + 1;
-        const errors = (sameDay ? (current?.cycleErrors ?? 0) : 0) + (entry.isError ? 1 : 0);
+        const current = one(
+          await tx.select().from(legalLoaderState).where(eq(legalLoaderState.id, 1)),
+          "legal_loader_state",
+        );
+        const sameDay = current.cycleDay === day;
+        const requests = (sameDay ? current.cycleRequests : 0) + 1;
+        const errors = (sameDay ? current.cycleErrors : 0) + (entry.isError ? 1 : 0);
         await tx
           .update(legalLoaderState)
           .set({ cycleDay: day, cycleRequests: requests, cycleErrors: errors })

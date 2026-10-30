@@ -4,6 +4,7 @@
 import { and, count, eq, isNull, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import { legalEmbeddingModels, legalFragmentEmbeddings, legalFragmentVersions } from "./schema.ts";
+import { one } from "./rows.ts";
 
 export interface EmbeddingModel {
   readonly id: string;
@@ -84,13 +85,13 @@ export async function vectorCounts(
   db: SystemDb,
   modelId: string,
 ): Promise<{ total: number; embedded: number }> {
-  const [total] = await db
+  const total = await db
     .select({ n: count() })
     .from(legalFragmentVersions)
     .where(
       and(eq(legalFragmentVersions.isCurrent, true), eq(legalFragmentVersions.excluded, false)),
     );
-  const [embedded] = await db
+  const embedded = await db
     .select({ n: count() })
     .from(legalFragmentEmbeddings)
     .innerJoin(
@@ -104,5 +105,8 @@ export async function vectorCounts(
         eq(legalFragmentVersions.excluded, false),
       ),
     );
-  return { total: total?.n ?? 0, embedded: embedded?.n ?? 0 };
+  return {
+    total: one(total, "legal_fragment_versions").n,
+    embedded: one(embedded, "legal_fragment_embeddings").n,
+  };
 }

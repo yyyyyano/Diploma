@@ -191,6 +191,19 @@ async function seedUser(email: string): Promise<Seeded> {
     "insert into receipt_attempts (household_id, user_id, receipt_id, attempt, ok) values ($1, $2, $3, 0, true)",
     [...ids, receipt.rows[0]?.id],
   );
+  // Регулярный платёж с ревизией (REC-02, P5): строки владельца, уходят вместе с аккаунтом.
+  const recurring = await db.owner.query<{ id: string }>(
+    `insert into recurring_items (household_id, user_id, series_key, merchant_key, name, flow, section, period, state,
+       anchor_day, next_expected_on)
+     values ($1, $2, 'expense|кредит|23', 'кредит', 'Кредит', 'expense', 'mandatory', 'month', 'active', 23, '2026-11-23')
+     returning id`,
+    ids,
+  );
+  await db.owner.query(
+    `insert into recurring_revisions (household_id, user_id, item_id, existed, section, period, state, next_expected_on, user_fixed)
+     values ($1, $2, $3, true, 'mandatory', 'month', 'suggested', '2026-11-23', '{}')`,
+    [...ids, recurring.rows[0]?.id],
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

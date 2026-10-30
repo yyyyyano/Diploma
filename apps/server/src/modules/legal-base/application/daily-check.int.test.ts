@@ -270,3 +270,35 @@ describe("LAW-30: карточки актов вне индекса — раз �
     expect(t.calls.cards.filter((id) => id === "C20200778")).toHaveLength(2);
   });
 });
+
+describe("LAW-40: итог проверки в журнале обновлений", () => {
+  const lastEntry = async () =>
+    (
+      await db.owner.query<{ event: string; details: Record<string, number | string> }>(
+        "select event, details from legal_update_log where event like 'daily-check%' order by at desc, id desc limit 1",
+      )
+    ).rows[0];
+
+  it("каждый проход оставляет строку «daily-check» с числами: обновлено, карантин, ошибки, карточки, утратили силу", async () => {
+    const t = setup();
+    await t.loadAct("H10200090");
+    await t.daily();
+    expect(await lastEntry()).toEqual({
+      event: "daily-check",
+      // Карточки читаются у всех 28 актов стартового каталога: у индекса — раз в сутки, у остальных — первый раз.
+      details: { updated: 0, quarantined: 0, failed: 0, cards: 28, repealed: 0 },
+    });
+  });
+
+  it("остановка загрузчика — строка «daily-check-failed» с причиной, без текста страниц", async () => {
+    const t = setup();
+    await t.loadAct("H10200090");
+    t.pages["H10200090"] += " ";
+    t.stop();
+    await expect(t.daily()).rejects.toMatchObject({ code: "UNAVAILABLE" });
+    expect(await lastEntry()).toEqual({
+      event: "daily-check-failed",
+      details: { reason: "LOADER_BLOCKED" },
+    });
+  });
+});

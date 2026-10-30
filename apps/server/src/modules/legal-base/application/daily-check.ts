@@ -7,7 +7,7 @@ import type { SystemDb } from "../../../platform/db/system-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
-import { checkableActs, markActState } from "../infrastructure/db/catalog.repo.ts";
+import { checkableActs, logUpdate, markActState } from "../infrastructure/db/catalog.repo.ts";
 import { actsDueForCard } from "../infrastructure/db/changes.repo.ts";
 import type { ActCheck, TextOutcome } from "./act-check.ts";
 import type { Embedder } from "./embed.ts";
@@ -77,6 +77,12 @@ export function makeDailyCheck(d: DailyCheckDeps) {
       }
     } catch (error) {
       if (!(error instanceof LoaderStopped)) throw error;
+      await logUpdate(d.system, {
+        at: d.clock.now(),
+        actId: null,
+        event: "daily-check-failed",
+        details: { reason: error.reason },
+      });
       await d.notifications.notifyAdmins({
         kind: "law-update-failed",
         key: `loader-stopped:${error.reason}:${d.clock.today()}`,
@@ -86,6 +92,19 @@ export function makeDailyCheck(d: DailyCheckDeps) {
     }
     // Векторы — только у новых версий; нет модели — «ждём модель», проверка от этого не падает (LAW-10).
     await d.embedder.run(signal === undefined ? undefined : { signal });
+    // LAW-40: «последняя проверка» и её результат читает админка из журнала; числа и коды, без текстов.
+    await logUpdate(d.system, {
+      at: d.clock.now(),
+      actId: null,
+      event: "daily-check",
+      details: {
+        updated: text.updated + text.applied,
+        quarantined: text.quarantined,
+        failed: text.failed,
+        cards,
+        repealed,
+      },
+    });
     d.log.info({ count: text.updated + text.applied }, "law.daily-check.done");
     return { text, cards, repealed };
   };

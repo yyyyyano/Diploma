@@ -237,7 +237,10 @@ export function createLegalBaseModule({
     tools: Object.values(tools),
     events: [actUpdated, actRepealed],
     jobs: [job, embed, loadOne],
-    schedules: [dailyCheckSchedule(dailyCheck), catalogGrowthSchedule(growth)],
+    schedules: [
+      dailyCheckSchedule(dailyCheck, platform.settings),
+      catalogGrowthSchedule(growth, platform.settings),
+    ],
     subscriptions: [onSystemInitialized(platform, { identity: facades.identity, catalog, job })],
     settings: LEGAL_BASE_SETTINGS,
   });

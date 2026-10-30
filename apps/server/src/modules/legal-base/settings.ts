@@ -1,9 +1,10 @@
 // Настройки legal-base (ARCHITECTURE §9, LAW-35, LAW-36): автозагрузка, источник текстов, контакт оператора загрузчика,
 // паузы и пределы вежливого загрузчика. Значение из админки важнее переменной окружения (NFR-16); поле «контакт» и
-// остальное в админке — T-039.
+// остальное — вкладка «Законы» админки (T-039).
 import { z } from "zod";
 import { defineSetting } from "../../platform/settings/settings.ts";
 import { DEFAULT_TITLE_PATTERNS } from "./domain/relevance.ts";
+import { ClockTime } from "./domain/schedule.ts";
 import { DEFAULT_EPK_TOPICS, TOPICS } from "./domain/topics.ts";
 
 /**
@@ -126,6 +127,32 @@ export const TEXT_CHECK_WEEKS = defineSetting({
   default: 8,
 });
 
+/** Выключатель автообновления (LAW-30): выключен — плановые проходы (проверка и пополнение каталога) ничего не делают; ручные кнопки работают. */
+export const AUTO_UPDATE = defineSetting({
+  key: "legal-base.auto-update",
+  schema: z.boolean(),
+  default: true,
+});
+
+/** Время ежедневной проверки законов по поясу системы (LAW-30): по умолчанию 04:00; только внутри ночного окна (LAW-35). */
+export const CHECK_TIME = defineSetting({
+  key: "legal-base.check-time",
+  schema: ClockTime,
+  default: "04:00",
+});
+
+/** Ночное окно (LAW-35): плановые массовые проходы идут внутри него; по умолчанию 02:00–06:00. */
+export const WINDOW_FROM = defineSetting({
+  key: "legal-base.window-from",
+  schema: ClockTime,
+  default: "02:00",
+});
+export const WINDOW_TO = defineSetting({
+  key: "legal-base.window-to",
+  schema: ClockTime,
+  default: "06:00",
+});
+
 /** Шаблоны заголовков для отсева кадровых, наградных, разовых и территориальных актов (LAW-13 п. 2; редактор — T-039). */
 export const FILTER_TITLE_PATTERNS = defineSetting({
   key: "legal-base.filter-title-patterns",
@@ -152,6 +179,10 @@ export const AGENCY_PAGES = defineSetting({
 
 export const LEGAL_BASE_SETTINGS = [
   NEW_ACTS_MODE,
+  AUTO_UPDATE,
+  CHECK_TIME,
+  WINDOW_FROM,
+  WINDOW_TO,
   GROWTH_BATCH,
   TEXT_CHECK_WEEKS,
   FILTER_TITLE_PATTERNS,

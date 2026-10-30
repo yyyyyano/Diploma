@@ -20,7 +20,10 @@ export function topicOf(value: FactValue): FactTopic {
     case "youngSpecialist":
       return "benefits";
     case "income.salary":
+    case "income.regular":
       return "income";
+    case "obligations.regular":
+      return "obligations";
     case "property.land":
     case "property.car":
       return "property";

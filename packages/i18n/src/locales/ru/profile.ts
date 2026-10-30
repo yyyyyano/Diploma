@@ -25,6 +25,8 @@ export const profile = {
     "property.land": "Земельный участок",
     "property.car": "Автомобиль",
     "income.salary": "Зарплата «на руки»",
+    "income.regular": "Регулярный доход в месяц",
+    "obligations.regular": "Обязательные платежи в месяц",
     note: "Свой факт",
   },
   employment: {

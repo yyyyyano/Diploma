@@ -37,9 +37,9 @@ import classes from "./MemoryPage.module.css";
 /** Темы в порядке макета и ключи PROF-01, которые в теме могут быть «не указаны». */
 const GROUPS: readonly { topic: FactTopic; keys: readonly FactKey[] }[] = [
   { topic: "family", keys: ["children", "familyStatus", "largeFamily"] },
-  { topic: "income", keys: ["income.salary"] },
+  { topic: "income", keys: ["income.salary", "income.regular"] },
   { topic: "employment", keys: ["employment", "mainEmployer"] },
-  { topic: "obligations", keys: [] },
+  { topic: "obligations", keys: ["obligations.regular"] },
   { topic: "housing", keys: ["housingQueue", "property.apartment"] },
   { topic: "property", keys: ["property.car", "property.land"] },
   { topic: "benefits", keys: ["benefitCategory", "youngSpecialist"] },

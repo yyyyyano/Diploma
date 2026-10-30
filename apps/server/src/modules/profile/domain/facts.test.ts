@@ -107,6 +107,8 @@ describe("PROF-01: хранимое значение и тема", () => {
     [{ key: "benefitCategory" as const, value: false }, "benefits"],
     [{ key: "youngSpecialist" as const, value: false, until: null }, "benefits"],
     [{ key: "income.salary" as const, amount: { minor: 1, currency: "BYN" } }, "income"],
+    [{ key: "income.regular" as const, amount: { minor: 1, currency: "BYN" } }, "income"],
+    [{ key: "obligations.regular" as const, amount: { minor: 1, currency: "BYN" } }, "obligations"],
     [{ key: "property.land" as const, value: true }, "property"],
     [{ key: "property.car" as const, value: true }, "property"],
     [

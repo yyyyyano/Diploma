@@ -89,7 +89,9 @@ export function draftOf(fact: ProfileFact | undefined): Draft {
       return { ...EMPTY, housing: value.status, date: value.since ?? "" };
     case "youngSpecialist":
       return { ...EMPTY, flag: value.value ? "yes" : "no", date: value.until ?? "" };
-    case "income.salary": {
+    case "income.salary":
+    case "income.regular":
+    case "obligations.regular": {
       const parts = formatMoneyParts(value.amount);
       return { ...EMPTY, amount: `${parts.negative ? "-" : ""}${parts.amount}` };
     }
@@ -125,6 +127,8 @@ export function toInput(key: FactKey, draft: Draft): FactValueInput | undefined 
     "property.land": { key, value: flag },
     "property.car": { key, value: flag },
     "income.salary": { key, amount: parseMoney(draft.amount, "BYN") },
+    "income.regular": { key, amount: parseMoney(draft.amount, "BYN") },
+    "obligations.regular": { key, amount: parseMoney(draft.amount, "BYN") },
     note: { key, topic: draft.topic, label: draft.label, text: draft.text },
   };
   const parsed = FactValueInput.safeParse(raw[key]);
@@ -245,7 +249,9 @@ export function FactEditor({
             )}
           </>
         )}
-        {factKey === "income.salary" && (
+        {(factKey === "income.salary" ||
+          factKey === "income.regular" ||
+          factKey === "obligations.regular") && (
           <TextInput
             label={t("editor.amount")}
             inputMode="decimal"

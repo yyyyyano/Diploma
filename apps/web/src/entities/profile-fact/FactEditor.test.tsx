@@ -50,6 +50,15 @@ describe("PROF-05: значения форм", () => {
     expect(toInput("income.salary", { ...draftOf(undefined), amount: "абв" })).toBeUndefined();
   });
 
+  it("PROF-03: «регулярный доход» и «обязательные платежи» правятся как сумма в BYN", () => {
+    for (const key of ["income.regular", "obligations.regular"] as const) {
+      expect(toInput(key, { ...draftOf(undefined), amount: "1 440,00" })).toEqual({
+        key,
+        amount: { minor: 144_000, currency: "BYN" },
+      });
+    }
+  });
+
   it("да/нет без выбора — не сохраняется; учёт нуждающихся с датой", () => {
     expect(toInput("largeFamily", draftOf(undefined))).toBeUndefined();
     expect(

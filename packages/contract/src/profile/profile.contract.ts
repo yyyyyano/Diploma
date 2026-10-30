@@ -96,6 +96,9 @@ const commonValues = [
   yesNo("property.land"),
   yesNo("property.car"),
   z.strictObject({ key: z.literal("income.salary"), amount: Money.schema }),
+  // PROF-03, REC-04: регулярный доход и обязательные платежи в месяц — вывод из регулярных платежей («предположение»).
+  z.strictObject({ key: z.literal("income.regular"), amount: Money.schema }),
+  z.strictObject({ key: z.literal("obligations.regular"), amount: Money.schema }),
   // Свой факт («Плачу за кружок 60 BYN в месяц»): тема и подпись — от человека.
   z.strictObject({
     key: z.literal("note"),
@@ -133,6 +136,8 @@ export const FACT_KEYS = [
   "property.land",
   "property.car",
   "income.salary",
+  "income.regular",
+  "obligations.regular",
   "note",
 ] as const satisfies readonly FactValue["key"][];
 export const FactKey = z.enum(FACT_KEYS);

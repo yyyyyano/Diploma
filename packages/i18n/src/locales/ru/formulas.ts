@@ -49,5 +49,9 @@ export const formulas = {
     expectedTotal: "Итог по расчёту",
     total: "Итог на чеке",
     totalDifference: "Расхождение в итоге",
+    categorySum: "Сумма позиций категории",
+    categoryDiscount: "Доля скидки на чек",
+    categorySplit: "Часть чека в категории",
+    unrecognizedRemainder: "Нераспознанный остаток чека",
   },
 } as const;

@@ -42,6 +42,11 @@ export const TRACE_KEYS = [
   "receipts.expectedTotal",
   "receipts.total",
   "receipts.totalDifference",
+  // RCPT-09: разбивка итога по категориям — сумма категории, доля скидки, часть итога и нераспознанный остаток.
+  "receipts.categorySum",
+  "receipts.categoryDiscount",
+  "receipts.categorySplit",
+  "receipts.unrecognizedRemainder",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

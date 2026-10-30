@@ -3,6 +3,12 @@ export { node, type Calc, type NodeOptions } from "./calc.ts";
 export { toByn, type FxRateInput } from "./fx/to-byn.ts";
 export { balanceChainDifference, type BalanceChainInput } from "./statements/balance-chain.ts";
 export {
+  allocate,
+  splitByCategory,
+  type CategorySplit,
+  type SplitLine,
+} from "./receipts/split-by-category.ts";
+export {
   validateReceipt,
   type LineValidation,
   type ReceiptInput,

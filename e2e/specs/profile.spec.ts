@@ -3,6 +3,7 @@
 // нарушений WCAG 2.2 AA и нет горизонтальной прокрутки при 1440 и 390: пусто, окно формы, список фактов.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -82,8 +83,8 @@ test("«Что ассистент знает обо мне»: указать, у
 
   // PROF-05, P5: удалить — сразу; «Отменить» возвращает факт.
   await page.getByRole("button", { name: "Удалить: Многодетная семья" }).click();
-  await expect(page.getByText("Удалил: Многодетная семья")).toBeVisible();
+  const undoRemove = await holdUndoToast(page, "Удалил: Многодетная семья");
   await expect(family.getByText("указано вами")).toHaveCount(0);
-  await page.getByRole("button", { name: "Отменить" }).click();
+  await undoRemove.click();
   await expect(family.getByText("указано вами")).toBeVisible();
 });

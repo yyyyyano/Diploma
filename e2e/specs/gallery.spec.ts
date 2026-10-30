@@ -2,6 +2,7 @@
 // и стили — только со своего адреса (DES-09), панели и окна тоже проходят axe открытыми (CONSTRAINTS «Доступность»).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -9,7 +10,24 @@ const VIEWPORTS = [
   { name: "телефон 390", width: 390, height: 844 },
 ] as const;
 
+/**
+ * Конец переходов перед axe: панель и окна въезжают и проявляются, и посреди перехода axe видит полупрозрачный текст
+ * (color-contrast). Бесконечные анимации (мерцание скелетонов витрины) не кончаются — их не ждём.
+ */
+async function transitionsSettled(page: Page) {
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== "running" ||
+          animation.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
+}
+
 async function axeViolations(page: Page) {
+  await transitionsSettled(page);
   const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
   return result.violations.map((v) => ({
     id: v.id,
@@ -92,9 +110,9 @@ for (const viewport of VIEWPORTS) {
     test("уведомление с отменой — axe 0, «Отменить» работает", async ({ page }) => {
       await openGallery(page);
       await page.getByRole("button", { name: "Уведомление с отменой" }).click();
-      await expect(page.getByRole("status").filter({ hasText: "Записал" })).toBeVisible();
+      const undo = await holdUndoToast(page, "Записал");
       expect(await axeViolations(page)).toEqual([]);
-      await page.getByRole("button", { name: "Отменить" }).click();
+      await undo.click();
       await expect(page.getByText("Последнее действие: Отменено")).toBeVisible();
     });
   });

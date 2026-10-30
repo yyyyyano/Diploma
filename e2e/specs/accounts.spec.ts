@@ -4,6 +4,7 @@
 // «Откуда эта цифра?», окно нового счёта, окно подтверждения. Только BYN: курсы НБРБ e2e не запрашивает (без сети).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -87,8 +88,9 @@ test("«Счета»: итог с «Откуда эта цифра?», доба�
   await page.getByRole("menuitem", { name: "Переименовать" }).click();
   await page.getByRole("textbox", { name: "Название счёта" }).fill("Отпуск летом");
   await page.getByRole("button", { name: "Сохранить" }).click();
+  const undoRename = await holdUndoToast(page, "Переименовал: «Отпуск летом»");
   await expect(page.getByRole("article", { name: "Отпуск летом" })).toBeVisible();
-  await page.getByRole("button", { name: "Отменить" }).click();
+  await undoRename.click();
   await expect(page.getByRole("article", { name: "Отпуск" })).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
 

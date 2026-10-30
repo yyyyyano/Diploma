@@ -4,6 +4,7 @@
 // ввода, список, карточка, подтверждение удаления, «Ничего не нашлось». Только BYN: курсы НБРБ e2e не запрашивает.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -105,7 +106,7 @@ test("«Операции»: ввод, карточка, правка, удале
   await form.getByRole("button", { name: "Сохранить" }).click();
 
   // TXN-01: строка в таблице, «Записал…» с «Отменить»; на телефоне — карточка списка.
-  await expect(page.getByText(/Записал: Кофейня «Зерно»/)).toBeVisible();
+  await holdUndoToast(page, /Записал: Кофейня «Зерно»/);
   const open = page.getByRole("button", { name: "Открыть операцию: Кофейня «Зерно»" });
   await expect(open).toBeVisible();
   await expect(page.getByText("Найдено: 1 операция")).toBeVisible();
@@ -125,7 +126,7 @@ test("«Операции»: ввод, карточка, правка, удале
   const edit = page.getByRole("dialog", { name: "Изменить операцию" });
   await edit.getByLabel("Сумма, BYN").fill("8,00");
   await edit.getByRole("button", { name: "Сохранить" }).click();
-  await expect(page.getByText("Изменил операцию: Кофейня «Зерно».")).toBeVisible();
+  await holdUndoToast(page, "Изменил операцию: Кофейня «Зерно».");
   await expect(panel.getByText(/Изменено на сайте: сумма/)).toBeVisible();
 
   // AGT-07, TXN-03: удаление — только после «Да», затем «Отменить».
@@ -134,9 +135,9 @@ test("«Операции»: ввод, карточка, правка, удале
   await page.mouse.move(0, 0);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("button", { name: "Да, выполнить" }).click();
-  await expect(page.getByText("Операция удалена: Кофейня «Зерно».")).toBeVisible();
+  const undoDelete = await holdUndoToast(page, "Операция удалена: Кофейня «Зерно».");
   await expect(page.getByRole("heading", { name: "Операций пока нет" })).toBeVisible();
-  await page.getByRole("button", { name: "Отменить" }).click();
+  await undoDelete.click();
   await expect(open).toBeVisible();
 
   // TXN-04: вторая операция, выбор обеих, смена категории — окно выбора, вопрос с числом, «Да», «Отменить».
@@ -145,7 +146,7 @@ test("«Операции»: ввод, карточка, правка, удале
   await second.getByLabel("Сумма, BYN").fill("9,80");
   await second.getByLabel("Контрагент").fill("Яндекс Go");
   await second.getByRole("button", { name: "Сохранить" }).click();
-  await expect(page.getByText(/Записал: Яндекс Go/)).toBeVisible();
+  await holdUndoToast(page, /Записал: Яндекс Go/);
   await page.getByRole("checkbox", { name: "Выбрать все показанные" }).check();
   await expect(page.getByText("Выбрано: 2")).toBeVisible();
   await page.mouse.move(0, 0);
@@ -159,8 +160,8 @@ test("«Операции»: ввод, карточка, правка, удале
   await page.mouse.move(0, 0);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("button", { name: "Да, перенести 2" }).click();
-  await expect(page.getByText("Перенёс операций: 2.")).toBeVisible();
-  await page.getByRole("button", { name: "Отменить" }).click();
+  const undoBulk = await holdUndoToast(page, "Перенёс операций: 2.");
+  await undoBulk.click();
   await expect(page.getByText("Перенёс операций: 2.")).toHaveCount(0);
 
   // TXN-02: фильтр без результата — «Ничего не нашлось», «Сбросить фильтры» возвращает список.

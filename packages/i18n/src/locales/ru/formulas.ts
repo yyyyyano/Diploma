@@ -14,6 +14,7 @@ export const formulas = {
   },
   budgets: {
     limit: "Лимит на месяц",
+    limitRemaining: "Осталось до лимита",
     limitPercent: "Доля лимита",
     goalTarget: "Сумма цели",
     goalSaved: "Накоплено",

@@ -1,6 +1,7 @@
 // BUD-04, BUD-05, BUD-07: прогресс цели, рекомендуемый взнос, плановое значение на сегодня и «отстаёт от графика».
 import { LocalDate, Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
+import { node } from "../calc.ts";
 import {
   goalBehind,
   goalPercent,
@@ -11,6 +12,7 @@ import {
 
 const byn = (minor: number) => Money.of(minor, "BYN");
 const day = (text: string) => LocalDate.parse(text);
+const saved = (minor: number) => node("budgets.goalSaved", byn(minor));
 
 describe("BUD-05: сколько месяцев осталось", () => {
   it("с 28.10.2026 до 01.06.2027 — 7 месяцев, до 01.03.2027 — 4 (как в макете)", () => {
@@ -30,7 +32,11 @@ describe("BUD-05: сколько месяцев осталось", () => {
 
 describe("BUD-05: рекомендуемый взнос", () => {
   it("накопить 3 000 к июлю: 2 040 осталось на 3 месяца → 680, округление вверх до рубля", () => {
-    const result = recommendedContribution({ target: byn(300_000), saved: byn(96_000), months: 3 });
+    const result = recommendedContribution({
+      target: byn(300_000),
+      saved: saved(96_000),
+      months: 3,
+    });
     expect(result.value).toEqual(byn(68_000));
     expect(result.trace.key).toBe("budgets.goalContribution");
     expect(result.trace.note).toBe("÷ 3 мес.; rounding=ceil-ruble step=100");
@@ -41,21 +47,21 @@ describe("BUD-05: рекомендуемый взнос", () => {
   });
 
   it("не делится нацело: 1 000 на 3 месяца = 333,33 → 334 (вверх, чтобы уложиться в срок)", () => {
-    const result = recommendedContribution({ target: byn(100_000), saved: byn(0), months: 3 });
+    const result = recommendedContribution({ target: byn(100_000), saved: saved(0), months: 3 });
     expect(result.value).toEqual(byn(33_400));
   });
 
   it("цель достигнута или перевыполнена — взнос 0", () => {
     expect(
-      recommendedContribution({ target: byn(100_000), saved: byn(100_000), months: 2 }).value,
+      recommendedContribution({ target: byn(100_000), saved: saved(100_000), months: 2 }).value,
     ).toEqual(byn(0));
     expect(
-      recommendedContribution({ target: byn(100_000), saved: byn(120_000), months: 2 }).value,
+      recommendedContribution({ target: byn(100_000), saved: saved(120_000), months: 2 }).value,
     ).toEqual(byn(0));
   });
 
   it("месяцев меньше одного — ошибка программы", () => {
-    expect(() => recommendedContribution({ target: byn(100), saved: byn(0), months: 0 })).toThrow(
+    expect(() => recommendedContribution({ target: byn(100), saved: saved(0), months: 0 })).toThrow(
       RangeError,
     );
   });
@@ -63,9 +69,9 @@ describe("BUD-05: рекомендуемый взнос", () => {
 
 describe("BUD-04: прогресс цели", () => {
   it("2 150 из 3 000 → 71 % (вниз); цель перевыполнена — больше 100", () => {
-    expect(goalPercent(byn(215_000), byn(300_000)).value).toBe(71);
-    expect(goalPercent(byn(310_000), byn(300_000)).value).toBe(103);
-    expect(goalPercent(byn(215_000), byn(300_000)).trace.key).toBe("budgets.goalPercent");
+    expect(goalPercent(saved(215_000), byn(300_000)).value).toBe(71);
+    expect(goalPercent(saved(310_000), byn(300_000)).value).toBe(103);
+    expect(goalPercent(saved(215_000), byn(300_000)).trace.key).toBe("budgets.goalPercent");
   });
 });
 

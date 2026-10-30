@@ -31,18 +31,15 @@ export function monthsLeft(today: LocalDate, deadline: LocalDate): number {
 }
 
 /** BUD-04: прогресс цели = накоплено × 100 ÷ цель, вниз до целого; перевыполнение — больше 100. */
-export function goalPercent(saved: Money, target: Money): Calc<number> {
-  return percentOf(
-    "budgets.goalPercent",
-    node("budgets.goalSaved", saved),
-    node("budgets.goalTarget", target),
-  );
+export function goalPercent(saved: Calc<Money>, target: Money): Calc<number> {
+  return percentOf("budgets.goalPercent", saved, node("budgets.goalTarget", target));
 }
 
 /** BUD-05: «Откладывайте по X в месяц» = (цель − накоплено) ÷ месяцев, вверх до рубля; цель достигнута — 0. */
 export function recommendedContribution(input: {
   readonly target: Money;
-  readonly saved: Money;
+  /** Накоплено со своей трассой: сумма взносов или остаток счёта в BYN (со ссылкой на курс). */
+  readonly saved: Calc<Money>;
   readonly months: number;
 }): Calc<Money> {
   const { target, saved, months } = input;
@@ -51,9 +48,7 @@ export function recommendedContribution(input: {
       `budgets.goalContribution: месяцев не меньше одного, получено ${String(months)}.`,
     );
   }
-  const remaining = sub("budgets.goalRemaining", node("budgets.goalTarget", target), [
-    node("budgets.goalSaved", saved),
-  ]);
+  const remaining = sub("budgets.goalRemaining", node("budgets.goalTarget", target), [saved]);
   if (remaining.value.minor <= 0) {
     return node("budgets.goalContribution", Money.of(0, target.currency), {
       note: "цель достигнута",

@@ -30,6 +30,18 @@ import { MATCH_HANDLER, REMERGE_HANDLER, UNMERGE_HANDLER } from "./handlers.ts";
 
 type Channel = "web" | "telegram";
 
+const SnapshotSplit = z.object({
+  categoryCode: z.string().nullable(),
+  categoryId: z.string().nullable(),
+  amountMinor: z.number(),
+});
+const snapshotSplits = (rows: readonly z.infer<typeof SnapshotSplit>[]) =>
+  rows.map(({ categoryCode, categoryId, amountMinor }) => ({
+    categoryCode,
+    categoryId,
+    amountMinor,
+  }));
+
 /** Снимок операции чека, слитой с операцией выписки: по нему разрыв возвращает чек как был. */
 const Snapshot = z.object({
   receipt: z.object({
@@ -53,17 +65,14 @@ const Snapshot = z.object({
     version: z.number(),
     createdAt: z.string(),
   }),
-  splits: z.array(
-    z.object({
-      categoryCode: z.string().nullable(),
-      categoryId: z.string().nullable(),
-      amountMinor: z.number(),
-    }),
-  ),
+  splits: z.array(SnapshotSplit),
   bank: z.object({
     categoryCode: z.string().nullable(),
     categoryId: z.string().nullable(),
     categorySource: z.string().nullable(),
+    // Собственная разбивка операции выписки до связи: разрыв возвращает её, а не оставляет операцию без частей.
+    // Снимки, записанные до этого поля, разбивки выписки не знали — тогда её и не было.
+    splits: z.array(SnapshotSplit).default([]),
   }),
 });
 type Snapshot = z.infer<typeof Snapshot>;
@@ -151,6 +160,7 @@ export function makeMatch(d: Deps, parts: Parts) {
       return undefined;
     }
     const splits = await listSplits(tx, receipt.id);
+    const bankSplits = await listSplits(tx, bank.id);
     // Сумма операции — из выписки: части чека пересчитываются под неё пропорционально (сумма частей = сумме операции).
     const amounts = allocate(
       bank.amountMinor,
@@ -178,15 +188,12 @@ export function makeMatch(d: Deps, parts: Parts) {
         version: receipt.version,
         createdAt: receipt.createdAt.toISOString(),
       },
-      splits: splits.map((split) => ({
-        categoryCode: split.categoryCode,
-        categoryId: split.categoryId,
-        amountMinor: split.amountMinor,
-      })),
+      splits: snapshotSplits(splits),
       bank: {
         categoryCode: bank.categoryCode,
         categoryId: bank.categoryId,
         categorySource: bank.categorySource,
+        splits: snapshotSplits(bankSplits),
       },
     };
     // Категория операции выписки — своя, если человек её выбирал; иначе из чека (самая крупная часть).
@@ -239,14 +246,19 @@ export function makeMatch(d: Deps, parts: Parts) {
 
   /**
    * Разорвать: чек возвращается к своей операции «без пары» (RCPT-10: наличная трата или «ожидает выписки») с теми же id,
-   * разбивкой и счётом, у операции выписки снимаются разбивка и ссылка, категория возвращается. Пару больше не предлагаем.
+   * разбивкой и счётом, у операции выписки снимается ссылка, а категория и собственная разбивка возвращаются из снимка.
+   * Пару больше не предлагаем.
    */
   async function unmerge(tx: ScopedDb, bankId: string, channel: Channel): Promise<string> {
     const [bank] = await lockMany(tx, [bankId]);
     if (bank === undefined) throw new AppError("NOT_FOUND");
     const parsed = Snapshot.safeParse(bank.mergedReceipt);
     if (!parsed.success) throw new AppError("CONFLICT");
-    const { receipt, splits, bank: before } = parsed.data;
+    const {
+      receipt,
+      splits,
+      bank: { splits: bankSplits, ...before },
+    } = parsed.data;
     const restored = await insertTransaction(tx, {
       id: receipt.id,
       accountId: receipt.accountId,
@@ -284,7 +296,11 @@ export function makeMatch(d: Deps, parts: Parts) {
       version: bank.version + 1,
       ...before,
     };
-    await replaceSplits(tx, bank.id, []);
+    await replaceSplits(
+      tx,
+      bank.id,
+      bankSplits.map((split, index) => ({ ...split, position: index + 1 })),
+    );
     await updateTransaction(tx, bank.id, patch);
     await ledger.settle(tx, {
       batchId: randomUUID(),

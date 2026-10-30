@@ -11,7 +11,7 @@ import {
   newScope,
   transactionsWithJournal,
 } from "../../../main/__fixtures__/transactions-with-journal.ts";
-import { listSplits } from "../infrastructure/db/transactions.repo.ts";
+import { listSplits, replaceSplits } from "../infrastructure/db/transactions.repo.ts";
 import type { ImportRow } from "./import-batch.ts";
 import type { ReceiptOperation } from "./receipt-ops.ts";
 
@@ -295,6 +295,29 @@ describe("TXN-11: ручная связь и разрыв из карточки"
     expect(await t.actions.undo(s, unlinked.undoToken)).toBe("undone");
     expect(await monthExpenses()).toBe(5000);
     expect(await balance(cash)).toBe(0);
+  });
+
+  it("у операции выписки была своя разбивка — связь с чеком и разрыв возвращают её прежней", async () => {
+    const { s, t, bank, receipt } = await setup();
+    const bankId = await bank();
+    const own = [
+      { position: 1, categoryCode: "groceries", categoryId: null, amountMinor: 3000 },
+      { position: 2, categoryCode: "household", categoryId: null, amountMinor: 1730 },
+    ];
+    await s.transaction((tx) => replaceSplits(tx, bankId, own));
+    const parts = async () =>
+      (await listSplits(s, bankId)).map(({ position, categoryCode, categoryId, amountMinor }) => ({
+        position,
+        categoryCode,
+        categoryId,
+        amountMinor,
+      }));
+    const r = await receipt();
+    await t.ops.linkReceipt(s, { receiptId: r.receiptId, transactionId: bankId });
+    // Пока связаны — разбивка из чека.
+    expect((await parts()).map((split) => split.amountMinor)).toEqual([4000, 730]);
+    await t.ops.unlinkReceipt(s, bankId);
+    expect(await parts()).toEqual(own);
   });
 
   it("связать нельзя: платёж не расход выписки или уже с чеком, чек без операции — NOT_FOUND, разрыв без связи — CONFLICT", async () => {

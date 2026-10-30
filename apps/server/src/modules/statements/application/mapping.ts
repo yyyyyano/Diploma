@@ -2,7 +2,7 @@
 // служебных полей и токенов: токен «Отменить» остаётся на сервере.
 import { StatementImportId, type ImportDetail, type ImportSummary } from "@kosht/contract";
 import { LocalDate, Money } from "@kosht/kernel";
-import type { PreviewRow } from "../infrastructure/db/schema.ts";
+import type { PreviewRow } from "../domain/import-types.ts";
 import type { ImportRow } from "../infrastructure/db/statement-imports.repo.ts";
 
 type Summarized = Omit<ImportRow, "payload" | "schemaOverride">;

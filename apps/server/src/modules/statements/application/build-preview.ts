@@ -22,7 +22,7 @@ import {
 import { duplicateFlags, rowKeys } from "../domain/dedupe.ts";
 import { summarize, type PreviewCounts } from "../domain/preview.ts";
 import type { ParsedStatement } from "../domain/types.ts";
-import type { PreviewRow } from "../infrastructure/db/schema.ts";
+import type { PreviewRow } from "../domain/import-types.ts";
 import { STATEMENTS_REFUND_WINDOW_DAYS, STATEMENTS_TRANSFER_WINDOW_DAYS } from "../settings.ts";
 
 export interface PreviewDeps {

@@ -17,7 +17,7 @@ import type { TransactionsFacade } from "../../transactions/index.ts";
 import { summarize } from "../domain/preview.ts";
 import type { ColumnSchema, Role } from "../domain/types.ts";
 import { statementsImported, statementsRolledBack } from "../events.ts";
-import type { ImportPayload, PreviewRow } from "../infrastructure/db/schema.ts";
+import type { ImportPayload, PreviewRow } from "../domain/import-types.ts";
 import {
   deleteImportRow,
   findImport,

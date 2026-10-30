@@ -1,6 +1,7 @@
 // Запросы к statement_imports (черновики и итоги импорта): первый аргумент — s: ScopedDb, у каждого обращения свой s.own.
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
 import type { InsertValue, Patch, ScopedDb } from "../../../../platform/db/scoped-db.ts";
+import type { SweepFind } from "../../../../platform/jobs/sweep.ts";
 import { statementImports } from "./schema.ts";
 
 export type ImportRow = typeof statementImports.$inferSelect;
@@ -81,3 +82,19 @@ export async function updateImport(s: ScopedDb, id: string, patch: ImportPatch):
 export async function deleteImportRow(s: ScopedDb, id: string): Promise<void> {
   await s.delete(statementImports, eq(statementImports.id, id));
 }
+
+/** Сквозной поиск для обхода «брошенных черновиков»: владельцы предпросмотров и ошибок, не тронутых больше суток. */
+export const findStaleDraftOwners: SweepFind = async (db) =>
+  db
+    .select({
+      id: statementImports.id,
+      householdId: statementImports.householdId,
+      userId: statementImports.userId,
+    })
+    .from(statementImports)
+    .where(
+      and(
+        inArray(statementImports.status, ["ready", "failed"]),
+        lt(statementImports.updatedAt, sql`now() - interval '1 day'`),
+      ),
+    );

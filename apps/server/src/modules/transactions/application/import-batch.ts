@@ -68,6 +68,8 @@ export function makeImportBatch(d: Deps, parts: Parts) {
   /** Записать операции выписки; одна пачка ревизий и одно событие на весь импорт. */
   async function importBatch(tx: ScopedDb, input: ImportInput): Promise<ImportResult> {
     const batchId = randomUUID();
+    // Повторная загрузка той же выписки: записывать нечего, события «изменилось» нет.
+    if (input.rows.length === 0) return { batchId, ids: [], cashCounterparts: 0 };
     const created: TransactionRow[] = [];
     const counterparts: TransactionRow[] = [];
     for (const row of input.rows) {

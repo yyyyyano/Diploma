@@ -176,3 +176,93 @@ export async function listBatch(s: ScopedDb, batchId: string): Promise<RevisionR
     .where(and(s.own(transactionRevisions), eq(transactionRevisions.batchId, batchId)))
     .orderBy(asc(transactionRevisions.transactionId), asc(transactionRevisions.id));
 }
+
+/** STMT-07: какие из ключей дубля уже есть у операций выписок. */
+export async function existingDedupeKeys(
+  s: ScopedDb,
+  keys: readonly string[],
+): Promise<Set<string>> {
+  if (keys.length === 0) return new Set();
+  const rows = await s.db
+    .select({ key: transactions.dedupeKey })
+    .from(transactions)
+    .where(and(s.own(transactions), inArray(transactions.dedupeKey, [...keys])));
+  return new Set(rows.flatMap((row) => (row.key === null ? [] : [row.key])));
+}
+
+/** STMT-07: какие банковские идентификаторы операций уже есть. */
+export async function existingExternalIds(
+  s: ScopedDb,
+  ids: readonly string[],
+): Promise<Set<string>> {
+  if (ids.length === 0) return new Set();
+  const rows = await s.db
+    .select({ id: transactions.externalId })
+    .from(transactions)
+    .where(and(s.own(transactions), inArray(transactions.externalId, [...ids])));
+  return new Set(rows.flatMap((row) => (row.id === null ? [] : [row.id])));
+}
+
+/** STMT-08: переводы без пары на других счетах за окно — кандидаты в пару новому переводу. */
+export async function unpairedTransfers(
+  s: ScopedDb,
+  filter: { from: string; to: string; excludeAccountIds: readonly string[] },
+): Promise<TransactionRow[]> {
+  const conditions = [
+    s.own(transactions),
+    eq(transactions.type, "transfer"),
+    sql`${transactions.transferPairId} is null`,
+    gte(transactions.occurredOn, filter.from),
+    lte(transactions.occurredOn, filter.to),
+  ];
+  if (filter.excludeAccountIds.length > 0) {
+    conditions.push(sql`${transactions.accountId} not in ${[...filter.excludeAccountIds]}`);
+  }
+  return s.db
+    .select()
+    .from(transactions)
+    .where(and(...conditions))
+    .orderBy(asc(transactions.occurredOn), asc(transactions.id));
+}
+
+/** STMT-08: расходы тех же контрагентов за окно — покупки, к которым может относиться возврат. */
+export async function purchasesOf(
+  s: ScopedDb,
+  filter: { merchantKeys: readonly string[]; from: string; to: string },
+): Promise<TransactionRow[]> {
+  if (filter.merchantKeys.length === 0) return [];
+  return s.db
+    .select()
+    .from(transactions)
+    .where(
+      and(
+        s.own(transactions),
+        eq(transactions.type, "expense"),
+        inArray(transactions.merchantKey, [...filter.merchantKeys]),
+        gte(transactions.occurredOn, filter.from),
+        lte(transactions.occurredOn, filter.to),
+      ),
+    )
+    .orderBy(asc(transactions.occurredOn), asc(transactions.id));
+}
+
+/** STMT-11: операции одного импорта под блокировкой. */
+export async function lockByImport(s: ScopedDb, importId: string): Promise<TransactionRow[]> {
+  return s.db
+    .select()
+    .from(transactions)
+    .where(and(s.own(transactions), eq(transactions.importId, importId)))
+    .orderBy(asc(transactions.id))
+    .for("update");
+}
+
+/** STMT-11: сколько операций импорта правили вручную после загрузки (версия выше первой). */
+export async function countEditedInImport(s: ScopedDb, importId: string): Promise<number> {
+  const rows = await s.db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(transactions)
+    .where(
+      and(s.own(transactions), eq(transactions.importId, importId), gte(transactions.version, 2)),
+    );
+  return rows[0]?.n ?? 0;
+}

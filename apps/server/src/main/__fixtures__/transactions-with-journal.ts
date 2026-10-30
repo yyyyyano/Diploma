@@ -34,6 +34,7 @@ import {
   RESTORE_HANDLER,
   TRANSFER_HANDLER,
 } from "../../modules/transactions/application/handlers.ts";
+import { makeImportBatch } from "../../modules/transactions/application/import-batch.ts";
 import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
 import { fillRatesJob } from "../../modules/transactions/jobs/fill-rates.job.ts";
 import { categorizeJob } from "../../modules/transactions/jobs/categorize.job.ts";
@@ -188,9 +189,15 @@ export function transactionsWithJournal(
     categorize: categorizeJob(base.background.categorizeFallback),
   };
   ops = makeOperations(deps, base, jobRefs);
+  const imports = makeImportBatch(deps, {
+    prepare: base.prepare,
+    ledger: base.ledger,
+    jobs: jobRefs,
+  });
 
   return {
     ops,
+    imports,
     accounts,
     actions,
     explain,

@@ -45,6 +45,12 @@ export const transactions = userOwnedTable(
     visibility: text().notNull().default("personal"),
     transferPairId: uuid(),
     refundOfId: uuid(),
+    /** Импорт выписки, из которого операция (STMT-11, откат целиком); у ручных и чековых — null. Без FK: импорт — в statements. */
+    importId: uuid(),
+    /** Банковский идентификатор операции в пределах счёта «счёт|номер» (STMT-07); нет у выписки — null. */
+    externalId: text(),
+    /** Ключ дубля STMT-07: счёт, день, время, сумма, описание и порядковый номер среди одинаковых; у выписки. */
+    dedupeKey: text(),
     version: integer().notNull().default(1),
   },
   (t) => [
@@ -71,6 +77,16 @@ export const transactions = userOwnedTable(
     // TXN-02: страница по дате (последний ключ — id), поиск по счёту и по контрагенту (CAT-05).
     index("transactions_date_idx").on(t.householdId, t.occurredOn.desc(), t.id.desc()),
     index("transactions_merchant_key_idx").on(t.householdId, t.merchantKey),
+    // STMT-07, STMT-11: проверка дублей по ключу и идентификатору, операции одного импорта.
+    index("transactions_dedupe_idx")
+      .on(t.householdId, t.dedupeKey)
+      .where(sql`${t.dedupeKey} is not null`),
+    index("transactions_external_idx")
+      .on(t.householdId, t.externalId)
+      .where(sql`${t.externalId} is not null`),
+    index("transactions_import_idx")
+      .on(t.householdId, t.importId)
+      .where(sql`${t.importId} is not null`),
     index("transactions_rate_missing_idx")
       .on(t.householdId, t.id)
       .where(sql`${t.amountBynMinor} is null`),

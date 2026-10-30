@@ -15,6 +15,7 @@ import type { MerchantsFacade } from "../merchants/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { transactionsTools } from "./agent/tools.ts";
 import { transactionsRouter } from "./api/router.ts";
+import { makeImportBatch } from "./application/import-batch.ts";
 import { makeBase, makeOperations } from "./application/operations.ts";
 import {
   APPLY_RULE_HANDLER,
@@ -26,6 +27,7 @@ import {
 import { transactionsChanged } from "./events.ts";
 import { categorizeJob } from "./jobs/categorize.job.ts";
 import { fillRatesJob } from "./jobs/fill-rates.job.ts";
+import { countEditedInImport } from "./infrastructure/db/transactions.repo.ts";
 import { transactionsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -58,9 +60,19 @@ export function createTransactionsModule({
     categorize: categorizeJob(base.background.categorizeFallback),
   };
   const ops = makeOperations(deps, base, jobs);
+  const imports = makeImportBatch(deps, { prepare: base.prepare, ledger: base.ledger, jobs });
   const tools = transactionsTools(ops);
   return defineModule({
     id: "transactions",
+    facade: {
+      importBatch: imports.importBatch,
+      deleteImport: imports.deleteImport,
+      knownKeys: imports.knownKeys,
+      transferCandidates: imports.transferCandidates,
+      purchaseCandidates: imports.purchaseCandidates,
+      countEditedInImport,
+      requestMarkTransfer: ops.requestMarkTransfer,
+    },
     router: transactionsRouter(ops),
     events: [transactionsChanged],
     jobs: [jobs.fillRates, jobs.categorize],
@@ -76,5 +88,9 @@ export function createTransactionsModule({
   });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined) — фасад (агрегаты пачками, запись из чека и выписки) добавят их задачи. */
+/**
+ * Что модуль даёт соседям: запись выписки (T-026) — `importBatch(tx, { importId, rows })`, `deleteImport(tx, importId)`,
+ * проверка дублей `knownKeys`, кандидаты в пару перевода и покупки возврата, `countEditedInImport`,
+ * `requestMarkTransfer(s, ids, channel)` — «Да/Нет» для спорных переводов; агрегаты пачками и запись из чека — T-027, T-031.
+ */
 export type TransactionsFacade = ReturnType<typeof createTransactionsModule>["facade"];

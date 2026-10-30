@@ -4,19 +4,20 @@
 
 ## Назначение
 Операции, переводы и возвраты, сопоставление чек ↔ выписка, массовые действия, агрегации пачками; остаток счёта
-пересчитывает фасад `accounts` (STMT-02). Сейчас (T-021, T-022): таблица и фильтры, ввод, правка и удаление с «Отменить»,
-карточка с историей, массовые действия, правило из исправления, инструменты агента, фон (курс НБРБ, модель).
+пересчитывает фасад `accounts` (STMT-02). Сделано: таблица и фильтры, ввод, правка и удаление с «Отменить», карточка с историей, массовые действия, запись выписки.
 
 ## Требования SPEC
 TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (применить к прошлым).
 ## Публичный API (`index.ts`)
-- Фабрика: `createTransactionsModule({ platform, facades })`; фасадов наружу пока нет. Форма будущего (ARCHITECTURE §4.3,
+- Фабрика: `createTransactionsModule({ platform, facades })`. Фасад (`statements`): `importBatch(tx, { importId, rows })` — выписка
+  пачкой (`import_id`, `external_id`, `dedupe_key`; пара перевода, «Наличные» для снятия, покупка возврата; одно
+  `transactions.changed`), `deleteImport`, `knownKeys`, `transferCandidates`, `purchaseCandidates`, `countEditedInImport`,
+  `requestMarkTransfer`. Форма будущего (ARCHITECTURE §4.3,
   §15): агрегаты — **только пачками**, `aggregate(s, { period, groupBy })` → `{ key, total: Money, count }`; запись
   чужими модулями — фасадом с `tx`.
 - Контракт `contract.transactions.*` (authed, канал отмены — web, источник — «вручную»): `list` (страница + размер ≤ 100
   + `total`; фильтры — период, счёт, категория, тип, сумма в BYN, источник, текст; сортировка день → время → `id`),
-  `get` (карточка: `rate`, `history`),
-  `create`/`update` (→ `{ transaction, undoToken, applyToPast }`), `requestDelete`, `requestChangeCategory`,
+  `get` (карточка: `rate`, `history`), `create`/`update` (→ `{ transaction, undoToken, applyToPast }`), `requestDelete`, `requestChangeCategory`,
   `requestMarkTransfer` (`ids` → `{ decisionId }`), `explainRate` (→ `traceId`; курса нет — `UNAVAILABLE`).
 - Сценарии — файлы `application/`: `read`, `write`, `remove`, `restore` («Отменить»), `bulk` (массовые решения и их
   «Да»), `rule` (правило из исправления), `background` (курс, модель); общее — `ledger` (ревизии, остатки, событие),
@@ -42,13 +43,13 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
 - Таблицы (`userOwnedTable`, `user-data.ts`): `transactions` (счёт, тип, направление, день и время, сумма и валюта, BYN и
   id курса, описание, контрагент и ключ, категория и источник, источник операции, пара, покупка, версия) и
   `transaction_revisions` (пачка, действие, канал, состояние «до»; без FK — история удалённой остаётся). Составные FK —
-  руками в миграции `*_transactions`: счёт и своя категория `RESTRICT`, пара и покупка `SET NULL (колонка)`.
+  руками в миграции `*_transactions`: счёт и категория `RESTRICT`, пара и покупка `SET NULL (колонка)`; `import_id` без FK.
 
 ## Зависимости
 Можно: accounts, categories, merchants, fx-rates, actions, explain, notifications (`tooling/architecture/modules.ts`). Слушает: —.
 
 ## Запреты
-- Фасад без агрегатов пачками (метод «сумма по одной категории» в цикле) — нет: только `aggregate`.
+- Фасад без агрегатов пачками («сумма по одной категории» в цикле) — только `aggregate`.
 - В чужой модуль — только через его `index.ts`, из «Можно»; наверх — событием (ADR-0004). Данные — только через
   `s: ScopedDb` с `s.own(таблица)`, «чьи» — только `s.scope`.
 
@@ -56,5 +57,4 @@ TXN-01…11, FIN-01, STMT-02/09, STMT-07/08 (запись), CAT-05 (примен
 - `pnpm vitest run apps/server/src/modules/transactions` — правила (`domain/`); сценарии на Postgres с настоящими
   accounts, actions, explain, merchants и categories (`main/__fixtures__/transactions-with-journal.ts`: курсы НБРБ — карта
   в памяти, шлюз моделей — шпион): `operations`, `list`, `bulk`, `background`, `agent/tools`; изоляция —
-  `main/isolation.registry.int.test.ts`. Бюджет «страница 50 строк ≤ 150 мс p95» — `make bench`
-  (`application/list.bench.ts`, 10 000 операций; p95 печатается).
+  `main/isolation.registry.int.test.ts`; выписка — `import-batch.int.test.ts`. «Страница 50 строк ≤ 150 мс p95» — `make bench`.

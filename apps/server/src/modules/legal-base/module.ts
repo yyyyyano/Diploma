@@ -17,6 +17,7 @@ import { makeEmbedder } from "./application/embed.ts";
 import { makeDemand } from "./application/demand.ts";
 import { makeLawSearch } from "./application/search.ts";
 import { loadActJob } from "./jobs/load-act.job.ts";
+import { makeCardReader } from "./application/card-reader.ts";
 import { makeLookup } from "./application/lookup.ts";
 import { makeReader } from "./application/reader.ts";
 import { makeActCheck } from "./application/act-check.ts";
@@ -154,9 +155,11 @@ export function createLegalBaseModule({
     adminScoped: () => facades.identity.adminScoped(),
     events: { publish: (tx, event, payload) => platform.events.publish(tx, event, payload) },
   });
+  const readCard = makeCardReader({ source, clock: platform.clock });
   const actCheck = makeActCheck({
     system: platform.system,
     source,
+    readCard,
     loadAct,
     publish,
     // LAW-32: модель (systemCaller, данных пользователя нет) лишь предлагает статьи и дату; принимает программа (verifyProposal).
@@ -187,6 +190,7 @@ export function createLegalBaseModule({
     source,
     agencies: createAgencySource({ fetcherFor }),
     loadAct,
+    readCard,
     actCheck,
     classify: async (title): Promise<Topic | null> => {
       const answer = await facades.llm.extract(caller, {

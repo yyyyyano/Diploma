@@ -12,6 +12,8 @@ import type { Topic } from "../domain/topics.ts";
 import { START_CATALOG } from "../domain/start-catalog.ts";
 import { seedActs } from "../infrastructure/db/catalog.repo.ts";
 import { decideCandidate } from "../infrastructure/db/growth.repo.ts";
+import { makeActCheck } from "./act-check.ts";
+import { makeCardReader } from "./card-reader.ts";
 import { makeCatalogGrowth } from "./catalog-growth.ts";
 import { makeLoadAct } from "./load-act.ts";
 import {
@@ -130,9 +132,11 @@ function setup(opts: Setup = {}) {
     log: log.log,
     notifications: { notifyAdmins: async () => undefined } as never,
   });
+  const readCard = makeCardReader({ source: async () => source, clock });
   const growth = makeCatalogGrowth({
     system,
     source: async () => source,
+    readCard,
     agencies: {
       fetchAgencyPage: async (url) => {
         calls.agency.push(url);
@@ -174,7 +178,7 @@ function setup(opts: Setup = {}) {
       },
     } as never,
   });
-  return { clock, system, growth, calls, notified, plainLoad };
+  return { clock, system, growth, calls, notified, plainLoad, readCard, source, log };
 }
 
 const rows = async <T extends Record<string, unknown>>(sql: string, params: unknown[] = []) =>
@@ -252,8 +256,21 @@ describe("LAW-12, LAW-13: новые поступления и фильтры б
     await t.growth.discoverArrivals();
     await t.growth.evaluate();
     expect(t.notified.filter((n) => n.kind === "law-new-acts")).toEqual([
-      { kind: "law-new-acts", key: "new-acts:2026-10-30", params: { count: 1 } },
+      { kind: "law-new-acts", key: "new-acts:2026-10-30:1", params: { count: 1 } },
     ]);
+  });
+
+  it("второй проход того же дня с новыми актами — отдельное уведомление, повтор без новых — ничего", async () => {
+    const t = setup({ topics: TOPICS });
+    await t.growth.discoverArrivals();
+    await t.growth.evaluate();
+    await db.owner.query(
+      "insert into legal_candidates (pravo_id, source, title, kind_line) values ('P32600399', 'new-arrivals', 'О налоговых льготах', 'Указ Президента Республики Беларусь от 29 октября 2026 г. № 399')",
+    );
+    await t.growth.evaluate();
+    await t.growth.evaluate();
+    const keys = t.notified.filter((n) => n.kind === "law-new-acts").map((n) => n.key);
+    expect(keys).toEqual(["new-acts:2026-10-30:1", "new-acts:2026-10-30:2"]);
   });
 
   it("«только предлагать» превращает автодобавление новых поступлений в очередь администратора", async () => {
@@ -532,6 +549,41 @@ describe("LAW-11, LAW-13, LAW-14, LAW-17: граф ссылок", () => {
     await db.owner.query("update legal_acts set links_scanned_snapshot_id = null");
     await t.growth.discoverLinks();
     expect(await candidate("C20600522")).toMatchObject({ status: "rejected" });
+  });
+});
+
+describe("T-039: карточка акта читается одним вызовом", () => {
+  it("кандидат графа ссылок и проверка утраты силы того же акта читают карточку один раз", async () => {
+    const t = setup({
+      cards: {
+        C20600522: card(
+          "О порядке налогообложения",
+          "Постановление Совета Министров Республики Беларусь от 1 июня 2006 г. № 522",
+        ),
+      },
+      withText: ["C20600522"],
+      rubricPages: { C20600522: rubrics("03.02.01") },
+    });
+    await db.owner.query(
+      "insert into legal_candidates (pravo_id, source) values ('C20600522', 'link-graph')",
+    );
+    await t.growth.evaluate();
+    const act = (
+      await rows<{ id: string }>("select id from legal_acts where pravo_id = 'C20600522'")
+    )[0];
+    const check = makeActCheck({
+      system: t.system,
+      source: async () => t.source,
+      readCard: t.readCard,
+      loadAct: async () => "unchanged",
+      publish: async () => undefined,
+      proposeChange: async () => ({ articles: [], inForceOn: null }),
+      clock: t.clock,
+      log: t.log.log,
+      notifications: { notifyAdmins: async () => undefined } as never,
+    });
+    await check.checkCard({ id: act?.id ?? "", pravoId: "C20600522" });
+    expect(t.calls.cards).toEqual(["C20600522"]);
   });
 });
 

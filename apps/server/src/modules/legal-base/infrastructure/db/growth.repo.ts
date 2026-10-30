@@ -1,7 +1,7 @@
 // Пополнение каталога (LAW-11…17): кандидаты, добавление актов, граф ссылок, проверка появления текста, журнал спроса и
 // отметки проходов — только SystemDb модуля. Сети внутри нет.
 import { gunzipSync } from "node:zlib";
-import { and, asc, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, eq, gte, inArray, isNull, lt, ne, or, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type { CandidateSource } from "../../domain/routes.ts";
 import { one } from "./rows.ts";
@@ -74,6 +74,15 @@ export async function addFoundCandidates(
     .onConflictDoNothing({ target: legalCandidates.pravoId })
     .returning({ id: legalCandidates.id });
   return rows.length;
+}
+
+/** Сколько кандидатов добавлено в каталог с момента `since` (ключ уведомления «добавлены новые акты»). */
+export async function countAddedSince(db: SystemDb, since: Date): Promise<number> {
+  const rows = await db
+    .select({ n: count() })
+    .from(legalCandidates)
+    .where(and(eq(legalCandidates.status, "added"), gte(legalCandidates.decidedAt, since)));
+  return rows[0]?.n ?? 0;
 }
 
 /** Кандидаты, ожидающие проверки фильтрами: самые давние первыми, не больше `limit` за проход. */

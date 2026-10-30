@@ -19,7 +19,7 @@ import {
   touchCardChecked,
   type PendingChangeRow,
 } from "../infrastructure/db/changes.repo.ts";
-import { changeKeysOfPage, parseCard } from "../infrastructure/pravo-by/parse-card.ts";
+import { changeKeysOfPage, type ParsedCard } from "../infrastructure/pravo-by/parse-card.ts";
 import { readActPage } from "../infrastructure/pravo-by/read-page.ts";
 import type { LoadAct } from "./load-act.ts";
 import { ActTextNotFound, type LegalSource, type RegistrySource } from "./ports.ts";
@@ -36,6 +36,8 @@ export interface ActCheckDeps {
   readonly source: () => Promise<LegalSource & RegistrySource>;
   readonly loadAct: LoadAct;
   readonly publish: PublishSystemEvent;
+  /** Карточка акта одним вызовом на всех (card-reader): утрата силы и кандидаты графа читают её один раз. */
+  readonly readCard: (pravoId: string) => Promise<ParsedCard>;
   /** Предложение модели по тексту изменяющего акта (`systemCaller`, облачная цепочка: данных пользователя нет, PRIV-09). */
   readonly proposeChange: (document: string) => Promise<ChangeProposal>;
   readonly clock: Clock;
@@ -96,7 +98,7 @@ export function makeActCheck(d: ActCheckDeps) {
   /** Карточка акта: утрата силы и изменения, не вошедшие в текст. */
   async function checkCard(act: { id: string; pravoId: string }): Promise<CardOutcome> {
     const source = await d.source();
-    const card = parseCard((await source.fetchActCard(act.pravoId)).html);
+    const card = await d.readCard(act.pravoId);
     await touchCardChecked(d.system, act.id, d.clock.now());
     if (card.repealedOn !== null) {
       if (await markRepealed(d.system, act.id, card.repealedOn)) {

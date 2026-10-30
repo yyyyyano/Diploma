@@ -20,7 +20,9 @@ const SERVER = "apps/server/src";
 /**
  * Где рождается Scope (ARCHITECTURE §6.4). Уточняют T-004 (kernel, testing), T-059 (http), T-006 (jobs, tools),
  * T-009 (регистрация и первый запуск — один файл identity), T-017 (удаление пользователя администратором — один файл
- * identity), T-052 (вход Telegram). Тесты, `__fixtures__` и `packages/testing` не проверяются вовсе (TEST_CODE).
+ * identity), T-052 (вход Telegram). Системные события общей правовой базы (`legal-base.act-updated`, `act-repealed`, T-036)
+ * публикуются от имени первого активного администратора: `identity.adminScoped()` лежит в том же файле `new-user-scope.ts`
+ * (по образцу `identity.system-initialized`) — отдельного места рождения scope у `legal-base` нет и быть не должно. Тесты, `__fixtures__` и `packages/testing` не проверяются вовсе (TEST_CODE).
  */
 export const SCOPE_ENTRIES = [
   `${SERVER}/platform/http/`, // сайт: сессия → makeScope → context.s

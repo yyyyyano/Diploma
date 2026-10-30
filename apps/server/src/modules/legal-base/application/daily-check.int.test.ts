@@ -11,6 +11,7 @@ import { START_CATALOG } from "../domain/start-catalog.ts";
 import { seedActs } from "../infrastructure/db/catalog.repo.ts";
 import { pendingChangesOf } from "../infrastructure/db/changes.repo.ts";
 import { makeActCheck } from "./act-check.ts";
+import { makeCardReader } from "./card-reader.ts";
 import { makeDailyCheck } from "./daily-check.ts";
 import { makeEmbedder } from "./embed.ts";
 import { makeLoadAct } from "./load-act.ts";
@@ -93,6 +94,7 @@ function setup() {
   const actCheck = makeActCheck({
     system,
     source: async () => source,
+    readCard: makeCardReader({ source: async () => source, clock }),
     loadAct,
     publish: async (event, ids) => {
       published.push(`${event.name}:${String(ids.length)}`);

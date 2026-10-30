@@ -26,6 +26,7 @@ import {
   addAct,
   addDemand,
   addFoundCandidates,
+  countAddedSince,
   currentSnapshotHtml,
   decideCandidate,
   demandSince,
@@ -41,7 +42,7 @@ import {
 } from "../infrastructure/db/growth.repo.ts";
 import { logUpdate, markActState } from "../infrastructure/db/catalog.repo.ts";
 import { parseArrivals } from "../infrastructure/pravo-by/parse-arrivals.ts";
-import { parseCard } from "../infrastructure/pravo-by/parse-card.ts";
+import type { ParsedCard } from "../infrastructure/pravo-by/parse-card.ts";
 import { pravoLinksIn } from "../infrastructure/pravo-by/parse-links.ts";
 import { parseRubrics } from "../infrastructure/pravo-by/parse-rubrics.ts";
 import { PRAVO_ID } from "../infrastructure/pravo-by/pravo-source.ts";
@@ -75,6 +76,8 @@ export interface GrowthDeps {
   readonly source: () => Promise<FullSource>;
   readonly agencies: AgencySource;
   readonly loadAct: LoadAct;
+  /** Карточка акта одним вызовом на всех (card-reader). */
+  readonly readCard: (pravoId: string) => Promise<ParsedCard>;
   readonly actCheck: Pick<ActCheck, "checkCard" | "checkText">;
   /** Модель (`systemCaller`, облачная цепочка — данных пользователя нет, PRIV-09): тема акта по заголовку; null — не про деньги. */
   readonly classify: (title: string) => Promise<Topic | null>;
@@ -355,7 +358,7 @@ export function makeCatalogGrowth(d: GrowthDeps) {
     const source = await d.source();
     try {
       if (c.title === null) {
-        const card = parseCard((await source.fetchActCard(c.pravoId)).html);
+        const card = await d.readCard(c.pravoId);
         title = card.title;
         kindLine = card.kindLine;
         if (title === "") return await refuse("card-unreadable");
@@ -480,9 +483,12 @@ export function makeCatalogGrowth(d: GrowthDeps) {
       if ((await evaluateOne(c, ctx)) === "decided") decided += 1;
     }
     if (ctx.added > 0) {
+      // Ключ — день и число актов, добавленных за последние сутки: повтор прохода без новых актов ничего не шлёт, а второй
+      // проход того же дня с новыми актами — отдельное уведомление (замечено в T-037, решено в T-039).
+      const total = await countAddedSince(d.system, new Date(d.clock.now().getTime() - DAY_MS));
       await d.notifications.notifyAdmins({
         kind: "law-new-acts",
-        key: `new-acts:${d.clock.today()}`,
+        key: `new-acts:${d.clock.today()}:${String(total)}`,
         params: { count: ctx.added },
       });
     }

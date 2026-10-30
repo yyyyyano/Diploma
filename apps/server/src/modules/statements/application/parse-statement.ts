@@ -59,6 +59,14 @@ export interface ParseDeps {
   readonly log: Logger;
 }
 
+/** Параметры разбора: схема колонок, заданная человеком, — вместо запомненной, словаря и модели. */
+export interface ParseOptions {
+  readonly schema?: ColumnSchema;
+}
+
+/** Строк таблицы в образце для окна «Исправить колонки». */
+const SAMPLE_ROWS = 8;
+
 /** Валюта по умолчанию, если её нет ни в шапке, ни в колонке: белорусские выписки (предупреждение currency-assumed). */
 const DEFAULT_CURRENCY = "BYN";
 
@@ -101,7 +109,11 @@ export function makeParseStatement(d: ParseDeps) {
     return schemaFromRoles(grid, header.dataStart, roles);
   }
 
-  async function parseTable(s: ScopedDb, table: RawTable): Promise<ParsedStatement> {
+  async function parseTable(
+    s: ScopedDb,
+    table: RawTable,
+    given: ColumnSchema | undefined,
+  ): Promise<ParsedStatement> {
     const header = locateHeader(table);
     if (header === undefined) throw new AppError("STATEMENT_UNREADABLE");
     // PDF без шапки в таблице по координатам не выровнять.
@@ -130,13 +142,19 @@ export function makeParseStatement(d: ParseDeps) {
     let formatChanged = false;
     let done: (ReturnType<typeof attempt> & { method: ParsedStatement["method"] }) | undefined;
 
+    // 0. Колонки заданы человеком («Исправить колонки», STMT-04): разбор без модели по его схеме.
+    if (given !== undefined) {
+      const result = attempt(given);
+      if (!result.usable) throw new AppError("STATEMENT_UNREADABLE");
+      done = { ...result, method: "detected" };
+    }
     // 1. Запомненный формат — без модели (STMT-05). Не подошёл — формат банка изменился: определяем заново.
-    const remembered = await findFormat(s, fingerprint);
+    const remembered = done === undefined ? await findFormat(s, fingerprint) : undefined;
     if (remembered !== undefined) {
       const result = attempt(remembered.schema);
       if (result.usable) done = { ...result, method: "remembered" };
       else formatChanged = true;
-    } else if (bankKey !== undefined) {
+    } else if (done === undefined && bankKey !== undefined) {
       // Отпечаток новый, а формат этого банка в этом виде файла уже запоминали: формат изменился.
       formatChanged = (await findFormatsOfBank(s, bankKey, table.kind)).length > 0;
     }
@@ -168,6 +186,14 @@ export function makeParseStatement(d: ParseDeps) {
       schema: done.schema,
       formatChanged,
       warnings,
+      sample: {
+        header: header.texts,
+        rows: grid.lines
+          .slice(header.dataStart)
+          .filter((line) => line.cells.some((cell) => cell !== ""))
+          .slice(0, SAMPLE_ROWS)
+          .map((line) => line.cells),
+      },
     });
   }
 
@@ -235,7 +261,11 @@ export function makeParseStatement(d: ParseDeps) {
   }
 
   /** Разобрать байты файла известного типа. */
-  async function parseBytes(s: ScopedDb, input: ReadInput): Promise<ParsedStatement> {
+  async function parseBytes(
+    s: ScopedDb,
+    input: ReadInput,
+    options: ParseOptions = {},
+  ): Promise<ParsedStatement> {
     const started = performance.now();
     let document;
     try {
@@ -249,7 +279,7 @@ export function makeParseStatement(d: ParseDeps) {
     }
     const parsed =
       document.kind === "table"
-        ? await parseTable(s, document.table)
+        ? await parseTable(s, document.table, options.schema)
         : await parseScan(s, document.images);
     d.log.info(
       {
@@ -264,12 +294,16 @@ export function makeParseStatement(d: ParseDeps) {
   }
 
   /** Разобрать загруженный файл выписки по id (его проверил и сохранил модуль files). */
-  async function parseStatement(s: ScopedDb, fileId: FileId): Promise<ParsedStatement> {
+  async function parseStatement(
+    s: ScopedDb,
+    fileId: FileId,
+    options: ParseOptions = {},
+  ): Promise<ParsedStatement> {
     const file = await d.files.open(s, fileId);
     const type = fileTypeOfMime(file.mime);
     if (type === undefined) throw new AppError("STATEMENT_UNREADABLE");
     const bytes = new Uint8Array(await file.blob.arrayBuffer());
-    return parseBytes(s, { type, bytes });
+    return parseBytes(s, { type, bytes }, options);
   }
 
   return { parseStatement, parseBytes };
@@ -285,6 +319,7 @@ interface Assembly {
   readonly schema?: ColumnSchema;
   readonly formatChanged: boolean;
   readonly warnings: readonly string[];
+  readonly sample?: ParsedStatement["sample"];
 }
 
 /** Собрать результат: шапка, строки и сверка цепочки остатков (STMT-04 шаг 3). */
@@ -306,6 +341,7 @@ function assemble(a: Assembly): ParsedStatement {
     ...(a.schema === undefined ? {} : { schema: a.schema }),
     sourceKind: a.sourceKind,
     formatChanged: a.formatChanged,
+    ...(a.sample === undefined ? {} : { sample: a.sample }),
     balance: {
       status: check.status,
       ...(check.difference === undefined ? {} : { difference: check.difference }),

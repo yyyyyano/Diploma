@@ -246,6 +246,39 @@ describe("STMT-05: запомненный формат", () => {
   });
 });
 
+describe("STMT-04: «Исправить колонки»", () => {
+  it("схема человека разбирает без модели и без запомненного формата; в образце — шапка и первые строки", async () => {
+    const s = scoped();
+    const item = loadCase("csv-unknown-headers");
+    const { parse, calls } = setup();
+    const schema = {
+      dateOrder: "dmy" as const,
+      columns: (item.expected.columns ?? []).map((column) =>
+        ["amount", "debit", "credit", "balance"].includes(column.role)
+          ? { ...column, decimal: "," as const }
+          : column,
+      ),
+    };
+    const parsed = await parse.parseBytes(s, { type: item.type, bytes: item.bytes }, { schema });
+    expect(rowsOf(parsed)).toEqual(item.expected.rows);
+    expect(calls).toEqual([]);
+    expect(parsed.sample?.header[0]).toBe("Проведено");
+    expect(parsed.sample?.rows).toHaveLength(8);
+  });
+
+  it("схема, которая не разбирает таблицу (нет даты), — STATEMENT_UNREADABLE", async () => {
+    const item = loadCase("lesbank-csv-september");
+    const { parse } = setup();
+    await expect(
+      parse.parseBytes(
+        scoped(),
+        { type: item.type, bytes: item.bytes },
+        { schema: { dateOrder: "dmy", columns: [{ index: 1, role: "description" }] } },
+      ),
+    ).rejects.toMatchObject({ code: "STATEMENT_UNREADABLE" });
+  });
+});
+
 describe("STMT-04 шаг 3: цепочка остатков", () => {
   it("не хватает операции на сумму Х: статус «mismatch», расхождение называет Х, трасса сохранена", async () => {
     const item = loadCase("csv-balance-mismatch");

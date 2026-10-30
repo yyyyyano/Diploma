@@ -131,6 +131,11 @@ export interface ParsedStatement {
     /** Трасса расхождения для «Откуда эта цифра?». */
     readonly trace?: unknown;
   };
+  /** Шапка и первые строки таблицы как в файле — для окна «Исправить колонки» (STMT-04); у скана нет. */
+  readonly sample?: {
+    readonly header: readonly string[];
+    readonly rows: readonly (readonly string[])[];
+  };
   /** Предупреждения разбора кодами: `currency-assumed`, `rows-skipped` — сайт покажет по словарю. */
   readonly warnings: readonly string[];
 }

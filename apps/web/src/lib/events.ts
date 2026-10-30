@@ -63,6 +63,7 @@ const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
   "profile-fact": () => [orpc.profile.key()],
   "chat-message": () => [orpc.chat.key()],
   "data-export": () => [orpc.privacy.key()],
+  recurring: () => [orpc.recurring.key()],
 };
 
 function apply(event: SiteEvent, queryClient: QueryClient): void {

@@ -56,6 +56,28 @@ describe("DES-16: состояния экрана «Операции»", () => {
     expect(screen.getByText("Показано 3 из 58")).toBeInTheDocument();
   });
 
+  it("REC-02: операция регулярного платежа помечена «Регулярный», разовая — нет", async () => {
+    server.use(
+      http.post("*/api/recurring/markers", async ({ request }) => {
+        const { ids } = (await request.json()) as { ids: string[] };
+        return HttpResponse.json({ ids: ids.filter((id) => id === T2) });
+      }),
+      ...baseHandlers(),
+      list(() =>
+        page([
+          { ...coffee, id: T1 },
+          { ...steam, id: T2 },
+        ]),
+      ),
+    );
+    renderPage();
+    const rows = await screen.findAllByRole("row");
+    const steamRow = rows.find((row) => within(row).queryByText("Steam") !== null);
+    const coffeeRow = rows.find((row) => within(row).queryByText("Кофейня «Зерно»") !== null);
+    expect(await within(steamRow as HTMLElement).findByText("Регулярный")).toBeInTheDocument();
+    expect(within(coffeeRow as HTMLElement).queryByText("Регулярный")).toBeNull();
+  });
+
   it("STMT-09: валюта — сумма в BYN и исходная под ней; курса нет — исходная сумма и «курс не получен»", async () => {
     server.use(
       ...baseHandlers(),

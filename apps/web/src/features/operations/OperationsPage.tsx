@@ -3,7 +3,7 @@
 // «Отменить», карточка операции в боковой панели, удаление — только после «Да» (DecisionDialog) и снова «Отменить»,
 // «Откуда курс?» у валютной операции. Четыре состояния (DES-16); обновления — поток событий (`transaction`).
 // Показ «есть чек», «регулярный» и импорт в карточке — задачи T-028, T-030, T-026; «Выгрузить в Excel» — T-051.
-import type { Transaction } from "@kosht/contract";
+import { MARKERS_MAX, type Transaction } from "@kosht/contract";
 import { formatMoney } from "@kosht/i18n";
 import type { TraceId } from "@kosht/kernel";
 import { Button, Modal } from "@mantine/core";
@@ -12,6 +12,7 @@ import {
   keepPreviousData,
   useInfiniteQuery,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -96,6 +97,14 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
   const failed = isPhone ? moreQuery.isError : pageQuery.isError;
   const retry = () => void (isPhone ? moreQuery.refetch() : pageQuery.refetch());
   const filtered = hasFilters(search);
+  // REC-02: «регулярный» у строк страницы — один запрос на страницу, а не на строку; нет ответа — просто нет метки.
+  const chunks = Array.from({ length: Math.ceil(items.length / MARKERS_MAX) }, (_, index) =>
+    items.slice(index * MARKERS_MAX, (index + 1) * MARKERS_MAX).map((item) => item.id),
+  );
+  const markers = useQueries({
+    queries: chunks.map((ids) => orpc.recurring.markers.queryOptions({ input: { ids } })),
+  });
+  const regular: ReadonlySet<string> = new Set(markers.flatMap((query) => query.data?.ids ?? []));
 
   const setSearch = (patch: Partial<OperationsSearch>, replace = false) =>
     void navigate({ to: "/operations", search: (prev) => ({ ...prev, ...patch }), replace });
@@ -305,6 +314,7 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             items={items}
             total={total}
             accounts={accountItems}
+            regular={regular}
             page={search.page ?? 1}
             pageSize={PAGE_SIZE}
             onPage={(page) => setSearch({ page })}
@@ -319,6 +329,7 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             items={items}
             total={total}
             accounts={accountItems}
+            regular={regular}
             hasMore={moreQuery.hasNextPage}
             loadingMore={moreQuery.isFetchingNextPage}
             onMore={() => void moreQuery.fetchNextPage()}

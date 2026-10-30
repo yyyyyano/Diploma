@@ -103,6 +103,8 @@ export function page(items: readonly unknown[], total = items.length, pageNumber
 /** Запросы, которые экран делает всегда: счета и категории. */
 export function baseHandlers() {
   return [
+    // REC-02: «регулярный» — по умолчанию ни одна операция не входит в регулярный платёж.
+    http.post("*/api/recurring/markers", () => HttpResponse.json({ ids: [] })),
     http.get("*/api/accounts", () =>
       HttpResponse.json({
         onDate: "2026-10-28",

@@ -11,13 +11,15 @@ import { CategoryBadge } from "../../entities/category/index.ts";
 import { TransactionAmount } from "../../entities/transaction/index.ts";
 import { cx } from "../../ui/cx.ts";
 import { StatusBadge } from "../../ui/index.ts";
-import { ArrowLeftRight, Clock, Receipt, TriangleAlert, Undo2 } from "lucide-react";
+import { ArrowLeftRight, Clock, Receipt, Repeat, TriangleAlert, Undo2 } from "lucide-react";
 import classes from "./OperationsList.module.css";
 
 export interface OperationsListProps {
   readonly items: readonly Transaction[];
   readonly total: number;
   readonly accounts: readonly AccountListItem[];
+  /** REC-02: операции страницы, входящие в регулярный платёж, — метка «Регулярный». */
+  readonly regular?: ReadonlySet<string>;
   readonly onOpen: (id: string) => void;
   /** Выбранные строки (TXN-04): галочки; выбор переживает смену страницы только на телефоне («Показать ещё»). */
   readonly selected: ReadonlySet<string>;
@@ -43,7 +45,7 @@ function useRowParts(accounts: readonly AccountListItem[]) {
   };
 }
 
-function Badges({ item }: { readonly item: Transaction }) {
+function Badges({ item, regular }: { readonly item: Transaction; readonly regular: boolean }) {
   const { t } = useTranslation("operations");
   if (item.type === "transfer") {
     return (
@@ -70,6 +72,11 @@ function Badges({ item }: { readonly item: Transaction }) {
           {t("badge.receipt")}
         </StatusBadge>
       )}
+      {regular && (
+        <StatusBadge tone="brand" icon={Repeat}>
+          {t("badge.regular")}
+        </StatusBadge>
+      )}
       {item.type === "refund" && (
         <StatusBadge tone="ok" icon={Undo2}>
           {t("badge.refund")}
@@ -83,6 +90,7 @@ export function OperationsTable({
   items,
   total,
   accounts,
+  regular,
   page,
   pageSize,
   onPage,
@@ -155,7 +163,7 @@ export function OperationsTable({
                 )}
               </td>
               <td>
-                <Badges item={item} />
+                <Badges item={item} regular={regular?.has(item.id) ?? false} />
               </td>
               <td>{parts.account(item)}</td>
               <td className={classes.right}>
@@ -193,6 +201,7 @@ export function OperationsCards({
   items,
   total,
   accounts,
+  regular,
   hasMore,
   loadingMore,
   onMore,
@@ -237,7 +246,7 @@ export function OperationsCards({
               {parts.description(item) !== null && (
                 <span className={classes.description}>{parts.description(item)}</span>
               )}
-              <Badges item={item} />
+              <Badges item={item} regular={regular?.has(item.id) ?? false} />
             </button>
           </li>
         ))}

@@ -12,7 +12,7 @@ import {
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
 import { RecurringSearch } from "./model/search.ts";
@@ -110,6 +110,31 @@ const TOTALS = [
   { section: "subscriptions", monthly: byn(1_599), yearly: byn(19_188) },
   { section: "other", monthly: null, yearly: null },
 ];
+
+const TRACE_FREE = "0199f0a0-0000-7000-8000-0000000000cc";
+const FREE = {
+  onDate: "2026-10-28",
+  months: 3,
+  window: { from: "2026-07-01", to: "2026-09-30" },
+  freeBalance: byn(84_000),
+  freeBalanceTraceId: TRACE_FREE,
+  reason: null,
+  income: byn(240_000),
+  incomeTraceId: TRACE,
+  obligations: [
+    { group: "utilities", amount: byn(18_000), traceId: TRACE },
+    { group: "communication", amount: byn(3_500), traceId: TRACE },
+    { group: "loan", amount: byn(120_000), traceId: TRACE },
+    { group: "subscriptions", amount: byn(14_500), traceId: TRACE },
+  ],
+};
+
+function free(over: Record<string, unknown> = {}) {
+  return http.get("*/api/fin/free-balance", () => HttpResponse.json({ ...FREE, ...over }));
+}
+
+// Блок «Свободный остаток» запрашивает fin.freeBalance на каждой странице: по умолчанию — пример FIN-20.
+beforeEach(() => server.use(free()));
 
 function list(items: readonly unknown[]) {
   return http.get("*/api/recurring", () =>
@@ -414,5 +439,94 @@ describe("REC-02: вкладки-фильтр в адресе", () => {
     await userEvent.click(await screen.findByRole("menuitem", { name: "Показать операции" }));
     await waitFor(() => expect(router.state.location.pathname).toBe("/operations"));
     expect(router.state.location.search).toMatchObject({ q: "Яндекс Плюс" });
+  });
+});
+
+describe("FIN-20, EXPL-01: блок «Свободный остаток»", () => {
+  it("число «в месяц», «по данным за 3 мес.», окно и разбивка: доход минус пять обязательных", async () => {
+    server.use(list(all));
+    renderPage();
+    expect((await screen.findAllByText(/840,00/)).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(/По данным за 3 мес\./)).toBeInTheDocument();
+    expect(screen.getByText(/01\.07\.2026 – 30\.09\.2026/)).toBeInTheDocument();
+    const rows = await screen.findAllByText(
+      /^Средний регулярный доход$|^ЖКХ$|^Связь, интернет и ТВ$|^Кредиты и займы$|^Подписки$/,
+    );
+    expect(rows.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it("ⓘ у остатка открывает сохранённый расчёт по его traceId", async () => {
+    let asked: string | null = null;
+    server.use(
+      list(all),
+      http.get("*/api/explain", ({ request }) => {
+        asked =
+          new URL(request.url).searchParams.get("traceId") ??
+          new URL(request.url).searchParams.get("id");
+        return HttpResponse.json({
+          id: TRACE_FREE,
+          trace: { key: "fin.freeBalance", op: "sub", value: byn(84_000), inputs: [], refs: [] },
+          period: { from: "2026-07-01", to: "2026-09-30" },
+          createdAt: "2026-10-28T09:00:00Z",
+        });
+      }),
+    );
+    renderPage();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Откуда эта цифра: свободный остаток" }),
+    );
+    expect(await screen.findByText("Откуда эта цифра?")).toBeInTheDocument();
+    await waitFor(() => expect(asked).toBe(TRACE_FREE));
+  });
+
+  it("история меньше трёх месяцев — «По данным за 2 мес.»", async () => {
+    server.use(list(all), free({ months: 2, window: { from: "2026-08-01", to: "2026-09-30" } }));
+    renderPage();
+    expect(await screen.findByText(/По данным за 2 мес\./)).toBeInTheDocument();
+  });
+
+  it("нет полного месяца — «—» и причина словами, а не «0»", async () => {
+    server.use(
+      list(all),
+      free({
+        months: 0,
+        window: null,
+        freeBalance: null,
+        freeBalanceTraceId: null,
+        reason: "insufficient-history",
+        income: byn(0),
+        incomeTraceId: null,
+        obligations: [],
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText(/Пока мало истории/)).toBeInTheDocument();
+    expect(screen.getByText("—")).toBeInTheDocument();
+    expect(screen.queryByText(/свободный остаток.*0,00/i)).toBeNull();
+  });
+
+  it("нет регулярного дохода — причина «Не нашёл регулярного дохода»", async () => {
+    server.use(
+      list(all),
+      free({
+        freeBalance: null,
+        freeBalanceTraceId: null,
+        reason: "no-regular-income",
+        income: byn(0),
+        incomeTraceId: null,
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText(/Не нашёл регулярного дохода/)).toBeInTheDocument();
+  });
+
+  it("ошибка загрузки остатка — сообщение и «Обновить», остальной экран работает", async () => {
+    server.use(
+      list(all),
+      http.get("*/api/fin/free-balance", () => HttpResponse.json({}, { status: 500 })),
+    );
+    renderPage();
+    expect(await screen.findByText(/Свободный остаток не загрузился/)).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Доходы" })).toBeInTheDocument();
   });
 });

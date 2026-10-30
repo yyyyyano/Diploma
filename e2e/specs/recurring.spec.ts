@@ -61,6 +61,8 @@ test("«Регулярные платежи»: пусто, добавить вр
   await page.goto("/recurring");
   const empty = page.getByRole("heading", { name: "Регулярных платежей пока нет" });
   await expect(empty).toBeVisible();
+  // FIN-20: полных месяцев истории нет — свободного остатка нет, причина словами (не «0»).
+  await expect(page.getByText(/Пока мало истории/)).toBeVisible();
   await shownSettled(empty);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
 

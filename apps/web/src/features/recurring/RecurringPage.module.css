@@ -308,3 +308,17 @@
 .kinds {
   overflow-x: auto;
 }
+
+/* Блок свободного остатка (T-031): карточка показателя и формула рядом, на телефоне — друг под другом. */
+.free {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.6fr);
+  gap: var(--s-16);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .free {
+    grid-template-columns: 1fr;
+  }
+}

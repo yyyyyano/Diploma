@@ -21,6 +21,7 @@ import { errorCodeOf } from "../../lib/errors.ts";
 import { EmptyState, Money, PageHeader, SkeletonCard, WhyButton } from "../../ui/index.ts";
 import { categoryRef, everyText, periodText, SECTIONS } from "./model/format.ts";
 import { RecurringSearch } from "./model/search.ts";
+import { FreeBalanceCard } from "./FreeBalanceCard.tsx";
 import { AddForm, EditForm } from "./RecurringForms.tsx";
 import { RowMenu, StateBadge } from "./RecurringRows.tsx";
 import classes from "./RecurringPage.module.css";
@@ -106,6 +107,7 @@ export function RecurringPage({ search }: { readonly search: RecurringSearch }) 
         }
       />
       <div className={classes.body}>
+        <FreeBalanceCard onWhy={setTraceId} />
         {list.isPending && (
           <>
             <SkeletonCard />

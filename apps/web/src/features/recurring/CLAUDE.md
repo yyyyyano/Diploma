@@ -12,6 +12,7 @@ REC-01…05 (список, период, средняя сумма, следую
 вручную, «возможно прекращён»), EXPL-01 (ⓘ у средней суммы), P5 («Отменить»); состояния — DES-16; доступность — NFR-20.
 
 ## Данные (контракт)
+- Свободный остаток: `orpc.fin.freeBalance` (`months`, `window`, число или `null` с причиной, разбивка с `traceId`); перезапрос — по сигналам `recurring`, `transaction`, `account`, `profile-fact`.
 - Чтение: `orpc.recurring.list` — `{ onDate, items, totals }` (итоги разделов в месяц и год считает сервер); `loader` —
   `prefetchQuery`. Контекст ассистента: `staticData.page = "recurring"`.
 - Изменение (одиночное → `UndoActionToast`): `confirm` («Да, регулярный»), `exclude` («Это не регулярный»), `end` («Да,
@@ -23,7 +24,7 @@ REC-01…05 (список, период, средняя сумма, следую
 - В «Операциях» (`features/operations`) строки регулярных платежей помечены «Регулярный»: `recurring.markers` — один запрос на 100 строк страницы.
 
 ## Компоненты
-Свои: `RecurringPage`, `RecurringRows` (`StateBadge`, `RowMenu`), `RecurringForms` (`EditForm`, `AddForm`), `model/format.ts` (подписи). Из `entities`: `action` (`UndoActionToast`), `category`
+Свои: `RecurringPage`, `FreeBalanceCard`, `RecurringRows` (`StateBadge`, `RowMenu`), `RecurringForms` (`EditForm`, `AddForm`), `model/format.ts` (подписи). Из `entities`: `action` (`UndoActionToast`), `category`
 (`CategoryBadge`), `explanation`. Из `ui`: `PageHeader`, `Money`, `WhyButton`, `StatusBadge`, `EmptyState`, `SkeletonCard`; Mantine
 `Modal`, `Menu`, `SegmentedControl`, `Select`.
 
@@ -31,7 +32,8 @@ REC-01…05 (список, период, средняя сумма, следую
 «Показать операции» → `/operations?q=<название платежа>`.
 
 ## Отличия от макета (с причиной)
-- Нет блока «Свободный остаток» и кнопки «Спросить ассистента»: расчёт — T-031, панель чата — T-043 (кусок без модуля скрыт, §10.5).
+- Нет кнопки «Спросить ассистента»: панель чата — T-043 (кусок без модуля скрыт, §10.5).
+- «Свободный остаток» — карточка и формула «доход − обязательные по группам» с ⓘ у каждого числа (`FreeBalanceCard`, `orpc.fin.freeBalance`); полосы-«бары» и «28 % дохода» не рисуются: доли считает код, а сервер их не отдаёт (P1). Месяцы окна — датами «01.07.2026 – 30.09.2026», а не «июль–сентябрь».
 - «Исключить» без окна подтверждения: действие одиночное и сразу с «Отменить» (P5); подтверждение «Да/Нет» — только для удаления (AGT-07).
 - В карточке предположения нет дат повторов («09.08, 09.09, 09.10»): сервер отдаёт число повторов, а не список дат.
 - В «Как Кошт находит…» — пороги по умолчанию из SPEC (REC-01, REC-05); значения настроек администратора сайту не отдаются.

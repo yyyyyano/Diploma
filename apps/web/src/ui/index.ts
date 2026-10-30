@@ -8,6 +8,12 @@ export {
 export { ConfirmDialog, type ConfirmDialogProps } from "./components/ConfirmDialog.tsx";
 export { EmptyState, type EmptyStateProps } from "./components/EmptyState.tsx";
 export { Formula, type FormulaProps, type FormulaRow } from "./components/Formula.tsx";
+export {
+  LimitBar,
+  limitLevel,
+  type LimitBarProps,
+  type LimitLevel,
+} from "./components/LimitBar.tsx";
 export { Logo, type LogoProps } from "./components/Logo.tsx";
 export { Money, type MoneyKind, type MoneyProps } from "./components/Money.tsx";
 export { PageHeader, type PageHeaderProps } from "./components/PageHeader.tsx";

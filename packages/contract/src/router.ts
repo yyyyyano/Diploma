@@ -14,6 +14,7 @@ import { llmContract } from "./llm/llm.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
 import { privacyContract } from "./privacy/privacy.contract.ts";
 import { profileContract } from "./profile/profile.contract.ts";
+import { statementsContract } from "./statements/statements.contract.ts";
 import { transactionsContract } from "./transactions/transactions.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 
@@ -31,6 +32,7 @@ export const contract = {
   accounts: accountsContract,
   categories: categoriesContract,
   transactions: transactionsContract,
+  statements: statementsContract,
   chat: chatContract,
   llm: llmContract,
   admin: adminContract,

@@ -17,6 +17,8 @@ import type { ActionsFacade } from "../actions/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import { makeParseStatement } from "./application/parse-statement.ts";
 import type { DocumentReader } from "./application/ports.ts";
+import { statementsTools } from "./agent/tools.ts";
+import { statementsRouter } from "./api/router.ts";
 import { makeBuildPreview } from "./application/build-preview.ts";
 import { makeImports, ROLLBACK_HANDLER } from "./application/imports.ts";
 import { makeRememberFormat } from "./application/remember-format.ts";
@@ -95,6 +97,8 @@ export function createStatementsModule({
   return defineModule({
     id: "statements",
     facade: { parseStatement, parseBytes, rememberFormat, ...imports },
+    router: statementsRouter(imports, platform.settings),
+    tools: [statementsTools(imports).status],
     events: [statementsImported, statementsRolledBack],
     jobs: [parse, discard],
     sweeps: [discardDraftsSweep(discard)],

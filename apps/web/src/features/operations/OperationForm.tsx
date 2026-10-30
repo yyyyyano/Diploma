@@ -10,7 +10,7 @@ import {
   type Transaction,
   type UpdateTransactionPatch,
 } from "@kosht/contract";
-import { parseMoney } from "@kosht/i18n";
+import { formatScaled, parseMoney } from "@kosht/i18n";
 import { Button, SegmentedControl, Select, Stack, TextInput } from "@mantine/core";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,12 +34,8 @@ export interface OperationFormProps {
   readonly onCancel: () => void;
 }
 
-/** Сумма операции текстом для поля: «6,50» из копеек (знак не нужен — направление задаёт тип). */
-function amountText(minor: number): string {
-  const whole = Math.floor(minor / 100);
-  const cents = String(minor % 100).padStart(2, "0");
-  return `${String(whole)},${cents}`;
-}
+/** Сумма операции текстом для поля: «6,50» из копеек (знак не нужен — направление задаёт тип); форматтер — `@kosht/i18n`. */
+const amountText = (minor: number): string => formatScaled(minor, 2);
 
 /** Вид категорий для выбора: возврат покупки — расходные, доход — доходные. */
 function pickerKind(type: Transaction["type"]): "expense" | "income" {

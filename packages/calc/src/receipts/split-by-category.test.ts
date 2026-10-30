@@ -79,6 +79,25 @@ describe("RCPT-09: части итога по категориям", () => {
     expect(result[1]?.amount.trace.key).toBe("receipts.unrecognizedRemainder");
   });
 
+  it("строки одной категории вперемешку складываются в одну часть на месте первого появления", () => {
+    const result = splitByCategory({
+      lines: [line("milk", 300), line("bread", 200), line("milk", 150)],
+      total: byn(650),
+      remainderKey: "other",
+    });
+    expect(parts(result)).toEqual([
+      ["milk", 450],
+      ["bread", 200],
+    ]);
+  });
+
+  it("ни одной распознанной строки — весь итог уходит в остаток («Прочее»)", () => {
+    const result = splitByCategory({ lines: [], total: byn(4730), remainderKey: "other" });
+    expect(result.map((part) => [part.category, part.amount.value.minor, part.remainder])).toEqual([
+      ["other", 4730, true],
+    ]);
+  });
+
   it("свойство: сумма частей равна итогу при любом итоге, а все части больше нуля", () => {
     fc.assert(
       fc.property(

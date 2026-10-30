@@ -4,7 +4,7 @@
 // (часть чека не распознана) — недостающее уходит в «нераспознанный остаток» (RCPT-07, категория «Прочее»).
 import type { Money } from "@kosht/kernel";
 import { node, type Calc } from "../calc.ts";
-import { sub, sum, type NonEmpty } from "../money-ops.ts";
+import { sub, sum } from "../money-ops.ts";
 
 export interface SplitLine {
   /** Ключ категории (код встроенной или id своей) — как его выбрал вызывающий. */
@@ -51,17 +51,17 @@ export function splitByCategory(input: {
   readonly total: Money;
   readonly remainderKey: string;
 }): CategorySplit[] {
-  const order: string[] = [];
-  const groups = new Map<string, Calc<Money>[]>();
+  // Группа появляется вместе с первой строкой категории, поэтому пустой не бывает (это видно и по типу).
+  const groups = new Map<string, [Calc<Money>, ...Calc<Money>[]]>();
   for (const line of input.lines) {
-    const bucket = groups.get(line.category) ?? [];
-    if (bucket.length === 0) order.push(line.category);
-    bucket.push(node("receipts.lineTotal", line.total));
-    groups.set(line.category, bucket);
+    const total = node("receipts.lineTotal", line.total);
+    const bucket = groups.get(line.category);
+    if (bucket === undefined) groups.set(line.category, [total]);
+    else bucket.push(total);
   }
-  const sums = order.map((category) =>
-    sum("receipts.categorySum", (groups.get(category) ?? []) as unknown as NonEmpty<Calc<Money>>),
-  );
+  // Map хранит порядок вставки — категории идут в порядке первого появления в чеке.
+  const order = [...groups.keys()];
+  const sums = [...groups.values()].map((bucket) => sum("receipts.categorySum", bucket));
   const linesSum = sums.reduce((acc, part) => acc + part.value.minor, 0);
   const result: CategorySplit[] = [];
   if (linesSum >= input.total.minor) {

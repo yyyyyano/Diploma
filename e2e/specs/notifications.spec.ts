@@ -3,6 +3,7 @@
 // нарушений WCAG 2.2 AA и нет горизонтальной прокрутки при 1440 и 390 с открытым списком и на /settings?tab=notifications.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { shownSettled } from "./support/settled.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -51,12 +52,11 @@ test("колокольчик со списком и настройки увед�
     await page.setViewportSize(size);
     await page.getByRole("button", { name: /^Уведомления/ }).click();
     await expect(page.getByRole("heading", { level: 2, name: "Уведомления" })).toBeVisible();
-    await expect(page.getByText(/Уведомлений пока нет/)).toBeVisible();
-    // Список появляется с переходом прозрачности: axe посреди перехода видит бледный текст (под нагрузкой
-    // параллельных сценариев переход дольше) — ждём конца переходов, а после — закрытия списка.
-    await page.waitForFunction(() =>
-      document.getAnimations().every((animation) => animation.playState !== "running"),
-    );
+    const empty = page.getByText(/Уведомлений пока нет/);
+    await expect(empty).toBeVisible();
+    // Список появляется с переходом прозрачности: axe посреди перехода видит бледный текст — ждём, пока список
+    // станет непрозрачным (support/settled.ts), а после — закрытия списка.
+    await shownSettled(empty);
     const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
     expect(result.violations.map((v) => ({ width: size.width, id: v.id }))).toEqual([]);
     // Escape закрывает список и возвращает фокус колокольчику.

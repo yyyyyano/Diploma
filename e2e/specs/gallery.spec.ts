@@ -2,6 +2,7 @@
 // и стили — только со своего адреса (DES-09), панели и окна тоже проходят axe открытыми (CONSTRAINTS «Доступность»).
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { shownSettled } from "./support/settled.ts";
 import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
@@ -90,7 +91,9 @@ for (const viewport of VIEWPORTS) {
       await openGallery(page);
       const opener = page.getByRole("button", { name: "Открыть панель" });
       await opener.click();
-      await expect(page.getByRole("dialog", { name: "Откуда эта цифра?" })).toBeVisible();
+      const panel = page.getByRole("dialog", { name: "Откуда эта цифра?" });
+      await expect(panel).toBeVisible();
+      await shownSettled(panel);
       expect(await axeViolations(page)).toEqual([]);
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -102,6 +105,7 @@ for (const viewport of VIEWPORTS) {
       await page.getByRole("button", { name: "Подтверждение удаления" }).click();
       const dialog = page.getByRole("dialog", { name: "Удалить 3 операции?" });
       await expect(dialog).toBeVisible();
+      await shownSettled(dialog);
       expect(await axeViolations(page)).toEqual([]);
       await dialog.getByRole("button", { name: "Да, удалить 3" }).click();
       await expect(page.getByText("Последнее действие: Удалено 3")).toBeVisible();

@@ -266,6 +266,14 @@ export async function markTextChecked(db: SystemDb, actId: string, at: Date): Pr
   await db.update(legalActs).set({ textCheckedAt: at }).where(eq(legalActs.id, actId));
 }
 
+/** Текст у акта появился, а тема не определена (у акта своя уже есть): акт переходит в «ждёт загрузки», тема не меняется. */
+export async function enableTextKeepTopic(db: SystemDb, actId: string): Promise<void> {
+  await db
+    .update(legalActs)
+    .set({ hasText: true, loadState: "pending", lastProblem: null })
+    .where(eq(legalActs.id, actId));
+}
+
 /** Текст у акта появился и тема определена: акт переходит в «ждёт загрузки» (LAW-17). */
 export async function enableText(
   db: SystemDb,

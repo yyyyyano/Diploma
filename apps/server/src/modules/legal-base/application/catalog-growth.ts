@@ -31,6 +31,7 @@ import {
   decideCandidate,
   demandSince,
   enableText,
+  enableTextKeepTopic,
   foundCandidates,
   markLinksScanned,
   markTextChecked,
@@ -40,7 +41,8 @@ import {
   writeMark,
   type CandidateRow,
 } from "../infrastructure/db/growth.repo.ts";
-import { logUpdate, markActState } from "../infrastructure/db/catalog.repo.ts";
+import { restoreAct } from "../infrastructure/db/admin.repo.ts";
+import { findAct, logUpdate, markActState } from "../infrastructure/db/catalog.repo.ts";
 import { organTopics } from "../infrastructure/db/dictionaries.repo.ts";
 import { parseArrivals } from "../infrastructure/pravo-by/parse-arrivals.ts";
 import type { ParsedCard } from "../infrastructure/pravo-by/parse-card.ts";
@@ -543,6 +545,122 @@ export function makeCatalogGrowth(d: GrowthDeps) {
     return appeared;
   }
 
+  /** Итог ручного добавления акта (LAW-16): что стало с ID из ссылки администратора. */
+  type ManualOutcome = "added" | "restored" | "known" | "repealed" | "not-found" | "later";
+
+  /**
+   * «Добавить акт по ссылке / списком» (LAW-16, LAW-06): акт, названный администратором, заводится без фильтров LAW-13 —
+   * решение уже принято человеком, в том числе для местных актов. Известный акт не дублируется: исключённый возвращается,
+   * ждущий загрузки загружается, акт без текста проверяется на появление текста. Карточка читается вежливым загрузчиком.
+   */
+  async function addManual(pravoId: string): Promise<ManualOutcome> {
+    if (await restoreAct(d.system, pravoId)) {
+      await logUpdate(d.system, {
+        at: d.clock.now(),
+        actId: null,
+        event: "act-restored",
+        details: { pravoId },
+      });
+      return "restored";
+    }
+    const known = await findAct(d.system, pravoId);
+    if (known !== undefined) {
+      if (!known.hasText) await checkTextNow(pravoId);
+      else if (known.loadState === "pending" || known.loadState === "failed")
+        await loadNew(pravoId);
+      return "known";
+    }
+    let card: ParsedCard;
+    try {
+      card = await d.readCard(pravoId);
+    } catch (error) {
+      if (error instanceof LoaderStopped) throw error;
+      if (error instanceof SourceUnavailable) return "later";
+      if (error instanceof ActTextNotFound || error instanceof RobotsDenied) return "not-found";
+      throw error;
+    }
+    if (card.title === "") return "not-found";
+    if (card.repealedOn !== null) return "repealed";
+    const source = await d.source();
+    let hasText = true;
+    try {
+      await source.headActText(pravoId);
+    } catch (error) {
+      if (!(error instanceof ActTextNotFound)) throw error;
+      hasText = false;
+    }
+    const found = await topicFor(
+      {
+        id: "",
+        pravoId,
+        title: card.title,
+        kindLine: card.kindLine,
+        registryNo: null,
+        source: "admin",
+        foundOn: null,
+      },
+      card.title,
+      card.kindLine,
+      hasText,
+    );
+    const topic = found === "irrelevant" ? null : found.topic;
+    const kind = kindOfLine(card.kindLine);
+    await addAct(d.system, {
+      pravoId,
+      title: card.title,
+      kind,
+      isNpa: kind !== "plenum",
+      hasText,
+      source: "admin",
+      topic,
+      topicSource: topic === null || found === "irrelevant" ? null : found.source,
+    });
+    await logUpdate(d.system, {
+      at: d.clock.now(),
+      actId: null,
+      event: "act-added",
+      details: { pravoId, source: "admin", route: "manual" },
+    });
+    if (hasText) await loadNew(pravoId);
+    return "added";
+  }
+
+  /**
+   * «Проверить, появился ли текст» (LAW-40): у акта-карточки. Текст берётся только с pravo.by (LEGAL-06): HEAD страницы текста;
+   * появился — акт переходит в «ждёт загрузки» и загружается обычным путём, тема — по рубрикам ЕПК, иначе прежняя.
+   */
+  async function checkTextNow(pravoId: string): Promise<"appeared" | "absent" | "unknown"> {
+    const act = await findAct(d.system, pravoId);
+    if (act === undefined || act.hasText) return "unknown";
+    const source = await d.source();
+    const now = d.clock.now();
+    try {
+      await source.headActText(pravoId);
+    } catch (error) {
+      if (error instanceof ActTextNotFound) {
+        await markTextChecked(d.system, act.id, now);
+        return "absent";
+      }
+      throw error;
+    }
+    await markTextChecked(d.system, act.id, now);
+    const page = await source.fetchActRubrics(pravoId);
+    const topic =
+      page === null
+        ? null
+        : topicOfRubrics(parseRubrics(page.html), await d.settings.get(EPK_TOPICS));
+    await logUpdate(d.system, {
+      at: now,
+      actId: act.id,
+      event: "text-appeared",
+      details: { topic: topic ?? "" },
+    });
+    if (topic === null) await enableTextKeepTopic(d.system, act.id);
+    else await enableText(d.system, act.id, { topic, topicSource: "epk" });
+    await loadNew(pravoId);
+    return "appeared";
+  }
+
   /** Недельная сводка спроса (LAW-15): темы без текстов вопросов, подходящие акты каталога — в очередь администратора. */
   async function summarizeDemand(): Promise<void> {
     const now = d.clock.now();
@@ -638,6 +756,8 @@ export function makeCatalogGrowth(d: GrowthDeps) {
     discoverAgencies,
     evaluate,
     recheckText,
+    addManual,
+    checkTextNow,
     summarizeDemand,
     recordDemand,
   };

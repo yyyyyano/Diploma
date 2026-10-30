@@ -754,3 +754,115 @@ describe("LAW-35, LAW-38: остановка загрузчика", () => {
     expect(await rows("select 1 from legal_candidates")).toHaveLength(before.length);
   });
 });
+
+describe("LAW-16, LAW-06: ручное добавление акта по ссылке", () => {
+  const PRAVO = "H12600777";
+  const LOCAL = "D926g0999999";
+  const KIND = "Закон Республики Беларусь от 1 октября 2026 г. № 777-З";
+
+  it("акт без текста заводится карточкой от имени администратора, без фильтров и без модели", async () => {
+    const t = setup({ cards: { [PRAVO]: card("О тестовых пособиях", KIND) } });
+    expect(await t.growth.addManual(PRAVO)).toBe("added");
+    const [act] = await rows<{ source: string; has_text: boolean; load_state: string }>(
+      "select source, has_text, load_state from legal_acts where pravo_id = $1",
+      [PRAVO],
+    );
+    expect(act).toEqual({ source: "admin", has_text: false, load_state: "card-only" });
+    expect(t.calls.classified).toEqual([]);
+    expect(
+      await rows(
+        "select 1 from legal_update_log where event = 'act-added' and details->>'route' = 'manual'",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("местный акт (LAW-06) добавляется, хотя автоматически такие акты отсекаются", async () => {
+    const t = setup({ cards: { [LOCAL]: card("О тарифах на тепловую энергию", KIND) } });
+    expect(await t.growth.addManual(LOCAL)).toBe("added");
+    expect(await rows("select 1 from legal_acts where pravo_id = $1", [LOCAL])).toHaveLength(1);
+  });
+
+  it("утративший силу акт не добавляется, а акта с таким ID нет на pravo.by — «not-found»", async () => {
+    const t = setup({ cards: { [PRAVO]: card("Старый закон", KIND, "01.01.2020") } });
+    expect(await t.growth.addManual(PRAVO)).toBe("repealed");
+    expect(await t.growth.addManual("H19999999")).toBe("not-found");
+    expect(
+      await rows("select 1 from legal_acts where pravo_id in ($1, 'H19999999')", [PRAVO]),
+    ).toHaveLength(0);
+  });
+
+  it("исключённый акт возвращается в каталог тем же действием", async () => {
+    const t = setup();
+    await db.owner.query("update legal_acts set status = 'excluded' where pravo_id = 'Hk0900071'");
+    expect(await t.growth.addManual("Hk0900071")).toBe("restored");
+    expect(
+      (
+        await rows<{ status: string }>("select status from legal_acts where pravo_id = 'Hk0900071'")
+      )[0]?.status,
+    ).toBe("active");
+  });
+
+  it("известный акт не дублируется: ждущий загрузки — загружается, акт без текста — проверяется на появление текста", async () => {
+    const t = setup({ withText: [] });
+    expect(await t.growth.addManual("Hk0900071")).toBe("known");
+    expect(t.calls.loaded).toContain("Hk0900071");
+    expect(await t.growth.addManual("C20200778")).toBe("known");
+    expect(t.calls.heads).toContain("C20200778");
+    expect(await rows("select 1 from legal_acts where pravo_id = 'Hk0900071'")).toHaveLength(1);
+  });
+
+  it("остановка загрузчика пробрасывается — задача повторится позже, а не запишет акт «не найден»", async () => {
+    const t = setup();
+    t.source.fetchActCard = async () => {
+      throw new LoaderStopped("LOADER_BLOCKED");
+    };
+    await expect(t.growth.addManual("H12600778")).rejects.toBeInstanceOf(LoaderStopped);
+    expect(await rows("select 1 from legal_acts where pravo_id = 'H12600778'")).toHaveLength(0);
+  });
+});
+
+describe("LAW-40: «Проверить, появился ли текст»", () => {
+  const ID = "C20200778";
+
+  it("текст появился: акт переходит в «ждёт загрузки», тема — по рубрикам ЕПК, загрузка идёт обычным путём", async () => {
+    const t = setup({
+      withText: [ID],
+      texts: { [ID]: fixture("H10200090.html") },
+      rubricPages: { [ID]: rubrics("03.02.01") },
+    });
+    expect(await t.growth.checkTextNow(ID)).toBe("appeared");
+    const [act] = await rows<{ has_text: boolean; topic: string; topic_source: string }>(
+      "select has_text, topic, topic_source from legal_acts where pravo_id = $1",
+      [ID],
+    );
+    expect(act).toEqual({ has_text: true, topic: "taxes", topic_source: "epk" });
+    expect(t.calls.loaded).toEqual([ID]);
+  });
+
+  it("рубрики не определили тему — прежняя тема акта остаётся", async () => {
+    const t = setup({ withText: [ID], texts: { [ID]: fixture("H10200090.html") } });
+    expect(await t.growth.checkTextNow(ID)).toBe("appeared");
+    const [act] = await rows<{ has_text: boolean; topic: string }>(
+      "select has_text, topic from legal_acts where pravo_id = $1",
+      [ID],
+    );
+    expect(act).toEqual({ has_text: true, topic: "consumer" });
+  });
+
+  it("текста всё ещё нет — акт остаётся карточкой, время проверки записано", async () => {
+    const t = setup({ withText: [] });
+    expect(await t.growth.checkTextNow(ID)).toBe("absent");
+    const [act] = await rows<{ has_text: boolean; text_checked_at: Date | null }>(
+      "select has_text, text_checked_at from legal_acts where pravo_id = $1",
+      [ID],
+    );
+    expect(act?.has_text).toBe(false);
+    expect(act?.text_checked_at).not.toBeNull();
+  });
+
+  it("у акта с текстом и у неизвестного акта проверять нечего", async () => {
+    const t = setup();
+    expect(await t.growth.checkTextNow("Hk0900071")).toBe("unknown");
+    expect(await t.growth.checkTextNow("H19999999")).toBe("unknown");
+  });
+});

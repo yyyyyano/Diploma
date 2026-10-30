@@ -206,6 +206,7 @@ export {
   RegisterInput,
   Role,
   SessionUser,
+  LoaderContact,
   SetupInput,
   SignInInput,
   VerifyEmailInput,

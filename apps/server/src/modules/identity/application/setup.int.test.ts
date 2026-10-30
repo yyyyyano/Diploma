@@ -9,7 +9,7 @@ import { createSystemDb } from "../../../platform/db/system-db.ts";
 import type { EventDef } from "../../../platform/events/define-event.ts";
 import type { Events } from "../../../platform/events/events.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
-import { isInitialized } from "../infrastructure/db/identity.repo.ts";
+import { isInitialized, readLoaderContact } from "../infrastructure/db/identity.repo.ts";
 import { verifyPassword } from "../infrastructure/password.ts";
 import { makeSetup } from "./setup.ts";
 
@@ -119,5 +119,18 @@ describe("AUTH-10: первый запуск", () => {
     await expect(setup(admin)).rejects.toThrow("очередь недоступна");
     expect(await users()).toEqual([]);
     expect(await isInitialized(system)).toBe(false);
+  });
+
+  it("LAW-36: контакт загрузчика законов по умолчанию — email администратора, в событие он не попадает", async () => {
+    const { setup, published, system } = setupWith();
+    await setup(admin);
+    expect(await readLoaderContact(system)).toBe("admin@example.test");
+    expect(JSON.stringify(published)).not.toContain("admin@example.test");
+  });
+
+  it("LAW-36: заданный на экране контакт сохраняется как есть", async () => {
+    const { setup, system } = setupWith();
+    await setup({ ...admin, loaderContact: "https://example.test/about" });
+    expect(await readLoaderContact(system)).toBe("https://example.test/about");
   });
 });

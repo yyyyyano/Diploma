@@ -26,6 +26,7 @@ import { makeTargetUserScope } from "./application/target-user-scope.ts";
 import { makeScopeVerifier } from "./application/verify-scope.ts";
 import { systemInitialized, userRegistered } from "./events.ts";
 import { createAuth, createAuthGateway } from "./infrastructure/auth.ts";
+import { readLoaderContact } from "./infrastructure/db/identity.repo.ts";
 import { IDENTITY_SETTINGS } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -72,6 +73,8 @@ export function createIdentityModule({
       resetUserPassword: adminUsers.resetPassword,
       /** Email вошедшего (тестовое письмо админки — на него). */
       emailOf: async (s: ScopedDb) => (await me(s)).email,
+      /** Контакт загрузчика законов с первого запуска (LAW-36): legal-base сохраняет его в своей настройке. */
+      loaderContact: () => readLoaderContact(platform.system),
     },
     events: [systemInitialized, userRegistered],
     router: identityRouter({

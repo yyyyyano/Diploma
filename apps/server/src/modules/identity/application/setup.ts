@@ -2,7 +2,8 @@
 // нового пользователя (нет записи — нет события). Признак system_state.initialized переводится условным UPDATE:
 // повторный или параллельный второй setup получает CONFLICT, а не второго администратора. Хэш пароля (≈ 0,13 с) —
 // до транзакции. Код восстановления (AUTH-05) создаётся в той же транзакции и возвращается один раз — экран первого
-// запуска показывает его сразу. Контакт загрузчика законов (LAW-36) — T-034.
+// запуска показывает его сразу. Контакт загрузчика законов (LAW-36) — второе поле экрана, по умолчанию email (AUTH-10): в событие он не
+// кладётся (нагрузка — только id, OBS-04), его читает legal-base фасадом identity.loaderContact().
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import { systemInitialized, userRegistered } from "../events.ts";
@@ -25,13 +26,21 @@ export function makeSetup(d: SetupDeps) {
   return async function setup(input: {
     email: string;
     password: string;
+    loaderContact?: string | undefined;
   }): Promise<{ recoveryCode: string }> {
     if (await isInitialized(d.system)) throw new AppError("CONFLICT");
     const passwordHash = await hashPassword(input.password);
     const ids = await newUserIds(d.system);
     const s = newUserScope(d, ids);
     const recoveryCode = await s.transaction(async (tx) => {
-      if (!(await claimInitialization(tx.db, d.clock.now()))) throw new AppError("CONFLICT");
+      if (
+        !(await claimInitialization(
+          tx.db,
+          d.clock.now(),
+          input.loaderContact ?? input.email.toLowerCase(),
+        ))
+      )
+        throw new AppError("CONFLICT");
       await insertUser(tx.db, {
         ...ids,
         email: input.email.toLowerCase(),

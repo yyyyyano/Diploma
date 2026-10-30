@@ -37,6 +37,15 @@ export async function newUserIds(
 }
 
 /** Система уже инициализирована (AUTH-10). */
+/** Контакт загрузчика законов, заданный на первом запуске (LAW-36); системы нет или контакта нет — null. */
+export async function readLoaderContact(db: IdentityDb): Promise<string | null> {
+  const rows = await db
+    .select({ contact: systemState.loaderContact })
+    .from(systemState)
+    .where(eq(systemState.id, 1));
+  return rows[0]?.contact ?? null;
+}
+
 export async function isInitialized(db: IdentityDb): Promise<boolean> {
   const rows = await db
     .select({ initialized: systemState.initialized })
@@ -49,10 +58,14 @@ export async function isInitialized(db: IdentityDb): Promise<boolean> {
  * Перевести признак в «инициализирована», если он ещё не был: условный UPDATE берёт блокировку строки — второй
  * параллельный setup дождётся коммита первого и вернёт false.
  */
-export async function claimInitialization(db: IdentityDb, at: Date): Promise<boolean> {
+export async function claimInitialization(
+  db: IdentityDb,
+  at: Date,
+  loaderContact: string,
+): Promise<boolean> {
   const rows = await db
     .update(systemState)
-    .set({ initialized: true, initializedAt: at })
+    .set({ initialized: true, initializedAt: at, loaderContact })
     .where(and(eq(systemState.id, 1), eq(systemState.initialized, false)))
     .returning({ id: systemState.id });
   return rows.length === 1;

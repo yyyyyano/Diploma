@@ -31,6 +31,7 @@ oRPC, формы на схемах), `@kosht/i18n` (тексты ошибок п
   приводит `Numeric`), `get` (карточка с историей), `create`/`update` (→ `{ transaction, undoToken }`), `requestDelete`
   (`ids` ≤ `MAX_BULK` → `{ decisionId }`), `explainRate` (курс НБРБ → `traceId`); `Transaction.amountInByn: null` — «курс не получен».
 - `recurring` (T-030): `list` (GET, фильтр `section`; платежи `RecurringItem` с Money в BYN, итоги разделов в месяц и год), решения `confirm`, `exclude`, `end`, `resume`, `stillComing`, `edit`, `create` → `{ item, undoToken }`, `explain({ id })` → `traceId`, `markers({ ids ≤ 100 })` → id операций регулярных платежей. Ключи фактов `income.regular`, `obligations.regular` (сумма в месяц).
+- `budgets` (T-032): `overview({ month? })` (лимиты `BudgetLimit` — расход, лимит, остаток, процент, `traceId`, пороги; цели `BudgetGoal` — накоплено, процент, взнос, «укладывается», плановая сумма, `behind`, последние взносы; `freeBalance` для сравнения), `setLimit` (создать или править лимит категории), `createGoal`, `updateGoal`, `contribute` → `{ …, undoToken }`, `requestDeleteLimit`/`requestDeleteGoal` → `{ decisionId }` (AGT-07), `previewGoal` (взнос до создания цели). Категория лимита — `CategoryKey` («system:код» / «custom:id»).
 - `files` (T-016): `download` — `GET /files/{id}`, вход `FileRef { id }`, ответ — сам файл (`z.file()`).
 - `llm` (T-023): `models` (модели для выбора в чате и выбор вошедшего), `setPreferredModel({ modelId | null })` — LLM-10;
   id пользователя во входе нет.

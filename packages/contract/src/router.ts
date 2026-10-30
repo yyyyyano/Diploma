@@ -1,6 +1,7 @@
 // Дерево процедур контракта (ADR-0005): сервер реализует его (`implement(contract)` в main/router.ts), сайт строит по
 // нему клиент. Процедуры модулей добавляют их задачи: `<модуль>/<модуль>.contract.ts` и ветка здесь.
 import { accountsContract } from "./accounts/accounts.contract.ts";
+import { budgetsContract } from "./budgets/budgets.contract.ts";
 import { finContract } from "./fin/fin.contract.ts";
 import { recurringContract } from "./recurring/recurring.contract.ts";
 import { adminContract } from "./admin/admin.contract.ts";
@@ -35,6 +36,7 @@ export const contract = {
   accounts: accountsContract,
   recurring: recurringContract,
   fin: finContract,
+  budgets: budgetsContract,
   categories: categoriesContract,
   transactions: transactionsContract,
   receipts: receiptsContract,

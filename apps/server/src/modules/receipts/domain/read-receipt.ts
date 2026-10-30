@@ -74,8 +74,25 @@ export function readReceipt(
     printed.receiptDiscount === null
       ? undefined
       : parsePrintedMoney(printed.receiptDiscount, currency);
-  const receiptDiscount = Money.of(Math.abs(discount?.minor ?? 0), currency);
-  const printedTotal = parsePrintedMoney(printed.total, currency);
+  return checkReceipt(
+    items,
+    Money.of(Math.abs(discount?.minor ?? 0), currency),
+    parsePrintedMoney(printed.total, currency),
+    options,
+  );
+}
+
+/**
+ * Та же сверка по уже разобранным числам: правка позиций человеком («Изменить», RCPT-08) пересчитывает статус тем же
+ * валидатором, что и чтение моделью. `printedTotal` нет — итог не прочитан.
+ */
+export function checkReceipt(
+  items: readonly ReadItem[],
+  receiptDiscount: Money,
+  printedTotal: Money | undefined,
+  options: ReadOptions,
+): ReadReceipt {
+  const { currency } = options;
   const lineInputs = items.map((item) => toLineInput(item, currency));
   // Нечитаемый итог: подставляем расчётный, чтобы арифметика итога не ругалась ложно.
   const linesSum = lineInputs.reduce((acc, line) => acc + line.lineTotal.minor, 0);

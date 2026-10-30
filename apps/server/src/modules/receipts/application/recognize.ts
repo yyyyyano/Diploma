@@ -8,10 +8,13 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { JobDef } from "../../../platform/jobs/define-job.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
+import type { CategoriesFacade } from "../../categories/index.ts";
 import type { ExplainFacade } from "../../explain/index.ts";
 import type { FilesFacade } from "../../files/index.ts";
 import type { LlmFacade } from "../../llm/index.ts";
 import type { MerchantsFacade } from "../../merchants/index.ts";
+import type { NotificationsFacade } from "../../notifications/index.ts";
+import type { TransactionsFacade } from "../../transactions/index.ts";
 import { parsePrintedDate, parsePrintedMoney, parsePrintedTime } from "../domain/printed.ts";
 import { uidFromQr } from "../domain/qr.ts";
 import { applyRecheck, askedOf } from "../domain/recheck.ts";
@@ -22,7 +25,7 @@ import {
   type ReadReceipt,
 } from "../domain/read-receipt.ts";
 import type { Mismatch, PrintedReceipt, ReceiptStage } from "../domain/types.ts";
-import { receiptsNeedsReview, receiptsRecognized } from "../events.ts";
+import { receiptsNeedsReview, receiptsRecognized, receiptsWarrantyItemsFound } from "../events.ts";
 import {
   findByKey,
   findByUid,
@@ -41,6 +44,7 @@ import {
   RECEIPTS_MAX_RECHECKS,
   RECEIPTS_TOLERANCE_MINOR,
 } from "../settings.ts";
+import { makeOperationPlan, type PlannedItem } from "./operation-plan.ts";
 import { PhotoReadError, type PhotoPreparer, type PhotoType } from "./ports.ts";
 import {
   PROMPT_VERSION,
@@ -68,6 +72,9 @@ export interface RecognizeDeps {
   readonly llm: Pick<LlmFacade, "extract">;
   readonly merchants: Pick<MerchantsFacade, "resolve" | "normalizeItemName">;
   readonly explain: Pick<ExplainFacade, "save">;
+  readonly categories: Pick<CategoriesFacade, "categorize">;
+  readonly transactions: Pick<TransactionsFacade, "recordFromReceipt">;
+  readonly notifications: Pick<NotificationsFacade, "notify">;
   readonly preparer: PhotoPreparer;
   readonly jobs: { readonly recognize: JobDef<{ receiptId: string }> };
 }
@@ -83,6 +90,7 @@ interface Attempt {
 export function makeRecognize(d: RecognizeDeps) {
   const { clock, log, jobs, events, realtime, settings } = d.platform;
 
+  const plan = makeOperationPlan(d);
   const changed = (tx: ScopedDb, id: string) => realtime.changed(tx, { entity: ENTITY, ids: [id] });
   const progress = (s: ScopedDb, id: string, percent: number) =>
     realtime.progress(s.scope, { entity: ENTITY, id, percent });
@@ -174,8 +182,15 @@ export function makeRecognize(d: RecognizeDeps) {
   }
 
   /** Строки для сохранения: числа разобраны, нормализованное наименование (RCPT-15), спорные пометки. */
-  function itemsOf(read: ReadReceipt, disputed: ReadonlySet<number>): NewItem[] {
+  function itemsOf(
+    read: ReadReceipt,
+    disputed: ReadonlySet<number>,
+    planned: readonly PlannedItem[],
+  ): NewItem[] {
     return read.items.map((item, index) => ({
+      categoryCode: planned[index]?.category.code ?? null,
+      categoryId: planned[index]?.category.id ?? null,
+      warranty: planned[index]?.warranty ?? false,
       position: index + 1,
       name: item.name,
       normalizedName: d.merchants.normalizeItemName(item.name),
@@ -291,6 +306,19 @@ export function makeRecognize(d: RecognizeDeps) {
         mismatch.kind === "line" ? [mismatch.line] : [],
       );
       const status = read.ok ? "ok" : "needs-review";
+      // RCPT-09, RCPT-10: категории позиций (модель — вне транзакции), разбивка и операция чека.
+      const planned = await plan(s, {
+        read,
+        currency,
+        merchant: {
+          name: store === "" ? null : (merchant?.name ?? store),
+          key: merchant?.key || null,
+        },
+        date: date ?? clock.today().toString(),
+        time: time ?? null,
+        method: extraction.payment,
+        cardLast4: extraction.payment === "card" ? extraction.cardLast4 : null,
+      });
       // RCPT-07: расхождение итога с суммой строк — «нераспознанный остаток чека» (в «Прочее»); итог, разобранный из
       // текста, — напечатанный; не разобрался — по сумме строк.
       const remainderMinor =
@@ -327,7 +355,14 @@ export function makeRecognize(d: RecognizeDeps) {
           recognizedAt: clock.now(),
           updatedAt: clock.now(),
         });
-        await replaceItems(tx, receiptId, itemsOf(read, new Set(disputedLines)));
+        await replaceItems(tx, receiptId, itemsOf(read, new Set(disputedLines), planned.items));
+        if (planned.operation !== undefined) {
+          await d.transactions.recordFromReceipt(tx, {
+            ...planned.operation,
+            receiptId,
+            needsReview: status === "needs-review",
+          });
+        }
         for (const attempt of attempts) {
           await insertAttempt(tx, receiptId, {
             attempt: attempt.attempt,
@@ -338,8 +373,20 @@ export function makeRecognize(d: RecognizeDeps) {
           });
         }
         await events.publish(tx, receiptsRecognized, { ids: [receiptId] });
-        if (status === "needs-review")
+        if (status === "needs-review") {
           await events.publish(tx, receiptsNeedsReview, { ids: [receiptId] });
+          // NOTIF-02: «чек требует проверки» — одно уведомление на чек (ключ — id чека).
+          await d.notifications.notify(tx, {
+            kind: "receipt-review",
+            key: receiptId,
+            objectRef: { entity: ENTITY, id: receiptId },
+            params: {},
+          });
+        }
+        // RCPT-13: техника в чеке — календарь создаёт «конец гарантии» (CAL-04).
+        if (planned.warrantyCount > 0) {
+          await events.publish(tx, receiptsWarrantyItemsFound, { ids: [receiptId] });
+        }
         await changed(tx, receiptId);
       });
       await progress(s, receiptId, 100);
@@ -363,3 +410,5 @@ export function makeRecognize(d: RecognizeDeps) {
 
   return { start, run };
 }
+
+export type Recognize = ReturnType<typeof makeRecognize>;

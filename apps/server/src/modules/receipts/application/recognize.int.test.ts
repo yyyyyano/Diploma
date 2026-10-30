@@ -19,6 +19,7 @@ import { makePhotoPreparer } from "../infrastructure/image/prepare-photo.ts";
 import { caseIds, loadCase, type Expected } from "../__fixtures__/datasets.ts";
 import { scriptedLlm, testSettings, type Answer } from "../__fixtures__/scripted-llm.ts";
 import { makeRecognize } from "./recognize.ts";
+import { makeReview } from "./review.ts";
 
 let db: TestDb;
 beforeAll(async () => {
@@ -92,6 +93,7 @@ function setup(options: Options) {
   const t = transactionsWithJournal(db);
   const files = new Map<string, { kind: string; mime: string; bytes: Uint8Array }>();
   const progress: { id: string; percent: number | undefined }[] = [];
+  const notices: { kind: string; key: string }[] = [];
   const script = scriptedLlm(options.answers);
   const logger = memoryLogger();
   const preparerCalls: string[] = [];
@@ -137,8 +139,30 @@ function setup(options: Options) {
     llm: script.llm,
     merchants: t.merchants,
     explain: t.explain,
+    categories: t.categories,
+    transactions: t.ops,
+    notifications: {
+      notify: async (_s, input) => {
+        notices.push({ kind: input.kind, key: input.key });
+        return randomUUID();
+      },
+    },
     preparer,
     jobs: { recognize: recognizeJob },
+  });
+  const removedFiles: string[] = [];
+  const review = makeReview({
+    platform: { ...t.platform, settings: testSettings(options.settings), realtime } as never,
+    files: {
+      remove: async (_s: unknown, id: string) => {
+        removedFiles.push(id);
+        files.delete(id);
+      },
+    },
+    categories: t.categories,
+    explain: t.explain,
+    merchants: t.merchants,
+    transactions: t.ops,
   });
   const upload = (bytes: Uint8Array, mime = "image/jpeg", kind = "receipt-photo") => {
     const id = FileId.parse(randomUUID());
@@ -178,6 +202,9 @@ function setup(options: Options) {
     ).rows as Record<string, unknown>[];
   return {
     t,
+    notices,
+    review,
+    removedFiles,
     flow,
     script,
     logger,
@@ -351,7 +378,10 @@ describe("RCPT-07, RCPT-06: расхождение осталось", () => {
       false,
     ]);
     const events = stand.t.published.map((event) => event.name);
-    expect(events).toEqual(["receipts.recognized", "receipts.needs-review"]);
+    expect(events.filter((name) => name.startsWith("receipts."))).toEqual([
+      "receipts.recognized",
+      "receipts.needs-review",
+    ]);
   });
 
   it("модель недоступна на перепроверке — чек не теряется: сохраняется «требует проверки» с прочитанным", async () => {
@@ -616,7 +646,7 @@ describe("RCPT-03, RCPT-15: сохранённый чек и позиции", ()
     const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
     await stand.flow.run(s, id);
     expect(stand.script.calls).toHaveLength(1);
-    expect(stand.t.published).toHaveLength(1);
+    expect(stand.t.published.filter((event) => event.name.startsWith("receipts."))).toHaveLength(1);
   });
 });
 
@@ -881,4 +911,232 @@ describe("QA-11: набор datasets/receipts — настоящая подго�
     },
     90_000,
   );
+});
+
+describe("RCPT-08…10, RCPT-13, NOTIF-02: чек в учёте", () => {
+  it("наличный чек сразу становится тратой «Наличных» с разбивкой по категориям позиций; остаток уменьшился", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [{ ...base(), payment: "cash", cardLast4: null }] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const operation = await stand.t.ops.operationOfReceipt(s, id);
+    expect(operation).toMatchObject({ pending: false, source: "receipt" });
+    const cash = (await stand.t.accounts.list(s)).items.find((item) => item.kind === "cash");
+    expect(cash?.balance.minor).toBe(-2346);
+    const splits = await db.owner.query(
+      "select category_code, amount_minor from transaction_splits where household_id = $1 and transaction_id = $2",
+      [s.scope.householdId, operation?.id],
+    );
+    expect(splits.rows.reduce((acc, row) => acc + Number(row.amount_minor), 0)).toBe(2346);
+  });
+
+  it("чек картой — предварительная операция «ожидает выписки»: остаток счёта не меняется", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [base()] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const operation = await stand.t.ops.operationOfReceipt(s, id);
+    expect(operation).toMatchObject({ pending: true });
+    const accounts = (await stand.t.accounts.list(s)).items;
+    expect(accounts.every((account) => account.balance.minor === 0)).toBe(true);
+  });
+
+  it("«требует проверки» — одно уведомление receipt-review и операция с признаком; «сходится» — без уведомления", async () => {
+    const s = newScope(db);
+    const bad = setup({ codes: [], answers: [misread(), sameLine2, sameLine2] });
+    const id = await bad.recognize(s, bad.upload(new Uint8Array([1])));
+    expect(bad.notices).toEqual([{ kind: "receipt-review", key: id }]);
+    const list = await bad.t.ops.list(s, { needsReview: true, page: 1, pageSize: 50 });
+    expect(list.items[0]).toMatchObject({ receiptId: id, needsReview: true });
+    const good = setup({ codes: [], answers: [base()] });
+    await good.recognize(s, good.upload(new Uint8Array([1])));
+    expect(good.notices).toEqual([]);
+  });
+
+  it("техника в чеке — позиция с гарантией и событие receipts.warranty-items-found", async () => {
+    const s = newScope(db);
+    const reading = base();
+    reading.items[2] = {
+      ...reading.items[2]!,
+      name: "Чайник электрический 1,7л",
+      unitPrice: "5,00",
+      lineTotal: "5,00",
+    };
+    const stand = setup({ codes: [], answers: [reading] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    expect((await stand.items(s, id)).map((item) => item["warranty"])).toEqual([
+      false,
+      false,
+      true,
+    ]);
+    expect(stand.t.published.map((event) => event.name)).toContain("receipts.warranty-items-found");
+  });
+});
+
+describe("RCPT-08: «Верно», «Изменить», «Отменить»", () => {
+  it("«Верно» подтверждает чек и снимает признак «требует проверки» у операции", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [misread(), sameLine2, sameLine2] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const card = await stand.review.confirm(s, id);
+    expect(card.receipt).toMatchObject({ status: "needs-review", confirmed: true });
+    const operation = await stand.t.ops.list(s, { needsReview: true, page: 1, pageSize: 50 });
+    expect(operation.items).toEqual([]);
+  });
+
+  it("«Изменить»: исправленная строка 2 — валидатор пересчитывает статус «сходится», сумма операции и остаток меняются", async () => {
+    const s = newScope(db);
+    const stand = setup({
+      codes: [],
+      answers: [{ ...misread(), payment: "cash" }, sameLine2, sameLine2],
+    });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const before = await stand.review.get(s, id);
+    expect(before.receipt.status).toBe("needs-review");
+    expect(before.mismatches).toContainEqual(
+      expect.objectContaining({ kind: "line", line: 2, reason: "arithmetic" }),
+    );
+    const byn = (minor: number) => ({ minor, currency: "BYN" });
+    const card = await stand.review.updateItems(s, id, {
+      items: [
+        {
+          name: "Хлеб Нарочанский 400г",
+          quantityMilli: 1000,
+          unitPrice: byn(1099),
+          discount: byn(0),
+          lineTotal: byn(1099),
+        },
+        {
+          name: "Молоко 3,2% 1л",
+          quantityMilli: 3000,
+          unitPrice: byn(249),
+          discount: byn(0),
+          lineTotal: byn(747),
+        },
+        {
+          name: "Яйца С1 10шт",
+          quantityMilli: 1000,
+          unitPrice: byn(500),
+          discount: byn(0),
+          lineTotal: byn(500),
+        },
+      ],
+      total: byn(2346),
+      receiptDiscount: byn(0),
+    });
+    expect(card.receipt).toMatchObject({ status: "ok", confirmed: false, disputedLines: [] });
+    expect(card.mismatches).toEqual([]);
+    expect(card.remainder.minor).toBe(0);
+    expect(card.attempts.map((attempt) => [attempt.attempt, attempt.ok])).toEqual([
+      [0, false],
+      [1, false],
+      [2, false],
+      [3, true],
+    ]);
+    expect(card.items.map((item) => item.category?.type)).toEqual(["system", "system", "system"]);
+    const cash = (await stand.t.accounts.list(s)).items.find((item) => item.kind === "cash");
+    expect(cash?.balance.minor).toBe(-2346);
+    expect(card.operation).toMatchObject({ pending: false, merged: false });
+  });
+
+  it("«Изменить»: другой итог — расхождение остаётся, остаток итога уходит в «Прочее» в разбивке операции", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [base()] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const byn = (minor: number) => ({ minor, currency: "BYN" });
+    const card = await stand.review.updateItems(s, id, {
+      items: [
+        {
+          name: "Хлеб",
+          quantityMilli: 1000,
+          unitPrice: byn(1099),
+          discount: byn(0),
+          lineTotal: byn(1099),
+        },
+      ],
+      total: byn(1599),
+      receiptDiscount: byn(0),
+    });
+    expect(card.receipt.status).toBe("needs-review");
+    expect(card.remainder.minor).toBe(500);
+    const operation = await stand.t.ops.operationOfReceipt(s, id);
+    const splits = await db.owner.query(
+      "select category_code, amount_minor from transaction_splits where household_id = $1 and transaction_id = $2 order by position",
+      [s.scope.householdId, operation?.id],
+    );
+    expect(splits.rows.map((row) => [row.category_code, Number(row.amount_minor)]).at(-1)).toEqual([
+      "other",
+      500,
+    ]);
+  });
+
+  it("«Изменить» отвергает чужую валюту и нулевой итог", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [base()] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    const line = {
+      name: "Х",
+      quantityMilli: 1000,
+      unitPrice: { minor: 100, currency: "USD" },
+      discount: { minor: 0, currency: "USD" },
+      lineTotal: { minor: 100, currency: "USD" },
+    };
+    await expect(
+      stand.review.updateItems(s, id, {
+        items: [line],
+        total: { minor: 100, currency: "USD" },
+        receiptDiscount: { minor: 0, currency: "USD" },
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    const byn = (minor: number) => ({ minor, currency: "BYN" });
+    await expect(
+      stand.review.updateItems(s, id, {
+        items: [{ ...line, unitPrice: byn(100), discount: byn(0), lineTotal: byn(100) }],
+        total: byn(0),
+        receiptDiscount: byn(0),
+      }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+  });
+
+  it("«Отменить» удаляет чек, его операцию и фото; остаток «Наличных» возвращается", async () => {
+    const s = newScope(db);
+    const stand = setup({ codes: [], answers: [{ ...base(), payment: "cash" }] });
+    const fileId = stand.upload(new Uint8Array([1]));
+    const id = await stand.recognize(s, fileId);
+    await stand.review.cancel(s, id);
+    expect(await stand.t.ops.operationOfReceipt(s, id)).toBeUndefined();
+    await expect(stand.review.get(s, id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(stand.removedFiles).toEqual([fileId]);
+    const cash = (await stand.t.accounts.list(s)).items.find((item) => item.kind === "cash");
+    expect(cash?.balance.minor).toBe(0);
+    expect(await stand.items(s, id)).toEqual([]);
+  });
+
+  it("чужой чек: карточка, «Верно», «Изменить» и «Отменить» — NOT_FOUND", async () => {
+    const mine = newScope(db);
+    const theirs = newScope(db);
+    const stand = setup({ codes: [], answers: [base()] });
+    const id = await stand.recognize(mine, stand.upload(new Uint8Array([1])));
+    await expect(stand.review.get(theirs, id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(stand.review.confirm(theirs, id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(stand.review.cancel(theirs, id)).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("«не вышло» подтвердить или править нельзя — CONFLICT; дубль называет прежний чек и день его загрузки", async () => {
+    const s = newScope(db);
+    const item = loadCase("sosnovy-clean-card");
+    const stand = setup({ answers: [readingOf(item.expected)] });
+    const first = await stand.recognize(s, stand.uploadCase("sosnovy-clean-card"));
+    const second = await stand.recognize(s, stand.uploadCase("sosnovy-clean-card"));
+    await expect(stand.review.confirm(s, second)).rejects.toMatchObject({ code: "CONFLICT" });
+    const card = await stand.review.get(s, second);
+    expect(card.receipt).toMatchObject({ status: "failed", errorCode: "RECEIPT_DUPLICATE" });
+    expect(card.receipt.duplicateOf).toMatchObject({ id: first });
+    expect(card.receipt.duplicateOf?.date).toMatch(/^\d{2}\.\d{2}$/);
+    const list = await stand.review.list(s);
+    expect(list.map((receipt) => receipt.id)).toEqual([second, first]);
+    expect(card.mns).toBeNull();
+    expect((await stand.review.get(s, first)).mns).toEqual({
+      uid: item.expected.uid,
+      date: item.expected.date,
+    });
+  });
 });

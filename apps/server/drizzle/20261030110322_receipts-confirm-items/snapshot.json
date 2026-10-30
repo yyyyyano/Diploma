@@ -1,0 +1,115 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "85db8765-e55d-4092-9764-6f74ed38d5a3",
+  "prevIds": ["c67a22cc-8832-438b-809f-6c76931c12ad"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "receipt_items", "category_code"],
+      "writes": [
+        "s|col|public.receipt_items.category_code",
+        "n|col|public.receipt_items.category_code",
+        "e|col|public.receipt_items.category_code"
+      ],
+      "reads": ["n|tbl|public.receipt_items", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "receipt_items", "category_id"],
+      "writes": [
+        "s|col|public.receipt_items.category_id",
+        "n|col|public.receipt_items.category_id",
+        "e|col|public.receipt_items.category_id"
+      ],
+      "reads": ["n|tbl|public.receipt_items", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "receipt_items", "warranty"],
+      "writes": [
+        "s|col|public.receipt_items.warranty",
+        "n|col|public.receipt_items.warranty",
+        "e|col|public.receipt_items.warranty"
+      ],
+      "reads": ["n|tbl|public.receipt_items", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "receipts", "confirmed_at"],
+      "writes": [
+        "s|col|public.receipts.confirmed_at",
+        "n|col|public.receipts.confirmed_at",
+        "e|col|public.receipts.confirmed_at"
+      ],
+      "reads": ["n|tbl|public.receipts", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "receipt_items",
+        "name": "category_code",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "receipt_items",
+        "name": "category_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "receipt_items",
+        "name": "warranty",
+        "type": "boolean",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "false",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "receipts",
+        "name": "confirmed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

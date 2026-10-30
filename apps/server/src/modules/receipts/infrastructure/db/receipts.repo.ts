@@ -1,6 +1,6 @@
 // Запросы к receipts, receipt_items, receipt_attempts: первый аргумент — s: ScopedDb, у каждого обращения к таблице
 // свой s.own (ADR-0006). Сценарии зовут эти функции, а не пишут SQL.
-import { and, asc, eq, isNotNull, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import type { InsertValue, Patch, ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { receiptAttempts, receiptItems, receipts } from "./schema.ts";
 
@@ -134,4 +134,28 @@ export function isUniqueViolation(error: unknown): boolean {
     current = (current as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/** Вкладка чеков: новые сверху, не больше `limit`. */
+export async function listReceipts(s: ScopedDb, limit: number): Promise<ReceiptRow[]> {
+  return s.db
+    .select()
+    .from(receipts)
+    .where(s.own(receipts))
+    .orderBy(desc(receipts.createdAt), desc(receipts.id))
+    .limit(limit);
+}
+
+/** Чеки по id (свои): прежние чеки для «уже загружен 12.10». */
+export async function findReceipts(s: ScopedDb, ids: readonly string[]): Promise<ReceiptRow[]> {
+  if (ids.length === 0) return [];
+  return s.db
+    .select()
+    .from(receipts)
+    .where(and(s.own(receipts), inArray(receipts.id, [...ids])));
+}
+
+/** Чек удаляется вместе с позициями и историей (каскад по составному FK). */
+export async function deleteReceipt(s: ScopedDb, id: string): Promise<void> {
+  await s.delete(receipts, eq(receipts.id, id));
 }

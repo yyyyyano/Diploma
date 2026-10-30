@@ -66,6 +66,8 @@ export const receipts = userOwnedTable(
     errorCode: text(),
     duplicateOf: uuid(),
     recognizedAt: timestamp({ withTimezone: true }),
+    /** «Верно» (RCPT-08): человек подтвердил чек — признак «требует проверки» снят. */
+    confirmedAt: timestamp({ withTimezone: true }),
   },
   (t) => [
     check(
@@ -98,6 +100,11 @@ export const receiptItems = userOwnedTable(
     lineTotalMinor: bigint({ mode: "number" }),
     /** Строка осталась спорной после перепроверок. */
     disputed: boolean().notNull().default(false),
+    /** Категория позиции (RCPT-09): встроенная по коду или своя по id; нет — null (позиция не распознана). */
+    categoryCode: text(),
+    categoryId: uuid(),
+    /** Позиция с гарантией (RCPT-13): по категории и наименованию; по ней создаётся событие «конец гарантии» (CAL-04). */
+    warranty: boolean().notNull().default(false),
   },
   (t) => [
     check("receipt_items_position_check", sql`${t.position} >= 1`),

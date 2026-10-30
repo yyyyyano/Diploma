@@ -55,6 +55,8 @@ interface Household {
   readonly transactionId: string;
   /** Импорт выписки B (черновик). */
   readonly importId: string;
+  /** Чек B (с позицией). */
+  readonly receiptId: string;
 }
 
 /**
@@ -201,6 +203,29 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "statements.cancel": { input: (b) => ({ id: b.importId }) },
   "statements.rollbackInfo": { input: (b) => ({ id: b.importId }) },
   "statements.rollback": { input: (b) => ({ id: b.importId }) },
+  "tool:get_receipt": { input: (b) => ({ id: b.receiptId }) },
+  "tool:receipt_status": { input: () => ({}) },
+  "receipts.start": { input: (b) => ({ fileIds: [b.fileId] }) },
+  "receipts.list": { input: () => undefined },
+  "receipts.get": { input: (b) => ({ id: b.receiptId }) },
+  "receipts.confirm": { input: (b) => ({ id: b.receiptId }) },
+  "receipts.updateItems": {
+    input: (b) => ({
+      id: b.receiptId,
+      items: [
+        {
+          name: "Х",
+          quantityMilli: 1000,
+          unitPrice: { minor: 100, currency: "BYN" },
+          discount: { minor: 0, currency: "BYN" },
+          lineTotal: { minor: 100, currency: "BYN" },
+        },
+      ],
+      total: { minor: 100, currency: "BYN" },
+      receiptDiscount: { minor: 0, currency: "BYN" },
+    }),
+  },
+  "receipts.cancel": { input: (b) => ({ id: b.receiptId }) },
   "files.upload": {
     exempt:
       "приём файлов запроса: чужих id во входе нет, файл сохраняется в домохозяйство сессии (main/files.int.test.ts)",
@@ -382,6 +407,10 @@ async function seedHousehold(email: string): Promise<Household> {
     `insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready') returning id`,
     [ids.household_id, ids.user_id, file.rows[0]?.id],
   );
+  const receipt = await db.owner.query<{ id: string }>(
+    "insert into receipts (household_id, user_id, file_id, status) values ($1, $2, $3, 'ok') returning id",
+    [ids.household_id, ids.user_id, file.rows[0]?.id],
+  );
   return {
     scope: makeScope({ userId: ids.user_id, householdId: ids.household_id } as never),
     email,
@@ -397,6 +426,7 @@ async function seedHousehold(email: string): Promise<Household> {
     categoryId: category.rows[0]?.id ?? "",
     transactionId: operation.rows[0]?.id ?? "",
     importId: statementImport.rows[0]?.id ?? "",
+    receiptId: receipt.rows[0]?.id ?? "",
   };
 }
 
@@ -545,6 +575,12 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "profile.facts",
       "profile.onboarding",
       "profile.setFact",
+      "receipts.cancel",
+      "receipts.confirm",
+      "receipts.get",
+      "receipts.list",
+      "receipts.start",
+      "receipts.updateItems",
       "statements.cancel",
       "statements.confirm",
       "statements.fixColumns",
@@ -567,8 +603,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "delete_account",
       "delete_transaction",
       "explain_number",
+      "get_receipt",
       "list_accounts",
       "read_profile_facts",
+      "receipt_status",
       "rename_account",
       "search_transactions",
       "statement_import_status",
@@ -590,6 +628,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.categoryId,
       b.transactionId,
       b.importId,
+      b.receiptId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

@@ -15,7 +15,10 @@ import type { ActionsFacade } from "../actions/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
 import { makeRecognize } from "./application/recognize.ts";
-import { receiptsNeedsReview, receiptsRecognized } from "./events.ts";
+import { makeReview } from "./application/review.ts";
+import { receiptsTools } from "./agent/tools.ts";
+import { receiptsRouter } from "./api/router.ts";
+import { receiptsNeedsReview, receiptsRecognized, receiptsWarrantyItemsFound } from "./events.ts";
 import { makePhotoPreparer } from "./infrastructure/image/prepare-photo.ts";
 import { recognizeJob } from "./jobs/recognize.job.ts";
 import {
@@ -53,13 +56,27 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
     llm: facades.llm,
     merchants: facades.merchants,
     explain: facades.explain,
+    categories: facades.categories,
+    transactions: facades.transactions,
+    notifications: facades.notifications,
     preparer,
     jobs: { recognize },
   });
+  const review = makeReview({
+    platform,
+    files: facades.files,
+    categories: facades.categories,
+    explain: facades.explain,
+    merchants: facades.merchants,
+    transactions: facades.transactions,
+  });
+  const tools = receiptsTools(review);
   return defineModule({
     id: "receipts",
     facade: { start: flow.start },
-    events: [receiptsRecognized, receiptsNeedsReview],
+    router: receiptsRouter(flow, review),
+    tools: [tools.get, tools.status],
+    events: [receiptsRecognized, receiptsNeedsReview, receiptsWarrantyItemsFound],
     jobs: [recognize],
     settings: [
       RECEIPTS_TOLERANCE_MINOR,

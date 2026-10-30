@@ -27,6 +27,7 @@ import type { HttpContext } from "../platform/http/procedures.ts";
 import { requireAdmin, requireLocal, requireSession } from "../platform/http/procedures.ts";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import { compose, type Composition } from "./compose.ts";
+import { TEST_POOL_MAX } from "./__fixtures__/compose-on-test-db.ts";
 
 /** Данные домохозяйства, посеянные тестом: из B берутся входы, по A — сессия. */
 interface Household {
@@ -418,7 +419,7 @@ beforeAll(async () => {
       DATA_DIR: join(dir, "data"),
     }),
     "api",
-    { log: memoryLogger().log },
+    { log: memoryLogger().log, poolMax: TEST_POOL_MAX },
   );
   // Очереди созданы, как в процессе api: процедуры, ставящие задачу (privacy.requestExport), работают.
   await api.startJobs();

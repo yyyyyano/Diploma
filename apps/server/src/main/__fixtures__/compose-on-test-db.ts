@@ -10,6 +10,14 @@ import { loadConfig } from "../../platform/config/config.ts";
 import { memoryLogger } from "../../platform/logging/__fixtures__/memory-logger.ts";
 import { compose, type Composition, type ProcessRole } from "../compose.ts";
 
+/**
+ * Пул процесса на тестовой базе: int-файлы идут параллельно (воркеры Vitest) на одном Postgres с max_connections 100,
+ * а стенд файла — это api и worker сразу. С боевыми 10 на процесс worker, опрашивающий каждую очередь, держал 10
+ * соединений, и десяток стендов разом получал 53300 «too many clients». 4 — с запасом для транзакции задачи и
+ * опросов очередей.
+ */
+export const TEST_POOL_MAX = 4;
+
 export interface TestComposition {
   readonly composition: Composition;
   close(): Promise<void>;
@@ -40,7 +48,7 @@ export async function composeOnTestDb(
       ...env,
     }),
     role,
-    { log: memoryLogger().log },
+    { log: memoryLogger().log, poolMax: TEST_POOL_MAX },
   );
   return {
     composition,

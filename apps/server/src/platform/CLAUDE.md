@@ -94,9 +94,11 @@
 
 ## Точки входа и корень композиции (T-059, ARCHITECTURE §3)
 Своих паспортов у `src/entrypoints` и `src/main` нет: обзор процессов и сборки — `apps/server/CLAUDE.md`, детали — здесь.
-- `main/compose.ts` — `compose(config, role, { log, createModules? })` → `Composition`: пул владельца (`max: 1`, имя
-  `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
-  `kosht-<роль>` роли приложения → `assertAppRole` (ADR-0020) → `SystemDb`, часы, настройки, реестр сессий, реестр
+- `main/compose.ts` — `compose(config, role, { log, createModules?, poolMax? })` → `Composition`: пул владельца (`max: 1`,
+  имя `kosht-<роль>-migrate`) → `migrateDatabase` → пул владельца закрыт (`end`) → `db.migrated` → боевой пул
+  `kosht-<роль>` роли приложения (`max` 10; int-тесты — `poolMax: TEST_POOL_MAX` = 4 из
+  `main/__fixtures__/compose-on-test-db.ts`: стенды api+worker параллельных файлов иначе исчерпывают
+  max_connections 100, 53300) → `assertAppRole` (ADR-0020) → `SystemDb`, часы, настройки, реестр сессий, реестр
   проверки scope задач (`scopes`), очередь `jobs` (`createJobs` на том же пуле, пояс расписаний —
   `settings.get(TIME_ZONE)`), `realtime` → `platform: Platform` (+ `secrets`, `rateLimiter`, `blobs` —
   `<DATA_DIR>/files`, `scoped(scope)`; `events` — с поздним связыванием: публикация из фабрики модуля — ошибка) и

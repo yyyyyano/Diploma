@@ -107,6 +107,12 @@ export interface ComposeDeps {
   readonly log: Logger;
   /** Сборка модулей; по умолчанию — все 36 (create-modules.ts), тесты подставляют свои. */
   readonly createModules?: (ports: ModulePorts) => readonly ModuleDescriptor[];
+  /**
+   * Предел пула роли приложения; по умолчанию — 10 (createPool). Тесты задают меньше: int-файлы со своими api и
+   * worker идут параллельно на одном Postgres (max_connections 100), а worker опрашивает очередь каждой задачи
+   * отдельно и держит пул заполненным — десяток таких стендов разом исчерпывал соединения (53300).
+   */
+  readonly poolMax?: number;
 }
 
 export async function compose(
@@ -126,7 +132,10 @@ export async function compose(
     await owner.end();
   }
   log.info({ role }, "db.migrated");
-  const pool = createPool(config.db.app, { applicationName: `kosht-${role}` });
+  const pool = createPool(config.db.app, {
+    applicationName: `kosht-${role}`,
+    ...(deps.poolMax === undefined ? {} : { max: deps.poolMax }),
+  });
   try {
     await assertAppRole(pool);
   } catch (error) {

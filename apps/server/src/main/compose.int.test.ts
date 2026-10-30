@@ -97,6 +97,32 @@ describe("повторное имя в реестре — ошибка стар�
   });
 });
 
+describe("размер пула процесса (стабильность make check)", () => {
+  it("poolMax 2: двадцать запросов разом открывают ровно 2 соединения процесса, close() их закрывает", async () => {
+    // Идёт сразу после теста отказа: соединений kosht-bot в базе файла ещё нет. Без poolMax пул открыл бы 10 (как
+    // в бою) — а int-файлы со своими api и worker идут параллельно на одном Postgres (max_connections 100).
+    const connections = async () =>
+      (
+        await db.owner.query<{ n: number }>(
+          "select count(*)::int as n from pg_stat_activity where datname = $1 and application_name = 'kosht-bot'",
+          [db.name],
+        )
+      ).rows[0]?.n;
+    const composition = await compose(config, "bot", {
+      log: memoryLogger().log,
+      createModules: () => [],
+      poolMax: 2,
+    });
+    try {
+      await Promise.all(Array.from({ length: 20 }, async () => composition.ready()));
+      expect(await connections()).toBe(2);
+    } finally {
+      await composition.close();
+    }
+    await vi.waitFor(async () => expect(await connections()).toBe(0));
+  });
+});
+
 describe("ARCHITECTURE §3: 36 модулей в корне композиции", () => {
   let api: Composition;
   let ports: ModulePorts | undefined;

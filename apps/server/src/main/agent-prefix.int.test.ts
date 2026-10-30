@@ -12,6 +12,7 @@ import { agentPrefix } from "../modules/agent/index.ts";
 import { loadConfig } from "../platform/config/config.ts";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import { compose, type Composition } from "./compose.ts";
+import { TEST_POOL_MAX } from "./__fixtures__/compose-on-test-db.ts";
 
 const PREFIX_TOKEN_BUDGET = 3_000;
 
@@ -38,7 +39,7 @@ beforeAll(async () => {
       DATA_DIR: join(dir, "data"),
     }),
     "api",
-    { log: memoryLogger().log },
+    { log: memoryLogger().log, poolMax: TEST_POOL_MAX },
   );
 });
 

@@ -16,6 +16,7 @@ import { BODY_LIMIT } from "../platform/http/body-limit.ts";
 import type { ListenerName } from "../platform/http/guard.ts";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import { compose, type Composition } from "./compose.ts";
+import { TEST_POOL_MAX } from "./__fixtures__/compose-on-test-db.ts";
 
 let db: TestDb;
 let dir: string;
@@ -41,8 +42,11 @@ beforeAll(async () => {
     LANGFUSE_ENABLED: "false",
     DATA_DIR: join(dir, "data"),
   });
-  api = await compose(config, "api", { log: memoryLogger().log });
-  worker = await compose(config, "worker", { log: memoryLogger().log });
+  api = await compose(config, "api", { log: memoryLogger().log, poolMax: TEST_POOL_MAX });
+  worker = await compose(config, "worker", {
+    log: memoryLogger().log,
+    poolMax: TEST_POOL_MAX,
+  });
   await api.startJobs();
   await worker.startJobs();
   const log = memoryLogger().log;

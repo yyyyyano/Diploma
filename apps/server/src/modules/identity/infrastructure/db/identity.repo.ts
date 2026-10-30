@@ -408,3 +408,16 @@ export async function setAdminResetMark(
     .set({ passwordResetByAdminAt: at })
     .where(eq(identityUsers.id, userId));
 }
+
+/** Самый давний активный администратор: от его имени идут системные события общей базы (законы), у которых нет своего владельца. */
+export async function firstActiveAdmin(
+  db: IdentityDb,
+): Promise<{ id: string; householdId: string } | undefined> {
+  const rows = await db
+    .select({ id: identityUsers.id, householdId: identityUsers.householdId })
+    .from(identityUsers)
+    .where(and(eq(identityUsers.role, "admin"), eq(identityUsers.status, "active")))
+    .orderBy(identityUsers.createdAt, identityUsers.id)
+    .limit(1);
+  return rows[0];
+}

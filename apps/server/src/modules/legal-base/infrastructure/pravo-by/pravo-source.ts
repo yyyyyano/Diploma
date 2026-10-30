@@ -4,6 +4,7 @@ import {
   ActTextNotFound,
   SourceUnavailable,
   type LegalSource,
+  type RegistrySource,
   type SourcePage,
 } from "../../application/ports.ts";
 import type { PoliteFetcher } from "./polite-fetcher.ts";
@@ -19,13 +20,28 @@ export function textUrl(baseUrl: string, pravoId: string): URL {
 export function createPravoSource(deps: {
   readonly fetcher: PoliteFetcher;
   readonly baseUrl: string;
-}): LegalSource {
+}): LegalSource & RegistrySource {
   return {
     async fetchActText(pravoId): Promise<SourcePage> {
       const got = await deps.fetcher.get(textUrl(deps.baseUrl, pravoId));
       if (got.status === 404) throw new ActTextNotFound();
       if (got.status !== 200) throw new SourceUnavailable();
       return { html: got.body, fetchedAt: got.fetchedAt };
+    },
+    async fetchActCard(pravoId): Promise<SourcePage> {
+      if (!PRAVO_ID.test(pravoId))
+        throw new RangeError("ID акта pravo.by не по правилу реквизитов.");
+      const got = await deps.fetcher.get(
+        new URL(`/document/?guid=3961&p0=${pravoId}`, deps.baseUrl),
+      );
+      if (got.status !== 200) throw new SourceUnavailable();
+      return { html: got.body, fetchedAt: got.fetchedAt };
+    },
+    async headActText(pravoId) {
+      const got = await deps.fetcher.head(textUrl(deps.baseUrl, pravoId));
+      if (got.status === 404) throw new ActTextNotFound();
+      if (got.status !== 200) throw new SourceUnavailable();
+      return { contentLength: got.contentLength };
     },
   };
 }

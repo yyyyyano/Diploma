@@ -14,6 +14,14 @@ export interface LegalSource {
   fetchActText(pravoId: string): Promise<SourcePage>;
 }
 
+/** Что источник даёт сверх текста (Национальный реестр, LAW-30): карточка акта и лёгкая проверка размера страницы. */
+export interface RegistrySource {
+  /** Карточка акта (`guid=3961`): вступление в силу, утрата силы, изменяющие акты. */
+  fetchActCard(pravoId: string): Promise<SourcePage>;
+  /** HEAD страницы текста без сжатия: размер для сравнения с последним снимком; нет текста — `ActTextNotFound`. */
+  headActText(pravoId: string): Promise<{ readonly contentLength: number | null }>;
+}
+
 /** Код остановки загрузчика: показывается администратору текстом из словаря i18n. */
 export type LoaderStopReason = "LOADER_CONTACT_EMPTY" | "LOADER_BLOCKED" | "LOADER_TOO_MANY_ERRORS";
 

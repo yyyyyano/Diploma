@@ -51,6 +51,8 @@ export interface Fetched {
   readonly status: number;
   readonly body: string;
   readonly fetchedAt: Date;
+  /** Content-Length ответа (для HEAD без сжатия — размер страницы); нет заголовка — null. */
+  readonly contentLength: number | null;
 }
 
 /** «Kosht/0.1 (+mailto:admin@example.org)» — для email; адрес сайта — как есть. Под браузер не маскируемся. */
@@ -117,6 +119,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     userAgent: string,
     settings: FetcherSettings,
     signal?: AbortSignal,
+    method: "GET" | "HEAD" = "GET",
   ): Promise<
     { response: Response; bytes: Uint8Array } | { transient: true; status: number | null }
   > {
@@ -132,10 +135,12 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     let outcome = "ok";
     try {
       response = await deps.fetch(url, {
+        method,
         redirect: "manual",
         headers: {
           "User-Agent": userAgent,
-          "Accept-Encoding": "gzip, br",
+          // Лёгкая проверка (LAW-30): HEAD без сжатия — Content-Length совпадает с размером страницы, которую мы сохранили.
+          "Accept-Encoding": method === "HEAD" ? "identity" : "gzip, br",
           Accept: "text/html,text/plain;q=0.9",
         },
         signal:
@@ -144,7 +149,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
             : AbortSignal.any([signal, AbortSignal.timeout(settings.timeoutMs)]),
       });
       bytes =
-        response.status >= 300 && response.status < 400
+        method === "HEAD" || (response.status >= 300 && response.status < 400)
           ? new Uint8Array()
           : await readCapped(response, settings.maxPageBytes);
     } catch (error) {
@@ -243,15 +248,16 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     userAgent: string,
     settings: FetcherSettings,
     signal?: AbortSignal,
+    method: "GET" | "HEAD" = "GET",
   ): Promise<Fetched> {
     let target = url;
     for (let hops = 0; hops <= MAX_REDIRECTS; hops += 1) {
-      let result = await attempt(target, userAgent, settings, signal);
+      let result = await attempt(target, userAgent, settings, signal, method);
       for (const delay of RETRY_LADDER_MS) {
         if (!("transient" in result)) break;
         log.info({ ms: delay }, "law.loader.retry");
         await deps.sleep(delay, signal);
-        result = await attempt(target, userAgent, settings, signal);
+        result = await attempt(target, userAgent, settings, signal, method);
       }
       if ("transient" in result) throw new SourceUnavailable();
       const { response, bytes } = result;
@@ -264,34 +270,40 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
         status: response.status,
         body: decodeBody(bytes, response.headers.get("content-type")),
         fetchedAt: clock.now(),
+        contentLength: Number(response.headers.get("content-length") ?? "") || null,
       };
     }
     throw new SourceUnavailable();
   }
 
+  /** Запрос с проверкой контакта, остановки цикла и robots.txt; ответ любого кода, кроме 403/429/5xx, возвращается как есть. */
+  async function request(url: URL, method: "GET" | "HEAD", signal?: AbortSignal): Promise<Fetched> {
+    const userAgent = await ready();
+    const settings = await deps.settings();
+    const robots = await robotsFor(url, userAgent, settings, signal);
+    if (robots.isAllowed(url.href, userAgent) === false) {
+      await store.record(
+        {
+          at: clock.now(),
+          url: loggedUrl(url),
+          httpStatus: null,
+          bytes: null,
+          ms: 0,
+          outcome: "robots-denied",
+          isError: false,
+        },
+        clock.today(),
+      );
+      throw new RobotsDenied();
+    }
+    return requestWithRetries(url, userAgent, settings, signal, method);
+  }
+
   return {
-    /** GET страницы с проверкой robots.txt; ответ любого кода, кроме 403/429/5xx, возвращается как есть (404 решает вызывающий). */
-    async get(url: URL, signal?: AbortSignal): Promise<Fetched> {
-      const userAgent = await ready();
-      const settings = await deps.settings();
-      const robots = await robotsFor(url, userAgent, settings, signal);
-      if (robots.isAllowed(url.href, userAgent) === false) {
-        await store.record(
-          {
-            at: clock.now(),
-            url: loggedUrl(url),
-            httpStatus: null,
-            bytes: null,
-            ms: 0,
-            outcome: "robots-denied",
-            isError: false,
-          },
-          clock.today(),
-        );
-        throw new RobotsDenied();
-      }
-      return requestWithRetries(url, userAgent, settings, signal);
-    },
+    /** GET страницы (404 решает вызывающий). */
+    get: (url: URL, signal?: AbortSignal): Promise<Fetched> => request(url, "GET", signal),
+    /** HEAD без сжатия — лёгкая проверка, менялась ли страница (LAW-30). */
+    head: (url: URL, signal?: AbortSignal): Promise<Fetched> => request(url, "HEAD", signal),
   };
 }
 

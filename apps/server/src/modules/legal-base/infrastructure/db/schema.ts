@@ -69,6 +69,10 @@ export const legalActs = publicTable(
     /** Сколько статей у акта по последнему применённому снимку (канарейка LAW-39). */
     articleCount: integer(),
     loadedAt: moment(),
+    /** День, с которого акт утратил силу (LAW-34): «Дата ограничения действия» с карточки; пусто — действует. */
+    repealedOn: date({ mode: "string" }),
+    /** Когда карточку акта читали в последний раз (LAW-30: карточки индекса — ежедневно, прочих — раз в неделю). */
+    cardCheckedAt: moment(),
     /** Код причины последней ошибки или карантина (без текста страницы, OBS-04). */
     lastProblem: text(),
     createdAt: moment().notNull().defaultNow(),
@@ -269,4 +273,49 @@ export const legalFragmentEmbeddings = publicTable(
     embeddedAt: moment().notNull(),
   },
   (t) => [index("legal_fragment_embeddings_model_idx").on(t.modelId)],
+);
+
+/**
+ * Принятые, но не вступившие (не отражённые в тексте) изменения акта (LAW-32): строка на изменяющий акт. Ключ — «номер|дата»
+ * из карточки; когда изменяющий акт появился в перечне текста — `reflected`. Статьи — только проверенные дословно по тексту
+ * изменяющего акта (модель предлагает, программа проверяет); пусто — предупреждение на уровне акта.
+ */
+export const legalPendingChanges = publicTable(
+  "legal_pending_changes",
+  {
+    id: id(),
+    actId: uuid()
+      .notNull()
+      .references(() => legalActs.id),
+    changeKey: text().notNull(),
+    /** «Закон Республики Беларусь от 16 марта 2026 г. № 134-З» — как в карточке. */
+    description: text().notNull(),
+    inForceOn: date({ mode: "string" }),
+    articles: text()
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    status: text().notNull().default("pending"),
+    firstSeenAt: moment().notNull(),
+    /** Когда изменяющий акт разобран (статьи и дата вступления); пусто — ещё не разбирали. */
+    analyzedAt: moment(),
+    notifiedAt: moment(),
+  },
+  (t) => [
+    uniqueIndex("legal_pending_changes_key_idx").on(t.actId, t.changeKey),
+    check("legal_pending_changes_status_check", sql`${t.status} in ('pending','reflected')`),
+  ],
+);
+
+/** Догрузки по требованию (LAW-09): строка на догрузку — предел в сутки считается по ним. */
+export const legalDemandLoads = publicTable(
+  "legal_demand_loads",
+  {
+    id: id(),
+    actId: uuid()
+      .notNull()
+      .references(() => legalActs.id),
+    at: moment().notNull(),
+  },
+  (t) => [index("legal_demand_loads_at_idx").on(t.at)],
 );

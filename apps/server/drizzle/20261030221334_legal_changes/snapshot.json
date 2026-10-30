@@ -1,0 +1,508 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "8814595c-077d-407e-a358-c000dccf16a6",
+  "prevIds": ["9a6a8db9-38dc-44d1-87f0-e480697d0cd9"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "legal_demand_loads"],
+      "writes": [
+        "s|tbl|public.legal_demand_loads",
+        "n|tbl|public.legal_demand_loads",
+        "e|tbl|public.legal_demand_loads",
+        "n|rel|public.legal_demand_loads",
+        "n|type|public.legal_demand_loads",
+        "n|rel|public.legal_demand_loads_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "legal_pending_changes"],
+      "writes": [
+        "s|tbl|public.legal_pending_changes",
+        "n|tbl|public.legal_pending_changes",
+        "e|tbl|public.legal_pending_changes",
+        "n|rel|public.legal_pending_changes",
+        "n|type|public.legal_pending_changes",
+        "n|rel|public.legal_pending_changes_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "repealed_on"],
+      "writes": [
+        "s|col|public.legal_acts.repealed_on",
+        "n|col|public.legal_acts.repealed_on",
+        "e|col|public.legal_acts.repealed_on"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "legal_acts", "card_checked_at"],
+      "writes": [
+        "s|col|public.legal_acts.card_checked_at",
+        "n|col|public.legal_acts.card_checked_at",
+        "e|col|public.legal_acts.card_checked_at"
+      ],
+      "reads": ["n|tbl|public.legal_acts", "n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "legal_demand_loads", "legal_demand_loads_at_idx"],
+      "writes": [
+        "s|idx|public.legal_demand_loads_at_idx",
+        "n|idx|public.legal_demand_loads_at_idx",
+        "e|idx|public.legal_demand_loads_at_idx",
+        "n|rel|public.legal_demand_loads_at_idx"
+      ],
+      "reads": [
+        "n|tbl|public.legal_demand_loads",
+        "n|sch|public",
+        "n|col|public.legal_demand_loads.at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "legal_pending_changes",
+        "legal_pending_changes_key_idx"
+      ],
+      "writes": [
+        "s|idx|public.legal_pending_changes_key_idx",
+        "n|idx|public.legal_pending_changes_key_idx",
+        "e|idx|public.legal_pending_changes_key_idx",
+        "n|rel|public.legal_pending_changes_key_idx"
+      ],
+      "reads": [
+        "n|tbl|public.legal_pending_changes",
+        "n|sch|public",
+        "n|col|public.legal_pending_changes.act_id",
+        "n|col|public.legal_pending_changes.change_key"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "legal_demand_loads"],
+      "writes": [
+        "s|fk|public.legal_demand_loads.legal_demand_loads_act_id_legal_acts_id_fkey",
+        "n|fk|public.legal_demand_loads.legal_demand_loads_act_id_legal_acts_id_fkey",
+        "e|fk|public.legal_demand_loads.legal_demand_loads_act_id_legal_acts_id_fkey",
+        "n|con|public.legal_demand_loads.legal_demand_loads_act_id_legal_acts_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.legal_demand_loads",
+        "n|sch|public",
+        "n|tbl|public.legal_acts",
+        "n|sch|public",
+        "n|col|public.legal_demand_loads.act_id",
+        "n|col|public.legal_acts.id",
+        "e|uniqueness|public.legal_acts.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "legal_pending_changes"],
+      "writes": [
+        "s|fk|public.legal_pending_changes.legal_pending_changes_act_id_legal_acts_id_fkey",
+        "n|fk|public.legal_pending_changes.legal_pending_changes_act_id_legal_acts_id_fkey",
+        "e|fk|public.legal_pending_changes.legal_pending_changes_act_id_legal_acts_id_fkey",
+        "n|con|public.legal_pending_changes.legal_pending_changes_act_id_legal_acts_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.legal_pending_changes",
+        "n|sch|public",
+        "n|tbl|public.legal_acts",
+        "n|sch|public",
+        "n|col|public.legal_pending_changes.act_id",
+        "n|col|public.legal_acts.id",
+        "e|uniqueness|public.legal_acts.id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "legal_demand_loads",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "legal_pending_changes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "repealed_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_acts",
+        "name": "card_checked_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "act_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "act_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "change_key",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "description",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "in_force_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "articles",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 1,
+        "default": "'{}'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'pending'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "first_seen_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "analyzed_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "notified_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "legal_demand_loads_at_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "at",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "legal_pending_changes_key_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "act_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "change_key",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "legal_demand_loads_act_id_legal_acts_id_fkey",
+        "nameExplicit": false,
+        "columns": ["act_id"],
+        "schemaTo": "public",
+        "tableTo": "legal_acts",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "legal_pending_changes_act_id_legal_acts_id_fkey",
+        "nameExplicit": false,
+        "columns": ["act_id"],
+        "schemaTo": "public",
+        "tableTo": "legal_acts",
+        "columnsTo": ["id"],
+        "onUpdate": "NO ACTION",
+        "onDelete": "NO ACTION",
+        "entityType": "fks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_demand_loads",
+        "name": "legal_demand_loads_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "legal_pending_changes_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "legal_pending_changes",
+        "name": "legal_pending_changes_status_check",
+        "value": "\"status\" in ('pending','reflected')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

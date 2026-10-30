@@ -11,6 +11,7 @@ import type { Events } from "../../../platform/events/events.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import { isInitialized, readLoaderContact } from "../infrastructure/db/identity.repo.ts";
 import { verifyPassword } from "../infrastructure/password.ts";
+import { makeAdminScoped } from "./admin-scoped.ts";
 import { makeSetup } from "./setup.ts";
 
 let db: TestDb | undefined;
@@ -132,5 +133,19 @@ describe("AUTH-10: первый запуск", () => {
     const { setup, system } = setupWith();
     await setup({ ...admin, loaderContact: "https://example.test/about" });
     expect(await readLoaderContact(system)).toBe("https://example.test/about");
+  });
+
+  it("adminScoped: до первого запуска администратора нет, после — ScopedDb первого активного администратора", async () => {
+    if (db === undefined) throw new Error("нет базы");
+    const { setup, system } = setupWith();
+    const pool = db.pool;
+    const adminScoped = makeAdminScoped({
+      system,
+      scoped: (scope) => createScopedDb(pool, scope),
+    });
+    expect(await adminScoped()).toBeUndefined();
+    await setup(admin);
+    const s = await adminScoped();
+    expect(s?.scope.userId).toBe((await users())[0]?.id);
   });
 });

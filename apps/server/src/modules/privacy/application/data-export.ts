@@ -79,14 +79,16 @@ export function makeDataExport(d: DataExportDeps) {
     let replaced: string[];
     try {
       replaced = await s.transaction(async (tx) => {
-        const old = await deleteExports(tx);
-        const id = await insertExport(tx, d.clock.now());
+        const now = d.clock.now();
+        const old = await deleteExports(tx, new Date(now.getTime() - EXPORT_BUILD_SECONDS * 1000));
+        const id = await insertExport(tx, now);
         await d.enqueueBuild(tx, id);
         await d.realtime.changed(tx, { entity: "data-export", ids: [id] });
         return old;
       });
     } catch (error) {
-      // Вторая заявка разом с первой: первая уже поставила сборку — отдаём её.
+      // Вторая заявка разом с первой (свежая готовящаяся не удаляется, индекс не пускает вторую): первая уже
+      // поставила сборку — отдаём её.
       if (isSecondPending(error)) return view(await latestExport(s));
       throw error;
     }

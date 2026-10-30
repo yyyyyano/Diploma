@@ -187,6 +187,28 @@ describe("PRIV-05: заявка на архив «Мои данные»", () => 
     );
     expect(rows).toEqual([{ status: "pending" }]);
   });
+  it("первая заявка закоммичена между проверкой и транзакцией второй — вторая её не удаляет, задача одна", async () => {
+    const { exports, enqueued } = setup();
+    const s = scoped(testScope({ user: 12, household: 12 }));
+    // Детерминированная гонка: вторая заявка уже прочитала «заявок нет», а первая успела закоммитить свою до того,
+    // как вторая открыла транзакцию (так бывает под нагрузкой при двух запросах разом).
+    const late: ScopedDb = {
+      ...s,
+      transaction: async (fn) => {
+        await exports.request(s);
+        return s.transaction(fn);
+      },
+    };
+    const second = await exports.request(late);
+    expect(enqueued).toHaveLength(1);
+    expect(second).toEqual(await exports.state(s));
+    const { rows } = await db.owner.query<{ id: string; status: string }>(
+      "select id, status from privacy_exports where household_id = $1",
+      [s.scope.householdId],
+    );
+    expect(rows).toEqual([{ id: enqueued[0], status: "pending" }]);
+  });
+
   it("чужая заявка «готовится» ещё не закоммичена — вставка ждёт её и отдаёт её же, второй задачи нет", async () => {
     const { exports, enqueued } = setup();
     const s = scoped(testScope({ user: 10, household: 10 }));

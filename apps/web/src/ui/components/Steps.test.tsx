@@ -24,9 +24,9 @@ describe("Steps", () => {
     const list = screen.getByRole("list", { name: "Этапы проверки чека" });
     const items = within(list).getAllByRole("listitem");
     expect(items.map((item) => item.textContent)).toEqual([
-      "Читаю чек, сделано",
-      "Проверяю арифметику, идёт",
-      "Раскладываю по категориям, ждёт",
+      "Читаю чек сделано",
+      "Проверяю арифметику идёт",
+      "Раскладываю по категориям ждёт",
     ]);
     expect(items.map((item) => item.getAttribute("data-state"))).toEqual([
       "done",

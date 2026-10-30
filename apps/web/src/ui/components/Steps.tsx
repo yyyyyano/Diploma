@@ -34,8 +34,8 @@ export function Steps({ steps, label, stateLabels }: StepsProps) {
             )}
             {step.state === "pending" && <Circle size={14} strokeWidth={1.8} />}
           </span>
-          <span>{step.label}</span>
-          <span className={classes.srOnly}>{`, ${stateLabels[step.state]}`}</span>
+          <span>{step.label}</span>{" "}
+          <span className={classes.srOnly}>{stateLabels[step.state]}</span>
         </li>
       ))}
     </ol>

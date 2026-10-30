@@ -373,3 +373,56 @@ describe("фасад для transactions и statements", () => {
     ]);
   });
 });
+
+describe("FIN-22: balances — остатки в BYN как расчёты", () => {
+  const savings = {
+    ...card,
+    kind: "savings" as const,
+    bank: null,
+    mask: null,
+    name: "Подушка",
+    initialBalance: Money.of(50_000, "BYN"),
+  };
+  const usd = {
+    ...card,
+    bank: null,
+    mask: null,
+    name: "USD",
+    currency: "USD",
+    initialBalance: Money.of(1_000, "USD"),
+  };
+
+  it("«доступно» — без накопительного, эквивалент валюты с трассой курса; счёт без курса помечен, а не 0", async () => {
+    const s = scoped();
+    const { accounts } = accountsWithJournal({ USD });
+    await accounts.create(s, card, "web");
+    await accounts.create(s, savings, "web");
+    await accounts.create(s, usd, "web");
+    const result = await accounts.balances(s);
+    // 150,00 BYN + 10,00 USD × 2,9871 = 29,87 → 179,87 (накопительный 500,00 — не в «доступно»)
+    expect(result.available.value).toEqual(Money.of(17_987, "BYN"));
+    expect(result.available.trace.key).toBe("accounts.available");
+    expect(JSON.stringify(result.available.trace)).toContain("fx.rate");
+    expect(result.unconverted).toEqual([]);
+    expect(result.items).toHaveLength(3);
+  });
+
+  it("курс НБРБ недоступен: валютный счёт в unconverted, валюта в missingRates, сумма — без него", async () => {
+    const s = scoped();
+    const { accounts } = accountsWithJournal();
+    await accounts.create(s, card, "web");
+    const created = await accounts.create(s, usd, "web");
+    const result = await accounts.balances(s);
+    expect(result.available.value).toEqual(Money.of(15_000, "BYN"));
+    expect(result.unconverted).toEqual([created.account.id]);
+    expect(result.missingRates).toEqual(["USD"]);
+    expect(result.items.find((item) => item.currency === "USD")?.inByn).toBeNull();
+  });
+
+  it("счетов нет — 0 BYN, а не ошибка; чужие счета не видны", async () => {
+    const s = scoped();
+    const { accounts } = accountsWithJournal();
+    await accounts.create(scoped(), card, "web");
+    expect((await accounts.balances(s)).available.value).toEqual(Money.of(0, "BYN"));
+  });
+});

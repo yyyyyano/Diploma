@@ -3,7 +3,7 @@
 // её id); удалить — только через ожидающее решение «Да/Нет» в actions. Курсы запрашиваются до транзакций (HTTP вне
 // транзакции); курса нет — эквивалент и итог не показываются, а не считаются нулём. Фасад для transactions и statements:
 // найти или создать карту банка, применить изменение остатка, «Наличные» и «Карта, не указана».
-import type { FxRateInput } from "@kosht/calc";
+import { node, sum, type Calc, type FxRateInput } from "@kosht/calc";
 import {
   AccountId,
   type AccountListItem,
@@ -46,6 +46,23 @@ import {
 
 export const RESTORE_HANDLER = "accounts.restore";
 export const DELETE_HANDLER = "accounts.delete";
+
+/** Остатки счетов в BYN для расчётов fin (FIN-22). */
+export interface AccountBalances {
+  readonly onDate: LocalDate;
+  readonly items: readonly {
+    readonly id: string;
+    readonly kind: string;
+    readonly currency: string;
+    readonly balance: Money;
+    /** Эквивалент в BYN с трассой; нет курса — `null` (счёт помечен, не 0). */
+    readonly inByn: Calc<Money> | null;
+  }[];
+  /** Сумма эквивалентов счетов без накопительных; счета без курса в неё не входят. */
+  readonly available: Calc<Money>;
+  readonly unconverted: readonly string[];
+  readonly missingRates: readonly string[];
+}
 
 export type Channel = "web" | "telegram";
 
@@ -150,6 +167,36 @@ export function makeAccounts(d: AccountsDeps) {
           (currency) => currency !== "BYN" && !rates.has(currency),
         ),
       },
+    };
+  }
+
+  /**
+   * Фасад для `fin` (FIN-22): остатки в BYN как расчёты. «Доступно» — без накопительных счетов; счёт, у которого нет курса
+   * НБРБ, не считается нулём: он в `unconverted`, его валюта — в `missingRates`, а в сумму не входит.
+   */
+  async function balances(s: ScopedDb): Promise<AccountBalances> {
+    const rows = await listAccounts(s);
+    const rates = await ratesFor(rows);
+    const inputs = new Map([...rates].map(([currency, rate]) => [currency, rateInput(rate)]));
+    const items = rows.map((row) => ({
+      id: row.id,
+      kind: row.kind,
+      currency: row.currency,
+      balance: Money.of(row.balanceMinor, row.currency),
+      inByn: balanceInByn(row, inputs.get(row.currency)) ?? null,
+    }));
+    const spendable = items.filter((item) => !isSavings(item.kind));
+    const converted = spendable.flatMap((item) => (item.inByn === null ? [] : [item.inByn]));
+    const [first, ...rest] = converted;
+    return {
+      onDate: clock.today(),
+      items,
+      available:
+        first === undefined
+          ? node("accounts.available", Money.of(0, "BYN"))
+          : sum("accounts.available", [first, ...rest]),
+      unconverted: items.filter((item) => item.inByn === null).map((item) => item.id),
+      missingRates: [...new Set(items.filter((i) => i.inByn === null).map((i) => i.currency))],
     };
   }
 
@@ -486,6 +533,7 @@ export function makeAccounts(d: AccountsDeps) {
 
   return {
     list,
+    balances,
     explain,
     create,
     rename,

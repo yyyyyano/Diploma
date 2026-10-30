@@ -36,6 +36,7 @@ export function createAccountsModule({ platform, facades }: ModuleDeps<AccountsF
   return defineModule({
     id: "accounts",
     facade: {
+      balances: accounts.balances,
       findOrCreate: accounts.findOrCreate,
       findCard: accounts.findCard,
       findCardByMask: accounts.findCardByMask,

@@ -2,10 +2,19 @@
 export { node, type Calc, type NodeOptions } from "./calc.ts";
 export { toByn, type FxRateInput } from "./fx/to-byn.ts";
 export { balanceChainDifference, type BalanceChainInput } from "./statements/balance-chain.ts";
+export {
+  validateReceipt,
+  type LineValidation,
+  type ReceiptInput,
+  type ReceiptLineInput,
+  type ReceiptValidation,
+  type TotalValidation,
+} from "./receipts/validate-receipt.ts";
 export { freeBalance, type FreeBalanceInput } from "./fin/free-balance.ts";
 export {
   avg,
   mul,
+  mulQuantity,
   mulRate,
   round,
   sub,

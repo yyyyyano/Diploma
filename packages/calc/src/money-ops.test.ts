@@ -4,7 +4,7 @@ import { Money } from "@kosht/kernel";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { node, type Calc } from "./calc.ts";
-import { avg, mul, sub, sum } from "./money-ops.ts";
+import { avg, mul, mulQuantity, sub, sum } from "./money-ops.ts";
 
 const byn = (minor: number): Calc<Money> => node("test.amount", Money.of(minor, "BYN"));
 
@@ -158,5 +158,38 @@ describe("свойства (fast-check)", () => {
         },
       ),
     );
+  });
+});
+
+describe("mulQuantity", () => {
+  it("0,345 кг × 12,99 = 4,48155 → 4,48 до копейки, половина от нуля", () => {
+    const line = mulQuantity("receipts.lineGross", byn(1_299), node("receipts.quantity", 345), {
+      rounding: "half-up-kopeck",
+    });
+    expect(line.value).toEqual({ minor: 448, currency: "BYN" });
+    expect(line.trace).toMatchObject({ op: "mul", note: "rounding=half-up-kopeck step=1" });
+    expect(line.trace.inputs.map((input) => input.value)).toEqual([
+      { minor: 1_299, currency: "BYN" },
+      345,
+    ]);
+  });
+
+  it("целое количество в тысячных: 3 × 2,49 = 7,47 без округления", () => {
+    const line = mulQuantity("x", byn(249), node("x.q", 3_000), { rounding: "half-up-kopeck" });
+    expect(line.value.minor).toBe(747);
+  });
+
+  it("половина копейки округляется от нуля: 0,5 × 0,01 → 0,01, а −0,5 × 0,01 → −0,01", () => {
+    const rule = { rounding: "half-up-kopeck" } as const;
+    expect(mulQuantity("x", byn(1), node("x.q", 500), rule).value.minor).toBe(1);
+    expect(mulQuantity("x", byn(-1), node("x.q", 500), rule).value.minor).toBe(-1);
+  });
+
+  it("результат за пределами безопасного диапазона — ошибка", () => {
+    expect(() =>
+      mulQuantity("x", byn(Number.MAX_SAFE_INTEGER), node("x.q", 2_000), {
+        rounding: "half-up-kopeck",
+      }),
+    ).toThrow(RangeError);
   });
 });

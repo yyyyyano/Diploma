@@ -70,6 +70,38 @@ export function mul(key: string, amount: Calc<Money>, factor: Calc<number>): Cal
   return { value, trace: trace(key, "mul", value, [amount.trace, factor.trace]) };
 }
 
+/** 1000 тысячных = одна единица товара (штука, килограмм). */
+const MILLI = 1_000n;
+
+/**
+ * RCPT-05: цена за единицу × количество в тысячных долях единицы (0,345 кг → 345; 3 шт → 3000) с явным округлением
+ * до копейки. Количество — узел трассы (целое), цена — деньги; произведение считается на BigInt.
+ */
+export function mulQuantity(
+  key: string,
+  unitPrice: Calc<Money>,
+  quantityMilli: Calc<number>,
+  options: RoundingOptions,
+): Calc<Money> {
+  const exact = BigInt(unitPrice.value.minor) * BigInt(quantityMilli.value);
+  const value = toMoney(
+    key,
+    divideRounded(exact, MILLI, options.rounding),
+    unitPrice.value.currency,
+  );
+  return {
+    value,
+    trace: trace(
+      key,
+      "mul",
+      value,
+      [unitPrice.trace, quantityMilli.trace],
+      [],
+      roundingNote(options.rounding),
+    ),
+  };
+}
+
 /** Деньги × ставка в базисных пунктах (1300 = 13 %) с явным округлением; ставка — узел трассы с основаниями. */
 export function mulRate(
   key: string,

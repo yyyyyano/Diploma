@@ -28,6 +28,20 @@ export const TRACE_KEYS = [
   "statements.closingBalance",
   "statements.expectedClosing",
   "statements.balanceDifference",
+  // RCPT-05: строка чека — цена, количество (в тысячных), скидка, расчётная и напечатанная сумма, разница.
+  "receipts.unitPrice",
+  "receipts.quantity",
+  "receipts.lineGross",
+  "receipts.lineDiscount",
+  "receipts.lineExpected",
+  "receipts.lineTotal",
+  "receipts.lineDifference",
+  // RCPT-05: итог чека — сумма строк, скидки на чек, расчётный и напечатанный итог, разница.
+  "receipts.linesSum",
+  "receipts.receiptDiscount",
+  "receipts.expectedTotal",
+  "receipts.total",
+  "receipts.totalDifference",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

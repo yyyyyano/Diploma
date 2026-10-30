@@ -36,4 +36,18 @@ export const formulas = {
     expectedClosing: "Остаток на конец, если все операции учтены",
     balanceDifference: "Расхождение с выпиской",
   },
+  receipts: {
+    unitPrice: "Цена за единицу",
+    quantity: "Количество, в тысячных долях единицы",
+    lineGross: "Цена × количество",
+    lineDiscount: "Скидка на строку",
+    lineExpected: "Сумма строки по расчёту",
+    lineTotal: "Сумма строки на чеке",
+    lineDifference: "Расхождение в строке",
+    linesSum: "Сумма строк чека",
+    receiptDiscount: "Скидки на чек",
+    expectedTotal: "Итог по расчёту",
+    total: "Итог на чеке",
+    totalDifference: "Расхождение в итоге",
+  },
 } as const;

@@ -15,7 +15,7 @@ export type NewAttempt = Omit<InsertValue<typeof receiptAttempts>, "receiptId">;
 export async function insertReceipt(s: ScopedDb, value: NewReceipt): Promise<ReceiptRow> {
   const rows = await s.insert(receipts).values(value).returning();
   // INSERT … RETURNING всегда возвращает вставленную строку.
-  return rows.reduce((_, row) => row);
+  return rows[0] as ReceiptRow;
 }
 
 /** Чек по id (свой); чужой и неизвестный — undefined. */
@@ -114,11 +114,6 @@ export async function listAttempts(s: ScopedDb, receiptId: string): Promise<Atte
     .from(receiptAttempts)
     .where(and(s.own(receiptAttempts), eq(receiptAttempts.receiptId, receiptId)))
     .orderBy(asc(receiptAttempts.attempt));
-}
-
-/** Попытки пересобираются заново, если чек перераспознают: старая история не нужна. */
-export async function deleteAttempts(s: ScopedDb, receiptId: string): Promise<void> {
-  await s.delete(receiptAttempts, eq(receiptAttempts.receiptId, receiptId));
 }
 
 /** Тот же чек под блокировкой строки: два запуска распознавания одного чека идут по очереди. */

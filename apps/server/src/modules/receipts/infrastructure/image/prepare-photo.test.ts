@@ -4,7 +4,7 @@ import { crc32, deflateSync } from "node:zlib";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { uidFromQr } from "../../domain/qr.ts";
-import { caseIds, loadCase } from "../../application/__fixtures__/datasets.ts";
+import { caseIds, loadCase } from "../../__fixtures__/datasets.ts";
 import { PhotoReadError } from "../../application/ports.ts";
 import { makePhotoPreparer } from "./prepare-photo.ts";
 

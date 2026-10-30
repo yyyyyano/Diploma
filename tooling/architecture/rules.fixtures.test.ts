@@ -151,6 +151,10 @@ const EXPECTED: Record<string, string[]> = {
     `${P}/telemetry/telemetry.ts → @langfuse/otel`,
   ],
   "sharp-only-in-llm-images": [`${M}/receipts/application/recognize.ts → sharp`],
+  "photo-decoders-only-in-receipts-infrastructure": [
+    `${M}/statements/application/parse-statement.ts → heic-decode`,
+    `${M}/receipts/application/recognize.ts → zxing-wasm`,
+  ],
   "document-parsers-only-in-statements-infrastructure": [
     `${M}/receipts/application/recognize.ts → unpdf`,
     `${M}/receipts/application/recognize.ts → xlsx`,

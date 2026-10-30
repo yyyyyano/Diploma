@@ -2,8 +2,8 @@
 // заданными ответами (первый — чтение чека, дальше — перепроверки), проверяя каждый схемой запроса, как шлюз проверяет
 // ответ модели (LLM-04), и записывает вызовы — по ним тест видит, что именно ушло модели. Реальные модели в обычных
 // тестах не вызываются (NFR-11, QA-01). Ответ-функция получает номер вызова и может заглянуть в базу или бросить ошибку.
-import type { Settings, SettingDef } from "../../../../platform/settings/settings.ts";
-import type { LlmFacade } from "../../../llm/index.ts";
+import type { Settings, SettingDef } from "../../../platform/settings/settings.ts";
+import type { LlmFacade } from "../../llm/index.ts";
 
 export interface ScriptedCall {
   readonly caller: unknown;

@@ -2,10 +2,10 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Expected } from "../../../../../../../tooling/synth/receipts/cases.ts";
-import type { PhotoType } from "../ports.ts";
+import type { Expected } from "../../../../../../tooling/synth/receipts/cases.ts";
+import type { PhotoType } from "../application/ports.ts";
 
-const ROOT = fileURLToPath(new URL("../../../../../../../datasets/receipts/", import.meta.url));
+const ROOT = fileURLToPath(new URL("../../../../../../datasets/receipts/", import.meta.url));
 
 export type { Expected };
 

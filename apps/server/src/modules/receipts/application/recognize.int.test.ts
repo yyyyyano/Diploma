@@ -14,9 +14,10 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Realtime } from "../../../platform/realtime/realtime.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
+import type { PhotoPreparer } from "./ports.ts";
 import { makePhotoPreparer } from "../infrastructure/image/prepare-photo.ts";
-import { caseIds, loadCase, type Expected } from "./__fixtures__/datasets.ts";
-import { scriptedLlm, testSettings, type Answer } from "./__fixtures__/scripted-llm.ts";
+import { caseIds, loadCase, type Expected } from "../__fixtures__/datasets.ts";
+import { scriptedLlm, testSettings, type Answer } from "../__fixtures__/scripted-llm.ts";
 import { makeRecognize } from "./recognize.ts";
 
 let db: TestDb;
@@ -78,6 +79,8 @@ function recheckOf(e: Expected, lines: readonly number[]) {
 
 interface Options {
   readonly answers: readonly Answer[];
+  /** Своя подготовка фото вместо настоящей и вместо заглушки с кодами. */
+  readonly preparer?: PhotoPreparer;
   readonly settings?: Record<string, unknown>;
   /** Настоящая подготовка фото (поток, декодеры, QR) или заглушка с заданными кодами. */
   readonly codes?: readonly string[];
@@ -93,7 +96,8 @@ function setup(options: Options) {
   const logger = memoryLogger();
   const preparerCalls: string[] = [];
   const preparer =
-    options.codes === undefined
+    options.preparer ??
+    (options.codes === undefined
       ? realPreparer
       : {
           prepare: async () => {
@@ -104,7 +108,7 @@ function setup(options: Options) {
               codes: options.codes ?? [],
             };
           },
-        };
+        });
   const realtime: Realtime = {
     changed: (tx, signal) => t.platform.realtime.changed(tx, signal),
     progress: async (_scope, signal) => {
@@ -485,6 +489,46 @@ describe("RCPT-03, RCPT-15: сохранённый чек и позиции", ()
     expect(rows[0]).toMatchObject({ name: "Хлеб Нарочанский 400г", unit: "шт" });
   });
 
+  it("на чеке нет магазина, дня, времени и валюты, а числа строки не читаются — чек сохраняется с пустыми полями", async () => {
+    const s = newScope(db);
+    const sparse = {
+      ...base(),
+      store: null,
+      date: null,
+      time: null,
+      currency: null,
+      items: [
+        { name: "???", quantity: "?", unit: null, unitPrice: "?", discount: null, lineTotal: "?" },
+      ],
+      total: "5,00",
+    };
+    const again = {
+      lines: [{ line: 1, quantity: "?", unitPrice: "?", discount: null, lineTotal: "?" }],
+      total: null,
+      receiptDiscount: null,
+    };
+    const stand = setup({ codes: [], answers: [sparse, again, again] });
+    const id = await stand.recognize(s, stand.upload(new Uint8Array([1])));
+    expect(await stand.row(s, id)).toMatchObject({
+      status: "needs-review",
+      store_name: null,
+      store_key: null,
+      purchase_date: null,
+      purchase_time: null,
+      currency: "BYN",
+      total_minor: "500",
+      // Строка не прочитана: весь итог — «нераспознанный остаток» чека.
+      remainder_minor: "500",
+      disputed_lines: [1],
+    });
+    expect((await stand.items(s, id))[0]).toMatchObject({
+      quantity_milli: null,
+      unit_price_minor: null,
+      line_total_minor: null,
+      disputed: true,
+    });
+  });
+
   it("оплата наличными — карта не сохраняется, даже если модель вернула цифры", async () => {
     const s = newScope(db);
     const stand = setup({
@@ -610,6 +654,39 @@ describe("RCPT-04: дубли", () => {
     ).toEqual(["failed", "ok"]);
     expect(states.filter((row) => row["error_code"] === "RECEIPT_DUPLICATE")).toHaveLength(1);
     expect(states.filter((row) => row["error_code"] === null)).toHaveLength(1);
+  });
+
+  it("оба запуска дошли до УИ одновременно — уникальный индекс пропускает одного, второй становится дублем", async () => {
+    const s = newScope(db);
+    const item = loadCase("sosnovy-clean-card");
+    let arrived = 0;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    // Подготовка фото ждёт, пока дойдут оба запуска: оба проверят УИ до того, как кто-то его занял.
+    const preparer = {
+      prepare: async () => {
+        arrived += 1;
+        if (arrived === 2) release();
+        await gate;
+        return {
+          image: new Uint8Array([0xff, 0xd8, 0xff]),
+          mime: "image/jpeg" as const,
+          codes: [`https://check.example.test/c?uid=${item.expected.uid}`],
+        };
+      },
+    };
+    const stand = setup({ answers: [readingOf(item.expected)], preparer });
+    const [a, b] = await Promise.all([
+      stand.flow.start(s, stand.upload(new Uint8Array([1]))),
+      stand.flow.start(s, stand.upload(new Uint8Array([2]))),
+    ]);
+    await Promise.all([stand.flow.run(s, a.id), stand.flow.run(s, b.id)]);
+    const rows = [await stand.row(s, a.id), await stand.row(s, b.id)];
+    expect(rows.filter((row) => row["status"] === "ok")).toHaveLength(1);
+    expect(rows.filter((row) => row["error_code"] === "RECEIPT_DUPLICATE")).toHaveLength(1);
+    expect(stand.script.calls).toHaveLength(1);
   });
 
   it("чек без QR — дубль по магазину, дню, времени и итогу", async () => {

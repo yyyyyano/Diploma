@@ -445,13 +445,24 @@ function libraryRules(): ForbiddenRule[] {
     rule(
       "sharp-only-in-llm-images",
       "Обработка изображений (sharp) — только в llm/infrastructure/images (перед облаком изображение перекодируется " +
-        "без метаданных, PRIV-04) и в statements/infrastructure (картинки страниц-сканов PDF → PNG для модели, T-025); " +
-        "остальной код получает готовые байты.",
+        "без метаданных, PRIV-04) в statements/infrastructure (картинки страниц-сканов PDF → PNG для модели, T-025) и " +
+        "в receipts/infrastructure (подготовка фото чека в изолированном потоке, T-027); остальной код получает готовые байты.",
       {
         path: `^${SERVER}/`,
-        pathNot: [`^${MOD}/llm/infrastructure/images/`, `^${MOD}/statements/infrastructure/`],
+        pathNot: [
+          `^${MOD}/llm/infrastructure/images/`,
+          `^${MOD}/statements/infrastructure/`,
+          `^${MOD}/receipts/infrastructure/`,
+        ],
       },
       { path: npmPattern(["sharp"]) },
+    ),
+    rule(
+      "photo-decoders-only-in-receipts-infrastructure",
+      "Декодеры недоверенных фото чеков (heic-decode, zxing-wasm) — только в receipts/infrastructure: они работают в " +
+        "изолированном потоке с таймаутом и лимитом памяти (SEC-03, T-027); остальной код получает готовую копию и тексты QR.",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/receipts/infrastructure/`] },
+      { path: npmPattern(["heic-decode", "zxing-wasm"]) },
     ),
     rule(
       "document-parsers-only-in-statements-infrastructure",

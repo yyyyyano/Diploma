@@ -31,7 +31,7 @@ import { transactionsChanged, transactionsMerged } from "./events.ts";
 import { MATCH_AMOUNT_TOLERANCE_MINOR, MATCH_SIMILARITY, MATCH_WINDOW_DAYS } from "./settings.ts";
 import { categorizeJob } from "./jobs/categorize.job.ts";
 import { fillRatesJob } from "./jobs/fill-rates.job.ts";
-import { countEditedInImport } from "./infrastructure/db/transactions.repo.ts";
+import { countEditedInImport, recurringHistory } from "./infrastructure/db/transactions.repo.ts";
 import { transactionsUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -77,6 +77,7 @@ export function createTransactionsModule({
       transferCandidates: imports.transferCandidates,
       purchaseCandidates: imports.purchaseCandidates,
       countEditedInImport,
+      recurringHistory,
       requestMarkTransfer: ops.requestMarkTransfer,
       recordFromReceipt: ops.recordFromReceipt,
       updateFromReceipt: ops.updateFromReceipt,
@@ -111,6 +112,7 @@ export function createTransactionsModule({
  * Что модуль даёт соседям: запись выписки (T-026) — `importBatch(tx, { importId, rows })`, `deleteImport(tx, importId)`,
  * проверка дублей `knownKeys`, кандидаты в пару перевода и покупки возврата, `countEditedInImport`,
  * `requestMarkTransfer(s, ids, channel)` — «Да/Нет» для спорных переводов; чеки (T-028): `recordFromReceipt`,
- * `updateFromReceipt`, `setReceiptReviewed`, `removeForReceipt`, `operationOfReceipt`; агрегаты пачками — T-031.
+ * `updateFromReceipt`, `setReceiptReviewed`, `removeForReceipt`, `operationOfReceipt`; история для поиска регулярных (T-030) —
+ * `recurringHistory` (операции пачкой без переводов, возвратов и «ожидает выписки»); агрегаты пачками — T-031.
  */
 export type TransactionsFacade = ReturnType<typeof createTransactionsModule>["facade"];

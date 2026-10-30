@@ -39,7 +39,10 @@ import {
 } from "../../modules/transactions/application/handlers.ts";
 import { makeImportBatch } from "../../modules/transactions/application/import-batch.ts";
 import { makeBase, makeOperations } from "../../modules/transactions/application/operations.ts";
-import { countEditedInImport } from "../../modules/transactions/infrastructure/db/transactions.repo.ts";
+import {
+  countEditedInImport,
+  recurringHistory,
+} from "../../modules/transactions/infrastructure/db/transactions.repo.ts";
 import { fillRatesJob } from "../../modules/transactions/jobs/fill-rates.job.ts";
 import { categorizeJob } from "../../modules/transactions/jobs/categorize.job.ts";
 
@@ -227,6 +230,7 @@ export function transactionsWithJournal(
     transferCandidates: imports.transferCandidates,
     purchaseCandidates: imports.purchaseCandidates,
     countEditedInImport,
+    recurringHistory,
     requestMarkTransfer: ops.requestMarkTransfer,
     matchReceipt: ops.matchReceipt,
     matchBankOps: ops.matchBankOps,

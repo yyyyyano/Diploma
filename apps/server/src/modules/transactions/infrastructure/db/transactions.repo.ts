@@ -376,3 +376,65 @@ export async function receiptCandidates(s: ScopedDb, q: CandidateQuery): Promise
     )
     .orderBy(asc(t.occurredOn), asc(t.id));
 }
+
+/** Операция для поиска регулярных (REC-01): только то, что нужно, без описания и заметок. */
+export interface HistoryRow {
+  readonly id: string;
+  readonly merchantKey: string;
+  readonly merchantName: string;
+  readonly type: "expense" | "income";
+  readonly occurredOn: string;
+  readonly amountBynMinor: number;
+  readonly categoryCode: string | null;
+  readonly categoryId: string | null;
+}
+
+/**
+ * REC-01: доходы и расходы с известным контрагентом за период — без переводов и возвратов, без «ожидает выписки» (она
+ * придёт второй раз) и без курса НБРБ (эквивалента ещё нет). Ключи контрагентов — пачкой, не запросом на операцию.
+ */
+export async function recurringHistory(
+  s: ScopedDb,
+  input: { from: string; to: string; merchantKeys?: readonly string[] },
+): Promise<HistoryRow[]> {
+  const rows = await s.db
+    .select({
+      id: transactions.id,
+      merchantKey: transactions.merchantKey,
+      merchantName: transactions.merchantName,
+      type: transactions.type,
+      occurredOn: transactions.occurredOn,
+      amountBynMinor: transactions.amountBynMinor,
+      categoryCode: transactions.categoryCode,
+      categoryId: transactions.categoryId,
+    })
+    .from(transactions)
+    .where(
+      and(
+        s.own(transactions),
+        inArray(transactions.type, ["expense", "income"]),
+        eq(transactions.pending, false),
+        isNotNull(transactions.merchantKey),
+        isNotNull(transactions.amountBynMinor),
+        gte(transactions.occurredOn, input.from),
+        lte(transactions.occurredOn, input.to),
+        input.merchantKeys === undefined
+          ? undefined
+          : inArray(transactions.merchantKey, [...input.merchantKeys]),
+      ),
+    )
+    .orderBy(asc(transactions.occurredOn), asc(transactions.id));
+  return rows.flatMap((row) =>
+    row.merchantKey === null || row.amountBynMinor === null
+      ? []
+      : [
+          {
+            ...row,
+            merchantKey: row.merchantKey,
+            merchantName: row.merchantName ?? row.merchantKey,
+            amountBynMinor: row.amountBynMinor,
+            type: row.type as "expense" | "income",
+          },
+        ],
+  );
+}

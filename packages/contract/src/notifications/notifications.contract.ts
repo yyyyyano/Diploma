@@ -30,6 +30,7 @@ export type UserNotificationKind = z.infer<typeof UserNotificationKind>;
 export const ADMIN_NOTIFICATION_KINDS = [
   "law-update-failed",
   "law-new-acts",
+  "law-layout-changed",
   "rates-mismatch",
   "ai-provider",
 ] as const;

@@ -127,6 +127,7 @@ describe("дерево процедур", () => {
       "llm.localModelsProgress",
       "llm.models",
       "llm.setPreferredModel",
+      "legalBase.startupProgress",
       "admin.users",
       "admin.setUserStatus",
       "admin.setUserRole",

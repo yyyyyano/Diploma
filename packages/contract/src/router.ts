@@ -14,6 +14,7 @@ import { explainContract } from "./explain/explain.contract.ts";
 import { filesContract } from "./files/files.contract.ts";
 import { identityContract } from "./identity/identity.contract.ts";
 import { notificationsContract } from "./notifications/notifications.contract.ts";
+import { legalBaseContract } from "./legal-base/legal-base.contract.ts";
 import { llmContract } from "./llm/llm.contract.ts";
 import { mailContract } from "./mail/mail.contract.ts";
 import { privacyContract } from "./privacy/privacy.contract.ts";
@@ -45,5 +46,6 @@ export const contract = {
   statements: statementsContract,
   chat: chatContract,
   llm: llmContract,
+  legalBase: legalBaseContract,
   admin: adminContract,
 };

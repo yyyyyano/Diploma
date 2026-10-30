@@ -70,6 +70,11 @@ export {
   ObligationGroup,
   ObligationRow,
 } from "./fin/fin.contract.ts";
+export {
+  LawsStartupProgress,
+  legalBaseContract,
+  LoaderStopReason,
+} from "./legal-base/legal-base.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
   AI_CAPABILITIES,

@@ -14,7 +14,8 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 07, 08 (поиск),
   `notifications` (`notifyAdmins`), `identity` (`loaderContact()`, `adminScoped()`). Типы: `Topic`, `TOPICS` (10 тем LAW-01).
 - Инструменты агента (набор `legal`, чтение): `search_law`, `get_law_fragment`, `law_act_card`. Фасад: `search(query, opts?)` → `{ mode: exact | hybrid,
   vectors, fragments[] }` (6–10 действующих фрагментов), `fragment(versionId)`, `actCard(pravoId)`, `vectorProgress(modelReady)`, `pendingChanges(pravoId)`,
-  `recordDemand({ topic, actIds })` — журнал спроса: тема из `TOPICS`, ≤ 20 ID актов, без текста вопроса (иначе `VALIDATION`).
+  `recordDemand({ topic, actIds })` — журнал спроса: тема из `TOPICS`, ≤ 20 ID актов, без текста вопроса (иначе `VALIDATION`). Публичные процедуры
+  (`publicProc`, T-038): `catalog`, `act`, `fragments`, `resolve` (`application/reader.ts`: оглавление — статьи или страницы по 40 фрагментов; тексты частями).
 - Поиск: 1) «ст. 210 НК», «п. 3 ст. 13 Закона о …» по кратким именам `legal_act_aliases` (у «НК» два акта — где есть статья); 2) гибрид: FTS `russian`
   (ё→е, «И», при нехватке «ИЛИ») + halfvec HNSW, RRF k = 60, словарь «бытовое → юридическое», только действующее; 3) расширение статьями по ссылкам
   и определениям. Без модели — реквизиты и FTS (`law.search.no-vectors`). Догрузка по требованию (LAW-09): акт без индекса — задача `load-act`
@@ -45,7 +46,6 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 07, 08 (поиск),
   `pravo-source`/`fixtures-source`/`createAgencySource`, `cheerio` (страница, карточка, новые поступления, рубрики ЕПК, ссылки ведомств).
 - `application/`: `load-act`, `act-check`, `daily-check`, `start-catalog`, `search`, `demand`, `embed`, `lookup`, `catalog-growth`; SQL — `*.repo.ts`.
 
-## Зависимости
 Можно: llm, notifications, identity (`tooling/architecture/modules.ts`). Слушает: `identity.system-initialized`.
 
 ## Запреты

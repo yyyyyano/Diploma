@@ -18,5 +18,11 @@ export const tools = {
   get_free_balance: "Считаю свободный остаток…",
   list_recurring: "Смотрю регулярные платежи…",
   upcoming_payments: "Смотрю ближайшие платежи…",
+  list_budgets: "Смотрю лимиты и цели…",
+  set_limit: "Ставлю лимит…",
+  create_goal: "Создаю цель…",
+  contribute_to_goal: "Откладываю на цель…",
+  delete_limit: "Готовлю удаление лимита…",
+  delete_goal: "Готовлю удаление цели…",
   statement_import_status: "Проверяю, как идёт разбор выписки…",
 } as const;

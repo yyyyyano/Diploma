@@ -251,15 +251,11 @@ describe("STMT-04: «Исправить колонки»", () => {
     const s = scoped();
     const item = loadCase("csv-unknown-headers");
     const { parse, calls } = setup();
-    const schema = {
-      dateOrder: "dmy" as const,
-      columns: (item.expected.columns ?? []).map((column) =>
-        ["amount", "debit", "credit", "balance"].includes(column.role)
-          ? { ...column, decimal: "," as const }
-          : column,
-      ),
-    };
-    const parsed = await parse.parseBytes(s, { type: item.type, bytes: item.bytes }, { schema });
+    const parsed = await parse.parseBytes(
+      s,
+      { type: item.type, bytes: item.bytes },
+      { columns: item.expected.columns ?? [] },
+    );
     expect(rowsOf(parsed)).toEqual(item.expected.rows);
     expect(calls).toEqual([]);
     expect(parsed.sample?.header[0]).toBe("Проведено");
@@ -273,7 +269,7 @@ describe("STMT-04: «Исправить колонки»", () => {
       parse.parseBytes(
         scoped(),
         { type: item.type, bytes: item.bytes },
-        { schema: { dateOrder: "dmy", columns: [{ index: 1, role: "description" }] } },
+        { columns: [{ index: 1, role: "description" }] },
       ),
     ).rejects.toMatchObject({ code: "STATEMENT_UNREADABLE" });
   });

@@ -22,3 +22,31 @@ export const STATEMENTS_COLUMNS_SAMPLE_ROWS = defineSetting({
   schema: z.int().min(3).max(30),
   default: 8,
 });
+
+/** Окно пары перевода, дней (STMT-08): «списание тут — зачисление там» на ту же сумму. */
+export const STATEMENTS_TRANSFER_WINDOW_DAYS = defineSetting({
+  key: "statements.transfer-window-days",
+  schema: z.int().min(0).max(14),
+  default: 3,
+});
+
+/** Окно покупки возврата, дней (STMT-08): возврат ищет покупку у того же контрагента не старше этого. */
+export const STATEMENTS_REFUND_WINDOW_DAYS = defineSetting({
+  key: "statements.refund-window-days",
+  schema: z.int().min(1).max(365),
+  default: 60,
+});
+
+/** Через сколько дней брошенный черновик импорта удаляется (ночной обход). */
+export const STATEMENTS_DRAFT_TTL_DAYS = defineSetting({
+  key: "statements.draft-ttl-days",
+  schema: z.int().min(1).max(90),
+  default: 7,
+});
+
+/** Строк предпросмотра в ответе сайту (первые; остальные — после импорта в «Операциях»). */
+export const STATEMENTS_PREVIEW_ROWS = defineSetting({
+  key: "statements.preview-rows",
+  schema: z.int().min(3).max(50),
+  default: 5,
+});

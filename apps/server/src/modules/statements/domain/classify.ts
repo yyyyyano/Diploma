@@ -64,6 +64,15 @@ export function classifyRow(description: string, amount: Money): Classified {
   return { ...base, kind: incoming ? "income" : "expense" };
 }
 
+const REFUND_PREFIX =
+  /^(возврат\s+(платежа|покупки|средств|денег)|возврат|отмена\s+(покупки|операции)|refund|reversal)[\s:.,-]*/iu;
+
+/** Описание возврата без слов «Возврат покупки»: по остатку находится контрагент покупки (STMT-08). */
+export function withoutRefundWords(description: string): string {
+  const stripped = description.trim().replace(REFUND_PREFIX, "").trim();
+  return stripped === "" ? description : stripped;
+}
+
 /** Операция или кандидат пары: день, направление, сумма (модуль) и валюта. */
 export interface PairSide {
   readonly date: string;

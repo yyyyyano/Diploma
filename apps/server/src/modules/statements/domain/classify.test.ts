@@ -1,7 +1,13 @@
 // STMT-08, STMT-07: типы операций выписки — примеры из SPEC; ключи дублей.
 import { Money } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
-import { classifyRow, daysBetween, findCounterpart, findPurchase } from "./classify.ts";
+import {
+  classifyRow,
+  daysBetween,
+  findCounterpart,
+  findPurchase,
+  withoutRefundWords,
+} from "./classify.ts";
 import { duplicateFlags, rowKeys } from "./dedupe.ts";
 
 const byn = (minor: number) => Money.of(minor, "BYN");
@@ -125,6 +131,15 @@ describe("STMT-08: пара перевода и покупка возврата"
     expect(findPurchase(refund, [{ ...old, merchantKey: "GIPPO" }], 60)).toBeUndefined();
     expect(findPurchase(refund, [old], 10)).toBeUndefined();
     expect(findPurchase({ ...refund, merchantKey: null }, [old], 60)).toBeUndefined();
+  });
+
+  it("слова «Возврат покупки» отбрасываются — остаётся контрагент; без слов описание как есть", () => {
+    expect(withoutRefundWords("Возврат покупки EVROTORG T-0042 MINSK")).toBe(
+      "EVROTORG T-0042 MINSK",
+    );
+    expect(withoutRefundWords("Refund: GIPPO")).toBe("GIPPO");
+    expect(withoutRefundWords("Возврат")).toBe("Возврат");
+    expect(withoutRefundWords("EVROTORG")).toBe("EVROTORG");
   });
 
   it("дней между днями — по модулю", () => {

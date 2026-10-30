@@ -5,11 +5,14 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import { normalizeHeader } from "../domain/column-roles.ts";
 import type { ParsedStatement } from "../domain/types.ts";
+
+/** Что нужно, чтобы запомнить формат: отпечаток, схема, вид файла и банк. */
+export type Rememberable = Pick<ParsedStatement, "fingerprint" | "schema" | "sourceKind" | "bank">;
 import { upsertFormat } from "../infrastructure/db/statement-formats.repo.ts";
 
 export function makeRememberFormat(d: Pick<Platform, "clock">) {
   /** Запомнить формат разобранной выписки; у скана и у выписки без схемы запоминать нечего. */
-  return async function rememberFormat(s: ScopedDb, parsed: ParsedStatement): Promise<boolean> {
+  return async function rememberFormat(s: ScopedDb, parsed: Rememberable): Promise<boolean> {
     if (
       parsed.fingerprint === undefined ||
       parsed.schema === undefined ||

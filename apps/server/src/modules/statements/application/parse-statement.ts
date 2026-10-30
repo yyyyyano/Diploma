@@ -59,9 +59,9 @@ export interface ParseDeps {
   readonly log: Logger;
 }
 
-/** Параметры разбора: схема колонок, заданная человеком, — вместо запомненной, словаря и модели. */
+/** Параметры разбора: роли колонок, заданные человеком («Исправить колонки»), — вместо запомненной схемы, словаря и модели. */
 export interface ParseOptions {
-  readonly schema?: ColumnSchema;
+  readonly columns?: readonly { readonly index: number; readonly role: Role }[];
 }
 
 /** Строк таблицы в образце для окна «Исправить колонки». */
@@ -112,7 +112,7 @@ export function makeParseStatement(d: ParseDeps) {
   async function parseTable(
     s: ScopedDb,
     table: RawTable,
-    given: ColumnSchema | undefined,
+    given: ParseOptions["columns"],
   ): Promise<ParsedStatement> {
     const header = locateHeader(table);
     if (header === undefined) throw new AppError("STATEMENT_UNREADABLE");
@@ -144,8 +144,17 @@ export function makeParseStatement(d: ParseDeps) {
 
     // 0. Колонки заданы человеком («Исправить колонки», STMT-04): разбор без модели по его схеме.
     if (given !== undefined) {
-      const result = attempt(given);
-      if (!result.usable) throw new AppError("STATEMENT_UNREADABLE");
+      const width = Math.max(
+        header.texts.length,
+        ...grid.lines
+          .slice(header.dataStart, header.dataStart + 50)
+          .map((line) => line.cells.length),
+      );
+      const roles: Role[] = Array.from({ length: width }, () => "ignore");
+      for (const column of given) if (column.index < width) roles[column.index] = column.role;
+      const schema = schemaFromRoles(grid, header.dataStart, roles);
+      const result = schema === undefined ? undefined : attempt(schema);
+      if (result?.usable !== true) throw new AppError("STATEMENT_UNREADABLE");
       done = { ...result, method: "detected" };
     }
     // 1. Запомненный формат — без модели (STMT-05). Не подошёл — формат банка изменился: определяем заново.
@@ -279,7 +288,7 @@ export function makeParseStatement(d: ParseDeps) {
     }
     const parsed =
       document.kind === "table"
-        ? await parseTable(s, document.table, options.schema)
+        ? await parseTable(s, document.table, options.columns)
         : await parseScan(s, document.images);
     d.log.info(
       {

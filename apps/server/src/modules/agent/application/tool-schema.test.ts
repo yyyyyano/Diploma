@@ -9,6 +9,8 @@ const input = z.strictObject({
   amount: z.number().int(),
   currency: z.string().regex(/^[A-Z]{3}$/u),
   note: z.string().max(10).default("x"),
+  limit: z.number().max(50).optional(),
+  ids: z.array(z.string()).max(5).optional(),
 });
 
 describe("providerJsonSchema", () => {
@@ -19,6 +21,12 @@ describe("providerJsonSchema", () => {
     expect(text).not.toContain("[2468][048]");
     expect(text).not.toContain("9007199254740991");
     expect(text).toContain('"format":"date"');
+  });
+
+  it("верхние границы (maximum, maxLength, maxItems) убраны: провайдер из-за них обрывает ответ ошибкой 400", () => {
+    expect(text).not.toContain("maximum");
+    expect(text).not.toContain("maxLength");
+    expect(text).not.toContain("maxItems");
   });
 
   it("короткая регулярка валюты остаётся: модели она подсказывает формат", () => {
@@ -40,6 +48,11 @@ describe("toolInputSchema: проверка — настоящей схемой 
   it("верный вызов проходит и идёт дальше как пришёл", async () => {
     const value = { day: "2026-10-31", amount: 5, currency: "BYN" };
     expect(await validate(value)).toEqual({ success: true, value });
+  });
+
+  it("превышение предела (limit 100 при максимуме 50) отвергает Zod: ошибка вернётся модели результатом вызова", async () => {
+    const result = await validate({ day: "2026-10-31", amount: 5, currency: "BYN", limit: 100 });
+    expect(result.success).toBe(false);
   });
 
   it("несуществующий день (2026-02-31) и лишнее поле — отказ", async () => {

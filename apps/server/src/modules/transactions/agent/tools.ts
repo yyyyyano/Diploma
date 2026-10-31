@@ -116,7 +116,7 @@ export function transactionsTools(ops: Operations) {
       toolset: "core",
       kind: "write",
       description:
-        "Record a transaction. Amount in kopecks, positive. Default account: cash (BYN). Category is chosen automatically. Returns an undo token.",
+        "Record a transaction. Amount in kopecks, positive. merchant = where or on what, in the user's words (coffee, a shop): the category is chosen from it. Default account: cash (BYN). Returns an undo token.",
       input: z.strictObject({
         type: TransactionType,
         amountMinor: z.number(),

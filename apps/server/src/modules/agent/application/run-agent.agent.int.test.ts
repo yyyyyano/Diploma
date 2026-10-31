@@ -423,6 +423,18 @@ describe("AGT-13: сбой инструмента не обрывает диал
     expect(shown(turn)).toBe("Не получилось найти эту операцию. Повторить?");
   });
 
+  it("вызов с пределом больше допустимого (limit 100) проверяет Zod локально: модель получает ошибку и продолжает, ответ не обрывается", async () => {
+    const user = newUser();
+    const turn = await ask(user, "Покажи все мои операции", [
+      { tools: [{ name: "search_transactions", input: { limit: 100 } }] },
+      { tools: [{ name: "search_transactions", input: { limit: 50 } }] },
+      { text: "Операций пока нет." },
+    ]);
+    expect(turn.chunks.map((chunk) => chunk.type)).toContain("tool-input-error");
+    expect(turn.calls).toHaveLength(3);
+    expect(shown(turn)).toBe("Операций пока нет.");
+  });
+
   it("цепочка моделей не ответила — честная пометка, без текста ошибки", async () => {
     const user = newUser();
     const failing: ScriptStep[] = [];

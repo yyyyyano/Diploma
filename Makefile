@@ -275,11 +275,13 @@ e2e-install: need-node ## Скачать Chromium своей версии Playwr
 	cd e2e && $(PLAYWRIGHT) install chromium
 
 # Кассеты моделей (QA-17, NFR-11): тесты сценария (AI_RECORD=<сценарий>) пишут кассету заново в record, остальные —
-# повтор. С тестового провайдера — без сети и ключей; с облачными моделями (T-023) — тратит лимиты, ключи читает
-# программа. Перезапись — отдельным коммитом test(...).
+# повтор. С тестового провайдера — без сети и ключей; с облачными моделями (T-023, T-042) — тратит лимиты, ключи
+# (GROQ_API_KEY, ZAI_API_KEY) читает программа из .env (агент .env не открывает). Запускаются только тесты модуля из
+# имени сценария (<модуль>/<имя>), а нет такой папки модуля — все int-тесты. Перезапись — отдельным коммитом test(...).
 ai-record: need-node db-up secrets/db_app_password ## Перезаписать кассеты сценария моделей: make ai-record SCENARIO=<модуль>/<имя>
 	@printf '%s' "$${SCENARIO:-}" | grep -Eq '^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*$$' || { echo "Укажите сценарий: make ai-record SCENARIO=chat/accounts" >&2; exit 2; }
-	AI_RECORD="$${SCENARIO}" $(BIN)/vitest run --project int
+	@dir=apps/server/src/modules/$${SCENARIO%%/*}; test -d "$$dir" || dir=.; \
+	AI_RECORD="$${SCENARIO}" $(NODE_APP) node_modules/vitest/vitest.mjs run --project int "$$dir"
 
 check-commits: need-node ## Проверить коммиты ветки относительно BASE (по умолчанию main)
 	node tooling/git-hooks/check-commits.mjs $(BASE)

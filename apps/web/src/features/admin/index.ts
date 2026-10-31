@@ -4,6 +4,7 @@
 import { lazyPage } from "../../lib/lazy-page.tsx";
 
 export const AdminLawsPage = lazyPage(() => import("./AdminLawsPage.tsx"), "AdminLawsPage");
+export const AdminRatesPage = lazyPage(() => import("./AdminRatesPage.tsx"), "AdminRatesPage");
 export { AdminAiProvidersPage } from "./AdminAiProvidersPage.tsx";
 export { AdminAiRequestsPage } from "./AdminAiRequestsPage.tsx";
 export { AdminLayout } from "./AdminLayout.tsx";

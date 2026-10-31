@@ -20,6 +20,9 @@ export function AdminLayout() {
           <Link to="/admin/laws" className={classes.tab} activeProps={{ "aria-current": "page" }}>
             {t("tabs.laws")}
           </Link>
+          <Link to="/admin/rates" className={classes.tab} activeProps={{ "aria-current": "page" }}>
+            {t("tabs.rates")}
+          </Link>
           <Link to="/admin/users" className={classes.tab} activeProps={{ "aria-current": "page" }}>
             {t("tabs.users")}
           </Link>

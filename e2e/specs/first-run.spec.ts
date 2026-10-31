@@ -197,6 +197,16 @@ test("первый запуск → администратор → вход → 
   await expect(page.getByRole("button", { name: "Добавить строку" })).toBeEnabled();
   await expect(page.getByRole("columnheader", { name: "ID акта" })).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
+  // ADM-11, TAX-03 (T-040): «Таблица ставок» — вычеты ст. 209 подтверждены разработчиком по тексту НК, ставки и ПДН ждут «Подтвердить».
+  await page.getByRole("link", { name: "Таблица ставок" }).click();
+  await expect(page).toHaveURL(/\/admin\/rates$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Таблица ставок" })).toBeVisible();
+  await expect(page.getByText(/216,00\sBYN\sв месяц/)).toBeVisible();
+  await expect(page.getByText("разработчиком, 30.10.2026").first()).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Подтвердить значение: Ставка подоходного налога/ }),
+  ).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
   await page.getByRole("link", { name: "Пользователи" }).click();
   await expect(page).toHaveURL(/\/admin\/users$/);
   // Сценарии идут параллельно и заводят своих пользователей — их число заранее неизвестно.

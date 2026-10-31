@@ -81,6 +81,17 @@ export const TRACE_KEYS = [
   "budgets.goalPlanned",
   "budgets.goalElapsedDays",
   "budgets.goalTotalDays",
+  // AGT-03: калькулятор агента — слагаемое, сумма, разность, произведение на дробь, доля и календарный промежуток.
+  "calculator.operand",
+  "calculator.sum",
+  "calculator.difference",
+  "calculator.scale",
+  "calculator.numerator",
+  "calculator.denominator",
+  "calculator.part",
+  "calculator.whole",
+  "calculator.percent",
+  "calculator.days",
 ] as const;
 
 export type TraceKey = (typeof TRACE_KEYS)[number];

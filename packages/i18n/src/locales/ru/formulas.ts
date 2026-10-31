@@ -71,6 +71,18 @@ export const formulas = {
     expectedClosing: "Остаток на конец, если все операции учтены",
     balanceDifference: "Расхождение с выпиской",
   },
+  calculator: {
+    operand: "Исходное число",
+    sum: "Сумма",
+    difference: "Разность",
+    scale: "Произведение на дробь",
+    numerator: "Числитель",
+    denominator: "Знаменатель",
+    part: "Часть",
+    whole: "Целое",
+    percent: "Доля в процентах",
+    days: "Дней",
+  },
   receipts: {
     unitPrice: "Цена за единицу",
     quantity: "Количество, в тысячных долях единицы",

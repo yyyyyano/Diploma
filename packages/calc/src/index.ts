@@ -52,4 +52,5 @@ export {
   type RoundingOptions,
 } from "./money-ops.ts";
 export type { RoundingMode, RoundingRule, RoundingUnit } from "./rounding.ts";
+export { dayCount, ratioPercent, scaleMoney, type ScaleOptions } from "./calculator/calculator.ts";
 export { TRACE_KEYS, type TraceKey } from "./trace-keys.ts";

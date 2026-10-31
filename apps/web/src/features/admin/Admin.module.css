@@ -430,3 +430,123 @@
   border: 1px solid var(--line);
   border-radius: var(--r-md);
 }
+
+/* «Законы»: подвкладки-кнопки, фильтры состояний, строки действий, прогресс. */
+.segment[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+button.segment {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+
+button.segment[aria-pressed="true"] {
+  background: var(--surface);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+  justify-content: flex-end;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: 44px;
+  padding: 0 var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink-2);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pill[aria-pressed="true"] {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--ink);
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-8) var(--s-16);
+  align-items: center;
+  margin: 0;
+}
+
+.dl dt {
+  color: var(--ink-2);
+}
+
+.dl dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.small {
+  display: block;
+  margin-top: var(--s-4);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ink-2);
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-12);
+}
+
+/* fieldset без рамки: группа кнопок-переключателей (legend скрыта для глаз, но читается программой чтения). */
+.group {
+  min-width: 0;
+  margin: 0;
+  border: 0;
+}
+
+fieldset.pills {
+  padding: 0;
+}

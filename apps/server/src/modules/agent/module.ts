@@ -10,7 +10,7 @@ import type { ActionsFacade } from "../actions/index.ts";
 import type { ProfileFacade } from "../profile/index.ts";
 import type { LegalConsultFacade } from "../legal-consult/index.ts";
 import { makeRunAgent } from "./application/run-agent.ts";
-import { MAX_STEPS } from "./settings.ts";
+import { AGENT_SETTINGS, HISTORY_MESSAGES, MAX_STEPS } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface AgentFacades {
@@ -23,12 +23,17 @@ export interface AgentFacades {
 export function createAgentModule({ platform, facades }: ModuleDeps<AgentFacades, Platform>) {
   const run = makeRunAgent({
     llm: facades.llm,
+    actions: facades.actions,
+    profile: facades.profile,
+    legalConsult: facades.legalConsult,
     tools: () => platform.tools(),
     scoped: (scope) => platform.scoped(scope),
     log: platform.log,
+    clock: platform.clock,
     maxSteps: () => platform.settings.get(MAX_STEPS),
+    historyMessages: () => platform.settings.get(HISTORY_MESSAGES),
   });
-  return defineModule({ id: "agent", facade: { run }, settings: [MAX_STEPS] });
+  return defineModule({ id: "agent", facade: { run }, settings: AGENT_SETTINGS });
 }
 
 /** Что модуль даёт соседям: запуск агента с потоком UI-сообщения. */

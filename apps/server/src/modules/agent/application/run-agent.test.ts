@@ -2,11 +2,13 @@
 // запуска, ошибка инструмента — { ok: false, code }, не больше MAX_STEPS шагов и на последнем — toolChoice "none".
 import type { Scope } from "@kosht/kernel";
 import {
+  FakeClock,
   MockLanguageModelV4,
   testScope,
   type LanguageModelV4CallOptions,
   type LanguageModelV4StreamPart,
 } from "@kosht/testing";
+import { createAgentT } from "@kosht/i18n";
 import { simulateReadableStream, type UIMessage, type UIMessageChunk } from "ai";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
@@ -15,7 +17,10 @@ import { AppError } from "../../../platform/errors/app-error.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import { createTelemetry } from "../../../platform/telemetry/telemetry.ts";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
+import type { ActionsFacade } from "../../actions/index.ts";
+import type { LegalConsultFacade } from "../../legal-consult/index.ts";
 import type { LlmFacade } from "../../llm/index.ts";
+import type { ProfileFacade } from "../../profile/index.ts";
 import { makeRunAgent } from "./run-agent.ts";
 
 const scope = testScope();
@@ -108,10 +113,16 @@ async function run(toolName: string, toolTurns: number, maxSteps = 8) {
   let finished: { message: UIMessage; aborted: boolean } | undefined;
   const stream = await makeRunAgent({
     llm: llm(mock),
+    // Стражи, «да» и правовой ответ в этих тестах не участвуют: их сценарии — run-agent.agent.int.test.ts.
+    actions: {} as ActionsFacade,
+    profile: {} as ProfileFacade,
+    legalConsult: {} as LegalConsultFacade,
     tools: () => [household, broken],
     scoped: (given) => ({ scope: given }) as ScopedDb,
     log: memoryLogger().log,
+    clock: new FakeClock("2026-10-31T09:00:00Z"),
     maxSteps: async () => maxSteps,
+    historyMessages: async () => 12,
   })(s, {
     messages: [question],
     abortSignal: new AbortController().signal,
@@ -162,6 +173,13 @@ describe("AGT-01: цикл агента", () => {
     const { calls, finished } = await run("household_of_run", 100, 3);
     expect(calls).toHaveLength(3);
     expect(calls.map((c) => c.toolChoice?.type)).toEqual(["auto", "auto", "none"]);
-    expect(finished?.message.parts.at(-1)).toMatchObject({ type: "text", text: "Готово." });
+    expect(finished?.message.parts).toContainEqual(
+      expect.objectContaining({ type: "text", text: "Готово." }),
+    );
+    // AGT-01: упёрлись в предел — честная пометка программы, а не только текст модели.
+    expect(finished?.message.parts.at(-1)).toMatchObject({
+      type: "text",
+      text: createAgentT()("stepLimit"),
+    });
   });
 });

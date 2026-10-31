@@ -68,7 +68,7 @@ export function calculatorTool(explanations: Pick<Explanations, "save">) {
     toolset: "core",
     kind: "read",
     description:
-      "Exact arithmetic and dates; never calculate yourself. Money in kopecks. sum(values); sub(a-b); scale(a*b/c, c=1 by default: x12, a third); percent(a of b); add_days(date+days); days_between(date,date2). Returns text and traceId.",
+      "Exact math in kopecks and dates. sum(values) sub(a,b) scale(a*b/c, c=1: x12, a third) percent(a of b) add_days(date,days) days_between(date,date2). Returns text, traceId.",
     input: z.strictObject({
       op: z.enum(["sum", "sub", "scale", "percent", "add_days", "days_between"]),
       values: z.array(z.number()).max(MAX_VALUES).optional(),

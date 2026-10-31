@@ -2,6 +2,7 @@
 // core из настоящего реестра модулей, посчитанные токенизатором o200k_base. Новый инструмент core, раздувший
 // префикс, — красный тест.
 import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { createT } from "@kosht/i18n";
 import { countTokens } from "gpt-tokenizer/encoding/o200k_base";
 import { randomBytes } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
@@ -53,6 +54,27 @@ describe("ARCHITECTURE §8.2: префикс агента", () => {
   it(`подсказка и инструменты core — не больше ${String(PREFIX_TOKEN_BUDGET)} токенов o200k_base`, () => {
     const prefix = agentPrefix([...api.registries.tools.values()]);
     expect(prefix).toContain("list_accounts");
+    expect(prefix).toContain("calculator");
+    expect(prefix).toContain("ask_user");
+    expect(prefix).toContain("make_chart");
     expect(countTokens(prefix)).toBeLessThanOrEqual(PREFIX_TOKEN_BUDGET);
+  });
+
+  it("префикс каждого набора постоянен: два вызова дают одну и ту же строку (кэш провайдера)", () => {
+    const tools = [...api.registries.tools.values()];
+    for (const toolset of ["core", "legal", "planning", "reports"] as const) {
+      expect(agentPrefix(tools, toolset)).toBe(agentPrefix(tools, toolset));
+    }
+    expect(agentPrefix(tools, "legal")).toContain("search_law");
+    expect(agentPrefix(tools, "core")).not.toContain("search_law");
+  });
+
+  it("у каждого инструмента реестра есть подпись шага «Ищу траты…» в словаре tools (CHAT-02)", () => {
+    const t = createT();
+    const fallback = t("tools:fallback");
+    const without = [...api.registries.tools.values()]
+      .filter((tool) => t(`tools:${tool.name}` as "tools:fallback") === fallback)
+      .map((tool) => tool.name);
+    expect(without).toEqual([]);
   });
 });

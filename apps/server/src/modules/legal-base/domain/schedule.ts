@@ -51,3 +51,13 @@ export function checkSchedule(input: LawsScheduleInput): "window-empty" | "outsi
     ? null
     : "outside-window";
 }
+
+/** Время суток «ЧЧ:ММ» момента `at` по поясу IANA (DES-17: без секунд и пояса). */
+export function localTime(at: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(at);
+}

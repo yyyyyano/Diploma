@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkSchedule, ClockTime, dailyCron, inWindow } from "./schedule.ts";
+import { checkSchedule, ClockTime, dailyCron, inWindow, localTime } from "./schedule.ts";
 
 describe("LAW-30: время проверки законов", () => {
   it("«04:00» превращается в cron «0 4», а проход пополнения через 30 минут — в «30 4»", () => {
@@ -54,5 +54,12 @@ describe("LAW-35: ночное окно", () => {
     expect(checkSchedule({ checkTime: "04:00", windowFrom: "04:00", windowTo: "04:00" })).toBe(
       "window-empty",
     );
+  });
+});
+
+describe("DES-17: время суток по поясу системы", () => {
+  it("21:00 UTC — полночь в Минске (UTC+3): «00:00», а не «24:00»", () => {
+    expect(localTime(new Date("2026-10-30T21:00:00Z"), "Europe/Minsk")).toBe("00:00");
+    expect(localTime(new Date("2026-10-30T01:05:00Z"), "Europe/Minsk")).toBe("04:05");
   });
 });

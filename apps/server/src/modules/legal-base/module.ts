@@ -33,6 +33,9 @@ import { catalogGrowthSchedule } from "./jobs/catalog-growth.schedule.ts";
 import { dailyCheckSchedule } from "./jobs/daily-check.schedule.ts";
 import { embedJob } from "./jobs/embed.job.ts";
 import { makeLoadAct } from "./application/load-act.ts";
+import { makeAddActs } from "./application/add-acts.ts";
+import { makeDictionaries } from "./application/dictionaries.ts";
+import { makeLawsAdmin } from "./application/laws-admin.ts";
 import type { DiscoverySource, LegalSource, RegistrySource } from "./application/ports.ts";
 import { makeStartCatalog } from "./application/start-catalog.ts";
 import { makeLoaderStore } from "./infrastructure/db/loader.repo.ts";
@@ -43,6 +46,8 @@ import {
 } from "./infrastructure/pravo-by/polite-fetcher.ts";
 import { createAgencySource, createPravoSource } from "./infrastructure/pravo-by/pravo-source.ts";
 import { loadStartCatalogJob } from "./jobs/load-start-catalog.job.ts";
+import { addActsJob } from "./jobs/add-acts.job.ts";
+import { checkNowJob } from "./jobs/check-now.job.ts";
 import {
   DEMAND_LIMIT_PER_DAY,
   DEMAND_WAIT_MS,
@@ -56,6 +61,8 @@ import {
   LOADER_PAUSE_MIN_MS,
   LOADER_TIMEOUT_MS,
 } from "./settings.ts";
+import type { ScopedDb } from "../../platform/db/scoped-db.ts";
+import { TIME_ZONE } from "../../platform/settings/time-zone.ts";
 import { onSystemInitialized } from "./subscriptions/on-system-initialized.ts";
 
 const TopicAnswer = z.object({ topic: z.enum([...TOPICS, "none"]) });
@@ -208,8 +215,37 @@ export function createLegalBaseModule({
     log: platform.log,
     notifications: facades.notifications,
   });
-  const job = loadStartCatalogJob(catalog, (s) =>
-    s.transaction((tx) => platform.jobs.enqueue(tx, embed, {})),
+  // Векторы новых и обновлённых актов достраивает отдельная задача: поиск по реквизитам и FTS работает сразу (LAW-22).
+  const afterLoad = (s: ScopedDb) => s.transaction((tx) => platform.jobs.enqueue(tx, embed, {}));
+  const job = loadStartCatalogJob(catalog, afterLoad);
+  // Вкладка «Законы» (LAW-40): кнопки ставят задачи под `s` администратора, запросы к pravo.by идут из worker (LAW-35).
+  const checkNow = checkNowJob({ dailyCheck, growth }, afterLoad);
+  const addActs = addActsJob(
+    makeAddActs({
+      system: platform.system,
+      growth,
+      clock: platform.clock,
+      log: platform.log,
+      notifications: facades.notifications,
+    }),
+    afterLoad,
+  );
+  const lawsAdmin = makeLawsAdmin<ScopedDb>(
+    {
+      system: platform.system,
+      settings: platform.settings,
+      timeZone: () => platform.settings.get(TIME_ZONE),
+      clock: platform.clock,
+      startCatalog: catalog,
+      embedder,
+      dictionaries: makeDictionaries({ system: platform.system, settings: platform.settings }),
+    },
+    {
+      checkNow: (s, pravoId) =>
+        s.transaction((tx) => platform.jobs.enqueue(tx, checkNow, { pravoId })),
+      addActs: (s, pravoIds) =>
+        s.transaction((tx) => platform.jobs.enqueue(tx, addActs, { pravoIds: [...pravoIds] })),
+    },
   );
   const lookup = makeLookup({ system: platform.system });
   const reader = makeReader({ system: platform.system });
@@ -228,6 +264,8 @@ export function createLegalBaseModule({
       /** Принятые, но не вступившие изменения акта (LAW-32): статьи — проверенные дословно, пусто — предупреждение на уровне акта. */
       /** Журнал спроса (LAW-15): тема вопроса, на который база ответила «в моей базе нет», и ID подходящих актов; текста вопроса нет. */
       recordDemand: growth.recordDemand,
+      /** Вкладка «Законы» админки (LAW-40): сводка, список актов, журналы, очередь, кнопки, справочники; `s` — вошедший администратор. */
+      admin: lawsAdmin,
       pendingChanges: async (pravoId: string) => {
         const act = await findAct(platform.system, pravoId);
         return act === undefined ? [] : pendingChangesOf(platform.system, act.id);
@@ -236,7 +274,7 @@ export function createLegalBaseModule({
     router: legalBaseRouter(catalog, reader),
     tools: Object.values(tools),
     events: [actUpdated, actRepealed],
-    jobs: [job, embed, loadOne],
+    jobs: [job, embed, loadOne, checkNow, addActs],
     schedules: [
       dailyCheckSchedule(dailyCheck, platform.settings),
       catalogGrowthSchedule(growth, platform.settings),

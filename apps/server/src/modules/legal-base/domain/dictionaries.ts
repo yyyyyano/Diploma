@@ -2,6 +2,7 @@
 // ключ (`id`) собирается из ключевых полей; поля, их тип и проверка описаны здесь один раз, остальное — общий код
 // (application/dictionaries.ts) и общий редактор на сайте. Чистые функции: ни БД, ни настроек.
 import { LAW_GROUPS } from "@kosht/contract";
+import { PRAVO_ID } from "./act-links.ts";
 import { normalizeAlias } from "./reference.ts";
 import { TOPICS } from "./topics.ts";
 
@@ -37,7 +38,6 @@ const select = (name: string, options: readonly string[], required = true): Fiel
   required,
 });
 
-const PRAVO_ID = /^[A-Za-z][A-Za-z0-9]{5,11}$/u;
 export const ACT_KINDS = ["law", "code", "decree", "resolution", "plenum"] as const;
 
 export const KIND_DEFS: Readonly<Record<DictionaryKind, KindDef>> = {

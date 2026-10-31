@@ -259,6 +259,8 @@ export function createLegalBaseModule({
       fragment: lookup.fragment,
       /** Карточка акта по ID pravo.by. */
       actCard: lookup.actCard,
+      /** Текст пункта (`a209/p1.2`) и вложенных частей действующей редакции — сверка чисел таблицы ставок (LAW-33). */
+      fragmentsUnder: lookup.fragmentsUnder,
       /** Прогресс векторного индекса для админки (T-039): `modelReady` — ответил ли самотест модели. */
       vectorProgress: embedder.progress,
       /** Принятые, но не вступившие изменения акта (LAW-32): статьи — проверенные дословно, пусто — предупреждение на уровне акта. */

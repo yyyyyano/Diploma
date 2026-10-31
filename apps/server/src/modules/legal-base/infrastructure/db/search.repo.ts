@@ -1,7 +1,7 @@
 // SQL поиска по законам (LAW-21, LAW-22, ADR-0007): точное обращение (алиас + номер статьи), гибрид «полнотекстовый
 // `russian` + halfvec HNSW» со слиянием рангов RRF (k = 60), карточка акта. Только действующие акты и действующие
 // версии фрагментов. SystemDb модуля; данные пользователя здесь не участвуют.
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import { legalActAliases, legalActs, legalFragmentVersions, legalFragments } from "./schema.ts";
 
@@ -184,4 +184,43 @@ export async function actCardRow(db: SystemDb, pravoId: string) {
     .from(legalActs)
     .where(eq(legalActs.pravoId, pravoId));
   return rows[0];
+}
+
+export interface PathFragment {
+  readonly versionId: string;
+  readonly pathKey: string;
+  readonly text: string;
+}
+
+/**
+ * Действующие версии фрагмента `pathKey` и всех вложенных (`a209/p1.2` и `a209/p1.2/c2`) действующего акта: по ним norm-tables
+ * сверяет числа ставок с новой редакцией (LAW-33). Исключённая статья и исключённый администратором акт не отдаются.
+ */
+export async function fragmentsUnderPath(
+  db: SystemDb,
+  pravoId: string,
+  pathKey: string,
+): Promise<PathFragment[]> {
+  return db
+    .select({
+      versionId: legalFragmentVersions.id,
+      pathKey: legalFragments.pathKey,
+      text: legalFragmentVersions.body,
+    })
+    .from(legalFragments)
+    .innerJoin(legalFragmentVersions, eq(legalFragmentVersions.fragmentId, legalFragments.id))
+    .innerJoin(legalActs, eq(legalActs.id, legalFragments.actId))
+    .where(
+      and(
+        eq(legalActs.pravoId, pravoId),
+        eq(legalActs.status, "active"),
+        eq(legalFragmentVersions.isCurrent, true),
+        eq(legalFragmentVersions.excluded, false),
+        or(
+          eq(legalFragments.pathKey, pathKey),
+          sql`starts_with(${legalFragments.pathKey}, ${`${pathKey}/`})`,
+        ),
+      ),
+    )
+    .orderBy(legalFragments.position);
 }

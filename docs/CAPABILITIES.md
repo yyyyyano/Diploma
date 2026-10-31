@@ -55,7 +55,7 @@
 | `recurring` | REC-01…05 | поиск регулярных, ожидаемые даты, «возможно прекращён», подписки | transactions, categories, profile, notifications, actions, explain | user | `recurring.changed` |
 | `legal-base` | LAW-01…40, LEGAL-11, ADM-10 | каталог актов, загрузчик pravo.by, редакции и версии фрагментов, гибридный поиск, журнал спроса, публичная «База законов» | llm, notifications, identity | public, system | `legal-base.act-updated`, `legal-base.act-repealed` |
 | `norm-tables` | TAX-03, CAL-02 (сроки), AFF-05 (пределы ПДН), LAW-33, LEGAL-08, ADM-11 | таблицы «параметр → период → значение → источник» с подтверждением человеком | legal-base, notifications | public, system | `norm-tables.values-confirmed` |
-| `legal-consult` | LEGAL-01…12, CHAT-05/06, P3 | метки цитат `[[F…]]`, проверка дословности, «в моей базе нет», чек-листы документов и их состояние | legal-base | user | — |
+| `legal-consult` | LEGAL-01…12, CHAT-05/06, P3 | метки цитат `[[F…]]`, проверка дословности, «в моей базе нет», чек-листы документов и их состояние | legal-base, norm-tables | user | — |
 <!-- /capabilities:tier-2 -->
 
 ## Ярус 3 — расчёты и представления

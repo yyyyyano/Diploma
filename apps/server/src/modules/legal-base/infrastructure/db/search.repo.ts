@@ -180,6 +180,7 @@ export async function actCardRow(db: SystemDb, pravoId: string) {
       loadState: legalActs.loadState,
       loadedAt: legalActs.loadedAt,
       articleCount: legalActs.articleCount,
+      repealedOn: legalActs.repealedOn,
     })
     .from(legalActs)
     .where(eq(legalActs.pravoId, pravoId));

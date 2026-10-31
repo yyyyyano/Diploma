@@ -263,7 +263,8 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "LEGAL-01…12, CHAT-05/06, P3",
     responsibility:
       "метки цитат `[[F…]]`, проверка дословности, «в моей базе нет», чек-листы документов и их состояние",
-    dependsOn: ["legal-base"],
+    // norm-tables — LEGAL-08: вопрос о прошлой дате отвечает ставкой из таблицы, а не цитатой прежней редакции.
+    dependsOn: ["legal-base", "norm-tables"],
     tables: ["user"],
     publishes: [],
   },

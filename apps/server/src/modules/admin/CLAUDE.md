@@ -4,7 +4,7 @@
 
 ## Назначение
 Раздел «Администрирование»: процедуры `contract.admin.*` поверх admin-фасадов модулей; своих данных нет (PRIV-07).
-Сделано: «Пользователи» (ADM-30), «Система» (ADM-60), «Провайдеры ИИ» (ADM-50) и «Запросы к ИИ» (ADM-20/21/22);
+Сделано: «Пользователи» (ADM-30), «Система» (ADM-60), «Провайдеры ИИ» (ADM-50), «Запросы к ИИ» (ADM-20/21/22) и «Законы» (ADM-10, LAW-40);
 остальные вкладки — задачи своих модулей.
 
 ## Требования SPEC
@@ -26,6 +26,9 @@ ADM-01…60 (экраны).
   (цифры журнала расхода), `setAiPrice` (прайс-лист); локальные модели (NFR-25): `localModels` (набор, файлы, прогресс,
   самотест), `downloadLocalModels` (задача в worker), `selfTestLocalModels` (запасной режим на процессоре при «мусоре»). Ответы — типы `admin/ai.contract.ts`: без текстов запросов,
   пользователей и значений ключей. Форма ответов — только метаданные (`packages/contract/src/admin/admin.contract.test.ts`).
+  «Законы» (`facades.legalBase.admin`, `laws.contract.ts`): `lawsOverview` (к фасаду добавляется `modelReady` — самотест локальных моделей `ok`), `setLawsSettings`,
+  `lawsActs({ status?, page })`, `lawsUpdates`, `lawsFetches`, `lawsCandidates`, `decideLawCandidate`, `lawsCheckNow`, `lawsCheckText`, `addLawActs`, `excludeLawAct`,
+  `lawsDictionary`, `lawsDictionaryUpsert`, `lawsDictionaryRemove` (семь справочников по `kind`). Изменяющие ставят задачи под `context.s` администратора.
 
 ## Зависимости
 Можно: identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo (`tooling/architecture/modules.ts`). Слушает: —.
@@ -38,4 +41,5 @@ ADM-01…60 (экраны).
 
 ## Как тестировать
 - Сквозь HTTP и корень композиции — `main/admin.int.test.ts` (роли, список, блокировка и последний админ, удаление с
-  email, сброс пароля письмом и ссылкой, «Система»); форма DTO — `admin.contract.test.ts`.
+  email, сброс пароля письмом и ссылкой, «Система»); «Законы» — `main/admin-laws.int.test.ts` (api + worker, страницы из `__fixtures__/pravo-by`); форма DTO —
+  `admin.contract.test.ts`.

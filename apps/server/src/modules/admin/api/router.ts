@@ -3,6 +3,7 @@
 // (PRIV-07): учётные записи identity, флаг режима privacy, система и почта.
 import type { AdminUser, JobRun, SystemOverview } from "@kosht/contract";
 import type { IdentityFacade } from "../../identity/index.ts";
+import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import type { LlmAdminFacade } from "../../llm/index.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import type { SystemFacade } from "../../system/index.ts";
@@ -36,7 +37,15 @@ export function adminRouter(d: {
   readonly mail: Pick<MailFacade, "smtp">;
   /** Админка ИИ (ADM-20, ADM-50): цифры и настройки — без текстов запросов (ADM-22). */
   readonly llm: LlmAdminFacade["admin"];
+  /** Вкладка «Законы» (LAW-40): состояние правовой базы, кнопки и справочники — только метаданные общей базы. */
+  readonly laws: LegalBaseFacade["admin"];
 }) {
+  /** Ответил ли самотест локальной модели эмбеддингов: от него зависит «ждём модель» в прогрессе векторов. */
+  async function lawsOverview() {
+    const models = await d.llm.localModels();
+    return d.laws.overview(models.selfTest.state === "ok");
+  }
+
   async function overview(): Promise<SystemOverview> {
     const view = await d.system.view();
     return {
@@ -111,5 +120,43 @@ export function adminRouter(d: {
     ),
     selfTestLocalModels: admin.admin.selfTestLocalModels.handler(() => d.llm.selfTestLocalModels()),
     setAiPrice: admin.admin.setAiPrice.handler(({ input }) => d.llm.setPrice(input.id, input)),
+    lawsOverview: admin.admin.lawsOverview.handler(() => lawsOverview()),
+    setLawsSettings: admin.admin.setLawsSettings.handler(async ({ input }) => {
+      await d.laws.setSettings(input);
+      return lawsOverview();
+    }),
+    lawsActs: admin.admin.lawsActs.handler(({ input }) => d.laws.acts(input.status, input.page)),
+    lawsUpdates: admin.admin.lawsUpdates.handler(async () => ({ items: await d.laws.updates() })),
+    lawsFetches: admin.admin.lawsFetches.handler(async () => ({ items: await d.laws.fetches() })),
+    lawsCandidates: admin.admin.lawsCandidates.handler(async () => ({
+      items: await d.laws.candidates(),
+    })),
+    decideLawCandidate: admin.admin.decideLawCandidate.handler(async ({ input, context }) => ({
+      items: await d.laws.decide(context.s, input.id, input.decision),
+    })),
+    lawsCheckNow: admin.admin.lawsCheckNow.handler(async ({ context }) => {
+      await d.laws.checkNow(context.s);
+      return { ok: true as const };
+    }),
+    lawsCheckText: admin.admin.lawsCheckText.handler(async ({ input, context }) => {
+      await d.laws.checkText(context.s, input.pravoId);
+      return { ok: true as const };
+    }),
+    addLawActs: admin.admin.addLawActs.handler(({ input, context }) =>
+      d.laws.addActs(context.s, input.links),
+    ),
+    excludeLawAct: admin.admin.excludeLawAct.handler(async ({ input }) => {
+      await d.laws.exclude(input.pravoId);
+      return { ok: true as const };
+    }),
+    lawsDictionary: admin.admin.lawsDictionary.handler(({ input }) =>
+      d.laws.dictionaries.list(input.kind),
+    ),
+    lawsDictionaryUpsert: admin.admin.lawsDictionaryUpsert.handler(({ input }) =>
+      d.laws.dictionaries.upsert(input.kind, input.id, input.values),
+    ),
+    lawsDictionaryRemove: admin.admin.lawsDictionaryRemove.handler(({ input }) =>
+      d.laws.dictionaries.remove(input.kind, input.id),
+    ),
   };
 }

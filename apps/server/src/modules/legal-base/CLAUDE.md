@@ -4,10 +4,10 @@
 
 ## Назначение
 Каталог актов, вежливый загрузчик pravo.by, снимки и фрагменты, карантин (T-034); поиск и векторы (T-035); редакции, версии, карточки,
-события (T-036); пополнение каталога (T-037); «База законов» (T-038).
+события (T-036); пополнение каталога (T-037); «База законов» (T-038); вкладка «Законы» админки (T-039).
 
 ## Требования SPEC
-LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 07, 08 (поиск), 10…15, 17, 20…23, 30…34, 35…39, AUTH-10.
+LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 06, 07, 08 (поиск), 10…17, 20…23, 30…40, AUTH-10, ADM-10.
 
 ## Публичный API (`index.ts`)
 - Фабрика: `createLegalBaseModule({ platform, facades })`; платформа — `SystemPlatform`; фасады — `llm` (эмбеддинги, локальная модель, `law.topic`),
@@ -21,11 +21,12 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 07, 08 (поиск),
   и определениям. Без модели — реквизиты и FTS (`law.search.no-vectors`). Догрузка по требованию (LAW-09): акт без индекса — задача `load-act`
   (`api` в сеть не ходит), ждёт `demand-wait-ms` (15 с), ответ с `justAdded`; не дождался или предел `demand-limit-per-day` (20) — `cards`.
 - Векторы: `legal-base.embed` для версий без вектора активной модели (нет модели — «ждём модель»; HNSW под bge-m3 v1, смена модели — миграцией). Редакции (LAW-31): `matchVersions`.
-- `legal-base.daily-check` (04:00, `missed: once`; время и окно — T-039): текст — HEAD без сжатия (размер совпал — не качаем), иначе загрузка и сверка;
+- `legal-base.daily-check` (время — `check-time`, по умолчанию 04:00; `liveCron` — смена без перезапуска; `missed: once`; итог — строка `daily-check` /
+  `daily-check-failed` в `legal_update_log`; `auto-update` выключен — плановый проход пуст): текст — HEAD без сжатия (размер совпал — не качаем), иначе загрузка и сверка;
   карточка (`guid=3961`) индекса — ежедневно, прочих — раз в неделю: утрата силы (LAW-34) и изменяющие акты вне текста (LAW-32, `legal_pending_changes`:
   модель `law-change-v1` предлагает, принимается дословно найденное; без текста — уровень акта; 7 дней — уведомление). События `act-updated` /
   `act-repealed` (id пачкой) — от имени первого администратора через `identity.adminScoped()`.
-- Пополнение каталога (T-037), `legal-base.catalog-growth` (04:30): найденное — кандидаты `legal_candidates` (`found → queued | rejected | dropped | added |
+- Пополнение каталога (T-037), `legal-base.catalog-growth` (через 30 минут после проверки, тот же `liveCron`): найденное — кандидаты `legal_candidates` (`found → queued | rejected | dropped | added |
   event`). Находки: граф ссылок на 1 шаг (`requisitesIn` по текстам без перечня `changeadd`; ID: закон H1/V1, указ P3, ПСМ C2, кодекс HK/Hk, ведомственные не
   разрешаются), «Новые поступления» с отметки `arrivals-day` по вчера (≤ 30 дней; число актов на странице — канарейка вёрстки), ведомственные страницы
   раз в месяц (`agency-pages`, пусто по умолчанию), журнал спроса (недельная сводка: акты без индекса — в очередь). Кандидат: LAW-13 без модели (местные
@@ -33,18 +34,33 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 07, 08 (поиск),
   HEAD текста → тема (ЕПК `guid=11031` у актов с текстом, заголовок и орган у актов без текста; модель `law-topic-v1` — только когда ничего не решило) →
   маршрут LAW-17 (`domain/routes.ts`, `new-acts-mode` auto|suggest). Причина отсева — `legal_update_log` (`candidate-dropped`); за проход ≤ `growth-batch`
   проверок с запросами; текст нового акта без текста — раз в неделю `text-check-weeks` (8) недель.
+- Вкладка «Законы» (T-039, LAW-40), фасад `admin` (`application/laws-admin.ts`; `s` — вошедший администратор, роль проверяет `admin`): `overview(modelReady)`
+  (сводка, «N из 28», векторы, расписание, последняя/следующая проверка, контакт и User-Agent), `acts(status?, page)` (семь состояний: шесть LAW-40 и «ждёт
+  загрузки», `domain/admin-status.ts`), `updates()`, `fetches()`, `candidates()`, `decide(s, id, add|reject)`, `setSettings` (время проверки — только в ночном
+  окне и с запасом на проход пополнения, `domain/schedule.ts`; иначе `VALIDATION` с полем), `addActs(s, строки)` (`domain/act-links.ts`: ссылка pravo.by с `p0`
+  или ID), `checkNow(s)`, `checkText(s, pravoId)`, `exclude(pravoId)` (статус `excluded`: не в каталоге, поиске и проверках; записи остаются; добавление по
+  ссылке возвращает), `dictionaries.list/upsert/remove(kind)`. Сеть — только задачами worker под `s` администратора: `legal-base.check-now`
+  (`{ pravoId | null }`: весь проход — проверка и пополнение — или текст одного акта; без повторов, схлопывается) и `legal-base.add-acts` (≤ 200 ID,
+  `growth.addManual` без фильтров LAW-13 — решение человека, в том числе местные акты LAW-06; итог — строка `add-acts` журнала).
+- Справочники (LAW-40), семь видов в одной тройке (`application/dictionaries.ts`, поля и проверка — `domain/dictionaries.ts`): `start-catalog` (`legal_start_catalog`;
+  новый акт сразу заводится в каталог), `organs` (`legal_organ_topics`, порядок значим), `colloquial` (`legal_colloquial_terms`), `aliases` (`legal_act_aliases`),
+  `epk-topics`, `title-patterns`, `agency-pages` (настройки). Начальные строки трёх таблиц кладёт миграция — это умолчания кода (`START_CATALOG`,
+  `DEFAULT_ORGANS`, `DEFAULT_COLLOQUIAL_TERMS`); `dictionaries.repo.int.test.ts` сверяет их с таблицами. Краткие имена по умолчанию заводятся только в пустой таблице.
 - Подписка на `identity.system-initialized`: контакт → `loader-contact`; 28 актов — сразу; при `autoload` — `load-start-catalog` (повтор через 30 минут), затем `embed`.
 - Настройки (`legal-base.*`): `autoload`, `source` (`pravo-by`|`fixtures`), `fixtures-dir`, `base-url`, `loader-contact`, `pause-*-ms`, `timeout-ms`,
-  `max-page-bytes`, `demand-*`, `new-acts-mode`, `growth-batch`, `text-check-weeks`, `filter-title-patterns`, `epk-topics`, `agency-pages`.
+  `max-page-bytes`, `demand-*`, `new-acts-mode`, `auto-update`, `check-time`, `window-from`, `window-to`, `growth-batch`, `text-check-weeks`, `filter-title-patterns`,
+  `epk-topics`, `agency-pages`.
 - Таблицы (`publicTable`): `legal_acts` (+ `topic`, `topic_source`), `legal_act_snapshots` (gzip), `legal_fragments` (ключ `a216.1/p3`), `legal_fragment_versions`
   (+ `search_tsv`), `legal_act_aliases`, `legal_embedding_models`, `legal_fragment_embeddings`, `legal_pending_changes`, `legal_demand_loads`; `systemTable` —
-  `legal_loader_state` (строка на хост), `legal_fetch_log`, `legal_update_log`, `legal_candidates`, `legal_demand_log`, `legal_growth_marks`.
+  `legal_loader_state` (строка на хост), `legal_fetch_log`, `legal_update_log`, `legal_candidates`, `legal_demand_log`, `legal_growth_marks`,
+  `legal_start_catalog`, `legal_organ_topics`, `legal_colloquial_terms`. Статус акта: `active | repealed | excluded`.
 
 ## Устройство
-- `domain/` (чистое): фрагменты, карантин, версии, обращения, алиасы, словарь, `ts-query`, `change-proposal`, `requisites`, `relevance`, `topics`, `routes`;
+- `domain/` (чистое): фрагменты, карантин, версии, обращения, алиасы, словарь, `ts-query` (словарь «бытовое → юридическое» передаётся из таблицы), `change-proposal`,
+  `requisites`, `relevance`, `topics` (органы — параметр), `routes`, `schedule`, `act-links`, `admin-status`, `dictionaries`;
   `infrastructure/pravo-by/`: `polite-fetcher` (слоты в БД, robots, повторы, GET/HEAD; экземпляр и строка состояния на каждый хост), источники
   `pravo-source`/`fixtures-source`/`createAgencySource`, `cheerio` (страница, карточка, новые поступления, рубрики ЕПК, ссылки ведомств).
-- `application/`: `load-act`, `act-check`, `daily-check`, `start-catalog`, `search`, `demand`, `embed`, `lookup`, `catalog-growth`; SQL — `*.repo.ts`.
+- `application/`: `load-act`, `act-check`, `daily-check`, `start-catalog`, `search`, `demand`, `embed`, `lookup`, `catalog-growth` (+ `addManual`, `checkTextNow`), `add-acts`, `laws-admin`, `dictionaries`; SQL — `*.repo.ts` (`admin.repo`, `dictionaries.repo`).
 
 Можно: llm, notifications, identity (`tooling/architecture/modules.ts`). Слушает: `identity.system-initialized`.
 

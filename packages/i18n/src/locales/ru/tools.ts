@@ -25,4 +25,5 @@ export const tools = {
   delete_limit: "Готовлю удаление лимита…",
   delete_goal: "Готовлю удаление цели…",
   statement_import_status: "Проверяю, как идёт разбор выписки…",
+  get_checklist: "Готовлю чек-лист документов…",
 } as const;

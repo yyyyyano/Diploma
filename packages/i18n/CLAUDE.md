@@ -12,6 +12,8 @@
 - `createT(language = "ru")` — свой экземпляр i18next без React; `T` — тип перевода. Ключ — `<ns>:<ключ>`
   (`common:relativeDay.today`); несуществующий ключ или пространство имён не компилируется.
 - `resources` (`{ ru: { common, errors, formulas, tools, mail, policy, shell, ui, auth, setup, accounts, assistant, mailbox, settings, documents } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
+- `ratesTexts` (`locales/ru/rates.ts`, T-040) — словарь «Таблицы ставок»: есть в типах ключей (`rates:…`), но не в `resources`/`NAMESPACES` — страница регистрирует его
+  сама (`addResourceBundle`), чтобы он не ехал в первую загрузку сайта.
 - Словари (`locales/ru/`): `common` (общее; множественные числа `count.operations_*`), `errors` — по одному тексту на
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
   (каждый ключ `TRACE_KEYS` из `@kosht/calc`; `unknown` — запасная), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная), `mail` — письма

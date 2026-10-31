@@ -25,6 +25,7 @@ import { recurring } from "./locales/ru/recurring.ts";
 import { budget } from "./locales/ru/budget.ts";
 import { dashboard } from "./locales/ru/dashboard.ts";
 import { laws } from "./locales/ru/laws.ts";
+import type { rates } from "./locales/ru/rates.ts";
 
 export const NAMESPACES = [
   "common",
@@ -117,5 +118,7 @@ declare module "i18next" {
     laws: typeof laws;
     decisions: typeof decisions;
     notifications: typeof notifications;
+    // Подгружается со страницей «Таблицы ставок» (ratesTexts), в `resources` не входит: бюджет первой загрузки сайта.
+    rates: typeof rates;
   }
 }

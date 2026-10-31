@@ -9,6 +9,7 @@ export const admin = {
   tabs: {
     label: "Разделы администрирования",
     laws: "Законы",
+    rates: "Таблица ставок",
     users: "Пользователи",
     system: "Система",
     aiRequests: "Запросы к ИИ",

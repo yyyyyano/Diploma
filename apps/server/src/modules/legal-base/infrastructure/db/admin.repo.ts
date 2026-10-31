@@ -189,15 +189,3 @@ export async function restoreAct(db: SystemDb, pravoId: string): Promise<boolean
     .returning({ id: legalActs.id });
   return rows.length > 0;
 }
-
-/** Сколько кандидатов ждёт решения; кандидаты прошлых суток — для сводки. */
-export async function queuedCount(db: SystemDb): Promise<number> {
-  return (
-    (
-      await db
-        .select({ n: count() })
-        .from(legalCandidates)
-        .where(eq(legalCandidates.status, "queued"))
-    )[0]?.n ?? 0
-  );
-}

@@ -172,3 +172,65 @@ describe("LAW-40: краткие имена актов", () => {
     expect(await actsByAlias(system, "налоговый кодекс рб")).toEqual([]);
   });
 });
+
+describe("LAW-40: правка ключа переносит строку, не меняя её место", () => {
+  it("орган: шаблон переименован — строка осталась на своём месте, а не ушла в конец", async () => {
+    const dict = dictionaries();
+    const first = DEFAULT_ORGANS[0];
+    const renamed = await dict.upsert("organs", first?.pattern ?? null, {
+      pattern: "налогов\\p{L}*\\s+министерств",
+      topic: "work",
+    });
+    expect(renamed.rows[0]?.values).toEqual({
+      pattern: "налогов\\p{L}*\\s+министерств",
+      topic: "work",
+    });
+    expect(renamed.rows.some((r) => r.id === first?.pattern)).toBe(false);
+  });
+
+  it("слово словаря «бытовое → юридическое»: слово переименовано, термины переехали", async () => {
+    const dict = dictionaries();
+    await dict.upsert("colloquial", null, { word: "Бонус", terms: "премия" });
+    const renamed = await dict.upsert("colloquial", "бонус", {
+      word: "Надбавка",
+      terms: "доплата; премия",
+    });
+    expect(renamed.rows.some((r) => r.id === "бонус")).toBe(false);
+    expect((await colloquialTerms(system))["надбавка"]).toEqual(["доплата", "премия"]);
+  });
+
+  it("краткое имя: переименовано в другое имя и перенесено на другой акт", async () => {
+    await seedActs(system, START_CATALOG, "start-catalog");
+    const dict = dictionaries();
+    await dict.upsert("aliases", null, { pravoId: "Hk0900071", alias: "налоговый свод" });
+    const moved = await dict.upsert("aliases", "Hk0900071|налоговый свод", {
+      pravoId: "Hk0200166",
+      alias: "налоговый свод общий",
+    });
+    expect(moved.rows.some((r) => r.id === "Hk0900071|налоговый свод")).toBe(false);
+    expect(moved.rows.some((r) => r.id === "Hk0200166|налоговый свод общий")).toBe(true);
+    await expect(dict.remove("aliases", "H19999999|нет")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
+  it("опустевший справочник: новая строка получает первую позицию", async () => {
+    await db.owner.query("delete from legal_start_catalog; delete from legal_organ_topics");
+    const dict = dictionaries();
+    const catalog = await dict.upsert("start-catalog", null, {
+      pravoId: "H19900010",
+      title: "Закон",
+      label: "Закон",
+      kind: "law",
+      hasText: "card",
+      group: "",
+    });
+    expect(catalog.rows.map((r) => r.id)).toEqual(["H19900010"]);
+    const organs = await dict.upsert("organs", null, { pattern: "банк", topic: "banking" });
+    expect(organs.rows.map((r) => r.id)).toEqual(["банк"]);
+    const { rows } = await db.owner.query<{ position: number }>(
+      "select position from legal_organ_topics",
+    );
+    expect(rows).toEqual([{ position: 1 }]);
+  });
+});

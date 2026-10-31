@@ -107,6 +107,15 @@ describe("LAW-21 шаг 2, LAW-10: гибридный поиск", () => {
     expect(log.text()).toContain("law.search.no-vectors");
   });
 
+  it("эмбеддер чужой размерности (8 вместо 1024): без ошибки Postgres, векторная часть пустая, работает FTS", async () => {
+    const tiny = search(async () => Array.from({ length: 8 }, (_, i) => i / 8));
+    const out = await tiny.search("обмен товара надлежащего качества потребитель");
+    expect(out.mode).toBe("hybrid");
+    expect(out.vectors).toBe(false);
+    expect(out.fragments.some((f) => f.pravoId === "H10200090")).toBe(true);
+    expect(log.text()).toContain("law.search.vector-dims-mismatch");
+  });
+
   it("словарь «бытовое → юридическое»: «вычет» находит налоговые вычеты НК", async () => {
     const out = await noModel.search("какой вычет мне положен на ребёнка");
     expect(

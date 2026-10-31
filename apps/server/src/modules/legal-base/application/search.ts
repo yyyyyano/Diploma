@@ -15,6 +15,7 @@ import {
   articleFragments,
   definitionIds,
   fragmentsByVersionIds,
+  EMBEDDING_DIMS,
   hybridIds,
   type FragmentRow,
 } from "../infrastructure/db/search.repo.ts";
@@ -132,6 +133,12 @@ export function makeLawSearch(d: LawSearchDeps) {
       vector = await d.embedQuery(query);
     } catch {
       // Модель эмбеддингов недоступна — это не ошибка поиска (LAW-10): реквизиты и полнотекстовый индекс работают.
+      vector = null;
+    }
+    if (vector !== null && vector.length !== EMBEDDING_DIMS) {
+      // Модель не той размерности (стенд с маленьким эмбеддером, смена модели без миграции): не ошибка поиска —
+      // векторная часть пустая, работают реквизиты и полнотекстовый индекс (LAW-10).
+      d.log.warn({ count: vector.length }, "law.search.vector-dims-mismatch");
       vector = null;
     }
     if (vector === null) d.log.info({}, "law.search.no-vectors");

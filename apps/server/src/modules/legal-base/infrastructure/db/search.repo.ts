@@ -7,6 +7,8 @@ import { legalActAliases, legalActs, legalFragmentVersions, legalFragments } fro
 
 /** Id первой модели из миграции: частичный HNSW-индекс построен под неё, запрос называет её литералом (параметр индекс не использует). */
 export const FIRST_MODEL_ID = "019e0000-0000-7000-8000-000000000001";
+/** Размерность векторов поиска: HNSW-индекс и колонка — halfvec(1024) под bge-m3 (ADR-0007). */
+export const EMBEDDING_DIMS = 1024;
 /** RRF (ADR-0007): 1 / (k + ранг). */
 export const RRF_K = 60;
 /** Сколько кандидатов берёт каждая из двух веток. */
@@ -104,8 +106,10 @@ export interface HybridQuery {
 
 /** Гибрид: два списка рангов → RRF → id версий по убыванию оценки. */
 export async function hybridIds(db: SystemDb, q: HybridQuery): Promise<readonly string[]> {
-  if (q.tsQuery === null && q.vector === null) return [];
-  const vector = q.vector === null ? null : `[${q.vector.join(",")}]`;
+  // Вектор чужой размерности Postgres не сравнит с halfvec(1024) — векторная ветка пропускается (её отсев — в search.ts).
+  const vector =
+    q.vector === null || q.vector.length !== EMBEDDING_DIMS ? null : `[${q.vector.join(",")}]`;
+  if (q.tsQuery === null && vector === null) return [];
   const result = await db.execute<{ id: string }>(sql`
     with
     q as (select to_tsquery('russian', ${q.tsQuery ?? ""}) as tsq),
@@ -125,7 +129,7 @@ export async function hybridIds(db: SystemDb, q: HybridQuery): Promise<readonly 
     ),
     vec as (
       select e.version_id as id,
-             row_number() over (order by e.embedding <=> ${vector}::halfvec(1024)) as rnk
+             row_number() over (order by e.embedding <=> ${vector}::halfvec(${sql.raw(String(EMBEDDING_DIMS))})) as rnk
       from legal_fragment_embeddings e
       join legal_fragment_versions v on v.id = e.version_id
       join legal_fragments f on f.id = v.fragment_id
@@ -133,7 +137,7 @@ export async function hybridIds(db: SystemDb, q: HybridQuery): Promise<readonly 
       where ${vector === null ? sql`false` : sql`true`}
         and e.model_id = '019e0000-0000-7000-8000-000000000001'
         and v.is_current and not v.excluded and a.status = 'active'
-      order by e.embedding <=> ${vector}::halfvec(1024)
+      order by e.embedding <=> ${vector}::halfvec(${sql.raw(String(EMBEDDING_DIMS))})
       limit ${BRANCH_LIMIT}
     )
     select coalesce(fts.id, vec.id) as id

@@ -5,3 +5,5 @@ export { createLlmModule, type LlmAdminFacade, type LlmFacade, type LlmFacades }
 export type { Embedder } from "./application/ports.ts";
 export { gatewayEmbedder } from "./application/embedder.ts";
 export { localModelsReady } from "./events.ts";
+// SEC-10: фильтр инструктивных фраз — им пользуются стражи агента (сообщения пользователя и данные страницы).
+export { INJECTION_MARK, prepareDocument } from "./domain/injection.ts";

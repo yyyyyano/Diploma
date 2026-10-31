@@ -1,11 +1,12 @@
 // Модуль explain (паспорт — CLAUDE.md): сохранённые трассы расчётов и «Откуда эта цифра?» (EXPL-01, EXPL-02, P2):
-// фасад save/get для модулей, процедура explain.get для сайта, инструмент explain_number для агента.
+// фасад save/get для модулей, процедура explain.get для сайта, инструменты explain_number и calculator для агента.
 import {
   defineModule,
   type ModuleDeps,
   type NoFacades,
   type Platform,
 } from "../../platform/module/define-module.ts";
+import { calculatorTool } from "./agent/calculator.ts";
 import { explainNumberTool } from "./agent/tools.ts";
 import { MAX_REFS } from "./settings.ts";
 import { explainRouter } from "./api/router.ts";
@@ -21,7 +22,7 @@ export function createExplainModule({ platform }: ModuleDeps<ExplainFacades, Pla
     id: "explain",
     facade: explanations,
     router: explainRouter(explanations),
-    tools: [explainNumberTool(explanations)],
+    tools: [explainNumberTool(explanations), calculatorTool(explanations)],
     settings: [MAX_REFS],
     userData: explainUserData,
   });

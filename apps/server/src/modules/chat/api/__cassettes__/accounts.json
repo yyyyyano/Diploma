@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "bcaebe2f68b01795",
+      "fingerprint": "d04617783f171ca1",
       "parts": [
         {
           "delayMs": 0,
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 4,
+          "delayMs": 3,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -54,8 +54,8 @@
             },
             "usage": {
               "inputTokens": {
-                "total": 153,
-                "noCache": 153
+                "total": 394,
+                "noCache": 394
               },
               "outputTokens": {
                 "total": 1,
@@ -74,7 +74,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "419eff7b879e777e",
+      "fingerprint": "2875b86882b0dd5b",
       "parts": [
         {
           "delayMs": 0,
@@ -115,7 +115,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -123,7 +123,7 @@
           }
         },
         {
-          "delayMs": 302,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -178,8 +178,8 @@
             },
             "usage": {
               "inputTokens": {
-                "total": 315,
-                "noCache": 315
+                "total": 556,
+                "noCache": 556
               },
               "outputTokens": {
                 "total": 13,

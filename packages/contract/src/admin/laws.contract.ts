@@ -149,6 +149,7 @@ export const LawCandidate = z.strictObject({
 export type LawCandidate = z.infer<typeof LawCandidate>;
 
 export const LawCandidates = z.strictObject({ items: z.array(LawCandidate).max(500) });
+export type LawCandidates = z.infer<typeof LawCandidates>;
 
 /** Что меняет администратор в настройках «Законов»; не переданное — не меняется. */
 export const SetLawsSettingsInput = z.strictObject({

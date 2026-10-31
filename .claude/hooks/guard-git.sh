@@ -5,7 +5,8 @@
 # публикация дополнительно запрещена правилом permissions.deny в settings.json.
 #
 # Запрещено:
-#   git push (NFR-17: публикация только по явной просьбе пользователя — он делает её сам);
+#   git push — кроме ровно `git push origin main` (NFR-17, решение пользователя 2026-10-31: дирижёр пушит main
+#     в origin = yyyyyano/Diploma после каждой принятой задачи; --force, другие ветки и удалённые — запрещены);
 #   обход проверок: commit/merge --no-verify, commit -n, LEFTHOOK=0, HUSKY=0, core.hooksPath,
 #     COMMIT_MAX_LINES=/COMMIT_WARN_LINES= (порог размера коммита);
 #   потеря работы: reset --hard, clean -f, checkout -- <путь> / checkout . / checkout -f,
@@ -65,7 +66,9 @@ check_segment() {
   local -a a=("${w[@]:$((i+1))}")
   case "$sub" in
     push)
-      deny "Заблокировано: git push. Публикация — только по явной просьбе пользователя (NFR-17); пушит он сам." ;;
+      # NFR-17: разрешён только `git push origin main` — без флагов, других веток и удалённых.
+      [ "${#a[@]}" -eq 2 ] && [ "${a[0]}" = "origin" ] && [ "${a[1]}" = "main" ] && return 0
+      deny "Заблокировано: git push. Разрешено только «git push origin main» после принятой задачи (NFR-17); --force и другие ветки — нельзя." ;;
     commit)
       has_word '^--no-verify$' "${a[@]}" && deny "Заблокировано: git commit --no-verify. Git-хуки проверки обязательны — исправь причину отказа, а не обходи её."
       has_word '^-[a-zA-Z]*n[a-zA-Z]*$' "${a[@]}" && deny "Заблокировано: git commit -n (то же, что --no-verify). Git-хуки проверки обязательны."

@@ -39,11 +39,10 @@
       "Bash(make e2e)",
       "Bash(make check-quick)",
       "Bash(make check-full)",
-      "Bash(make check-commits)"
+      "Bash(make check-commits)",
+      "Bash(git push origin main)"
     ],
     "deny": [
-      "Bash(git push)",
-      "Bash(git push *)",
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(!.env.example)",

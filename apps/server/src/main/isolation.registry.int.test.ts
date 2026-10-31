@@ -382,6 +382,8 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
       "приём файлов запроса: чужих id во входе нет, файл сохраняется в домохозяйство сессии (main/files.int.test.ts)",
   },
   "tool:explain_number": { input: (b) => ({ traceId: b.traceId }) },
+  // Калькулятор принимает числа и даты вызова, чужих id во входе нет; трассу пишет только домохозяйству запуска.
+  "tool:calculator": { input: () => ({ op: "sum", values: [100, 250] }) },
   "notifications.list": { input: () => ({}) },
   "notifications.markRead": { input: (b) => ({ ids: [b.notificationId] }) },
   "notifications.markAllRead": { input: () => undefined },
@@ -818,6 +820,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "add_transaction",
       "aggregate_transactions",
       "bulk_change_category",
+      "calculator",
       "contribute_to_goal",
       "create_account",
       "create_goal",

@@ -12,6 +12,40 @@ export const DEFAULT_TIME_ZONE: TimeZone = "Europe/Minsk";
 // z.iso.date() проверяет и календарь: 2026-02-29 и 2026-13-01 не пройдут.
 const schema = z.iso.date().brand<"LocalDate">();
 
+/** Номер дня от 1970-01-01 по григорианскому календарю: целочисленная арифметика, без Date и часовых поясов. */
+function toEpochDay(date: LocalDate): number {
+  const [y = 0, m = 0, d = 0] = date.split("-").map(Number);
+  const year = m <= 2 ? y - 1 : y;
+  const era = Math.floor(year / 400);
+  const yearOfEra = year - era * 400;
+  const dayOfYear = Math.floor((153 * (m + (m > 2 ? -3 : 9)) + 2) / 5) + d - 1;
+  const dayOfEra =
+    yearOfEra * 365 + Math.floor(yearOfEra / 4) - Math.floor(yearOfEra / 100) + dayOfYear;
+  return era * 146_097 + dayOfEra - 719_468;
+}
+
+function fromEpochDay(epochDay: number): LocalDate {
+  const z = epochDay + 719_468;
+  const era = Math.floor(z / 146_097);
+  const dayOfEra = z - era * 146_097;
+  const yearOfEra = Math.floor(
+    (dayOfEra -
+      Math.floor(dayOfEra / 1460) +
+      Math.floor(dayOfEra / 36_524) -
+      Math.floor(dayOfEra / 146_096)) /
+      365,
+  );
+  const dayOfYear =
+    dayOfEra - (365 * yearOfEra + Math.floor(yearOfEra / 4) - Math.floor(yearOfEra / 100));
+  const mp = Math.floor((5 * dayOfYear + 2) / 153);
+  const day = dayOfYear - Math.floor((153 * mp + 2) / 5) + 1;
+  const month = mp < 10 ? mp + 3 : mp - 9;
+  const year = yearOfEra + era * 400 + (month <= 2 ? 1 : 0);
+  return LocalDate.parse(
+    `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`,
+  );
+}
+
 /** Календарный день «ГГГГ-ММ-ДД» по часовому поясу системы. Строки сравниваются по порядку дат. */
 export type LocalDate = z.infer<typeof schema>;
 
@@ -39,6 +73,17 @@ export const LocalDate = {
     const part = (type: "year" | "month" | "day") =>
       parts.find((item) => item.type === type)?.value ?? "";
     return LocalDate.parse(`${part("year")}-${part("month")}-${part("day")}`);
+  },
+
+  /** День через `days` дней (отрицательное — назад); выход за 0001…9999 — `RangeError`. */
+  addDays(date: LocalDate, days: number): LocalDate {
+    if (!Number.isSafeInteger(days)) throw new RangeError("Число дней — целое.");
+    return fromEpochDay(toEpochDay(date) + days);
+  },
+
+  /** Сколько дней от `from` до `to` (`to` позже — положительное). */
+  daysBetween(from: LocalDate, to: LocalDate): number {
+    return toEpochDay(to) - toEpochDay(from);
   },
 
   /** −1 — `a` раньше, 1 — позже, 0 — тот же день. */

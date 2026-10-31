@@ -57,3 +57,37 @@ describe("LocalDate.compare", () => {
     ]);
   });
 });
+
+describe("AGT-03: календарная арифметика — дата + N дней, дней между датами", () => {
+  const d = (text: string) => LocalDate.parse(text);
+
+  it("30 дней после 15 октября — 14 ноября; через границу года и в високосный февраль", () => {
+    expect(LocalDate.addDays(d("2026-10-15"), 30)).toBe("2026-11-14");
+    expect(LocalDate.addDays(d("2026-12-31"), 1)).toBe("2027-01-01");
+    expect(LocalDate.addDays(d("2028-02-28"), 1)).toBe("2028-02-29");
+    expect(LocalDate.addDays(d("2027-02-28"), 1)).toBe("2027-03-01");
+  });
+
+  it("отрицательное число дней — назад", () => {
+    expect(LocalDate.addDays(d("2026-03-01"), -1)).toBe("2026-02-28");
+    expect(LocalDate.addDays(d("2026-01-01"), -365)).toBe("2025-01-01");
+  });
+
+  it("дней между датами: вперёд — положительное, назад — отрицательное, тот же день — 0", () => {
+    expect(LocalDate.daysBetween(d("2026-09-01"), d("2026-10-31"))).toBe(60);
+    expect(LocalDate.daysBetween(d("2026-10-31"), d("2026-09-01"))).toBe(-60);
+    expect(LocalDate.daysBetween(d("2026-10-31"), d("2026-10-31"))).toBe(0);
+    expect(LocalDate.daysBetween(d("2024-01-01"), d("2025-01-01"))).toBe(366);
+  });
+
+  it("дробное число дней — RangeError", () => {
+    expect(() => LocalDate.addDays(d("2026-10-15"), 1.5)).toThrow(RangeError);
+  });
+
+  it("сложение и разность согласованы на длинном промежутке", () => {
+    const start = d("1999-12-25");
+    for (let days = -20_000; days <= 20_000; days += 997) {
+      expect(LocalDate.daysBetween(start, LocalDate.addDays(start, days))).toBe(days);
+    }
+  });
+});

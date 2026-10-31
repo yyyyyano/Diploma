@@ -178,8 +178,26 @@ test("первый запуск → администратор → вход → 
   await page.goto("/setup");
   await expect(page).toHaveURL(/\/home$/);
 
-  // ADM-30, ADM-60: администрирование — пункт меню только администратору; «/admin» открывает «Пользователи».
+  // ADM-10, LAW-40 (T-039): администрирование — пункт меню только администратору; «/admin» открывает «Законы»: сводка, расписание,
+  // загрузчик с контактом, акты по состояниям, журналы и общий редактор справочников. Страницы — из сохранённых, сети нет.
   await page.getByRole("link", { name: "Администрирование" }).first().click();
+  await expect(page).toHaveURL(/\/admin\/laws$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Расписание проверок" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Индекс и загрузчик" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: /Контакт оператора для загрузчика/ })).toHaveValue(
+    "https://example.test/operator",
+  );
+  await expect(page.getByRole("button", { name: "Проверить сейчас" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Все \d+$/ })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("button", { name: "Журнал обновлений" }).click();
+  await expect(page.getByRole("columnheader", { name: "Что произошло" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("button", { name: "Справочники" }).click();
+  await expect(page.getByRole("button", { name: "Добавить строку" })).toBeEnabled();
+  await expect(page.getByRole("columnheader", { name: "ID акта" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+  await page.getByRole("link", { name: "Пользователи" }).click();
   await expect(page).toHaveURL(/\/admin\/users$/);
   // Сценарии идут параллельно и заводят своих пользователей — их число заранее неизвестно.
   await expect(page.getByRole("heading", { level: 2, name: /^Пользователи · \d+$/ })).toBeVisible();

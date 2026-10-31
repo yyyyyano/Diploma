@@ -6,7 +6,13 @@ import { describe, expect, it } from "vitest";
 import { CHECKLISTS, UNSAVED_REFS, checklistById } from "./checklists.ts";
 
 const t = createLegalT();
-const texts: Record<string, Record<string, Record<string, string>>> = legalTexts.checklists;
+interface Entry {
+  readonly title: string;
+  readonly summary: string;
+  readonly items: Readonly<Record<string, string>>;
+  readonly deadlines?: Readonly<Record<string, string>>;
+}
+const texts: Readonly<Record<string, Entry>> = legalTexts.checklists;
 
 describe("LEGAL-12: набор и состав чек-листов", () => {
   it("шесть чек-листов MVP — вычет на обучение, на жильё, стандартные по ст. 209, возврат надлежащего качества, ненадлежащего, гарантия", () => {
@@ -24,14 +30,14 @@ describe("LEGAL-12: набор и состав чек-листов", () => {
         continue;
       }
       for (const item of list.items) {
-        const text = entry["items"]?.[item.id];
+        const text = entry.items[item.id];
         if (typeof text !== "string" || text.length <= 20)
           problems.push(`${list.id}/${item.id}: нет текста`);
-        if ((entry["deadlines"]?.[item.id] !== undefined) !== (item.deadline === true)) {
+        if ((entry.deadlines?.[item.id] !== undefined) !== (item.deadline === true)) {
           problems.push(`${list.id}/${item.id}: подпись срока не сходится с шаблоном`);
         }
       }
-      const items = Object.keys(entry["items"] ?? {}).toSorted();
+      const items = Object.keys(entry.items).toSorted();
       if (
         items.join() !==
         list.items
@@ -40,13 +46,13 @@ describe("LEGAL-12: набор и состав чек-листов", () => {
           .join()
       )
         problems.push(`${list.id}: лишние тексты пунктов`);
-      const deadlines = Object.keys(entry["deadlines"] ?? {}).toSorted();
+      const deadlines = Object.keys(entry.deadlines ?? {}).toSorted();
       const flagged = list.items
         .filter((i) => i.deadline === true)
         .map((i) => i.id)
         .toSorted();
       if (deadlines.join() !== flagged.join()) problems.push(`${list.id}: лишние подписи сроков`);
-      if (t(`checklists.${list.id}.title` as never).length <= 5)
+      if (entry.title.length <= 5 || entry.summary.length <= 20)
         problems.push(`${list.id}: нет названия`);
     }
     expect(problems).toEqual([]);

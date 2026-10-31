@@ -11,6 +11,7 @@ import type { LegalBaseFacade } from "../legal-base/index.ts";
 import type { NormTablesFacade } from "../norm-tables/index.ts";
 import { makeFinalizeAnswer } from "./application/finalize-answer.ts";
 import { FREE_QUOTE_MIN_WORDS, LEGAL_CONSULT_SETTINGS } from "./settings.ts";
+import { legalConsultUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface LegalConsultFacades {
@@ -22,10 +23,11 @@ export function createLegalConsultModule({
   platform,
   facades,
 }: ModuleDeps<LegalConsultFacades, Platform>) {
+  const t = createLegalT();
   const finalizeAnswer = makeFinalizeAnswer({
     legalBase: facades.legalBase,
     rate: facades.normTables.rate,
-    t: createLegalT(),
+    t,
     minFreeWords: () => platform.settings.get(FREE_QUOTE_MIN_WORDS),
     log: platform.log,
   });
@@ -38,6 +40,7 @@ export function createLegalConsultModule({
        */
       finalizeAnswer,
     },
+    userData: legalConsultUserData,
     settings: LEGAL_CONSULT_SETTINGS,
   });
 }

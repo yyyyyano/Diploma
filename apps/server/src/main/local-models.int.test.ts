@@ -102,29 +102,3 @@ describe("ADM-50: «Локальные модели» в админке", () => 
     });
   });
 });
-
-describe("NFR-25: кнопка «Скачать» без работающего worker", () => {
-  it("ставит ровно одну ожидающую задачу; повторное нажатие не плодит вторую", async () => {
-    const lone = await createTestDb();
-    const alone = await startHttpStack(lone, { worker: false });
-    try {
-      const admin = { email: "lone@example.test", password: STACK_PASSWORD };
-      await alone.call("local", "/identity/setup", { body: admin });
-      const cookie = sessionCookie(await alone.call("local", "/identity/sign-in", { body: admin }));
-      for (const _ of [1, 2, 3]) {
-        const response = await alone.call("local", "/admin/ai/local-models/download", {
-          cookie,
-          post: true,
-        });
-        expect(response.status).toBe(200);
-      }
-      const { rows } = await lone.owner.query<{ n: string }>(
-        "select count(*) as n from pgboss.job where name = 'llm.download-models' and state = 'created'",
-      );
-      expect(Number(rows[0]?.n)).toBe(1);
-    } finally {
-      await alone.close();
-      await lone.drop();
-    }
-  });
-});

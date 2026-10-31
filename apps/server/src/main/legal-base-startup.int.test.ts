@@ -78,9 +78,14 @@ describe("AUTH-10, LAW-10: стартовый каталог после перв
   });
 
   it("задача пережила бы перезапуск: загрузка записана в журнал фоновых задач как завершённая", async () => {
-    const runs = await db.owner.query<{ status: string }>(
-      "select status from background_job_run where kind = 'legal-base.load-start-catalog'",
-    );
-    expect(runs.rows.map((r) => r.status)).toEqual(["completed"]);
+    // Журнал пишет jobs после возврата обработчика (jobs.ts, finishRun), а «ready» видно уже по актам внутри него:
+    // ждём состояние журнала, а не читаем его сразу.
+    const statuses = async () =>
+      (
+        await db.owner.query<{ status: string }>(
+          "select status from background_job_run where kind = 'legal-base.load-start-catalog'",
+        )
+      ).rows.map((r) => r.status);
+    await expect.poll(statuses, { timeout: 30_000, interval: 100 }).toEqual(["completed"]);
   });
 });

@@ -229,6 +229,12 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, 'limit', $3, false, '{}')`,
     [...ids, limit.rows[0]?.id],
   );
+  // Отмеченный пункт чек-листа (LEGAL-12): строка владельца, уходит вместе с аккаунтом.
+  await db.owner.query(
+    `insert into checklist_progress (household_id, user_id, checklist_id, subject, item_id)
+     values ($1, $2, 'warranty', 'general', 'proof')`,
+    ids,
+  );
   return { cookie: user.cookie, scope, email, fileId: file.id };
 }
 

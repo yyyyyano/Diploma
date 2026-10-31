@@ -62,6 +62,8 @@ interface Household {
   /** Лимит B на категорию и его цель-копилка. */
   readonly limitId: string;
   readonly goalId: string;
+  /** Сообщение, к которому B отметил пункт чек-листа (состояние галочек — таблица домохозяйства). */
+  readonly checklistSubjectId: string;
 }
 
 /**
@@ -235,6 +237,22 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     exempt:
       "прогресс загрузки стартового каталога законов (localOnly): общие данные правовой базы, домохозяйства и данных пользователя нет",
   },
+  "legalConsult.checklists": { input: () => undefined },
+  "legalConsult.checklist": {
+    input: (b) => ({
+      id: "return-good-quality",
+      subject: { kind: "message", id: b.checklistSubjectId },
+    }),
+  },
+  "legalConsult.setChecked": {
+    input: (b) => ({
+      id: "return-good-quality",
+      subject: { kind: "message", id: b.checklistSubjectId },
+      item: "proof",
+      done: true,
+    }),
+  },
+  "tool:get_checklist": { input: () => ({ id: "return-good-quality" }) },
   "llm.localModelsProgress": {
     exempt:
       "прогресс скачивания локальных моделей (localOnly): байты и состояние системной задачи, домохозяйства и данных пользователя нет",
@@ -552,6 +570,12 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, $3, 'piggy', 300000, '2027-06-01', '2026-10-28') returning id`,
     [ids.household_id, ids.user_id, `цель ${email}`],
   );
+  const checklistSubjectId = randomUUID();
+  await db.owner.query(
+    `insert into checklist_progress (household_id, user_id, checklist_id, subject, item_id)
+     values ($1, $2, 'return-good-quality', $3, 'proof')`,
+    [ids.household_id, ids.user_id, `message:${checklistSubjectId}`],
+  );
   const statementImport = await db.owner.query<{ id: string }>(
     `insert into statement_imports (household_id, user_id, file_id, status) values ($1, $2, $3, 'ready') returning id`,
     [ids.household_id, ids.user_id, file.rows[0]?.id],
@@ -579,6 +603,7 @@ async function seedHousehold(email: string): Promise<Household> {
     recurringId: recurring.rows[0]?.id ?? "",
     limitId: limit.rows[0]?.id ?? "",
     goalId: goal.rows[0]?.id ?? "",
+    checklistSubjectId,
   };
 }
 
@@ -734,6 +759,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "identity.me",
       "identity.recoveryCodeStatus",
       "identity.resendVerification",
+      "legalConsult.checklist",
+      "legalConsult.checklists",
+      "legalConsult.setChecked",
       "llm.models",
       "llm.setPreferredModel",
       "notifications.adminList",
@@ -798,6 +826,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "delete_limit",
       "delete_transaction",
       "explain_number",
+      "get_checklist",
       "get_free_balance",
       "get_receipt",
       "list_accounts",

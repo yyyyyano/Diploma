@@ -9,6 +9,9 @@ import {
 } from "../../platform/module/define-module.ts";
 import type { LegalBaseFacade } from "../legal-base/index.ts";
 import type { NormTablesFacade } from "../norm-tables/index.ts";
+import { legalConsultTools } from "./agent/tools.ts";
+import { legalConsultRouter } from "./api/router.ts";
+import { makeChecklists } from "./application/checklists.ts";
 import { makeFinalizeAnswer } from "./application/finalize-answer.ts";
 import { FREE_QUOTE_MIN_WORDS, LEGAL_CONSULT_SETTINGS } from "./settings.ts";
 import { legalConsultUserData } from "./user-data.ts";
@@ -24,6 +27,7 @@ export function createLegalConsultModule({
   facades,
 }: ModuleDeps<LegalConsultFacades, Platform>) {
   const t = createLegalT();
+  const checklists = makeChecklists({ t });
   const finalizeAnswer = makeFinalizeAnswer({
     legalBase: facades.legalBase,
     rate: facades.normTables.rate,
@@ -40,6 +44,8 @@ export function createLegalConsultModule({
        */
       finalizeAnswer,
     },
+    router: legalConsultRouter(checklists),
+    tools: Object.values(legalConsultTools(checklists)),
     userData: legalConsultUserData,
     settings: LEGAL_CONSULT_SETTINGS,
   });

@@ -7,8 +7,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { CHECKLISTS, UNSAVED_REFS } from "../modules/legal-consult/domain/checklists.ts";
+import { isVerbatim } from "../modules/legal-consult/domain/verbatim.ts";
+import type { LegalBaseFacade } from "../modules/legal-base/index.ts";
 import type { LegalConsultFacade } from "../modules/legal-consult/index.ts";
 import {
+  registerUser,
   sessionCookie,
   STACK_PASSWORD,
   startHttpStack,
@@ -24,6 +28,7 @@ let stack: HttpStack;
 let dir: string;
 let root: string;
 let consult: LegalConsultFacade;
+let legalBase: LegalBaseFacade;
 
 beforeAll(async () => {
   db = await createTestDb();
@@ -47,6 +52,9 @@ beforeAll(async () => {
   const module = stack.api.modules.find((m) => m.id === "legal-consult");
   if (module === undefined) throw new Error("модуль legal-consult не создан");
   consult = module.facade as LegalConsultFacade;
+  const base = stack.api.modules.find((m) => m.id === "legal-base");
+  if (base === undefined) throw new Error("модуль legal-base не создан");
+  legalBase = base.facade as LegalBaseFacade;
 });
 afterAll(async () => {
   await stack.close();
@@ -210,5 +218,104 @@ describe("LEGAL-08: вопрос о прошлой дате — ставка и�
     expect(answer.notices[1]?.text).toMatch(
       /^Сумму на 01\.06\.2025 беру из таблицы ставок: 58,00 BYN \(источник: .*ст\. 209, п\. 1\.2; подтверждено администратором \d\d\.\d\d\.\d{4}\)\.$/u,
     );
+  });
+});
+
+describe("LEGAL-12, P3: нормы чек-листов найдены точным обращением, их слова — в тексте нормы", () => {
+  const norms = CHECKLISTS.flatMap((c) =>
+    c.items.flatMap((i) =>
+      i.norm === undefined ? [] : [{ where: `${c.id}/${i.id}`, norm: i.norm }],
+    ),
+  );
+
+  it("каждая ссылка на норму в шаблонах находится точным обращением; слова-основание пункта есть в найденном тексте", async () => {
+    const checked = norms.filter(({ norm }) => norm.unsaved !== true);
+    expect(checked.length).toBeGreaterThan(40);
+    const problems: string[] = [];
+    for (const { where, norm } of checked) {
+      const found = await legalBase.search(norm.ref);
+      if (found.mode !== "exact" || found.fragments.length === 0) {
+        problems.push(`${where}: «${norm.ref}» не найдена точным обращением`);
+      } else if (!found.fragments.every((f) => f.pravoId === norm.pravoId)) {
+        problems.push(`${where}: «${norm.ref}» найдена в другом акте`);
+      } else if (!found.fragments.some((f) => isVerbatim(norm.evidence ?? "", f.text))) {
+        problems.push(`${where}: «${norm.evidence ?? ""}» нет в тексте «${norm.ref}»`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+
+  it("нормы без сохранённой страницы (ст. 211, 222, 223 НК) в базе пока не находятся — список явный; найдутся — пометку снять и добавить слова-основание", async () => {
+    const unsaved = [
+      ...new Set(norms.filter(({ norm }) => norm.unsaved === true).map(({ norm }) => norm.ref)),
+    ];
+    expect(unsaved.toSorted()).toEqual([...UNSAVED_REFS].toSorted());
+    for (const ref of unsaved) {
+      const article = /ст\. (\d+)/u.exec(ref)?.[1] ?? "";
+      const rows = await db.owner.query(
+        "select 1 from legal_fragments f join legal_acts a on a.id = f.act_id where a.pravo_id = 'Hk0900071' and f.article_no = $1",
+        [article],
+      );
+      expect([ref, rows.rowCount]).toEqual([ref, 0]);
+    }
+  });
+
+  it("акт-ссылка без текста (ПСМ № 778): карточка в каталоге, текста нет (LEGAL-06)", async () => {
+    const acts = CHECKLISTS.flatMap((c) =>
+      c.items.flatMap((i) => (i.act === undefined ? [] : [i.act])),
+    );
+    expect(acts).toEqual(["C20200778"]);
+    expect(await legalBase.actCard("C20200778")).toMatchObject({ hasText: false });
+  });
+});
+
+describe("LEGAL-12, CHAT-04: чек-листы сквозь HTTP — галочки сохраняются у домохозяйства", () => {
+  const MESSAGE = "019e2222-0000-7000-8000-000000000001";
+  const subject = { kind: "message", id: MESSAGE };
+  type View = { items: { id: string; checked: boolean | null }[]; done: number; total: number };
+  const call = async (path: string, cookie: string | undefined, body?: unknown) =>
+    stack.call("local", path, {
+      ...(cookie === undefined ? {} : { cookie }),
+      ...(body === undefined ? {} : { body }),
+    });
+
+  it("гость не видит чек-листов; вошедший отмечает пункт и видит его после перезагрузки; другой пользователь — чистый чек-лист", async () => {
+    const alice = await registerUser(stack, db, "alice-checklist@example.test");
+    const bob = await registerUser(stack, db, "bob-checklist@example.test");
+    expect((await call("/legal-consult/checklists", undefined)).status).toBe(401);
+    expect((await call("/legal-consult/checklist", undefined, { id: "warranty" })).status).toBe(
+      401,
+    );
+
+    const list = (await (await call("/legal-consult/checklists", alice.cookie)).json()) as {
+      items: { id: string }[];
+    };
+    expect(list.items).toHaveLength(6);
+
+    const ticked = await call("/legal-consult/checklist/check", alice.cookie, {
+      id: "return-good-quality",
+      subject,
+      item: "proof",
+      done: true,
+    });
+    expect(ticked.status).toBe(200);
+    const again = (await (
+      await call("/legal-consult/checklist", alice.cookie, { id: "return-good-quality", subject })
+    ).json()) as View;
+    expect(again.items.filter((i) => i.checked === true).map((i) => i.id)).toEqual(["proof"]);
+    expect(again.done).toBe(1);
+
+    const others = (await (
+      await call("/legal-consult/checklist", bob.cookie, { id: "return-good-quality", subject })
+    ).json()) as View;
+    expect(others.done).toBe(0);
+
+    const bad = await call("/legal-consult/checklist/check", alice.cookie, {
+      id: "return-good-quality",
+      subject,
+      item: "food",
+      done: true,
+    });
+    expect(bad.status).toBe(400);
   });
 });

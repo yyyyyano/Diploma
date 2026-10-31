@@ -11,3 +11,5 @@ export type {
   LawNotice,
   LawPart,
 } from "./application/finalize-answer.ts";
+// Темы вопросов (LAW-15): агент называет тему, когда в базе нормы нет; список ведёт legal-base.
+export { TOPICS, type Topic } from "../legal-base/index.ts";

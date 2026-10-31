@@ -37,6 +37,7 @@ const DATE_LIKE = /\d{4}-\d{2}-\d{2}|\d{1,2}[./]\d{1,2}[./]\d{2,4}|\d{1,2}:\d{2}
 // Номер нормы и подобная нумерация: «ст. 210», «п. 1.1», «статьи 209.1», «глава 16», «пп. 2».
 const NORM_REF =
   /(?<![\p{L}\d])(?:ст|статья|статьи|статье|статью|п|пп|пункт|пункта|пункте|ч|часть|части|абз|абзац|подп|подпункт|гл|глава|главе|разд|раздел|№)\.?\s*\d+(?:\.\d+)*(?:-\d+)?/giu;
+const OPAQUE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const URL = /https?:\/\/\S+/giu;
 const LIST_MARKER = /^[ \t]*\d{1,3}[.)](?=\s)/gmu;
 // «2-х комнатная», «3-й»: числительное с окончанием — не количество.
@@ -70,7 +71,8 @@ export class NumberLedger {
     if (typeof value === "number") {
       for (const n of fromNumber(value)) this.#known.add(n);
     } else if (typeof value === "string") {
-      this.addText(value);
+      // Идентификаторы (uuid) — не количества: их цифры не должны «подтверждать» выдуманные числа.
+      if (!OPAQUE_ID.test(value)) this.addText(value);
     } else if (Array.isArray(value)) {
       for (const item of value) this.addJson(item, depth + 1);
     } else if (typeof value === "object") {

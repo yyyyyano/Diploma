@@ -98,6 +98,15 @@ describe("NumberLedger: разрешённые числа ответа", () => {
     expect(ledger.hasValue(777)).toBe(false);
   });
 
+  it("цифры идентификатора (uuid) не подтверждают числа ответа", () => {
+    const l = new NumberLedger();
+    l.addJson({
+      id: "0190f0a0-0000-7000-8000-123456789012",
+      traceId: "019a1234-5678-7abc-8def-000000000042",
+    });
+    expect(l.unverified("Вы потратили 190 и 7000 BYN")).toEqual(["190", "7000"]);
+  });
+
   it("слишком глубокая вложенность и undefined не ломают набор", () => {
     const deep: Record<string, unknown> = {};
     let cursor = deep;

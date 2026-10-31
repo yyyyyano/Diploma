@@ -1,6 +1,7 @@
-// Запросы таблицы ставок (TAX-03, ADM-11, LAW-33) — только через SystemDb модуля. Подтверждение — одна транзакция: прежнее
+// Запросы таблицы ставок (TAX-03, ADM-11, LAW-33) — через SystemDb модуля (подтверждение — в транзакции вызывающего): прежнее
 // подтверждённое значение того же периода становится `superseded`, новое — `confirmed`; пересечение с другим периодом не пропускается.
 import { and, asc, desc, eq, gte, isNotNull, isNull, lte, ne, or } from "drizzle-orm";
+import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import { normRates, type RateStatus } from "./schema.ts";
 
@@ -101,52 +102,54 @@ export async function savePending(db: SystemDb, rate: NewRate): Promise<void> {
 
 export type ConfirmResult = "confirmed" | "not-found" | "overlap";
 
-/** «Подтвердить»: ожидающее → подтверждённое, прежнее того же начала → вытеснено; пересечение с подтверждённым другого периода — `overlap`. */
+/**
+ * «Подтвердить»: ожидающее → подтверждённое, прежнее того же начала → вытеснено; пересечение с подтверждённым другого
+ * периода — `overlap`. Транзакцию открывает вызывающий (`s.transaction`), чтобы событие
+ * `norm-tables.values-confirmed` ушло в ней же: `tx` — `tx.db` ScopedDb (SystemDb подходит под этот тип).
+ */
 export async function confirmPending(
-  db: SystemDb,
+  tx: ScopedDb["db"],
   id: string,
   by: "developer" | "admin",
   on: string,
 ): Promise<{ result: ConfirmResult; row?: RateRecord }> {
-  return db.transaction(async (tx) => {
-    const row = (
-      await tx
-        .select()
-        .from(normRates)
-        .where(and(eq(normRates.id, id), eq(normRates.status, "pending")))
-    )[0];
-    if (row === undefined) return { result: "not-found" };
-    const overlap = await tx
-      .select({ id: normRates.id })
-      .from(normRates)
-      .where(
-        and(
-          eq(normRates.param, row.param),
-          eq(normRates.status, "confirmed"),
-          ne(normRates.validFrom, row.validFrom),
-          or(isNull(normRates.validTo), gte(normRates.validTo, row.validFrom)),
-          row.validTo === null ? undefined : lte(normRates.validFrom, row.validTo),
-        ),
-      )
-      .limit(1);
-    if (overlap.length > 0) return { result: "overlap" };
+  const row = (
     await tx
-      .update(normRates)
-      .set({ status: "superseded" })
-      .where(
-        and(
-          eq(normRates.param, row.param),
-          eq(normRates.validFrom, row.validFrom),
-          eq(normRates.status, "confirmed"),
-        ),
-      );
-    const [confirmed] = await tx
-      .update(normRates)
-      .set({ status: "confirmed", confirmedByKind: by, confirmedOn: on, driftAt: null })
-      .where(eq(normRates.id, id))
-      .returning();
-    return { result: "confirmed", ...(confirmed === undefined ? {} : { row: confirmed }) };
-  });
+      .select()
+      .from(normRates)
+      .where(and(eq(normRates.id, id), eq(normRates.status, "pending")))
+  )[0];
+  if (row === undefined) return { result: "not-found" };
+  const overlap = await tx
+    .select({ id: normRates.id })
+    .from(normRates)
+    .where(
+      and(
+        eq(normRates.param, row.param),
+        eq(normRates.status, "confirmed"),
+        ne(normRates.validFrom, row.validFrom),
+        or(isNull(normRates.validTo), gte(normRates.validTo, row.validFrom)),
+        row.validTo === null ? undefined : lte(normRates.validFrom, row.validTo),
+      ),
+    )
+    .limit(1);
+  if (overlap.length > 0) return { result: "overlap" };
+  await tx
+    .update(normRates)
+    .set({ status: "superseded" })
+    .where(
+      and(
+        eq(normRates.param, row.param),
+        eq(normRates.validFrom, row.validFrom),
+        eq(normRates.status, "confirmed"),
+      ),
+    );
+  const [confirmed] = await tx
+    .update(normRates)
+    .set({ status: "confirmed", confirmedByKind: by, confirmedOn: on, driftAt: null })
+    .where(eq(normRates.id, id))
+    .returning();
+  return { result: "confirmed", ...(confirmed === undefined ? {} : { row: confirmed }) };
 }
 
 /** Отклонить ожидающее значение. */

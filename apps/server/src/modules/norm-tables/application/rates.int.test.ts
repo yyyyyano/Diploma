@@ -127,6 +127,33 @@ describe("ADM-11: правка и подтверждение", () => {
     expect(published).toEqual([[id]]);
   });
 
+  it("событие не опубликовалось — подтверждение откатывается: значение по-прежнему ждёт «Подтвердить»", async () => {
+    await rates().propose({
+      param: "ndfl.std-deduction.child",
+      validFrom: "2024-01-01",
+      validTo: "2024-12-31",
+      value: 4000,
+      sourceAct: "Hk0900071",
+      sourceArticle: "209",
+      sourcePoint: "1.2",
+      sourceUrl: null,
+    });
+    const [id] = await ids("ndfl.std-deduction.child", "pending");
+    const failing = makeRates({
+      system,
+      clock,
+      publishConfirmed: async () => {
+        throw new Error("outbox down");
+      },
+    });
+    await expect(failing.confirm(adminScope(), id ?? "")).rejects.toThrow("outbox down");
+    expect(await ids("ndfl.std-deduction.child", "pending")).toContain(id);
+    expect(await rates().value("ndfl.std-deduction.child", "2024-06-01")).toEqual({
+      found: false,
+      reason: "unconfirmed",
+    });
+  });
+
   it("изменение подтверждённого значения: новая версия ждёт, старая действует; после «Подтвердить» старая — в истории", async () => {
     const [oldId] = await ids("ndfl.std-deduction.disabled", "confirmed");
     await rates().propose({

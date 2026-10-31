@@ -147,10 +147,14 @@ export function makeRates(d: RatesDeps) {
   /** «Подтвердить» (ADM-11): значение вступает в силу; событие — в одной транзакции с подтверждением администратора. */
   async function confirm(s: ScopedDb, id: string): Promise<RatesTable> {
     if ((await findRate(d.system, id)) === undefined) throw new AppError("NOT_FOUND");
-    const { result } = await confirmPending(d.system, id, "admin", d.clock.today());
+    // Подтверждение и событие — одна транзакция: событие не теряется и не уходит без подтверждения.
+    const result = await s.transaction(async (tx) => {
+      const out = await confirmPending(tx.db, id, "admin", d.clock.today());
+      if (out.result === "confirmed") await d.publishConfirmed(tx, [id]);
+      return out.result;
+    });
     if (result === "not-found") throw new AppError("NOT_FOUND");
     if (result === "overlap") throw new AppError("CONFLICT", { reason: "period-overlap" });
-    await s.transaction((tx) => d.publishConfirmed(tx, [id]));
     return table();
   }
 

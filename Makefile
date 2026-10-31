@@ -211,7 +211,7 @@ lint: need-node ## Линт всего кода (Oxlint, type-aware), преду
 
 lint-file: need-node ## Линт одного файла: make lint-file FILE=путь (прочие типы пропускаются)
 	@test -n "$(FILE)" || { echo "Укажите файл: make lint-file FILE=путь" >&2; exit 2; }
-	$(if $(filter $(FILE_EXT),$(LINT_EXT)),@$(BIN)/oxlint --deny-warnings --no-error-on-unmatched-pattern "$(FILE)",@:)
+	$(if $(filter $(FILE_EXT),$(LINT_EXT)),@$(BIN)/oxlint --deny-warnings --no-error-on-unmatched-pattern --format=unix "$(FILE)",@:)
 
 typecheck: need-node ## Проверка типов TypeScript 7 во всех пакетах (Turborepo)
 	$(BIN)/turbo run typecheck --output-logs=errors-only

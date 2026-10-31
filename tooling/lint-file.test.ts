@@ -13,10 +13,21 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 // oxlint берёт .oxlintrc.json из cwd (корень репозитория), так что правила проекта действуют и на него.
 const scratch = mkdtempSync(join(tmpdir(), "kosht-lint-file-"));
 
+// Окружение как у человека в терминале: без переменных агентов. Часть CLI (oxlint) меняет вывод под агентом
+// (AI_AGENT, CLAUDECODE), и тест, зависящий от этого, красный у человека и зелёный у агента.
+function humanEnv(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of Object.keys(env)) {
+    if (key === "AI_AGENT" || key === "CLAUDECODE" || key.startsWith("CLAUDE_")) delete env[key];
+  }
+  return env;
+}
+
 function lintFile(file: string) {
   return spawnSync("make", ["--no-print-directory", "lint-file", `FILE=${file}`], {
     cwd: root,
     encoding: "utf8",
+    env: humanEnv(),
   });
 }
 

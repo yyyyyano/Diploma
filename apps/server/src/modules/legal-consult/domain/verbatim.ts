@@ -9,6 +9,11 @@ const APOSTROPHES = /[‘’‚‛'`´]/gu;
 const DASHES = /[‐-―−]/gu;
 const ALNUM = /[\p{L}\p{N}]/u;
 // Пропуск в цитате: «…», «...», «[…]», «[...]», «(…)»: куски вокруг него должны идти в тексте по порядку.
+/**
+ * P3: кусок цитаты с пропуском — не короче трёх слов. Иначе склейка однословных кусков меняет смысл нормы и всё равно
+ * проходит: «доходы … облагаются» нашлось бы в тексте «доходы не облагаются».
+ */
+export const MIN_PIECE_WORDS = 3;
 const ELLIPSIS = /\[\s*(?:…|\.{2,})\s*\]|\(\s*(?:…|\.{2,})\s*\)|…|\.{2,}/gu;
 
 /**
@@ -56,7 +61,7 @@ function findPiece(source: string, piece: string, from: number): number {
 
 /**
  * Дословна ли цитата: каждый её кусок (между многоточиями) встречается в тексте фрагмента по порядку, целыми словами, и
- * содержит букву или цифру. Пустая цитата и цитата из одних знаков — нет.
+ * содержит букву или цифру; при пропуске каждый кусок — не короче `MIN_PIECE_WORDS` слов. Пустая цитата и цитата из одних знаков — нет.
  */
 export function isVerbatim(quote: string, source: string): boolean {
   const pieces = quote
@@ -65,6 +70,7 @@ export function isVerbatim(quote: string, source: string): boolean {
     .map(normalizeForQuote)
     .filter((piece) => piece !== "");
   if (pieces.length === 0 || pieces.some((piece) => !ALNUM.test(piece))) return false;
+  if (pieces.length > 1 && pieces.some((piece) => wordCount(piece) < MIN_PIECE_WORDS)) return false;
   const text = normalizeForQuote(source);
   let from = 0;
   for (const piece of pieces) {

@@ -124,7 +124,7 @@
   дописаны критерии `ConsentSource` и контакта загрузчика.
 
 ### T-001 · Ворота качества: монорепозиторий, проверки, хуки git и Makefile
-- Статус: done · 1a5faab..1191080
+- Статус: done · 08b3048..490f677
 - Модули: `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `tooling/tsconfig.base.json`, `.oxlintrc.json`,
   `.oxfmtrc.json`, `lefthook.yml`, `commitlint.config.ts`, `tooling/check-commit-size.mjs`, `tooling/git-hooks/`,
   `Makefile`, `.env.example`
@@ -157,7 +157,7 @@
 - Зависимости: —
 
 ### T-002 · Архитектура как код: карта 36 модулей, правила границ и `deps-guard`
-- Статус: done · d77da67..2d1b06d
+- Статус: done · 7746bf5..a851ea3
 - Модули: `tooling/architecture/modules.ts`, `.dependency-cruiser.mjs`, `tooling/checks/`,
   `tooling/architecture/fixtures/`, `docs/CAPABILITIES.md`, `commitlint.config.ts`, `Makefile`, `package.json`,
   `pnpm-workspace.yaml`, `vitest.config.ts`, `tsconfig.json`, `.oxlintrc.json`, `.oxfmtrc.json`
@@ -198,7 +198,7 @@
 - Зависимости: T-001
 
 ### T-056 · Свои проверки: изоляция, цвета, часы в `calc`, «Пол», литералы JSX, бюджет бандла
-- Статус: done · a15b214..74fe278
+- Статус: done · cbbea17..518bda8
 - Модули: `tooling/checks/`, `tooling/architecture/fixtures/`, `Makefile`
 - SPEC: ROLE-01, SEC-04, NFR-19, DES-01, P1
 - Критерии приёмки:
@@ -217,7 +217,7 @@
 - Зависимости: T-002
 
 ### T-003 · Деньги, даты и трасса расчёта: kernel, calc, помощники тестов
-- Статус: done · 9b55b2a..7cb531a
+- Статус: done · f1ad1e2..595e128
 - Модули: `@kosht/kernel`, `@kosht/calc`, `@kosht/testing`, `vitest.config.ts`, `Makefile`, `package.json`,
   `pnpm-workspace.yaml`
 - SPEC: P1, P2, EXPL-02, FIN-20, NFR-23
@@ -245,7 +245,7 @@
 - Зависимости: T-002
 
 ### T-057 · Контракт и тексты: contract, i18n
-- Статус: done · a1ef23a..7b34021
+- Статус: done · f9e6bf2..81e3242
 - Модули: `@kosht/contract`, `@kosht/i18n`, `pnpm-workspace.yaml`, `tooling/architecture/rules.ts`
   (+ фикстура правила)
 - SPEC: NFR-19, NFR-23, DES-17, P1
@@ -286,7 +286,7 @@
 - Зависимости: T-003
 
 ### T-004 · База данных и изоляция: `ScopedDb`, аудитор SQL, виды таблиц и миграции
-- Статус: done · 31961e8..192fd18
+- Статус: done · 348f908..bdd011d
 - Модули: `platform/db`, `apps/server/drizzle`, `@kosht/testing`, `compose.yaml`
 - SPEC: ROLE-01, SEC-04, PRIV-07, NFR-01
 - Критерии приёмки:
@@ -318,7 +318,7 @@
 - Зависимости: T-003
 
 ### T-058 · Аудитор SQL по настоящему разбору: парсер PostgreSQL вместо регулярок
-- Статус: done · a9eda6f..e8362eb
+- Статус: done · cd48717..f667453
 - Модули: `apps/server/src/platform/db` (`audit.ts`, тесты, паспорт), `apps/server/package.json`,
   `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `tooling/architecture/rules.ts` (+ фикстура), `docs/adr/`
 - SPEC: ROLE-01, SEC-04, PRIV-07
@@ -350,7 +350,7 @@
 - Зависимости: T-004
 
 ### T-005 · Платформа сервера, часть 1: конфигурация, логи, ошибки, часы, файлы, настройки, секреты, лимиты частоты
-- Статус: done · 53c6843..5477fee
+- Статус: done · d9523fd..3b13f60
 - Модули: `platform/{config,logging,errors,clock,blob-store,settings,secrets,rate-limit}`,
   `apps/server/{drizzle,drizzle.config.ts,package.json}`, `pnpm-workspace.yaml`, `Makefile`, `.env.example`,
   `apps/server/src/platform/CLAUDE.md`, `@kosht/testing`
@@ -387,7 +387,7 @@
 - Зависимости: T-004, T-057
 
 ### T-059 · Платформа сервера, часть 2: HTTP, процедуры и три процесса
-- Статус: done · 48a3be3..351619d
+- Статус: done · f1ebd84..4f4bdbe
 - Модули: `platform/http`, `apps/server/src/entrypoints`, `apps/server/src/main` (`compose.ts`, `router.ts`),
   `tooling/architecture/rules.ts` (+ фикстура: `@orpc/openapi` — к правилу `orpc-server-only-in-api`),
   `packages/contract` (комментарий в `errors.ts`)
@@ -422,7 +422,7 @@
 - Зависимости: T-005
 
 ### T-060 · Роль приложения без суперпользователя
-- Статус: done · a7390e4..fcef673
+- Статус: done · 723bef9..787d440
 - Модули: `platform/db` (новый `roles.ts`: `ensureAppRole`, `assertAppRole`; `audit.ts`; `migrate-cli.ts`),
   `platform/config`, `apps/server/src/main/compose.ts`, `Makefile` (`init`) и скрипт правки `.env` в `tooling/`,
   `.env.example`, `@kosht/testing`, `docs/adr/0020-db-roles.md`, `docs/ARCHITECTURE.md` §6,
@@ -473,7 +473,7 @@
 - Зависимости: T-005
 
 ### T-006 · Платформа: фоновые задачи и события
-- Статус: done · 13c1e57..85cf0ca
+- Статус: done · 64532fa..0badfdf
 - Модули: `platform/{jobs,events,db}`, `apps/server/src/main/compose.ts`, `apps/server/src/entrypoints/run.ts`,
   `tooling/architecture/rules.ts`, `apps/server/drizzle.config.ts`, `Makefile`, `@kosht/testing`, `pnpm-workspace.yaml`,
   `apps/server/package.json`, `apps/server/src/platform/CLAUDE.md`
@@ -513,7 +513,7 @@
 - Зависимости: T-005, T-004, T-059, T-060
 
 ### T-061 · Живые сигналы: realtime и `events.stream`
-- Статус: done · 72f1db1..a2eb42b
+- Статус: done · 3694138..d246efd
 - Модули: `platform/{realtime,db}` (новый `db/listen.ts`), `apps/server/src/main/{compose,router}.ts` (`createRouter({ streams })`),
   `apps/server/src/main/router.contract.test.ts`, `apps/server/src/entrypoints/run.ts`,
   `apps/server/src/entrypoints/__fixtures__/stream-api.ts`, `packages/contract` (комментарий в `events.contract.ts`),
@@ -551,7 +551,7 @@
 - Зависимости: T-059, T-060
 
 ### T-007 · Все 36 модулей пустыми, но живыми: паспорта, корень композиции и реестры
-- Статус: done · 32c0ebe..7311d3d
+- Статус: done · 67bff20..c344e51
 - Модули: все 36 модулей `docs/CAPABILITIES.md`, `apps/server/src/main`, `platform/tools`, `tooling/gen`
 - SPEC: NFR-10, AGT-03, PRIV-06
 - Критерии приёмки:
@@ -594,7 +594,7 @@
 - Зависимости: T-006, T-061, T-002
 
 ### T-008 · Каркас сайта и дизайн-система «Пуща и янтарь»
-- Статус: done · 0a3acc2..9888306
+- Статус: done · 2e8e76a..f399995
 - Модули: `apps/web`, `apps/web/src/app`, `apps/web/src/ui`, `apps/web/src/lib`, `e2e`
 - SPEC: DES-00, DES-01, DES-02, DES-05, DES-06, DES-07, DES-08, DES-09, DES-15, DES-16, DES-17, NFR-19, NFR-20, P9
 - Экран: каркас — design/screens/Main.dc.html и design/screens/MobileHome.dc.html (боковое меню, верхняя панель,
@@ -640,7 +640,7 @@
 - Зависимости: T-007, T-003, T-057, T-061
 
 ### T-009 · Сквозной срез: первый запуск, вход и счёт «Наличные» с тестом изоляции по реестру
-- Статус: done · 7e1d0a6..afcecc9
+- Статус: done · 5cafd3f..d50d279
 - Модули: `identity`, `accounts`, `features/setup`, `features/auth`, `features/accounts`, `entities/account`,
   `@kosht/testing`, `e2e`
 - SPEC: AUTH-10, AUTH-08, ROLE-01, ROLE-02, ADM-01, SEC-01, SEC-04, STMT-01, NFR-24
@@ -693,7 +693,7 @@
 - Зависимости: T-008, T-004, T-005, T-007, T-059
 
 ### T-010 · ИИ-шлюз и чат-заглушка: поток ответа агента через oRPC
-- Статус: done · e57a321..286582a
+- Статус: done · 0ed930b..419f9bd
 - Модули: `llm`, `agent`, `chat`, `accounts`, `platform/telemetry`, `platform/tools`, `platform/db` (флаг транзакции в `AsyncLocalStorage`;
   `LLM_IN_TRANSACTION` — класс ошибки вне каталога, наружу `INTERNAL`), `features/assistant`,
   `@kosht/testing`, `e2e`
@@ -739,7 +739,7 @@
 - Зависимости: T-009, T-006
 
 ### T-011 · Запуск одной командой и закрытие бетона: Docker Compose, образ, команды разработчика
-- Статус: done · 6e72115..0cc8bf7
+- Статус: done · 56e4756..4785542
 - Модули: `compose.yaml`, `docker/`, `Makefile`, `apps/web/CLAUDE.md`, `apps/server/CLAUDE.md`,
   `tooling/coverage-baseline.json`
 - SPEC: NFR-01, NFR-02, NFR-14, NFR-18, OBS-05, OBS-06, QA-01
@@ -825,7 +825,7 @@
 на контекст `default` (Engine), Docker Desktop остановлен.
 
 ### T-012 · Регистрация с согласиями, подтверждение почты и локальный почтовый ящик
-- Статус: done · 0fb756f..b112287
+- Статус: done · 892acd3..2a1c8b8
 - Модули: `identity`, `privacy`, `mail`, `features/auth`, `features/mailbox`, `features/settings`
 - SPEC: AUTH-01, AUTH-02, AUTH-03, AUTH-06, PRIV-01, PRIV-02, SEC-01, NFR-24
 - Экран: Register — design/screens/Register.dc.html; Mailbox — design/screens/Mailbox.dc.html; Settings —
@@ -864,7 +864,7 @@
 - Зависимости: T-011, T-009
 
 ### T-013 · Вход и восстановление доступа: сброс по ссылке, код восстановления, блокировка, частота попыток
-- Статус: done · a027c1c..b6b3ecc
+- Статус: done · 1dd5184..43e1800
 - Модули: `identity`, `mail`, `features/auth`, `features/setup`, `features/settings`
 - SPEC: AUTH-04, AUTH-05, AUTH-08, AUTH-10, AUTH-11, AUTH-12, SEC-01, SEC-02
 - Экран: Login — design/screens/Login.dc.html (состояния blocked, forgot-password, wrong-password; кнопка демо-входа
@@ -900,7 +900,7 @@
 - Зависимости: T-012
 
 ### T-014 · Отмена, подтверждения и «Откуда эта цифра?»: общие механизмы действий и расчётов
-- Статус: done · 13ac268..a68df97
+- Статус: done · 6fa568a..d06e4fe
 - Модули: `actions`, `explain`, `entities/explanation`, `apps/web/src/ui`
 - SPEC: P5, EXPL-01, EXPL-02, AGT-03, AGT-05, AGT-07
 - Экран: Main — design/screens/Main.dc.html, состояние `Main--why-panel` (панель «Откуда эта цифра?» как общий
@@ -930,7 +930,7 @@
 - Зависимости: T-013, T-008
 
 ### T-015 · Уведомления: центр с колокольчиком, виды и настройки по каналам
-- Статус: done · 18a8660..0a569d3
+- Статус: done · cb2d5ea..3004161
 - Модули: `notifications`, `actions`, `features/notifications`, `features/settings`, `entities/notification`
 - SPEC: NOTIF-01, NOTIF-02, NOTIF-03, NOTIF-04, NOTIF-05
 - Экран: Main — design/screens/Main.dc.html, состояние `Main--notifications` (колокольчик со счётчиком и список);
@@ -958,7 +958,7 @@
 - Зависимости: T-014, T-006
 
 ### T-016 · Файлы и «Мои данные»: приём файлов, выгрузка архива и удаление аккаунта
-- Статус: done · 9ed88b9..b89bb3c
+- Статус: done · c2849f1..fd340c5
 - Модули: `files`, `privacy`, `identity`, `llm`, `features/settings`
 - SPEC: SEC-03, PRIV-02, PRIV-05, PRIV-06, PRIV-07, AUTH-12, OBS-05, RCPT-11, STMT-10
 - Экран: Settings — design/screens/Settings.dc.html, вкладки «Конфиденциальность» (`Settings--privacy`: облачное
@@ -999,7 +999,7 @@
 - Зависимости: T-015, T-010
 
 ### T-017 · Администрирование: раздел, пользователи и система
-- Статус: done · 82e6131..3f96ccf
+- Статус: done · d488502..79ca0a6
 - Модули: `admin`, `identity`, `system`, `mail`, `features/admin`
 - SPEC: ADM-01, ADM-30, ADM-60, AUTH-05, AUTH-12, ROLE-02, PRIV-07, NFR-16, NFR-23, NFR-24, OBS-07
 - Экран: Admin — design/screens/Admin.dc.html, вкладки «Пользователи» (`Admin--users`) и «Система» (`Admin--system`);
@@ -1039,7 +1039,7 @@
 - Зависимости: T-016, T-013, T-015
 
 ### T-018 · Профиль и память ассистента: анкета на 1 минуту и «Что ассистент знает обо мне»
-- Статус: done · c08545b..a54ca1b
+- Статус: done · 7975e2c..a054363
 - Модули: `profile`, `features/onboarding`, `features/memory`
 - SPEC: PROF-01, PROF-02, PROF-03, PROF-04, PROF-05, PROF-06, AUTH-07, AGT-03
 - Экран: Onboarding — design/screens/Onboarding.dc.html (`Onboarding--question-2`); Memory — design/screens/Memory.dc.html
@@ -1065,7 +1065,7 @@
 - Зависимости: T-014, T-012
 
 ### T-019 · Счета и курсы НБРБ: экран «Счета», остатки с датой, валюты с трассой
-- Статус: done · fd5e6d6..1e18a6f
+- Статус: done · 9e4adc0..f1fbbc4
 - Модули: `fx-rates`, `accounts`, `features/accounts`, `entities/account`
 - SPEC: STMT-01, STMT-02, STMT-09, EXPL-01, AGT-03, AGT-07
 - Экран: Accounts — design/screens/Accounts.dc.html (+ `Accounts--add-account`)
@@ -1093,7 +1093,7 @@
 - Зависимости: T-018, T-014
 
 ### T-020 · Контрагенты и категории: очистка названий, справочник и гибридная категоризация
-- Статус: done · 56ff8db..b2b37c3
+- Статус: done · 33a197c..d96779b
 - Модули: `merchants`, `categories`, `entities/category`
 - SPEC: STMT-06, CAT-01, CAT-02, CAT-03, CAT-04, CAT-06, CAT-07, RCPT-15, LLM-05
 - Экран: выбор категории с «Новая категория» (по design/screens/Operations.dc.html) — компонент в `entities/category`
@@ -1125,7 +1125,7 @@
 - Зависимости: T-019, T-010
 
 ### T-021 · Операции: таблица со страницами, фильтры, ручной ввод, карточка и правка с отменой
-- Статус: done · cfcb9e4..8bb7661
+- Статус: done · 362df83..2000b65
 - Модули: `transactions`, `accounts`, `features/operations`, `entities/transaction`, `entities/category`
 - SPEC: TXN-01, TXN-02, TXN-03, TXN-05, FIN-01, STMT-02, STMT-09, CAT-02, AGT-03, AGT-05, AGT-07, P5
 - Экран: Operations — design/screens/Operations.dc.html (состояния loading, empty, error, add-operation,
@@ -1160,7 +1160,7 @@
 - Зависимости: T-020, T-019, T-015
 
 ### T-022 · Массовые действия и обучение категоризации на исправлениях
-- Статус: done · 2798e0b..a1e8b32
+- Статус: done · 9aa04c1..fca9e29
 - Модули: `transactions`, `categories`, `features/operations`
 - SPEC: TXN-04, CAT-05, AGT-03, AGT-07
 - Экран: Operations — design/screens/Operations.dc.html, `Operations--bulk-selection` (панель массовых действий,
@@ -1185,13 +1185,13 @@
 (для T-021 ещё `make bench`); итоговое ревью фазы ещё не проведено.
 
 **Следующий шаг (решение пользователя 2026-10-29), в новой сессии:** сначала итоговое ревью фазы 2 — `reviewer` (Opus)
-на весь diff фазы (T-012…T-022, от коммита перед 0fb756f до 0c21f9e), находки — одной правкой (`fixer` или Sonnet-имплементатор),
+на весь diff фазы (T-012…T-022, от коммита перед 892acd3 до 82d10c3), находки — одной правкой (`fixer` или Sonnet-имплементатор),
 зелёные `make check` / `make test-int` / `make e2e`, затем строка «Ревью фазы 2 — <дата>, <вердикт>» сюда. Только после этого
 `/task-cycle auto` начинает фазу 3 с критика (Opus).
 
 **Ревью фазы 2 — 2026-10-29, CHANGES_REQUESTED → исправлено.** Находка R-1 (risk high): адрес ссылок в письмах
 (сброс пароля, подтверждение почты, сброс админом) брался из заголовка Host — подмена Host уводила токен. Правка
-`fixer` (Opus) 660172c: адрес только из настроек (`network.lan-address`, иначе локальный вход), включение доступа из
+`fixer` (Opus) 42b404e: адрес только из настроек (`network.lan-address`, иначе локальный вход), включение доступа из
 сети без адреса — `VALIDATION`; NFR-24 и паспорта обновлены. После правки `make check` (2488 тестов) и `make test-int`
 (527) зелёные; один прогон `make check` дал разовое падение `toHaveLength(1)` (2 вместо 1) в неустановленном тесте —
 два повтора зелёные, считаем нестабильным тестом под нагрузкой.
@@ -1289,7 +1289,7 @@
 - Плавающие e2e под нагрузкой: `gallery.spec.ts:71` (телефон 390, фокус панели), `operations.spec.ts:128` (тост за 5 с)
   — в правку по итоговому ревью фазы 3 вместе с `data-export.int.test.ts:183`.
 
-**Ревью фазы 3 — 2026-10-30, APPROVE.** Блокирующих находок нет. Одна правка `fixer` (Opus) b134b2e..8adca86:
+**Ревью фазы 3 — 2026-10-30, APPROVE.** Блокирующих находок нет. Одна правка `fixer` (Opus) 1b7e322..879457a:
 гонка двух запросов экспорта — ошибка продукта (вторая заявка удаляла закоммиченную первую), исправлена
 с детерминированным тестом; снимок слияния хранит собственную разбивку операции выписки; группы `splitByCategory`
 непусты по типу; плавающие e2e — ожидания по состоянию (`holdUndoToast`, `shownSettled`), без `retries` и таймаутов.
@@ -1299,7 +1299,7 @@
 **Фаза 3 закрыта (2026-10-30).** Ручные проверки — за пользователем (см. «Для итога фазы» выше).
 
 ### T-023 · ИИ-провайдеры: Groq, Z.ai и локальная модель в цепочке, лимиты, журнал и админка
-- Статус: done · 211b584..1b91693
+- Статус: done · 7c2d764..ab408ee
 - Модули: `llm`, `privacy`, `admin`, `features/admin`
 - SPEC: LLM-02, LLM-03, LLM-04, LLM-05, LLM-06, LLM-08, LLM-09, LLM-10, NFR-02, NFR-04, PRIV-02, PRIV-09, ADM-20,
   ADM-21, ADM-22, ADM-50, NOTIF-03, OBS-03, OBS-05
@@ -1355,7 +1355,7 @@
 - Зависимости: T-022, T-016, T-017
 
 ### T-024 · Маскирование, защита от инъекций и локальные модели с автоскачиванием
-- Статус: done · e182ccd..28aa2a2
+- Статус: done · 2b64877..bb334a2
 - Модули: `llm`, `profile`, `features/admin`, `features/setup`
 - SPEC: PRIV-03, PRIV-04, SEC-10, SEC-11, NFR-03, NFR-05, NFR-25, LLM-01, LLM-07, VOICE-03, ADM-50, AUTH-10
 - Экран: Admin — design/screens/Admin.dc.html, «Провайдеры ИИ», блок локальных моделей; Setup —
@@ -1403,7 +1403,7 @@
 - Зависимости: T-023, T-018
 
 ### T-025 · Разбор выписок любого банка: чтение PDF/XLSX/XLS/CSV/сканов и запоминание формата
-- Статус: done · abb09b8..ffef891
+- Статус: done · ce3b54f..d820669
 - Модули: `statements`, `files`, `llm`, `tooling/synth`, `datasets/statements`
 - SPEC: STMT-03, STMT-04, STMT-05, STMT-12, PRIV-03, SEC-03, SEC-10, NFR-11, NFR-18, QA-01
 - Критерии приёмки:
@@ -1445,7 +1445,7 @@
 - Зависимости: T-024, T-016
 
 ### T-026 · Импорт выписки в учёт: дубли, типы операций, предпросмотр, откат и вкладка выписок
-- Статус: done · 3019331..821d2cf
+- Статус: done · 8fe353d..dcd7c98
 - Модули: `statements`, `transactions`, `accounts`, `categories`, `merchants`, `fx-rates`, `actions`,
   `notifications`, `features/documents`, `features/operations`
 - SPEC: STMT-01, STMT-02, STMT-03, STMT-04, STMT-06, STMT-07, STMT-08, STMT-09, STMT-10, STMT-11, CAT-06, NOTIF-02,
@@ -1482,7 +1482,7 @@
 - Зависимости: T-025, T-021, T-020
 
 ### T-027 · Распознавание чека: QR и дубли, извлечение, арифметический валидатор и перепроверка
-- Статус: done · 1844f0e..6737947
+- Статус: done · 902e4c0..b520c98
 - Модули: `receipts`, `@kosht/calc`, `llm`, `merchants`, `files`, `tooling/synth`, `datasets/receipts`
 - SPEC: RCPT-03, RCPT-04, RCPT-05, RCPT-06, RCPT-07, RCPT-14, RCPT-15, PRIV-04, SEC-11, NFR-11, NFR-18
 - Критерии приёмки:
@@ -1513,7 +1513,7 @@
 - Зависимости: T-025, T-024
 
 ### T-028 · Чеки в учёте и на экране: загрузка, анимация проверки, карточка «Верно / Изменить / Отменить»
-- Статус: done · c47a265..c826d02 (вместе с T-029)
+- Статус: done · add8e5f..45ed935 (вместе с T-029)
 - Модули: `receipts`, `transactions`, `categories`, `files`, `features/documents`, `features/operations`,
   `entities/receipt`
 - SPEC: RCPT-01, RCPT-02, RCPT-07, RCPT-08, RCPT-09, RCPT-10, RCPT-11, RCPT-12, RCPT-13, DES-03, DES-16, P9, NOTIF-02,
@@ -1547,7 +1547,7 @@
 - Зависимости: T-027, T-021
 
 ### T-029 · Сопоставление чека и выписки: автосвязь, вопрос «одна покупка?», ручная связь и разрыв
-- Статус: done · f896e13 (в пачке c47a265..c826d02)
+- Статус: done · f46d9c2 (в пачке add8e5f..45ed935)
 - Модули: `transactions`, `receipts`, `merchants`, `actions`, `notifications`, `features/operations`
 - SPEC: TXN-10, TXN-11, RCPT-10, NOTIF-02, NOTIF-05
 - Экран: Operations — design/screens/Operations.dc.html, связь и разрыв в карточке; уведомление с «Да / Нет»
@@ -1618,21 +1618,21 @@
 - В правку по итоговому ревью фазы 4: первая загрузка сайта 366,5 КБ gzip при бюджете 300 (`bundle-size.mjs`,
   `make check-full` красный ещё до T-033 — 360,9: страницы с `validateSearch` попадают в чанк `index`); форма «Новая
   операция» при прямом заходе на `/operations` оставляет «Счёт» пустым до загрузки списка («Сохранить» неактивна).
-- Коммиты дирижёра в ветке пачки: 5a841d8 (права критика) и 50ade4f (его отмена по решению пользователя) — правила
+- Коммиты дирижёра в ветке пачки: 5d636eb (права критика) и fa5349b (его отмена по решению пользователя) — правила
   критика остались прежними.
 
 **Ревью фазы 4 — 2026-10-30, APPROVE.** Блокирующих находок нет. Optional закрыты: SPEC BUD-03 и строка CONSTRAINTS
-(«ровно одно уведомление на лимит — о высшем пороге») — дирижёр 10dcae6. Правка `fixer` (Sonnet) ca12774..f29ff3c:
+(«ровно одно уведомление на лимит — о высшем пороге») — дирижёр 86651c0. Правка `fixer` (Sonnet) 4c82714..29c2bc9:
 первая загрузка сайта 366,5 → 286,6 КБ gzip (бюджет 300; страницы через `lib/lazy-page.tsx`, `"sideEffects"`,
 `category-key.ts`), `make check-full` зелёный; счёт по умолчанию в «Новой операции» после загрузки списка; агрегаты —
-разбивки только операций периода, `count` по операциям. Два пункта правки — в одном коммите f29ff3c (хук lint отклонил
+разбивки только операций периода, `count` по операциям. Два пункта правки — в одном коммите 29c2bc9 (хук lint отклонил
 первые попытки, историю не переписываем). После правки у дирижёра `make check` (3630) и `make test-int` (901) зелёные.
 `make audit`: 5 moderate (порог high), `osv-scanner` не установлен.
 
 **Фаза 4 закрыта (2026-10-30).**
 
 ### T-030 · Регулярные платежи и подписки: поиск по истории, «возможно прекращён», экран
-- Статус: done · 6bf532b..825edfe
+- Статус: done · b738c35..a6c29d4
 - Модули: `recurring`, `profile`, `notifications`, `actions`, `features/recurring`, `features/operations`,
   `features/memory`, `contract`, `i18n`
 - SPEC: REC-01, REC-02, REC-04, REC-05, PROF-03, NOTIF-02, TXN-01, AGT-03
@@ -1673,7 +1673,7 @@
 - Зависимости: T-029, T-018
 
 ### T-031 · Финансовые расчёты: свободный остаток, средний доход и прогноз остатка по дням
-- Статус: done · ea9f66d..4620edf
+- Статус: done · 701140f..88831ec
 - Модули: `fin`, `transactions`, `accounts`, `@kosht/calc`, `explain`, `profile`, `features/recurring`, `contract`, `i18n`
 - SPEC: FIN-01, FIN-20, FIN-21, FIN-22, REC-04, PROF-03, EXPL-01, EXPL-02, AGT-03
 - Экран: Recurring — design/screens/Recurring.dc.html, формула свободного остатка с «Откуда эта цифра?»
@@ -1724,7 +1724,7 @@
 - Зависимости: T-030, T-019
 
 ### T-032 · Лимиты и цели: прогресс, пороги 80/100 %, копилка и привязка к счёту
-- Статус: done · 74676cd..d2eebf9
+- Статус: done · bf3a91b..b0d1d3a
 - Модули: `budgets`, `@kosht/calc`, `notifications`, `actions`, `features/budget`, `entities/goal` (карточка цели и окно
   взноса — нужны и главной), `ui` (`LimitBar` в `ui/components`), `contract`, `i18n`
 - SPEC: BUD-01, BUD-02, BUD-03, BUD-04, BUD-05, BUD-06, BUD-07, NOTIF-02, AGT-03, AGT-05, AGT-07
@@ -1765,7 +1765,7 @@
 - Зависимости: T-031, T-015
 
 ### T-033 · Главный экран: дашборд с периодом, графиками и переходами в операции
-- Статус: done · 9c0ec7e..34fc389
+- Статус: done · dce8051..7bdaf99
 - Модули: `dashboard`, `accounts`, `features/dashboard`, `entities/explanation`, `entities/goal`, `ui`, `contract`, `i18n`,
   `lib/events`; `dependsOn` модуля `dashboard` += `explain` (правка `modules.ts` с обоснованием: трассы «Остальное»
   и итогов — `explain.saveMany`)
@@ -1865,10 +1865,10 @@
 - T-038 принята по зелёным `make check` (3931; один прогон из трёх — падение `legal-base-startup.int.test.ts` «задача
   записана в журнал как завершённая», два повтора зелёные — в правку по итоговому ревью вместе с `local-models.int.test.ts`
   53300), `make test-int` (1006), `make e2e` (24); первая загрузка 291,2 из 300 КБ. Живая страница рубрик ЕПК показала
-  другую вёрстку (рубрики — ссылки `guid=1991`, блок внутри HTML-комментария) — разбор переписан (92924d5). Отступления
+  другую вёрстку (рубрики — ссылки `guid=1991`, блок внутри HTML-комментария) — разбор переписан (ea7a244). Отступления
   приняты: в строке акта нет «№ … от …» (реквизитов в каталоге нет); «Касается вас» и кнопки ассистента — T-043, T-046;
   группы витрины «Персональные данные» и «Разъяснения Пленума» — не темы LAW-01.
-- T-039 сделана частично (d3e9b88: карточка одним вызовом с кэшем 6 ч, ключ `law-new-acts` по дню и числу актов,
+- T-039 сделана частично (b3f8622: карточка одним вызовом с кэшем 6 ч, ключ `law-new-acts` по дню и числу актов,
   комментарий `isolation.mjs`) — остаётся `in-progress`, доделывает новый имплементатор линии 2 (прежний у предела
   контекста). Решение: время и окно проверки — правкой `platform/jobs` (`ScheduleDef.cron` из настройки с повторной
   регистрацией при смене), без заглушки; остальные три справочника (стартовый каталог, органы, «бытовое → юридическое»)
@@ -1896,7 +1896,7 @@
 
 **Ревью фазы 5 — 2026-10-31, CHANGES_REQUESTED → исправлено.** Находка R-1 (risk high, LAW-35): пауза загрузчика
 отсчитывалась от начала запроса, а задачи `load-act`, `check-now`, `add-acts`, `daily-check`, `catalog-growth` идут
-в разных очередях — два запроса к pravo.by могли идти одновременно. Правка `fixer` (Opus) 8fc52e8..f683a1f: аренда очереди
+в разных очередях — два запроса к pravo.by могли идти одновременно. Правка `fixer` (Opus) 92db962..4af582f: аренда очереди
 запросов (`tryAcquire`/`release` после ответа, `next = end + pause`), int-тест «интервалы двух загрузчиков не
 пересекаются» (красный до правки), ADR-0012 исправлен. Заодно закрыты: поиск без векторов при чужой размерности
 эмбеддера; куски цитаты через «…» — не короче 3 слов (P3); атомарный суточный предел догрузки; подтверждение ставки
@@ -1912,7 +1912,7 @@
 ст. 211, 222, 223 НК для чек-листов (после загрузки полного НК); векторы — после `make up WITH_MODELS=1`.
 
 ### T-034 · Каталог актов и вежливый загрузчик pravo.by: стартовый каталог, снимки и фрагменты
-- Статус: done · 067ac48..fb1e2f9
+- Статус: done · 4c1ff51..ce445e9
 - Модули: `legal-base`, `notifications`, `identity`, `features/setup`, `contract`, `i18n`
 - SPEC: LAW-01, LAW-03, LAW-04, LAW-07, LAW-10, LAW-20, LAW-35, LAW-36, LAW-37, LAW-38, LAW-39, AUTH-10, NOTIF-03
 - Экран: Setup — design/screens/Setup.dc.html, прогресс загрузки законов
@@ -1955,7 +1955,7 @@
 - Зависимости: T-033, T-006
 
 ### T-035 · Поиск по законам: точное обращение по реквизитам, гибридный поиск и векторы в фоне
-- Статус: done · adae27d..e7ba125, ebfe0a3
+- Статус: done · 6041fd5..35da1b4, ac7a498
 - Модули: `legal-base`, `llm`, `contract`, `i18n`
 - SPEC: LAW-08, LAW-09, LAW-21, LAW-22, LAW-23, NFR-05, AGT-03
 - Критерии приёмки:
@@ -1987,7 +1987,7 @@
 - Зависимости: T-034, T-024
 
 ### T-036 · Ежедневное обновление законов: редакции, версии фрагментов, принятые изменения, утрата силы
-- Статус: done · 3e86ddc..a2f43d0
+- Статус: done · 1fcc23b..7c4ab93
 - Модули: `legal-base`, `notifications`
 - SPEC: LAW-30, LAW-31, LAW-32, LAW-34, NFR-22, CHAT-10
 - Критерии приёмки:
@@ -2016,7 +2016,7 @@
 - Зависимости: T-035
 
 ### T-037 · Пополнение каталога: граф ссылок, новые поступления, фильтры, темы и очередь кандидатов
-- Статус: done · b521f94..1ca0692
+- Статус: done · 3d12079..84c74bf
 - Модули: `legal-base`, `llm`, `notifications`
 - SPEC: LAW-02, LAW-11, LAW-12, LAW-13, LAW-14, LAW-15, LAW-17, PRIV-09
 - Критерии приёмки:
@@ -2039,7 +2039,7 @@
 - Зависимости: T-036, T-023
 
 ### T-038 · «База законов» для всех: каталог, поиск по статье и читалка с оглавлением
-- Статус: done · 92924d5..f225302
+- Статус: done · ea7a244..d951159
 - Модули: `legal-base`, `features/laws`, `entities/law`
 - SPEC: LEGAL-11, LEGAL-05, LEGAL-06, LAW-07, LAW-32, DES-06, DES-12
 - Экран: Laws — design/screens/Laws.dc.html (`Laws--article-reader`, `Laws--guest`)
@@ -2063,7 +2063,7 @@
 - Зависимости: T-037
 
 ### T-039 · Раздел «Законы» в админке: состояние базы, журналы, кандидаты и справочники
-- Статус: done · d3e9b88, a61a132..1e3bcee
+- Статус: done · b3f8622, 22f7186..616f861
 - Модули: `legal-base`, `admin`, `features/admin`
 - SPEC: LAW-40, ADM-10, LAW-06, LAW-16
 - Экран: Admin — design/screens/Admin.dc.html, вкладка «Законы» (`Admin--index-building`)
@@ -2091,7 +2091,7 @@
 - Зависимости: T-038, T-017
 
 ### T-040 · Таблица ставок с подтверждением человеком и сверка после обновления законов
-- Статус: done · 235c363..bc0b61b
+- Статус: done · d9ade4f..93be211
 - Модули: `norm-tables`, `legal-base`, `notifications`, `admin`, `features/admin`
 - SPEC: TAX-03, LAW-33, LEGAL-08, ADM-11, AFF-05, NOTIF-03
 - Экран: Admin — design/screens/Admin.dc.html, вкладка «Таблица ставок» (`Admin--rates`)
@@ -2115,7 +2115,7 @@
 - Зависимости: T-039, T-036
 
 ### T-041 · Правовой консультант: дословные цитаты, «в моей базе нет» и чек-листы документов
-- Статус: done · 0e7b030..6b75288
+- Статус: done · 2449dcb..269fe0d
 - Модули: `legal-consult`, `legal-base`, `norm-tables`, `contract`, `i18n`; в `modules.ts` для `legal-consult`
   в `dependsOn` += `norm-tables` с обоснованием (LEGAL-08)
 - SPEC: LEGAL-01, LEGAL-02, LEGAL-03, LEGAL-04, LEGAL-05, LEGAL-06, LEGAL-07, LEGAL-08, LEGAL-10, LEGAL-12, P3

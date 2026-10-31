@@ -9,7 +9,7 @@ import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
 import { findAct } from "../infrastructure/db/catalog.repo.ts";
-import { demandLoadsSince, recordDemandLoad } from "../infrastructure/db/changes.repo.ts";
+import { reserveDemandLoad } from "../infrastructure/db/changes.repo.ts";
 
 export type DemandOutcome = "loaded" | "timeout" | "limit";
 
@@ -34,10 +34,15 @@ export function makeDemand(d: DemandDeps) {
     if (act === undefined) return "timeout";
     if (act.loadState === "loaded") return "loaded";
     const now = d.clock.now();
-    if (
-      (await demandLoadsSince(d.system, new Date(now.getTime() - DAY_MS))) >=
-      (await d.limitPerDay())
-    ) {
+    // Проверка предела и запись догрузки атомарны: параллельные вопросы не проскочат предел.
+    const reserved = await reserveDemandLoad(
+      d.system,
+      act.id,
+      now,
+      new Date(now.getTime() - DAY_MS),
+      await d.limitPerDay(),
+    );
+    if (!reserved) {
       await d.notifications.notifyAdmins({
         kind: "law-update-failed",
         key: `demand-limit:${d.clock.today()}`,
@@ -46,7 +51,6 @@ export function makeDemand(d: DemandDeps) {
       d.log.warn({}, "law.demand.limit");
       return "limit";
     }
-    await recordDemandLoad(d.system, act.id, now);
     await d.enqueue(s, pravoId);
     const poll = d.pollMs ?? 250;
     // Ожидание состояния акта, а не времени: задача worker переведёт его в «загружен»; не дольше настройки.

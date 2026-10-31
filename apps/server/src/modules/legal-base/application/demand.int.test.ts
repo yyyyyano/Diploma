@@ -110,6 +110,14 @@ describe("LAW-09: догрузка по требованию", () => {
     ]);
   });
 
+  it("предел в сутки атомарен: из шести одновременных вопросов при пределе 2 задачу ставят ровно два", async () => {
+    const t = setup({ worker: false, limit: 2 });
+    const ids = ["Hk0900071", "H10200090", "Hk0900071", "H10200090", "Hk0900071", "H10200090"];
+    const out = await Promise.all(ids.map((id) => t.demand(S, id)));
+    expect(t.enqueued).toHaveLength(2);
+    expect(out.filter((o) => o === "limit")).toHaveLength(4);
+  });
+
   it("предел в сутки: сверх него — «limit», задача не ставится, администратор уведомлён один раз за день", async () => {
     const t = setup({ worker: false, limit: 1 });
     expect(await t.demand(S, "Hk0900071")).toBe("timeout");

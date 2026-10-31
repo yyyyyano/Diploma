@@ -124,17 +124,30 @@ export async function markChangeNotified(db: SystemDb, id: string, at: Date): Pr
     .where(eq(legalPendingChanges.id, id));
 }
 
-/** Догрузки по требованию за последние сутки (LAW-09): предел — настройка. */
-export async function demandLoadsSince(db: SystemDb, since: Date): Promise<number> {
-  const rows = await db
-    .select({ n: count() })
-    .from(legalDemandLoads)
-    .where(gte(legalDemandLoads.at, since));
-  return one(rows, "legal_demand_loads").n;
-}
+/** Ключ консультативной блокировки предела догрузок (LAW-09). */
+const DEMAND_LOCK_KEY = 8_340_009;
 
-export async function recordDemandLoad(db: SystemDb, actId: string, at: Date): Promise<void> {
-  await db.insert(legalDemandLoads).values({ actId, at });
+/**
+ * Занять одну догрузку по требованию из предела за сутки (LAW-09): подсчёт за `since` и запись — одной транзакцией под
+ * `pg_advisory_xact_lock`, чтобы параллельные вопросы не превысили предел. `false` — предел исчерпан, ничего не записано.
+ */
+export async function reserveDemandLoad(
+  db: SystemDb,
+  actId: string,
+  at: Date,
+  since: Date,
+  limit: number,
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${DEMAND_LOCK_KEY})`);
+    const rows = await tx
+      .select({ n: count() })
+      .from(legalDemandLoads)
+      .where(gte(legalDemandLoads.at, since));
+    if (one(rows, "legal_demand_loads").n >= limit) return false;
+    await tx.insert(legalDemandLoads).values({ actId, at });
+    return true;
+  });
 }
 
 /** Акты, которые ещё нечего проверять по карточке сегодня: индексные — раз в сутки, остальные — раз в неделю (LAW-30). */

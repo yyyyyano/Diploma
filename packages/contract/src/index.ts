@@ -188,6 +188,17 @@ export {
   UiMessagePart,
 } from "./chat/chat.contract.ts";
 export { CardPart, ChatMessagePart, StepPart, TextPart } from "./chat/message-parts.ts";
+export {
+  ActionResultData,
+  AnswerMetadata,
+  ChartData,
+  DATA_PARTS,
+  LawAnswerData,
+  LawCitationData,
+  LawNoticeData,
+  LawPartData,
+  MAX_CHART_SERIES,
+} from "./chat/agent-parts.ts";
 export { PageContext } from "./chat/page-context.ts";
 export {
   EntityId,

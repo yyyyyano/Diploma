@@ -42,6 +42,7 @@ export function createAdminModule({ facades }: ModuleDeps<AdminFacades, Platform
       mail: facades.mail,
       llm: facades.llm.admin,
       laws: facades.legalBase.admin,
+      rates: facades.normTables.admin,
     }),
   });
 }

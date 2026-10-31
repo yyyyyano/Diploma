@@ -4,7 +4,7 @@
 
 ## Назначение
 Раздел «Администрирование»: процедуры `contract.admin.*` поверх admin-фасадов модулей; своих данных нет (PRIV-07).
-Сделано: «Пользователи» (ADM-30), «Система» (ADM-60), «Провайдеры ИИ» (ADM-50), «Запросы к ИИ» (ADM-20/21/22) и «Законы» (ADM-10, LAW-40);
+Сделано: «Пользователи» (ADM-30), «Система» (ADM-60), «Провайдеры ИИ» (ADM-50), «Запросы к ИИ» (ADM-20/21/22) «Законы» (ADM-10, LAW-40) и «Таблица ставок» (ADM-11);
 остальные вкладки — задачи своих модулей.
 
 ## Требования SPEC
@@ -29,6 +29,7 @@ ADM-01…60 (экраны).
   «Законы» (`facades.legalBase.admin`, `laws.contract.ts`): `lawsOverview` (к фасаду добавляется `modelReady` — самотест локальных моделей `ok`), `setLawsSettings`,
   `lawsActs({ status?, page })`, `lawsUpdates`, `lawsFetches`, `lawsCandidates`, `decideLawCandidate`, `lawsCheckNow`, `lawsCheckText`, `addLawActs`, `excludeLawAct`,
   `lawsDictionary`, `lawsDictionaryUpsert`, `lawsDictionaryRemove` (семь справочников по `kind`). Изменяющие ставят задачи под `context.s` администратора.
+  «Таблица ставок» (`facades.normTables.admin`, `rates.contract.ts`): `rates`, `proposeRate`, `confirmRate` (`CONFLICT` при пересечении периодов), `rejectRate`.
 
 ## Зависимости
 Можно: identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo (`tooling/architecture/modules.ts`). Слушает: —.

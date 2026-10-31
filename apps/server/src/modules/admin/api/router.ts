@@ -6,6 +6,7 @@ import type { IdentityFacade } from "../../identity/index.ts";
 import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import type { LlmAdminFacade } from "../../llm/index.ts";
 import type { MailFacade } from "../../mail/index.ts";
+import type { NormTablesFacade } from "../../norm-tables/index.ts";
 import type { SystemFacade } from "../../system/index.ts";
 import { admin } from "../../../platform/http/procedures.ts";
 import type { AdminUserView } from "../application/admin-users.ts";
@@ -39,6 +40,8 @@ export function adminRouter(d: {
   readonly llm: LlmAdminFacade["admin"];
   /** Вкладка «Законы» (LAW-40): состояние правовой базы, кнопки и справочники — только метаданные общей базы. */
   readonly laws: LegalBaseFacade["admin"];
+  /** Таблица ставок (ADM-11): значения нормы с источником, подтверждение человеком. */
+  readonly rates: NormTablesFacade["admin"];
 }) {
   /** Ответил ли самотест локальной модели эмбеддингов: от него зависит «ждём модель» в прогрессе векторов. */
   async function lawsOverview() {
@@ -158,5 +161,11 @@ export function adminRouter(d: {
     lawsDictionaryRemove: admin.admin.lawsDictionaryRemove.handler(({ input }) =>
       d.laws.dictionaries.remove(input.kind, input.id),
     ),
+    rates: admin.admin.rates.handler(() => d.rates.table()),
+    proposeRate: admin.admin.proposeRate.handler(({ input }) => d.rates.propose(input)),
+    confirmRate: admin.admin.confirmRate.handler(({ input, context }) =>
+      d.rates.confirm(context.s, input.id),
+    ),
+    rejectRate: admin.admin.rejectRate.handler(({ input }) => d.rates.reject(input.id)),
   };
 }

@@ -190,6 +190,14 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     input: () => ({ kind: "title-patterns", id: "нет такой", values: { pattern: "^ок" } }),
   },
   "admin.lawsDictionaryRemove": { input: () => ({ kind: "title-patterns", id: "нет такой" }) },
+  // «Таблица ставок» (ADM-11): общие числа нормы без данных домохозяйств; изменяющие — с входом, который ничего не меняет.
+  "admin.rates": { input: () => undefined },
+  "admin.proposeRate": {
+    exempt:
+      "предлагает значение в общую таблицу ставок (ADM-11), данных домохозяйств не касается; роль и действие — admin-rates.int.test.ts, rates.int.test.ts",
+  },
+  "admin.confirmRate": { input: () => ({ id: "01990000-0000-7000-8000-000000000000" }) },
+  "admin.rejectRate": { input: () => ({ id: "01990000-0000-7000-8000-000000000000" }) },
   "admin.system": { input: () => undefined },
   "admin.setMail": {
     input: () => ({ host: "", port: 587, secure: false, user: "", from: "no-reply@kosht.local" }),
@@ -672,6 +680,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.addLawActs",
       "admin.aiProviders",
       "admin.aiUsage",
+      "admin.confirmRate",
       "admin.decideLawCandidate",
       "admin.downloadLocalModels",
       "admin.excludeLawAct",
@@ -685,6 +694,8 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.lawsOverview",
       "admin.lawsUpdates",
       "admin.localModels",
+      "admin.rates",
+      "admin.rejectRate",
       "admin.saveAiModel",
       "admin.selfTestLocalModels",
       "admin.sendTestMail",

@@ -1,0 +1,481 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "29da1257-52de-44f2-8811-9be387756c5e",
+  "prevIds": ["80a04c3c-e361-442b-9bb7-60683d5c6a9e"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "norm_rates"],
+      "writes": [
+        "s|tbl|public.norm_rates",
+        "n|tbl|public.norm_rates",
+        "e|tbl|public.norm_rates",
+        "n|rel|public.norm_rates",
+        "n|type|public.norm_rates",
+        "n|rel|public.norm_rates_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "norm_rates", "norm_rates_param_idx"],
+      "writes": [
+        "s|idx|public.norm_rates_param_idx",
+        "n|idx|public.norm_rates_param_idx",
+        "e|idx|public.norm_rates_param_idx",
+        "n|rel|public.norm_rates_param_idx"
+      ],
+      "reads": [
+        "n|tbl|public.norm_rates",
+        "n|sch|public",
+        "n|col|public.norm_rates.param",
+        "n|col|public.norm_rates.valid_from"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "norm_rates", "norm_rates_confirmed_idx"],
+      "writes": [
+        "s|idx|public.norm_rates_confirmed_idx",
+        "n|idx|public.norm_rates_confirmed_idx",
+        "e|idx|public.norm_rates_confirmed_idx",
+        "n|rel|public.norm_rates_confirmed_idx"
+      ],
+      "reads": [
+        "n|tbl|public.norm_rates",
+        "n|sch|public",
+        "n|col|public.norm_rates.param",
+        "n|col|public.norm_rates.valid_from"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "norm_rates", "norm_rates_pending_idx"],
+      "writes": [
+        "s|idx|public.norm_rates_pending_idx",
+        "n|idx|public.norm_rates_pending_idx",
+        "e|idx|public.norm_rates_pending_idx",
+        "n|rel|public.norm_rates_pending_idx"
+      ],
+      "reads": [
+        "n|tbl|public.norm_rates",
+        "n|sch|public",
+        "n|col|public.norm_rates.param",
+        "n|col|public.norm_rates.valid_from"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "norm_rates",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "uuidv7()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "param",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "valid_from",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "valid_to",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "value",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "status",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_act",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_path",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_article",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_point",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_url",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "source_version_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "confirmed_by_kind",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "confirmed_on",
+        "type": "date",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "drift_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "now()",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_param_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "param",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "valid_from",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_confirmed_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "param",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "valid_from",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" = 'confirmed'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_pending_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "param",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          },
+          {
+            "value": "valid_from",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": "\"status\" = 'pending'",
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_status_check",
+        "value": "\"status\" in ('pending','confirmed','superseded','rejected')",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_value_check",
+        "value": "\"value\" >= 0",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_period_check",
+        "value": "\"valid_to\" is null or \"valid_to\" >= \"valid_from\"",
+        "entityType": "checks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "norm_rates",
+        "name": "norm_rates_confirmed_by_check",
+        "value": "\"confirmed_by_kind\" is null or \"confirmed_by_kind\" in ('developer','admin')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

@@ -12,6 +12,7 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 06, 07, 08 (поис
 ## Публичный API (`index.ts`)
 - Фабрика: `createLegalBaseModule({ platform, facades })` (`SystemPlatform`; фасады `llm`, `notifications`, `identity`: `loaderContact()`, `adminScoped()`). Типы: `Topic`, `TOPICS`.
 - Инструменты агента (набор `legal`, чтение): `search_law`, `get_law_fragment`, `law_act_card`. Фасад: `search(query, opts?)` → `{ mode, vectors, fragments[] }`, `fragment(versionId)`,
+  `citations(versionIds)` (T-041: любые версии по id — текст, путь, действующая ли, `editionOn`, состояние акта; для цитат `legal-consult`), `firstEditionOn(pravoId)` (LEGAL-08),
   `actCard(pravoId)`, `fragmentsUnder(pravoId, pathKey)` (пункт и вложенные части — сверка ставок LAW-33), `vectorProgress(modelReady)`, `pendingChanges(pravoId)`, `recordDemand({ topic, actIds })` (тема из `TOPICS`, ≤ 20 ID, без текста вопроса, иначе `VALIDATION`).
   Публичные процедуры (`publicProc`, T-038): `catalog`, `act`, `fragments`, `resolve` (`reader.ts`: оглавление — статьи или страницы по 40 фрагментов).
 - Поиск: 1) «ст. 210 НК» по кратким именам `legal_act_aliases` (у «НК» два акта — где есть статья); 2) гибрид: FTS `russian` + halfvec HNSW, RRF k = 60, словарь «бытовое →

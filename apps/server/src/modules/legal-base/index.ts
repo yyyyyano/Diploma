@@ -2,3 +2,4 @@
 export { createLegalBaseModule, type LegalBaseFacade, type LegalBaseFacades } from "./module.ts";
 export { actRepealed, actUpdated } from "./events.ts";
 export { TOPICS, type Topic } from "./domain/topics.ts";
+export type { CitationSource } from "./application/lookup.ts";

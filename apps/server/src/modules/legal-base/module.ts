@@ -257,6 +257,10 @@ export function createLegalBaseModule({
       search: search.search,
       /** Фрагмент действующей версии по id (цитата, CHAT-10). */
       fragment: lookup.fragment,
+      /** Версии фрагментов по id для цитат legal-consult: текст, путь, действующая ли, день редакции, состояние акта (LEGAL-03, LEGAL-05). */
+      citations: lookup.citations,
+      /** День первой редакции акта в базе: вопрос о более ранней дате — только ставка из таблицы (LEGAL-08). */
+      firstEditionOn: lookup.firstEditionOn,
       /** Карточка акта по ID pravo.by. */
       actCard: lookup.actCard,
       /** Текст пункта (`a209/p1.2`) и вложенных частей действующей редакции — сверка чисел таблицы ставок (LAW-33). */

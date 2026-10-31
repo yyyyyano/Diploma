@@ -13,3 +13,6 @@ export { rates as ratesTexts } from "./locales/ru/rates.ts";
 // Словарь правового консультанта: тексты под ответом собирает сервер (`legal-consult`); в `resources` его нет.
 export { createLegalT, type LegalT } from "./create-legal-t.ts";
 export { legal as legalTexts } from "./locales/ru/legal.ts";
+// Словарь агента: отказы стражей и пометки пишет программа (`agent`); в `resources` его нет.
+export { createAgentT, type AgentT } from "./create-agent-t.ts";
+export { agent as agentTexts } from "./locales/ru/agent.ts";

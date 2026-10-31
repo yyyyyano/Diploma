@@ -26,4 +26,12 @@ export const tools = {
   delete_goal: "Готовлю удаление цели…",
   statement_import_status: "Проверяю, как идёт разбор выписки…",
   get_checklist: "Готовлю чек-лист документов…",
+  calculator: "Считаю…",
+  make_chart: "Рисую график…",
+  ask_user: "Уточняю…",
+  search_law: "Ищу в законах…",
+  get_law_fragment: "Открываю норму закона…",
+  law_act_card: "Смотрю карточку акта…",
+  get_receipt: "Смотрю чек…",
+  receipt_status: "Проверяю, как идёт разбор чека…",
 } as const;

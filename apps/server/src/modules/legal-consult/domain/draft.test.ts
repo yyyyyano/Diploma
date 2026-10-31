@@ -108,6 +108,12 @@ describe("LEGAL-03: вольные цитаты и привязка к метк�
     expect(rebuilt).toBe(draft.replace(`[[F${F1}]]`, ""));
   });
 
+  it("метка внутри кавычек выносится за них: цитата привязана к ней и проверяется, а не остаётся непроверенной", () => {
+    const items = scanDraft(`Вычет «в размере 217 рублей [[F${F1}]]» в месяц.`);
+    expect(quotes(items)[0]).toMatchObject({ text: "в размере 217 рублей", markIndexes: [0] });
+    expect(marks(items)).toHaveLength(1);
+  });
+
   it("незакрытая кавычка не ломает разбор и цитатой не считается", () => {
     const items = scanDraft(`«незакрытая цитата [[F${F1}]]`);
     expect(quotes(items)).toEqual([]);

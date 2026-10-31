@@ -67,8 +67,24 @@ function quoteSpans(text: string): Span[] {
   }));
 }
 
+/**
+ * Метка внутри кавычек («вычет 217 рублей [[F…]]») — та же цитата с меткой: выносим метку за закрывающую кавычку, иначе слова
+ * модели остались бы в ответе непроверенными.
+ */
+function hoistMarks(draft: string): string {
+  return draft.replace(QUOTE, (whole) => {
+    const marks = [...whole.matchAll(MARK)].map((m) => m[0]);
+    if (marks.length === 0) return whole;
+    const open = whole.slice(0, 1);
+    const close = whole.slice(-1);
+    const inner = whole.slice(1, -1).replace(MARK, "").replace(/\s+/gu, " ").trim();
+    return `${open}${inner}${close} ${marks.join("")}`;
+  });
+}
+
 /** Разобрать черновик на текст, цитаты и метки; номера меток — сквозные, по порядку появления. */
-export function scanDraft(draft: string): ScanItem[] {
+export function scanDraft(rawDraft: string): ScanItem[] {
+  const draft = hoistMarks(rawDraft);
   const tokens = tokenize(draft);
   // Номер метки по позиции токена.
   const markAt = new Map<number, number>();

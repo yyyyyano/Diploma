@@ -18,26 +18,34 @@ const store = () => makeLoaderStore(createSystemDb(db.pool));
 const day = (text: string) => LocalDate.parse(text);
 const T0 = new Date("2026-10-30T09:00:00Z");
 
-describe("LAW-35: очередь запросов к pravo.by", () => {
-  it("слоты идут с паузой, в том числе у нового экземпляра после перезапуска", async () => {
-    const first = await store().reserveSlot(T0, 4000);
-    expect(first.getTime()).toBe(T0.getTime());
-    // «Перезапуск»: другой экземпляр, то же состояние в БД.
-    const second = await store().reserveSlot(new Date(T0.getTime() + 1000), 3000);
-    expect(second.getTime()).toBe(T0.getTime() + 4000);
-    const third = await store().reserveSlot(new Date(T0.getTime() + 60_000), 3000);
-    expect(third.getTime()).toBe(T0.getTime() + 60_000);
+describe("LAW-35: очередь запросов к pravo.by — аренда", () => {
+  const at = (ms: number) => new Date(T0.getTime() + ms);
+
+  it("пока аренда не возвращена, очередь занята; пауза — от конца запроса, в том числе после перезапуска", async () => {
+    expect(await store().tryAcquire(T0, 60_000)).toBeNull();
+    // Запрос идёт 10 с: другой экземпляр (или «перезапуск») видит очередь занятой до конца аренды.
+    expect((await store().tryAcquire(at(10_000), 60_000))?.getTime()).toBe(at(60_000).getTime());
+    await store().release(T0, at(10_000), 4000);
+    expect((await store().tryAcquire(at(11_000), 60_000))?.getTime()).toBe(at(14_000).getTime());
+    expect(await store().tryAcquire(at(14_000), 60_000)).toBeNull();
+    await store().release(at(14_000), at(15_000), 3000);
   });
 
-  it("пять одновременных запросов получают разные слоты, разнесённые не меньше паузы", async () => {
+  it("возврат истёкшей аренды не укорачивает чужую", async () => {
     const base = new Date("2026-10-31T09:00:00Z");
-    const slots = await Promise.all(
-      Array.from({ length: 5 }, () => store().reserveSlot(base, 3000)),
+    const later = (ms: number) => new Date(base.getTime() + ms);
+    expect(await store().tryAcquire(base, 5000)).toBeNull();
+    expect(await store().tryAcquire(later(6000), 60_000)).toBeNull();
+    await store().release(base, later(7000), 3000);
+    expect((await store().tryAcquire(later(8000), 60_000))?.getTime()).toBe(
+      later(66_000).getTime(),
     );
-    const sorted = slots.map((s) => s.getTime()).sort((a, b) => a - b);
-    for (let i = 1; i < sorted.length; i += 1) {
-      expect(sorted[i]! - sorted[i - 1]!).toBeGreaterThanOrEqual(3000);
-    }
+  });
+
+  it("из пяти одновременных попыток аренду получает одна", async () => {
+    const base = new Date("2026-11-01T09:00:00Z");
+    const got = await Promise.all(Array.from({ length: 5 }, () => store().tryAcquire(base, 3000)));
+    expect(got.filter((g) => g === null)).toHaveLength(1);
   });
 });
 
@@ -83,15 +91,11 @@ describe("LAW-15: ведомственные сайты — пауза, оста
   const agency = (host: string) => makeLoaderStore(createSystemDb(db.pool), host);
   const base = new Date("2026-11-10T09:00:00Z");
 
-  it("слот одного сайта не задерживает другой: у каждого хоста своя очередь", async () => {
-    await agency("www.nalog.gov.by").reserveSlot(base, 5000);
-    const other = await agency("nbrb.by").reserveSlot(new Date(base.getTime() + 1000), 5000);
-    expect(other.getTime()).toBe(base.getTime() + 1000);
-    const same = await agency("www.nalog.gov.by").reserveSlot(
-      new Date(base.getTime() + 1000),
-      5000,
-    );
-    expect(same.getTime()).toBe(base.getTime() + 5000);
+  it("аренда одного сайта не задерживает другой: у каждого хоста своя очередь", async () => {
+    expect(await agency("www.nalog.gov.by").tryAcquire(base, 5000)).toBeNull();
+    expect(await agency("nbrb.by").tryAcquire(new Date(base.getTime() + 1000), 5000)).toBeNull();
+    const same = await agency("www.nalog.gov.by").tryAcquire(new Date(base.getTime() + 1000), 5000);
+    expect(same?.getTime()).toBe(base.getTime() + 5000);
   });
 
   it("остановка цикла и robots.txt одного хоста не видны другому", async () => {

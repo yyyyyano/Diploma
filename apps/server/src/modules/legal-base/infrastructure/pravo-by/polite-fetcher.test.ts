@@ -27,7 +27,7 @@ const robotsTxt = readFileSync(
 const DOC = "https://pravo.by/document/?guid=3871&p0=H10200090";
 const CONTACT = "operator@example.test";
 
-/** Память вместо БД: те же правила слотов и счётчиков, что у loader.repo.ts (его проверяет int-тест). */
+/** Память вместо БД: те же правила аренды очереди и счётчиков, что у loader.repo.ts (его проверяет int-тест). */
 function memoryStore(): LoaderStore & { log: RequestRecord[]; state: LoaderState } {
   let state: LoaderState = {
     stoppedOn: null,
@@ -39,16 +39,21 @@ function memoryStore(): LoaderStore & { log: RequestRecord[]; state: LoaderState
     cycleErrors: 0,
   };
   let next: Date | null = null;
+  let holder: Date | null = null;
   const log: RequestRecord[] = [];
   return {
     log,
     get state() {
       return state;
     },
-    async reserveSlot(now, pauseMs) {
-      const slot = next !== null && next.getTime() > now.getTime() ? next : now;
-      next = new Date(slot.getTime() + pauseMs);
-      return slot;
+    async tryAcquire(now, leaseMs) {
+      if (next !== null && next.getTime() > now.getTime()) return next;
+      holder = now;
+      next = new Date(now.getTime() + leaseMs);
+      return null;
+    },
+    async release(acquiredAt, end, pauseMs) {
+      if (holder?.getTime() === acquiredAt.getTime()) next = new Date(end.getTime() + pauseMs);
     },
     async read() {
       return state;

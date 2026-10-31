@@ -104,10 +104,16 @@ export interface RequestRecord {
 /** Состояние загрузчика в БД: общее для всех процессов, переживает перезапуск (LAW-35). */
 export interface LoaderStore {
   /**
-   * Занять место в очереди запросов: под `pg_advisory_xact_lock` читает «следующий запрос не раньше», ставит
-   * `max(now, это) + pause` и возвращает момент, когда можно слать запрос. HTTP внутри транзакции нет.
+   * Взять аренду очереди запросов (LAW-35: без параллельных запросов): под `pg_advisory_xact_lock` читает «следующий
+   * запрос не раньше»; если этот момент наступил — ставит его в `now + leaseMs` (аренда на время запроса: таймаут +
+   * пауза) и возвращает `null`, иначе возвращает момент, до которого очередь занята. HTTP внутри транзакции нет.
    */
-  reserveSlot(now: Date, pauseMs: number): Promise<Date>;
+  tryAcquire(now: Date, leaseMs: number): Promise<Date | null>;
+  /**
+   * Вернуть аренду, взятую в `acquiredAt`, после ответа или ошибки: следующий запрос не раньше `end + pauseMs` —
+   * пауза отсчитывается от конца запроса. Чужую аренду (своя истекла и очередь уже занял другой) не трогает.
+   */
+  release(acquiredAt: Date, end: Date, pauseMs: number): Promise<void>;
   read(): Promise<LoaderState>;
   stop(day: LocalDate, reason: LoaderStopReason): Promise<void>;
   /** Снять остановку (наступил новый день). */

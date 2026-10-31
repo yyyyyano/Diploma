@@ -42,7 +42,7 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 06, 07, 08 (поис
 
 ## Устройство
 - `domain/` (чистое): фрагменты, карантин, версии, алиасы, `ts-query`, `change-proposal`, `requisites`, `relevance`, `topics`, `routes`, `schedule`, `act-links`, `admin-status`,
-  `dictionaries`; `infrastructure/pravo-by/`: `polite-fetcher` (слоты в БД, robots, повторы; состояние на каждый хост), источники `pravo-source`/`fixtures-source`/
+  `dictionaries`; `infrastructure/pravo-by/`: `polite-fetcher` (аренда очереди в БД — один запрос за раз для всех задач, пауза от конца запроса; robots, повторы; состояние на каждый хост), источники `pravo-source`/`fixtures-source`/
   `createAgencySource`, `cheerio`-разборщики. `application/`: `load-act`, `act-check`, `daily-check`, `start-catalog`, `search`, `demand`, `embed`, `lookup`, `catalog-growth`, `add-acts`,
   `laws-admin`, `dictionaries`; SQL — `*.repo.ts`.
 

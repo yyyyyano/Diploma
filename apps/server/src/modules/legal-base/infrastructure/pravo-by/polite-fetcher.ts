@@ -1,5 +1,5 @@
-// Вежливый загрузчик pravo.by (LAW-35…38, ADR-0012): один поток, 3–5 с между запросами (очередь слотов в БД — пауза
-// переживает перезапуск и общая для всех процессов), сжатие, честный User-Agent с контактом оператора, robots.txt раз в
+// Вежливый загрузчик pravo.by (LAW-35…38, ADR-0012): один поток, 3–5 с между концом запроса и началом следующего
+// (аренда очереди в БД — общая для всех задач и процессов, переживает перезапуск), сжатие, честный User-Agent с контактом оператора, robots.txt раз в
 // сутки и проверка каждого адреса, лесенка повторов 30 с / 2 мин / 10 мин, остановка цикла до следующих суток при
 // 403/429 или более 20% ошибок. Время — только Clock, ожидание — порт sleep (тесты двигают FakeClock).
 // Контакт в лог и журнал не пишется (OBS-04): он только в заголовке User-Agent.
@@ -113,7 +113,7 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     return out;
   }
 
-  /** Одна попытка: слот в очереди → ожидание → запрос → запись в журнал; 403/429 и доля ошибок останавливают цикл. */
+  /** Одна попытка: аренда очереди → запрос → возврат аренды → запись в журнал; 403/429 и доля ошибок останавливают цикл. */
   async function attempt(
     url: URL,
     userAgent: string,
@@ -126,9 +126,16 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
     const pause =
       settings.pauseMinMs +
       Math.floor(deps.random() * (settings.pauseMaxMs - settings.pauseMinMs + 1));
-    const slot = await store.reserveSlot(clock.now(), pause);
-    const wait = slot.getTime() - clock.now().getTime();
-    if (wait > 0) await deps.sleep(wait, signal);
+    // LAW-35: очередь общая для всех задач и процессов — запрос идёт только под арендой; пока очередь занята чужим
+    // запросом, ждём кусками не длиннее паузы (аренда освобождается раньше своего срока, когда запрос закончится).
+    let acquiredAt: Date;
+    for (;;) {
+      acquiredAt = clock.now();
+      const busyUntil = await store.tryAcquire(acquiredAt, settings.timeoutMs + pause);
+      if (busyUntil === null) break;
+      const wait = busyUntil.getTime() - clock.now().getTime();
+      await deps.sleep(Math.max(1, Math.min(wait, settings.pauseMinMs)), signal);
+    }
     const started = clock.now();
     let response: Response | undefined;
     let bytes: Uint8Array | undefined;
@@ -160,6 +167,9 @@ export function createPoliteFetcher(deps: PoliteFetcherDeps) {
         await finish(url, started, response?.status ?? null, null, outcome, false);
         throw error;
       }
+    } finally {
+      // Пауза — от конца запроса (ответ, ошибка, отмена по signal), а не от его начала.
+      await store.release(acquiredAt, clock.now(), pause);
     }
     const status = response?.status ?? null;
     if (status !== null && status >= 500) outcome = "http-5xx";

@@ -1,8 +1,8 @@
-// Состояние вежливого загрузчика в БД (LAW-35…38): очередь слотов под pg_advisory_xact_lock (пауза 3–5 с общая для всех
-// процессов и переживает перезапуск), остановка цикла, кэш robots.txt, журнал запросов и счётчики цикла. Только
-// SystemDb модуля; HTTP внутри транзакций нет — слот занимается коротко, ожидание и запрос идут снаружи.
+// Состояние вежливого загрузчика в БД (LAW-35…38): аренда очереди запросов под pg_advisory_xact_lock (один запрос за раз
+// на хост для всех задач и процессов, пауза 3–5 с от конца запроса, переживает перезапуск), остановка цикла, кэш
+// robots.txt, журнал запросов и счётчики цикла. Только SystemDb модуля; HTTP внутри транзакций нет.
 import type { LocalDate } from "@kosht/kernel";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { one } from "./rows.ts";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import type {
@@ -40,7 +40,7 @@ export function makeLoaderStore(db: SystemDb, host = "pravo.by"): LoaderStore {
   }
 
   return {
-    async reserveSlot(now, pauseMs) {
+    async tryAcquire(now, leaseMs) {
       await ensure();
       return db.transaction(async (tx) => {
         await tx.execute(sql`select pg_advisory_xact_lock(${LOADER_LOCK_KEY}, hashtext(${host}))`);
@@ -49,16 +49,25 @@ export function makeLoaderStore(db: SystemDb, host = "pravo.by"): LoaderStore {
           .from(legalLoaderState)
           .where(eq(legalLoaderState.host, host));
         const next = rows[0]?.next ?? null;
-        const slot = next !== null && next.getTime() > now.getTime() ? next : now;
+        if (next !== null && next.getTime() > now.getTime()) return next;
+        // Аренда: пока запрос идёт, очередь занята до таймаута + паузы; release сдвинет её на конец запроса + паузу.
         await tx
           .update(legalLoaderState)
-          .set({
-            lastRequestAt: slot,
-            nextRequestAt: new Date(slot.getTime() + pauseMs),
-          })
+          .set({ lastRequestAt: now, nextRequestAt: new Date(now.getTime() + leaseMs) })
           .where(eq(legalLoaderState.host, host));
-        return slot;
+        return null;
       });
+    },
+
+    async release(acquiredAt, end, pauseMs) {
+      await ensure();
+      // Условие на lastRequestAt — «аренда ещё наша»: истёкшую и занятую другим не укорачиваем.
+      await db
+        .update(legalLoaderState)
+        .set({ nextRequestAt: new Date(end.getTime() + pauseMs) })
+        .where(
+          and(eq(legalLoaderState.host, host), eq(legalLoaderState.lastRequestAt, acquiredAt)),
+        );
     },
 
     async read(): Promise<LoaderState> {

@@ -214,6 +214,16 @@ describe("LAW-40: правка ключа переносит строку, не 
     });
   });
 
+  it("орган удаляется по шаблону; повторное удаление — NOT_FOUND", async () => {
+    const dict = dictionaries();
+    await dict.upsert("organs", null, { pattern: "тестов\\p{L}*\\s+орган", topic: "fines" });
+    const removed = await dict.remove("organs", "тестов\\p{L}*\\s+орган");
+    expect(removed.rows.some((r) => r.id === "тестов\\p{L}*\\s+орган")).toBe(false);
+    await expect(dict.remove("organs", "тестов\\p{L}*\\s+орган")).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
+  });
+
   it("опустевший справочник: новая строка получает первую позицию", async () => {
     await db.owner.query("delete from legal_start_catalog; delete from legal_organ_topics");
     const dict = dictionaries();

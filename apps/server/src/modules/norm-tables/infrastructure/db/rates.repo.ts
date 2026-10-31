@@ -1,6 +1,6 @@
 // Запросы таблицы ставок (TAX-03, ADM-11, LAW-33) — только через SystemDb модуля. Подтверждение — одна транзакция: прежнее
 // подтверждённое значение того же периода становится `superseded`, новое — `confirmed`; пересечение с другим периодом не пропускается.
-import { and, asc, desc, eq, gte, isNotNull, isNull, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNotNull, isNull, lte, ne, or } from "drizzle-orm";
 import type { SystemDb } from "../../../../platform/db/system-db.ts";
 import { normRates, type RateStatus } from "./schema.ts";
 
@@ -189,10 +189,4 @@ export async function markCheck(
     .update(normRates)
     .set({ driftAt: patch.driftAt, sourceVersionId: patch.sourceVersionId })
     .where(and(eq(normRates.id, id), eq(normRates.status, "confirmed")));
-}
-
-/** Сколько всего версий значений: проверка «таблица не пуста» в тестах. */
-export async function countRates(db: SystemDb): Promise<number> {
-  const rows = await db.select({ n: sql<number>`count(*)::int` }).from(normRates);
-  return rows[0]?.n ?? 0;
 }

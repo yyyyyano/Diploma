@@ -65,10 +65,7 @@ describe("AGT-03: инструменты счетов", () => {
     });
     expect(renamed.account.name).toBe("Вклад на год");
     const draft = await remove.propose(ctx, { id: AccountId.parse(created.account.id) });
-    expect(draft).toEqual({
-      action: "accounts.delete",
-      payload: { decisionId: expect.any(String) },
-    });
+    expect(draft).toEqual({ decisionId: expect.any(String), count: 1 });
     expect((await fixture.accounts.list(s)).items).toHaveLength(1);
   });
 });

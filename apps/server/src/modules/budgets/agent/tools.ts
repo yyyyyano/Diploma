@@ -16,8 +16,8 @@ import {
 } from "@kosht/contract";
 import { z } from "zod";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
-import { DELETE_GOAL_HANDLER, type Goals } from "../application/goals.ts";
-import { DELETE_LIMIT_HANDLER, type Limits } from "../application/limits.ts";
+import type { Goals } from "../application/goals.ts";
+import type { Limits } from "../application/limits.ts";
 import type { Overview } from "../application/overview.ts";
 
 export function budgetsTools(overview: Overview, limits: Limits, goals: Goals) {
@@ -70,8 +70,8 @@ export function budgetsTools(overview: Overview, limits: Limits, goals: Goals) {
         "Ask the user to confirm deleting a category limit by id. Nothing is deleted until the user says yes.",
       input: z.object({ id: LimitId }),
       propose: async (ctx, input) => ({
-        action: DELETE_LIMIT_HANDLER,
-        payload: { decisionId: await limits.requestDelete(ctx.s, input.id) },
+        decisionId: await limits.requestDelete(ctx.s, input.id),
+        count: 1,
       }),
     }),
     deleteGoal: defineTool({
@@ -82,8 +82,8 @@ export function budgetsTools(overview: Overview, limits: Limits, goals: Goals) {
         "Ask the user to confirm deleting a savings goal by id. Nothing is deleted until the user says yes.",
       input: z.object({ id: GoalId }),
       propose: async (ctx, input) => ({
-        action: DELETE_GOAL_HANDLER,
-        payload: { decisionId: await goals.requestDelete(ctx.s, input.id) },
+        decisionId: await goals.requestDelete(ctx.s, input.id),
+        count: 1,
       }),
     }),
   };

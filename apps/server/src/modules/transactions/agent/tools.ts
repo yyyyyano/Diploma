@@ -25,7 +25,6 @@ import { z } from "zod";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
 import type { Operations } from "../application/operations.ts";
-import { CATEGORY_HANDLER, DELETE_HANDLER } from "../application/handlers.ts";
 
 const Change = z.strictObject({ transaction: Transaction, undoToken: UndoToken });
 
@@ -195,15 +194,13 @@ export function transactionsTools(ops: Operations) {
         categoryCode: z.string().max(20),
       }),
       propose: async (ctx, input) => ({
-        action: CATEGORY_HANDLER,
-        payload: {
-          decisionId: await ops.requestChangeCategory(
-            ctx.s,
-            input.ids.map((id) => parsed(TransactionId, id)),
-            { type: "system", code: parsed(SystemCategoryCode, input.categoryCode) },
-            ctx.channel,
-          ),
-        },
+        decisionId: await ops.requestChangeCategory(
+          ctx.s,
+          input.ids.map((id) => parsed(TransactionId, id)),
+          { type: "system", code: parsed(SystemCategoryCode, input.categoryCode) },
+          ctx.channel,
+        ),
+        count: new Set(input.ids).size,
       }),
     }),
     remove: defineTool({
@@ -213,14 +210,12 @@ export function transactionsTools(ops: Operations) {
       description: "Ask to delete transactions. Nothing is deleted until the user says yes.",
       input: z.strictObject({ ids: z.array(Id).min(1).max(50) }),
       propose: async (ctx, input) => ({
-        action: DELETE_HANDLER,
-        payload: {
-          decisionId: await ops.requestDelete(
-            ctx.s,
-            input.ids.map((id) => parsed(TransactionId, id)),
-            ctx.channel,
-          ),
-        },
+        decisionId: await ops.requestDelete(
+          ctx.s,
+          input.ids.map((id) => parsed(TransactionId, id)),
+          ctx.channel,
+        ),
+        count: new Set(input.ids).size,
       }),
     }),
   };

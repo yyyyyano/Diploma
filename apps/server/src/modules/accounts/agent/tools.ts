@@ -10,7 +10,7 @@ import {
 } from "@kosht/contract";
 import { z } from "zod";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
-import { DELETE_HANDLER, type Accounts } from "../application/accounts.ts";
+import type { Accounts } from "../application/accounts.ts";
 
 const AccountChange = z.object({ account: AccountListItem, undoToken: UndoToken });
 
@@ -53,8 +53,8 @@ export function accountsTools(accounts: Accounts) {
         "Ask the user to confirm deleting an account by id. Nothing is deleted until the user says yes.",
       input: z.object({ id: AccountId }),
       propose: async (ctx, input) => ({
-        action: DELETE_HANDLER,
-        payload: { decisionId: await accounts.requestDelete(ctx.s, input.id) },
+        decisionId: await accounts.requestDelete(ctx.s, input.id),
+        count: 1,
       }),
     }),
   };

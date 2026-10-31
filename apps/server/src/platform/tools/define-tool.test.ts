@@ -37,20 +37,20 @@ describe("defineTool: read и write выполняются сразу", () => {
 });
 
 describe("AGT-07: destructive только предлагает действие", () => {
-  it("propose возвращает черновик ожидающего действия для actions", async () => {
+  it("propose возвращает id решения и число затронутых объектов", async () => {
     const tool = defineTool({
       name: "delete_account",
       toolset: "planning",
       kind: "destructive",
       description: "Propose deleting an account; the user confirms it.",
       input: z.object({ accountId: z.uuid() }),
-      propose: async (_ctx, input) => ({ action: "accounts.delete", payload: input }),
+      propose: async () => ({ decisionId: "decision-1", count: 1 }),
     });
     expect(tool.kind).toBe("destructive");
     const id = "0190f0a0-0000-7000-8000-000000000001";
     expect(await tool.propose({} as ToolCtx, { accountId: id })).toEqual({
-      action: "accounts.delete",
-      payload: { accountId: id },
+      decisionId: "decision-1",
+      count: 1,
     });
   });
 
@@ -61,7 +61,7 @@ describe("AGT-07: destructive только предлагает действие
       kind: "destructive",
       description: "Delete a goal.",
       input: z.object({}),
-      propose: async () => ({ action: "budgets.delete-goal", payload: {} }),
+      propose: async () => ({ decisionId: "decision-1", count: 1 }),
       // @ts-expect-error destructive не выполняет действие сам — только propose (AGT-07)
       execute: async () => ({}),
     };
@@ -74,7 +74,7 @@ describe("AGT-07: destructive только предлагает действие
       output: z.object({}),
       execute: async () => ({}),
       // @ts-expect-error read и write выполняются сразу: ожидающего действия у них нет
-      propose: async () => ({ action: "budgets.list", payload: {} }),
+      propose: async () => ({ decisionId: "decision-1", count: 1 }),
     };
     // Описания, собранные в обход типов, отвергает и само определение.
     expect(() => defineTool(destructive)).toThrow(/destructive/);

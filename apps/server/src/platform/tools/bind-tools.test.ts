@@ -81,19 +81,19 @@ describe("AGT-13: ошибка инструмента — { ok: false, code }", 
     expect(memory.lines().map((line) => line["msg"])).toContain("agent.tool-failed");
   });
 
-  it("destructive только предлагает ожидающее действие", async () => {
+  it("destructive только предлагает ожидающее действие: { ok: true, pending: { decisionId, count } }", async () => {
     const remove = defineTool({
       name: "delete_account",
       toolset: "planning",
       kind: "destructive",
       description: "Propose deleting an account.",
       input: z.object({ id: z.uuid() }),
-      propose: async (_ctx, input) => ({ action: "accounts.delete", payload: { id: input.id } }),
+      propose: async () => ({ decisionId: "decision-1", count: 1 }),
     });
     const id = "0190f0a0-0000-7000-8000-0000000000aa";
     expect(await bind(remove).bound.execute({ id })).toEqual({
       ok: true,
-      pending: { action: "accounts.delete", payload: { id } },
+      pending: { decisionId: "decision-1", count: 1 },
     });
   });
 });

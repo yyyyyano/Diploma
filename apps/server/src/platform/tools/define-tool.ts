@@ -24,10 +24,14 @@ export interface ToolCtx {
   readonly page?: PageContext;
 }
 
-/** Черновик ожидающего действия: action — обработчик подтверждения модуля (`<модуль>.<действие>`), payload — id. */
+/**
+ * Ожидающее действие (AGT-07): решение «Да/Нет» уже создано модулем-владельцем в `actions` (id) и показывает, сколько
+ * объектов заденет «Да». Один вид результата у всех destructive-инструментов: по нему агент узнаёт, на какое решение
+ * отвечает короткое «да» (AGT-07), а карточка подтверждения показывает число.
+ */
 export interface PendingActionDraft {
-  readonly action: string;
-  readonly payload: unknown;
+  readonly decisionId: string;
+  readonly count: number;
 }
 
 /** Вход инструмента — Zod-объект: агент передаёт аргументы модели, адаптер проверяет их схемой. */

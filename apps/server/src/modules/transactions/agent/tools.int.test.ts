@@ -133,8 +133,8 @@ describe("AGT-07: bulk_change_category — только решение «Да/Н
       ctx(),
       tools.changeCategory.input.parse({ ids, categoryCode: "taxi" }),
     );
-    expect(draft.action).toBe("transactions.bulk-category");
-    const decisionId = (draft.payload as { decisionId: string }).decisionId;
+    expect(draft).toEqual({ decisionId: expect.any(String), count: 2 });
+    const { decisionId } = draft;
     expect(await t.actions.decision(s, decisionId)).toMatchObject({
       summary: { key: "decisions.transactionsCategory", params: { count: 2, category: "Такси" } },
     });
@@ -201,8 +201,8 @@ describe("AGT-07: delete_transaction — только решение «Да/Не
       ctx(),
       tools.remove.input.parse({ ids: [transaction.id] }),
     );
-    expect(draft.action).toBe("transactions.delete");
-    const decisionId = (draft.payload as { decisionId: string }).decisionId;
+    expect(draft).toEqual({ decisionId: expect.any(String), count: 1 });
+    const { decisionId } = draft;
     expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(1);
     await t.actions.answer(s, decisionId, "yes", "web");
     expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(0);

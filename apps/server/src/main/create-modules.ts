@@ -180,7 +180,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
   });
   const legalConsultModule = createLegalConsultModule({
     platform: ports.platform,
-    facades: { legalBase: legalBaseModule.facade },
+    facades: { legalBase: legalBaseModule.facade, normTables: normTablesModule.facade },
   });
   const finModule = createFinModule({
     platform: ports.platform,

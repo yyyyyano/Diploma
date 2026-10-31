@@ -90,6 +90,15 @@ export {
   SetLawsSettingsInput,
 } from "./admin/laws.contract.ts";
 export {
+  ProposeRateInput,
+  RATE_STATUSES,
+  RateGroup,
+  RateRow,
+  RatesTable,
+  RateStatus,
+  RateUnit,
+} from "./admin/rates.contract.ts";
+export {
   LAW_GROUPS,
   LawActView,
   LawCatalog,

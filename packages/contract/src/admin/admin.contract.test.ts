@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import type { z } from "zod";
 import { AdminResetResult, AdminUser, JobRun, SystemOverview } from "./admin.contract.ts";
 import { AI_CAPABILITIES, AI_TASKS, AiProvider, AiProviders, AiUsage } from "./ai.contract.ts";
+import { RatesTable, RateRow } from "./rates.contract.ts";
 import {
   LawAdminActs,
   LawCandidates,
@@ -152,5 +153,38 @@ describe("PRIV-07, LAW-40: вкладка «Законы» — метаданн�
       "ms",
       "outcome",
     ]);
+  });
+});
+
+describe("PRIV-07, ADM-11: «Таблица ставок» — общие числа нормы с источником, без данных пользователей", () => {
+  it("строка — параметр, период, значение, источник и кто подтвердил; больше ничего", () => {
+    expect(paths(RateRow).toSorted((a, b) => a.localeCompare(b))).toEqual([
+      "confirmed",
+      "confirmed.by",
+      "confirmed.on",
+      "drift",
+      "group",
+      "id",
+      "param",
+      "source",
+      "source.act",
+      "source.article",
+      "source.linked",
+      "source.point",
+      "source.url",
+      "status",
+      "unit",
+      "validFrom",
+      "validTo",
+      "value",
+    ]);
+  });
+
+  it("в таблице нет ни id подтвердившего администратора, ни полей о пользователях и их финансах", () => {
+    expect(
+      paths(RatesTable).filter((path) =>
+        /user|household|owner|email|balance|transaction/i.test(path),
+      ),
+    ).toEqual([]);
   });
 });

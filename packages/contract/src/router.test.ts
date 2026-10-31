@@ -167,6 +167,10 @@ describe("дерево процедур", () => {
       "admin.lawsDictionary",
       "admin.lawsDictionaryUpsert",
       "admin.lawsDictionaryRemove",
+      "admin.rates",
+      "admin.proposeRate",
+      "admin.confirmRate",
+      "admin.rejectRate",
     ]);
   });
 

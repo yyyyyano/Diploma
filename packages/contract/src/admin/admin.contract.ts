@@ -20,6 +20,7 @@ import {
   SetAiModelEnabledInput,
   SetAiPriceInput,
 } from "./ai.contract.ts";
+import { ProposeRateInput, RatesTable } from "./rates.contract.ts";
 import {
   AddLawActsInput,
   AddLawActsResult,
@@ -337,5 +338,28 @@ export const adminContract = {
     .route({ method: "POST", path: "/admin/laws/dictionary/remove" })
     .input(z.strictObject({ kind: LawDictionaryKind, id: z.string().max(1100) }))
     .output(LawDictionary)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
+  /** «Таблица ставок» (ADM-11): все версии значений — подтверждённые, ожидающие и вытесненные (история). */
+  rates: oc
+    .route({ method: "GET", path: "/admin/rates" })
+    .output(RatesTable)
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN")),
+  /** Новое или изменённое значение (в том числе за прошлый год): ждёт «Подтвердить». Неизвестный параметр, период, источник — VALIDATION. */
+  proposeRate: oc
+    .route({ method: "POST", path: "/admin/rates/propose" })
+    .input(ProposeRateInput)
+    .output(RatesTable)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /** «Подтвердить»: значение вступает в силу, прежнее за тот же период вытесняется; пересечение с другим периодом — CONFLICT. */
+  confirmRate: oc
+    .route({ method: "POST", path: "/admin/rates/confirm" })
+    .input(z.strictObject({ id: z.uuid() }))
+    .output(RatesTable)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT")),
+  /** «Отклонить» ожидающее значение: в таблицу не попадает. */
+  rejectRate: oc
+    .route({ method: "POST", path: "/admin/rates/reject" })
+    .input(z.strictObject({ id: z.uuid() }))
+    .output(RatesTable)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND")),
 };

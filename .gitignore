@@ -33,3 +33,9 @@ apps/web/src/routeTree.gen.ts
 # Отчёты Playwright (make e2e).
 e2e/test-results/
 e2e/playwright-report/
+
+# Инструкции и настройки агентов (Claude Code) и курсовой документ — только локально, в git и на GitHub не попадают
+# (решение пользователя 2026-10-31). Паспорта модулей CLAUDE.md живут на диске и правятся как раньше, но не коммитятся.
+/.claude/
+CLAUDE.md
+/*.docx

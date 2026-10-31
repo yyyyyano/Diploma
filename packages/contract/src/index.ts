@@ -112,6 +112,16 @@ export {
   legalBaseContract,
   LoaderStopReason,
 } from "./legal-base/legal-base.contract.ts";
+export {
+  CHECKLIST_IDS,
+  CHECKLIST_INSTANCES,
+  ChecklistId,
+  ChecklistItem,
+  ChecklistSubject,
+  ChecklistSummary,
+  ChecklistView,
+  legalConsultContract,
+} from "./legal-consult/legal-consult.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
   AI_CAPABILITIES,

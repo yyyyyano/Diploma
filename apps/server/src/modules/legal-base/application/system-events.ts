@@ -1,23 +1,18 @@
-// Публикация системных событий общей базы (законы): scope — первого администратора (identity.adminScoped), транзакция — одна на
-// событие. Администратора ещё нет — событие не публикуется (системы нет, подписчикам нечего пересчитывать).
-import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
+// Публикация системных событий общей базы (законы): от имени первого администратора — фасадом
+// `identity.publishSystemEvent` (ScopedDb администратора из identity не выходит), транзакция — одна на событие. Администратора
+// ещё нет — событие не публикуется (системы нет, подписчикам нечего пересчитывать).
 import type { EventDef } from "../../../platform/events/define-event.ts";
-import type { Events } from "../../../platform/events/events.ts";
+
+type IdsEvent = EventDef<{ readonly ids: readonly string[] }>;
 
 export interface SystemEventsDeps {
-  readonly adminScoped: () => Promise<ScopedDb | undefined>;
-  readonly events: Pick<Events, "publish">;
+  readonly publishSystemEvent: (event: IdsEvent, ids: readonly string[]) => Promise<boolean>;
 }
 
 export function makeSystemEvents(d: SystemEventsDeps) {
-  return async function publish(
-    event: EventDef<{ readonly ids: readonly string[] }>,
-    actIds: readonly string[],
-  ): Promise<void> {
+  return async function publish(event: IdsEvent, actIds: readonly string[]): Promise<void> {
     if (actIds.length === 0) return;
-    const s = await d.adminScoped();
-    if (s === undefined) return;
-    await s.transaction((tx) => d.events.publish(tx, event, { ids: [...actIds] }));
+    await d.publishSystemEvent(event, actIds);
   };
 }
 

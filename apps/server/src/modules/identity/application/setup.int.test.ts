@@ -11,7 +11,7 @@ import type { Events } from "../../../platform/events/events.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import { isInitialized, readLoaderContact } from "../infrastructure/db/identity.repo.ts";
 import { verifyPassword } from "../infrastructure/password.ts";
-import { makeAdminScoped } from "./admin-scoped.ts";
+import { makePublishSystemEvent } from "./publish-system-event.ts";
 import { makeSetup } from "./setup.ts";
 
 let db: TestDb | undefined;
@@ -135,17 +135,24 @@ describe("AUTH-10: первый запуск", () => {
     expect(await readLoaderContact(system)).toBe("https://example.test/about");
   });
 
-  it("adminScoped: до первого запуска администратора нет, после — ScopedDb первого активного администратора", async () => {
+  it("publishSystemEvent: до первого запуска события нет; после — в транзакции первого активного администратора", async () => {
     if (db === undefined) throw new Error("нет базы");
     const { setup, system } = setupWith();
     const pool = db.pool;
-    const adminScoped = makeAdminScoped({
+    const published: { userId: string; ids: unknown }[] = [];
+    const publishSystemEvent = makePublishSystemEvent({
       system,
       scoped: (scope) => createScopedDb(pool, scope),
+      events: {
+        publish: async (tx, _event, payload) => {
+          published.push({ userId: tx.scope.userId, ids: payload });
+        },
+      },
     });
-    expect(await adminScoped()).toBeUndefined();
+    const event = { name: "legal-base.act-updated" } as never;
+    expect(await publishSystemEvent(event, ["a1"])).toBe(false);
     await setup(admin);
-    const s = await adminScoped();
-    expect(s?.scope.userId).toBe((await users())[0]?.id);
+    expect(await publishSystemEvent(event, ["a1", "a2"])).toBe(true);
+    expect(published).toEqual([{ userId: (await users())[0]?.id, ids: { ids: ["a1", "a2"] } }]);
   });
 });

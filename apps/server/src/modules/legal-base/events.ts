@@ -1,5 +1,5 @@
 // События legal-base (ADR-0004): системные события общей базы — у них нет своего владельца. Публикуются от имени первого
-// активного администратора (`identity.adminScoped()`), как `identity.system-initialized`; нагрузка — id актов пачкой.
+// активного администратора (`identity.publishSystemEvent`), как `identity.system-initialized`; нагрузка — id актов пачкой.
 import { z } from "zod";
 import { defineEvent } from "../../platform/events/define-event.ts";
 

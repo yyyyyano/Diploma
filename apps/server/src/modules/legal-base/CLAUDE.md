@@ -10,7 +10,7 @@
 LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 06, 07, 08 (поиск), 10…17, 20…23, 30…40, AUTH-10, ADM-10.
 
 ## Публичный API (`index.ts`)
-- Фабрика: `createLegalBaseModule({ platform, facades })` (`SystemPlatform`; фасады `llm`, `notifications`, `identity`: `loaderContact()`, `adminScoped()`). Типы: `Topic`, `TOPICS`.
+- Фабрика: `createLegalBaseModule({ platform, facades })` (`SystemPlatform`; фасады `llm`, `notifications`, `identity`: `loaderContact()`, `publishSystemEvent(event, ids)`). Типы: `Topic`, `TOPICS`.
 - Инструменты агента (набор `legal`, чтение): `search_law`, `get_law_fragment`, `law_act_card`. Фасад: `search(query, opts?)` → `{ mode, vectors, fragments[] }`, `fragment(versionId)`,
   `actCard(pravoId)`, `citations(versionIds)` (T-041: любые версии по id — текст, путь, действующая ли, `editionOn`, состояние акта; цитаты `legal-consult`), `firstEditionOn(pravoId)` (LEGAL-08), `fragmentsUnder(pravoId, pathKey)` (пункт и вложенные части — сверка ставок LAW-33), `vectorProgress(modelReady)`, `pendingChanges(pravoId)`, `recordDemand({ topic, actIds })` (тема из `TOPICS`, ≤ 20 ID, без текста вопроса, иначе `VALIDATION`).
   Публичные процедуры (`publicProc`, T-038): `catalog`, `act`, `fragments`, `resolve` (`reader.ts`: оглавление — статьи или страницы по 40 фрагментов).
@@ -21,7 +21,7 @@ LAW-01…40, LEGAL-11, ADM-10; сделано: LAW-01…04, 06, 07, 08 (поис
 - `legal-base.daily-check` (время `check-time`, 04:00; `liveCron` — смена без перезапуска; `missed: once`; итог — строка `daily-check`/`daily-check-failed` в `legal_update_log`;
   `auto-update` выключен — плановый проход пуст): текст — HEAD (размер совпал — не качаем), иначе загрузка и сверка; карточка (`guid=3961`) индекса — ежедневно, прочих —
   раз в неделю: утрата силы (LAW-34), изменяющие акты вне текста (LAW-32: модель `law-change-v1` предлагает, принимается дословно найденное; 7 дней — уведомление).
-  События `act-updated`/`act-repealed` — от имени первого администратора через `identity.adminScoped()`.
+  События `act-updated`/`act-repealed` — от имени первого администратора через `identity.publishSystemEvent` (ScopedDb администратора из identity не выходит).
 - Пополнение каталога (T-037), `legal-base.catalog-growth` (через 30 минут после проверки, тот же `liveCron`): кандидаты `legal_candidates` (`found → queued | rejected | dropped |
   added | event`). Находки: граф ссылок на 1 шаг, «Новые поступления» с отметки `arrivals-day` (≤ 30 дней; число актов — канарейка вёрстки), ведомственные страницы раз в
   месяц (`agency-pages`, пусто по умолчанию), журнал спроса. Кандидат: LAW-13 без модели → карточка → HEAD текста → тема (ЕПК у актов с текстом, заголовок и орган у

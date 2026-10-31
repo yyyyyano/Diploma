@@ -9,7 +9,6 @@ import type { ScopedDb } from "../../platform/db/scoped-db.ts";
 import type { MailFacade } from "../mail/index.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import { identityRouter } from "./api/router.ts";
-import { makeAdminScoped } from "./application/admin-scoped.ts";
 import { makeAdminGuard } from "./application/admins.ts";
 import { makeAdminResetNotice, makeAdminUsers } from "./application/admin-users.ts";
 import { makeChangePassword } from "./application/change-password.ts";
@@ -17,6 +16,7 @@ import { makeDeleteAccount } from "./application/delete-account.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
 import { makeEraseUser } from "./application/erase-user.ts";
 import { makePasswordReset } from "./application/password-reset.ts";
+import { makePublishSystemEvent } from "./application/publish-system-event.ts";
 import { makeRecoveryCodes } from "./application/recovery-code.ts";
 import { makeRegister } from "./application/register.ts";
 import { makeResendVerification } from "./application/resend-verification.ts";
@@ -76,8 +76,11 @@ export function createIdentityModule({
       emailOf: async (s: ScopedDb) => (await me(s)).email,
       /** Контакт загрузчика законов с первого запуска (LAW-36): legal-base сохраняет его в своей настройке. */
       loaderContact: () => readLoaderContact(platform.system),
-      /** ScopedDb первого администратора — для системных событий без владельца (законы); нет администратора — undefined. */
-      adminScoped: makeAdminScoped(platform),
+      /**
+       * Системное событие без владельца (законы) — от имени первого администратора в его транзакции; ScopedDb администратора
+       * из identity не выходит. Нет администратора — `false`, события нет.
+       */
+      publishSystemEvent: makePublishSystemEvent(platform),
     },
     events: [systemInitialized, userRegistered],
     router: identityRouter({

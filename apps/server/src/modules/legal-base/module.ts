@@ -159,8 +159,7 @@ export function createLegalBaseModule({
   });
   // События общей базы — без своего владельца: от имени первого администратора, как identity.system-initialized.
   const publish = makeSystemEvents({
-    adminScoped: () => facades.identity.adminScoped(),
-    events: { publish: (tx, event, payload) => platform.events.publish(tx, event, payload) },
+    publishSystemEvent: (event, ids) => facades.identity.publishSystemEvent(event, ids),
   });
   const readCard = makeCardReader({ source, clock: platform.clock });
   const actCheck = makeActCheck({

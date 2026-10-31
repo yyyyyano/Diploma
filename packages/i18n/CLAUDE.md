@@ -14,6 +14,7 @@
 - `resources` (`{ ru: { common, errors, formulas, tools, mail, policy, shell, ui, auth, setup, accounts, assistant, mailbox, settings, documents } }`), `NAMESPACES`, `LANGUAGES`, `Language`, `Namespace`.
 - `ratesTexts` (`locales/ru/rates.ts`, T-040) — словарь «Таблицы ставок»: есть в типах ключей (`rates:…`), но не в `resources`/`NAMESPACES` — страница регистрирует его
   сама (`addResourceBundle`), чтобы он не ехал в первую загрузку сайта.
+- `createLegalT()` / `legalTexts` (`locales/ru/legal.ts`, T-041) — тексты правового консультанта под ответом (пометка «Не является юридической консультацией», «в моей базе нет», ссылки вместо цитат, вопрос о прошлой дате, чек-листы): только для сервера, в `resources` и `NAMESPACES` словаря нет — сайт его не грузит.
 - Словари (`locales/ru/`): `common` (общее; множественные числа `count.operations_*`), `errors` — по одному тексту на
   `ErrorCode` контракта (`satisfies Record<ErrorCode, string>`), `formulas` — подписи ключей трассы calc
   (каждый ключ `TRACE_KEYS` из `@kosht/calc`; `unknown` — запасная), `tools` — подписи шагов агента по имени инструмента (`fallback` — запасная), `mail` — письма

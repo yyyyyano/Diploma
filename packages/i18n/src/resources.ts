@@ -25,6 +25,7 @@ import { recurring } from "./locales/ru/recurring.ts";
 import { budget } from "./locales/ru/budget.ts";
 import { dashboard } from "./locales/ru/dashboard.ts";
 import { laws } from "./locales/ru/laws.ts";
+import type { legal } from "./locales/ru/legal.ts";
 import type { rates } from "./locales/ru/rates.ts";
 
 export const NAMESPACES = [
@@ -120,5 +121,7 @@ declare module "i18next" {
     notifications: typeof notifications;
     // Подгружается со страницей «Таблицы ставок» (ratesTexts), в `resources` не входит: бюджет первой загрузки сайта.
     rates: typeof rates;
+    // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.
+    legal: typeof legal;
   }
 }

@@ -10,3 +10,6 @@ export { CONSENT_VERSIONS } from "./locales/ru/policy.ts";
 export { LANGUAGES, NAMESPACES, resources, type Language, type Namespace } from "./resources.ts";
 // Словарь «Таблицы ставок»: не входит в `resources`, страница регистрирует его при показе (ленивый чанк сайта).
 export { rates as ratesTexts } from "./locales/ru/rates.ts";
+// Словарь правового консультанта: тексты под ответом собирает сервер (`legal-consult`); в `resources` его нет.
+export { createLegalT, type LegalT } from "./create-legal-t.ts";
+export { legal as legalTexts } from "./locales/ru/legal.ts";

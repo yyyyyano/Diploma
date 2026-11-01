@@ -312,6 +312,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
   const telegramModule = createTelegramModule({
     platform: ports.systemPlatform,
     facades: {
+      files: filesModule.facade,
       chat: chatModule.facade,
       agent: agentModule.facade,
       identity: identityModule.facade,

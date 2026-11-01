@@ -1,0 +1,15 @@
+/* Плавающая кнопка (DES: .fab каркаса, тень — --kit-shadow-fab): справа внизу; на телефоне — над нижней панелью. */
+.fab {
+  position: fixed;
+  right: var(--s-24);
+  bottom: var(--s-24);
+  z-index: 90;
+  box-shadow: var(--kit-shadow-fab);
+}
+
+@media (max-width: 760px) {
+  .fab {
+    right: var(--s-16);
+    bottom: calc(84px + var(--s-12));
+  }
+}

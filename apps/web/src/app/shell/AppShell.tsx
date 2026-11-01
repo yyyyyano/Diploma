@@ -1,11 +1,13 @@
 // Каркас раздела пользователя (DES-15, ARCHITECTURE §10.1): меню — из реестра маршрутов (staticData.nav) под роль
 // текущей сессии, поток живых обновлений, выход с очисткой кэша, колокольчик уведомлений в углу (NOTIF-01).
-// «Сканировать чек» — в углу каркаса рядом с колокольчиком (RCPT-01, T-028); плавающая кнопка ассистента — с чатом (T-043).
+// «Сканировать чек» — в углу каркаса рядом с колокольчиком (RCPT-01, T-028); плавающая кнопка ассистента — на любой
+// странице раздела (CHAT-08, T-043): панель справа, на телефоне — страница чата.
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon } from "@mantine/core";
 import { Link, Outlet, useRouter, useRouterState } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { FloatingAssistant } from "../../features/assistant/index.ts";
 import { NotificationBell } from "../../features/notifications/index.ts";
 import { useEventStream } from "../../lib/events.ts";
 import { buildNav, isNavActive, splitPhoneNav, type NavItem } from "../../lib/nav.ts";
@@ -95,6 +97,7 @@ export function AppShell() {
       }
     >
       <Outlet />
+      {user && <FloatingAssistant />}
     </AppFrame>
   );
 }

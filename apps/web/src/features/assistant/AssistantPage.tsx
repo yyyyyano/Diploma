@@ -1,254 +1,163 @@
-// «Ассистент» (design/screens/Assistant.dc.html, CHAT-02, NFR-21): лента диалога и поле вопроса. Ответ приходит
-// потоком (useChat поверх процедур oRPC): текст — по мере генерации, шаг агента — подписью из словаря tools по имени
-// инструмента (не текстом модели), результат list_accounts — карточками счетов. Лента — role="log" с aria-live="off",
-// вехи («отвечает», «готово») — отдельной скрытой живой областью: диктор не читает каждый кусок. «Остановить» —
-// chat.stop(runId): запуск на сервере освобождает модель; закрытая вкладка ответ не обрывает — он придёт историей.
-import type { AccountListItem, ChatMessage, ConversationId } from "@kosht/contract";
-import { useChat } from "@ai-sdk/react";
-import { ActionIcon, Button, Textarea, VisuallyHidden } from "@mantine/core";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { UIMessage } from "ai";
-import {
-  CheckCircle2,
-  Loader2,
-  SendHorizontal,
-  Sparkles,
-  Square,
-  TriangleAlert,
-} from "lucide-react";
-import { useState, type FormEvent, type KeyboardEvent } from "react";
+// «Ассистент» (design/screens/Assistant.dc.html, MobileChat.dc.html, CHAT-01, CHAT-02, NFR-21): слева — диалоги
+// (на телефоне — шторка по кнопке «Диалоги»), справа — шапка с названием диалога и выбором модели, плашка «Локальный
+// режим», лента и поле вопроса. Открытый диалог — в адресе (`?c=`), новый — без `c` и создаётся первым вопросом.
+// Переписка живёт в ChatView: смена диалога меняет `key` загрузчика, а появление id у нового диалога — только адрес
+// и подсветку в списке (иначе идущий ответ оборвался бы перерисовкой).
+import type { ConversationId } from "@kosht/contract";
+import { Button } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { ListTree, Plus, Sparkles, TriangleAlert, UserRoundSearch } from "lucide-react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AccountCard } from "../../entities/account/index.ts";
-import { client, orpc } from "../../lib/api.ts";
-import { EmptyState, PageHeader, SkeletonText } from "../../ui/index.ts";
+import { orpc } from "../../lib/api.ts";
+import { sessionQuery } from "../../lib/session.ts";
+import { EmptyState, Sheet, SkeletonText } from "../../ui/index.ts";
 import classes from "./AssistantPage.module.css";
-import { metadataOf, toUiMessages } from "./model/messages.ts";
-import { createChatTransport } from "./model/transport.ts";
+import { ChatLoader } from "./ChatLoader.tsx";
+import { DialogList } from "./DialogList.tsx";
+import { ModelPicker } from "./ModelPicker.tsx";
+import { useCloudGranted } from "./LocalModeBanner.tsx";
+import { useInitialConversation } from "./model/use-initial-conversation.ts";
+import { useSeen } from "./model/use-seen.ts";
+import type { AssistantSearch } from "./model/search.ts";
 
-export function AssistantPage() {
-  const history = useQuery(orpc.chat.history.queryOptions());
-  if (history.isError) {
+const PHONE_QUERY = "(max-width: 860px)";
+
+export function AssistantPage({ search }: { readonly search: AssistantSearch }) {
+  const { t } = useTranslation("assistant");
+  const initial = useInitialConversation(search.c);
+  if (initial.status === "error") {
     return (
-      <Frame>
-        <ErrorState onRetry={() => void history.refetch()} />
-      </Frame>
+      <EmptyState
+        tone="error"
+        headingLevel={1}
+        icon={TriangleAlert}
+        title={t("historyError.title")}
+        description={t("historyError.text")}
+        actions={<Button onClick={initial.retry}>{t("historyError.retry")}</Button>}
+      />
     );
   }
-  if (history.isPending) {
+  if (initial.status === "pending") {
     return (
-      <Frame>
+      <div className={classes.wait}>
         <SkeletonText lines={4} />
-      </Frame>
+      </div>
     );
   }
-  return (
-    <Chat
-      conversationId={history.data?.conversationId ?? null}
-      initial={history.data?.messages ?? []}
-    />
-  );
+  return <Layout initial={initial.id} />;
 }
 
-function ErrorState({ onRetry }: { readonly onRetry: () => void }) {
+interface Opened {
+  /** Растёт при выборе другого диалога: по нему ChatLoader перемонтируется. */
+  readonly key: number;
+  readonly target: ConversationId | null;
+}
+
+function Layout({ initial }: { readonly initial: ConversationId | null }) {
   const { t } = useTranslation("assistant");
-  return (
-    <EmptyState
-      tone="error"
-      icon={TriangleAlert}
-      title={t("historyError.title")}
-      description={t("historyError.text")}
-      actions={<Button onClick={onRetry}>{t("historyError.retry")}</Button>}
-    />
-  );
-}
-
-function Frame({ children }: { readonly children: React.ReactNode }) {
-  const { t } = useTranslation("assistant");
-  return (
-    <>
-      <PageHeader title={t("title")} subtitle={t("subtitle")} />
-      <div className={classes.body}>{children}</div>
-    </>
-  );
-}
-
-function Chat({
-  conversationId,
-  initial,
-}: {
-  readonly conversationId: ConversationId | null;
-  readonly initial: readonly ChatMessage[];
-}) {
-  const { t } = useTranslation(["assistant", "tools"]);
-  const queryClient = useQueryClient();
-  // Транспорт создаётся один раз: диалог (из истории или первого ответа) он запоминает сам.
-  const [transport] = useState(() => createChatTransport(client, conversationId));
-  const { messages, sendMessage, status, stop, error } = useChat({
-    transport,
-    messages: toUiMessages(initial),
-    // История на сервере дописана — следующий заход покажет её без ожидания.
-    onFinish: () => void queryClient.invalidateQueries({ queryKey: orpc.chat.history.key() }),
+  const navigate = useNavigate();
+  const router = useRouter({ warn: false });
+  const isPhone = useMediaQuery(PHONE_QUERY) === true;
+  const [opened, setOpened] = useState<Opened>({ key: 0, target: initial });
+  // Id диалога сейчас: у нового появляется с первым ответом — ChatLoader при этом не перемонтируется.
+  const [activeId, setActiveId] = useState<ConversationId | null>(initial);
+  const [listOpen, setListOpen] = useState(false);
+  const seen = useSeen();
+  const conversations = useQuery(orpc.chat.conversations.queryOptions());
+  const session = router?.options.context.session;
+  const user = useQuery({
+    ...sessionQuery(session ?? { current: async () => undefined, signOut: async () => {} }),
+    enabled: session !== undefined,
   });
-  const stopRun = useMutation(orpc.chat.stop.mutationOptions());
-  const [text, setText] = useState("");
-  const [stopped, setStopped] = useState(false);
-  const busy = status === "submitted" || status === "streaming";
+  const cloudGranted = useCloudGranted();
 
-  const submit = (event?: FormEvent) => {
-    event?.preventDefault();
-    const question = text.trim();
-    if (question === "" || busy) return;
-    setText("");
-    setStopped(false);
-    void sendMessage({ text: question });
-  };
+  const show = useCallback(
+    (id: ConversationId | null, remount: boolean) => {
+      setActiveId(id);
+      if (remount) setOpened((current) => ({ key: current.key + 1, target: id }));
+      setListOpen(false);
+      void navigate({
+        to: "/assistant",
+        search: id === null ? {} : { c: id },
+        replace: true,
+      });
+    },
+    [navigate],
+  );
+  const open = useCallback((id: ConversationId) => show(id, true), [show]);
+  const start = useCallback(() => show(null, true), [show]);
+  const named = useCallback((id: ConversationId) => show(id, false), [show]);
 
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === "Enter" && !event.shiftKey) submit(event);
-  };
-
-  const onStop = () => {
-    const runId = metadataOf(messages.at(-1)).runId;
-    if (runId !== undefined) stopRun.mutate({ runId: runId as never });
-    setStopped(true);
-    void stop();
-  };
-
-  const milestone = busy
-    ? t("answering")
-    : error !== undefined
-      ? t("error")
-      : stopped
-        ? t("stopped")
-        : messages.length > 0
-          ? t("answered")
-          : "";
+  const title =
+    activeId === null
+      ? t("dialogs.untitled")
+      : (conversations.data?.items.find((item) => item.id === activeId)?.title ??
+        t("dialogs.untitled"));
+  const list = (
+    <DialogList activeId={activeId} onOpen={open} onNew={start} cloudNote={cloudGranted === true} />
+  );
 
   return (
-    <Frame>
-      <div className={classes.chat}>
-        <section className={classes.feed} role="log" aria-live="off" aria-label={t("feedLabel")}>
-          {messages.length === 0 && <p className={classes.empty}>{t("empty")}</p>}
-          {messages.map((message) => (
-            <Message key={message.id} message={message} />
-          ))}
-          {error !== undefined && (
-            <p className={classes.error} role="alert">
-              <TriangleAlert size={18} strokeWidth={1.8} aria-hidden />
-              {t("error")}
-            </p>
-          )}
-        </section>
-        <VisuallyHidden>
-          <output aria-live="polite">{milestone}</output>
-        </VisuallyHidden>
-        <form className={classes.composer} onSubmit={submit}>
-          <Textarea
-            className={classes.input}
-            aria-label={t("inputLabel")}
-            placeholder={t("placeholder")}
-            autosize
-            minRows={1}
-            maxRows={6}
-            value={text}
-            onChange={(event) => setText(event.currentTarget.value)}
-            onKeyDown={onKeyDown}
-          />
-          {busy ? (
-            <ActionIcon size={44} variant="light" aria-label={t("stop")} onClick={onStop}>
-              <Square size={18} strokeWidth={1.8} aria-hidden />
-            </ActionIcon>
-          ) : (
-            <ActionIcon
-              size={44}
-              type="submit"
-              aria-label={t("send")}
-              disabled={text.trim() === ""}
+    <div className={classes.wrap}>
+      <aside className={classes.list}>{list}</aside>
+      <section className={classes.chat}>
+        <header className={classes.head}>
+          <span className={classes.avatar}>
+            <Sparkles size={20} strokeWidth={1.8} aria-hidden />
+          </span>
+          <div className={classes.headText}>
+            <h1 className={classes.title}>{title}</h1>
+            <p className={classes.sub}>{t("head.sub")}</p>
+            <p className={classes.seen}>{t("mobile.context", { page: seen.label })}</p>
+          </div>
+          <div className={classes.headActions}>
+            <Button
+              className={classes.phoneOnly}
+              variant="default"
+              size="sm"
+              leftSection={<ListTree size={16} strokeWidth={1.8} aria-hidden />}
+              onClick={() => setListOpen(true)}
             >
-              <SendHorizontal size={20} strokeWidth={1.8} aria-hidden />
-            </ActionIcon>
-          )}
-        </form>
-        <p className={classes.note}>{t("note")}</p>
-      </div>
-    </Frame>
-  );
-}
-
-function Message({ message }: { readonly message: UIMessage }) {
-  const { t } = useTranslation(["assistant", "tools"]);
-  if (message.role === "user") {
-    return (
-      <div className={classes.user}>
-        <VisuallyHidden>{t("you")}</VisuallyHidden>
-        <p className={classes.bubble}>{textOf(message)}</p>
-      </div>
-    );
-  }
-  const interrupted = metadataOf(message).status === "interrupted";
-  return (
-    <article className={classes.answer} aria-label={t("bot")}>
-      <span className={classes.avatar}>
-        <Sparkles size={18} strokeWidth={1.8} aria-hidden />
-      </span>
-      <div className={classes.parts}>
-        {message.parts.map((part, index) => (
-          <Part key={`${message.id}-${String(index)}`} part={part} />
-        ))}
-        {interrupted && <p className={classes.muted}>{t("interrupted")}</p>}
-      </div>
-    </article>
-  );
-}
-
-/**
- * Часть ответа: текст модели или шаг инструмента. Шаг остаётся в ленте подписью из словаря tools по имени
- * инструмента (CHAT-02: видно, что агент делал) — с вращающимся значком, пока идёт, и галочкой после; результат
- * list_accounts — карточки счетов, ошибка шага — «Шаг не удался».
- */
-function Part({ part }: { readonly part: UIMessage["parts"][number] }) {
-  const { t } = useTranslation(["assistant", "tools"]);
-  if (part.type === "text") return <p className={classes.text}>{part.text}</p>;
-  if (!part.type.startsWith("tool-") || !("state" in part)) return null;
-  const toolName = part.type.slice("tool-".length);
-  const label = toolName === "list_accounts" ? t("tools:list_accounts") : t("tools:fallback");
-  const done = part.state === "output-available" || part.state === "output-error";
-  const items = part.state === "output-available" ? accountsOf(part.output) : undefined;
-  const failed =
-    part.state === "output-error" || (part.state === "output-available" && isFailure(part.output));
-  return (
-    <>
-      <p className={classes.step}>
-        {done ? (
-          <CheckCircle2 size={16} strokeWidth={1.8} aria-hidden />
-        ) : (
-          <Loader2 className={classes.spin} size={16} strokeWidth={1.8} aria-hidden />
-        )}
-        {label}
-      </p>
-      {items !== undefined && (
-        <div className={classes.cards}>
-          {items.map((account) => (
-            <AccountCard key={account.id} account={account} />
-          ))}
-        </div>
+              {t("dialogs.open")}
+            </Button>
+            <Button
+              className={classes.phoneOnly}
+              variant="default"
+              size="sm"
+              leftSection={<Plus size={16} strokeWidth={1.8} aria-hidden />}
+              onClick={start}
+            >
+              {t("dialogs.newDialog")}
+            </Button>
+            <ModelPicker />
+            <Link to="/memory" className={classes.memory}>
+              <UserRoundSearch size={16} strokeWidth={1.8} aria-hidden />
+              {t("head.memory")}
+            </Link>
+          </div>
+        </header>
+        <ChatLoader
+          key={opened.key}
+          variant="page"
+          conversationId={opened.target}
+          getPage={() => seen.context}
+          onConversation={named}
+          userName={user.data?.name}
+        />
+      </section>
+      {isPhone && (
+        <Sheet
+          opened={listOpen}
+          onClose={() => setListOpen(false)}
+          title={t("dialogs.label")}
+          position="bottom"
+        >
+          {list}
+        </Sheet>
       )}
-      {failed && <p className={classes.muted}>{t("toolFailed")}</p>}
-    </>
+    </div>
   );
-}
-
-function textOf(message: UIMessage): string {
-  return message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n");
-}
-
-/** Результат list_accounts — { items: AccountListItem[] } (карточка из @kosht/contract). */
-function accountsOf(output: unknown): AccountListItem[] | undefined {
-  if (typeof output !== "object" || output === null || !("items" in output)) return undefined;
-  const { items } = output;
-  return Array.isArray(items) ? (items as AccountListItem[]) : undefined;
-}
-
-function isFailure(output: unknown): boolean {
-  return typeof output === "object" && output !== null && "ok" in output && output.ok === false;
 }

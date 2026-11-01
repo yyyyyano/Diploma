@@ -14,6 +14,7 @@ import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
+import { SUMMARY } from "../../entities/weekly/fixtures.ts";
 import { HomePage } from "./HomePage.tsx";
 import { HomeSearch } from "./model/search.ts";
 
@@ -26,6 +27,7 @@ const OVERVIEW = {
   period: { from: "2026-10-01", to: "2026-10-31" },
   today: "2026-10-28",
   hasData: true,
+  weekly: null,
   income: { amount: byn(240_000), traceId: TRACE(1) },
   expense: { amount: byn(184_260), traceId: TRACE(2) },
   missingRates: 0,
@@ -577,6 +579,24 @@ describe("CAL-01, DASH-02: события календаря на главной
     server.use(overview({ events: [] }));
     renderPage();
     expect(await screen.findByText("Ближайших событий нет.")).toBeInTheDocument();
+  });
+});
+
+describe("WEEK-01, DASH-02: итоги недели на главной", () => {
+  it("последняя сводка — карточка с текстом и числами; сводки нет — карточки нет", async () => {
+    server.use(overview({ weekly: SUMMARY }));
+    renderPage();
+    expect(await screen.findByRole("region", { name: "Итоги недели" })).toBeVisible();
+    expect(screen.getByText(/потратили 312,00 BYN/u)).toBeVisible();
+  });
+
+  it("первой сводки ещё не было — блока нет", async () => {
+    server.use(overview({ weekly: null }));
+    renderPage();
+    expect(
+      await screen.findByRole("heading", { name: "Могу ли я позволить покупку?" }),
+    ).toBeVisible();
+    expect(screen.queryByRole("region", { name: "Итоги недели" })).toBeNull();
   });
 });
 

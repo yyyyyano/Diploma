@@ -18,6 +18,7 @@ import { useAccountName } from "../../entities/account/index.ts";
 import { EventRow, useCalendarTexts } from "../../entities/calendar-event/index.ts";
 import { categoryRefOf, useCategoryLookup } from "../../entities/category/index.ts";
 import { FoundBanner, useFoundChange } from "../../entities/deduction/index.ts";
+import { WeeklyCard } from "../../entities/weekly/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
 import { ContributeDialog, GoalCard } from "../../entities/goal/index.ts";
 import { orpc } from "../../lib/api.ts";
@@ -240,6 +241,7 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
             {data.missingRates > 0 && (
               <p className={classes.muted}>{t("dashboard:categories.missingRates")}</p>
             )}
+            {data.weekly !== null && <WeeklyCard summary={data.weekly} />}
             <AffordPromo />
 
             <div className={classes.columns}>

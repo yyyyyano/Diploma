@@ -1,0 +1,579 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "6bcd9aba-a515-4e04-b9d2-69f1a732ce28",
+  "prevIds": ["969e6dff-4791-45ad-b783-771ccbc273ee"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "telegram_bot"],
+      "writes": [
+        "s|tbl|public.telegram_bot",
+        "n|tbl|public.telegram_bot",
+        "e|tbl|public.telegram_bot",
+        "n|rel|public.telegram_bot",
+        "n|type|public.telegram_bot",
+        "n|rel|public.telegram_bot_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "telegram_link_codes"],
+      "writes": [
+        "s|tbl|public.telegram_link_codes",
+        "n|tbl|public.telegram_link_codes",
+        "e|tbl|public.telegram_link_codes",
+        "n|rel|public.telegram_link_codes",
+        "n|type|public.telegram_link_codes",
+        "n|rel|public.telegram_link_codes_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "telegram_links"],
+      "writes": [
+        "s|tbl|public.telegram_links",
+        "n|tbl|public.telegram_links",
+        "e|tbl|public.telegram_links",
+        "n|rel|public.telegram_links",
+        "n|type|public.telegram_links",
+        "n|rel|public.telegram_links_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "telegram_receipt_cards"],
+      "writes": [
+        "s|tbl|public.telegram_receipt_cards",
+        "n|tbl|public.telegram_receipt_cards",
+        "e|tbl|public.telegram_receipt_cards",
+        "n|rel|public.telegram_receipt_cards",
+        "n|type|public.telegram_receipt_cards",
+        "n|rel|public.telegram_receipt_cards_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "telegram_link_codes", "telegram_link_codes_user_idx"],
+      "writes": [
+        "s|idx|public.telegram_link_codes_user_idx",
+        "n|idx|public.telegram_link_codes_user_idx",
+        "e|idx|public.telegram_link_codes_user_idx",
+        "n|rel|public.telegram_link_codes_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.telegram_link_codes",
+        "n|sch|public",
+        "n|col|public.telegram_link_codes.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "telegram_links", "telegram_links_chat_id_idx"],
+      "writes": [
+        "s|idx|public.telegram_links_chat_id_idx",
+        "n|idx|public.telegram_links_chat_id_idx",
+        "e|idx|public.telegram_links_chat_id_idx",
+        "n|rel|public.telegram_links_chat_id_idx"
+      ],
+      "reads": [
+        "n|tbl|public.telegram_links",
+        "n|sch|public",
+        "n|col|public.telegram_links.chat_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "telegram_receipt_cards",
+        "telegram_receipt_cards_household_idx"
+      ],
+      "writes": [
+        "s|idx|public.telegram_receipt_cards_household_idx",
+        "n|idx|public.telegram_receipt_cards_household_idx",
+        "e|idx|public.telegram_receipt_cards_household_idx",
+        "n|rel|public.telegram_receipt_cards_household_idx"
+      ],
+      "reads": [
+        "n|tbl|public.telegram_receipt_cards",
+        "n|sch|public",
+        "n|col|public.telegram_receipt_cards.household_id"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "telegram_bot",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "telegram_link_codes",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "telegram_links",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "name": "telegram_receipt_cards",
+        "isRlsEnabled": false,
+        "entityType": "tables"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_bot",
+        "name": "id",
+        "type": "smallint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "1",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_bot",
+        "name": "username",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_bot",
+        "name": "updated_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "code_hash",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "household_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "expires_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "used_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "user_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "household_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "chat_id",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "username",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "receipt_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "household_id",
+        "type": "uuid",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "chat_id",
+        "type": "bigint",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "delivered_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "telegram_link_codes_user_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "user_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "telegram_links_chat_id_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "chat_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": true,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "telegram_receipt_cards_household_idx",
+        "nameExplicit": true,
+        "columns": [
+          {
+            "value": "household_id",
+            "isExpression": false,
+            "asc": true,
+            "nullsFirst": false,
+            "opclass": null
+          }
+        ],
+        "isUnique": false,
+        "where": null,
+        "with": "",
+        "method": "btree",
+        "concurrently": false,
+        "entityType": "indexes"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_bot",
+        "name": "telegram_bot_pkey",
+        "columns": ["id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_link_codes",
+        "name": "telegram_link_codes_pkey",
+        "columns": ["code_hash"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_links",
+        "name": "telegram_links_pkey",
+        "columns": ["user_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_receipt_cards",
+        "name": "telegram_receipt_cards_pkey",
+        "columns": ["receipt_id"],
+        "nameExplicit": false,
+        "entityType": "pks"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "telegram_bot",
+        "name": "telegram_bot_single_row_check",
+        "value": "\"id\" = 1",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

@@ -188,6 +188,12 @@ catalogs:
     '@fontsource-variable/onest':
       specifier: 5.3.1
       version: 5.3.1
+    '@grammyjs/auto-retry':
+      specifier: 2.0.2
+      version: 2.0.2
+    '@grammyjs/stream':
+      specifier: 1.1.0
+      version: 1.1.0
     '@hono/node-server':
       specifier: 2.1.5
       version: 2.1.5
@@ -338,6 +344,9 @@ catalogs:
     gpt-tokenizer:
       specifier: 4.1.0
       version: 4.1.0
+    grammy:
+      specifier: 1.46.0
+      version: 1.46.0
     heic-decode:
       specifier: 2.1.0
       version: 2.1.0
@@ -504,6 +513,12 @@ importers:
       '@ai-sdk/provider':
         specifier: 'catalog:'
         version: 4.0.34
+      '@grammyjs/auto-retry':
+        specifier: 'catalog:'
+        version: 2.0.2(grammy@1.46.0(supports-color@7.2.0))(supports-color@7.2.0)
+      '@grammyjs/stream':
+        specifier: 'catalog:'
+        version: 1.1.0(grammy@1.46.0(supports-color@7.2.0))
       '@hono/node-server':
         specifier: 'catalog:'
         version: 2.1.5(hono@4.13.13)
@@ -573,6 +588,9 @@ importers:
       fuzzball:
         specifier: 'catalog:'
         version: 2.2.6
+      grammy:
+        specifier: 'catalog:'
+        version: 1.46.0(supports-color@7.2.0)
       heic-decode:
         specifier: 'catalog:'
         version: 2.1.0
@@ -1333,6 +1351,21 @@ packages:
 
   '@fontsource-variable/onest@5.3.1':
     resolution: {integrity: sha512-xaaw6G4HDB2/RczsWLD/2bnib4ykmQlTlBUN3GOEOiyErilZukQWVJG95h9zwAy0i8KY+QzDa+COPfqhI72Acw==}
+
+  '@grammyjs/auto-retry@2.0.2':
+    resolution: {integrity: sha512-b4A4p5jlYDiQtW0c0FXYe11WMkYoiW+5rvOaDMCOk1h7Pu2SDl7B7gmFF8cthWCx2+M2nWLOsBxAgbBG4kKWYg==}
+    engines: {node: '>=12.20.0 || >=14.13.1'}
+    peerDependencies:
+      grammy: ^1.10.0
+
+  '@grammyjs/stream@1.1.0':
+    resolution: {integrity: sha512-xaVjR5dg68Ef/my0O0gSB57OxZObdmfTd0WsjkVVP1NjW02RAkR7LNCA0QwZQSO++R5CHPdDcmOrG+JVkJguRQ==}
+    engines: {node: '>=22'}
+    peerDependencies:
+      grammy: ^1.39.0
+
+  '@grammyjs/types@5.0.0':
+    resolution: {integrity: sha512-iq1Qrq1iPKkB8yAa0qSuIURMZOCuqTY5pWy5gHpCeL1oQ+GPadGhw/cDTVE8waJwuCzacUzuIjRv1sESvk7u7A==}
 
   '@hono/node-server@2.1.5':
     resolution: {integrity: sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==}
@@ -2668,6 +2701,10 @@ packages:
   '@yuku-toolchain/types@0.19.0':
     resolution: {integrity: sha512-tFkNbsP4WXX9UMUC5syJGdK9dPMLK0PPaIuXCcCYH75sZ8MrebfBZ2XvCILRTw8AgLivSSCfDa4R67iYBDa4Kg==}
 
+  abort-controller@3.0.0:
+    resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
+    engines: {node: '>=6.5'}
+
   acorn-jsx-walk@2.0.0:
     resolution: {integrity: sha512-uuo6iJj4D4ygkdzd6jPtcxs8vZgDX9YFIkqczGImoypX2fQ4dVImmu3UzA4ynixCIMTrEOWW+95M2HuBaCEOVA==}
 
@@ -3471,6 +3508,10 @@ packages:
   estree-walker@3.0.3:
     resolution: {integrity: sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==}
 
+  event-target-shim@5.0.1:
+    resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
+    engines: {node: '>=6'}
+
   eventsource-parser@3.1.1:
     resolution: {integrity: sha512-EKN1vKAMcZ8MlYMpaNuxN6R9yakzH6uajHcHVTqWJzvu5pWw9DyhbP35HH8MVBQ+dZjAfDxk+A8NiR9KWaXiyQ==}
     engines: {node: '>=18.0.0'}
@@ -3635,6 +3676,10 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  grammy@1.46.0:
+    resolution: {integrity: sha512-/8Qw+iisrUdOMk+p2mjEHouMm/BBdBEN1DHh16wiTpRUZkxDG3PxexdjCvR+wvK3LWPdrEvnQbdrwpU954sPhg==}
+    engines: {node: ^12.20.0 || >=14.13.1}
 
   guid-typescript@1.0.9:
     resolution: {integrity: sha512-Y8T4vYhEfwJOTbouREvG+3XDsjr8E3kIr7uf+JZ0BYloFsttiHU0WfvANVsR7TxNUJa/WpCnw/Ino/p+DeBhBQ==}
@@ -4361,6 +4406,15 @@ packages:
   nanostores@1.5.5:
     resolution: {integrity: sha512-FixtE239Gl6Gz0ZGCK0WzvNwObNCIwVT+L7zQcf1QgcA6AzBxblzqe9OT88qiucNkhsjSOqiogSaF5jVbJiqSA==}
     engines: {node: ^20.0.0 || >=22.0.0}
+
+  node-fetch@2.7.0:
+    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
 
   node-releases@2.0.60:
     resolution: {integrity: sha512-OmO8+GM1JUZqXET720VrJCwkjUCXmCMQm0Z3UDDRbfNLHS4NEAvY60j5jiFv0tkKw2PNNlqOLhahVmwJIOLDIQ==}
@@ -5138,6 +5192,9 @@ packages:
     resolution: {integrity: sha512-exgYmnmL/sJpR3upZfXG5PoatXQii55xAiXGXzY+sROLZ/Y+SLcp9PgJNI9Vz37HpQ74WvDcLT8eqm+kV3FzrA==}
     engines: {node: '>=16'}
 
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   tr46@7.0.0:
     resolution: {integrity: sha512-BcDSDW+SIGWVOns1Zm6Yg91q9AEj7eaID0QDY9oIqJD1A8dscNwMcl9Sms2DeuWCNov1X0/oXanHGYQBSLwZsg==}
     engines: {node: ^22.14.0 || >=24.0.0}
@@ -5482,6 +5539,9 @@ packages:
     engines: {node: ^22.13||^24||>=26}
     hasBin: true
 
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
     engines: {node: '>=20'}
@@ -5505,6 +5565,9 @@ packages:
   whatwg-url@17.3.0:
     resolution: {integrity: sha512-KwOAJrpf+GTgBvcBQJcP38sMF0DsQKdwtG+TxM2pW44P6E5k0hDbWrDmyuJDIF0Uef0aQq0ZoJs+5oI+k8ddhg==}
     engines: {node: ^22.14.0 || >=24.0.0}
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   which-boxed-primitive@1.1.1:
     resolution: {integrity: sha512-TbX3mj8n0odCBFVlY8AxkqcHASw3L60jIuF8jFP78az3C2YhmGvqbHBpAjTRH2/xqYunrJ9g1jSyjCjpoWzIAA==}
@@ -6063,6 +6126,20 @@ snapshots:
   '@fontsource-variable/literata@5.3.0': {}
 
   '@fontsource-variable/onest@5.3.1': {}
+
+  '@grammyjs/auto-retry@2.0.2(grammy@1.46.0(supports-color@7.2.0))(supports-color@7.2.0)':
+    dependencies:
+      debug: 4.4.3(supports-color@7.2.0)
+      grammy: 1.46.0(supports-color@7.2.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@grammyjs/stream@1.1.0(grammy@1.46.0(supports-color@7.2.0))':
+    dependencies:
+      abort-controller: 3.0.0
+      grammy: 1.46.0(supports-color@7.2.0)
+
+  '@grammyjs/types@5.0.0': {}
 
   '@hono/node-server@2.1.5(hono@4.13.13)':
     dependencies:
@@ -7112,6 +7189,10 @@ snapshots:
 
   '@yuku-toolchain/types@0.19.0': {}
 
+  abort-controller@3.0.0:
+    dependencies:
+      event-target-shim: 5.0.1
+
   acorn-jsx-walk@2.0.0: {}
 
   acorn-jsx@5.3.2(acorn@8.19.0):
@@ -7803,6 +7884,8 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.9
 
+  event-target-shim@5.0.1: {}
+
   eventsource-parser@3.1.1: {}
 
   exceljs@4.4.0:
@@ -7989,6 +8072,16 @@ snapshots:
   gpt-tokenizer@4.1.0: {}
 
   graceful-fs@4.2.11: {}
+
+  grammy@1.46.0(supports-color@7.2.0):
+    dependencies:
+      '@grammyjs/types': 5.0.0
+      abort-controller: 3.0.0
+      debug: 4.4.3(supports-color@7.2.0)
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
 
   guid-typescript@1.0.9: {}
 
@@ -8786,6 +8879,10 @@ snapshots:
   nanoid@3.3.20: {}
 
   nanostores@1.5.5: {}
+
+  node-fetch@2.7.0:
+    dependencies:
+      whatwg-url: 5.0.0
 
   node-releases@2.0.60: {}
 
@@ -9668,6 +9765,8 @@ snapshots:
     dependencies:
       tldts: 7.4.19
 
+  tr46@0.0.3: {}
+
   tr46@7.0.0:
     dependencies:
       punycode: 2.3.1
@@ -9980,6 +10079,8 @@ snapshots:
 
   watskeburt@6.0.0: {}
 
+  webidl-conversions@3.0.1: {}
+
   webidl-conversions@8.0.1: {}
 
   webpack-virtual-modules@0.6.2: {}
@@ -9999,6 +10100,11 @@ snapshots:
       webidl-conversions: 8.0.1
     transitivePeerDependencies:
       - '@noble/hashes'
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   which-boxed-primitive@1.1.1:
     dependencies:

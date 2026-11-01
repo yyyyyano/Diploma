@@ -73,6 +73,10 @@ catalog:
   drizzle-kit: 1.0.0-rc.5
   drizzle-orm: 1.0.0-rc.5
   fast-check: 4.10.2
+  # Бот (T-052, ADR-0012): grammY, повтор при 429 и потоковый ответ черновиками — только telegram/infrastructure.
+  "@grammyjs/auto-retry": 2.0.2
+  "@grammyjs/stream": 1.1.0
+  grammy: 1.46.0
   # Разбор выписок (T-025): определение типа файла по содержимому (SEC-03), CSV, текст и картинки PDF.
   file-type: 22.2.0
   papaparse: 5.7.0

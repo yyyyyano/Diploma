@@ -186,7 +186,7 @@ function renderPage(path = "/home") {
     path: "/budget",
     component: () => <p>Лимиты</p>,
   });
-  const others = ["/recurring", "/accounts"].map((path) =>
+  const others = ["/recurring", "/accounts", "/afford"].map((path) =>
     createRoute({ getParentRoute: () => root, path, component: () => <p>{path}</p> }),
   );
   const router = createRouter({
@@ -577,5 +577,47 @@ describe("CAL-01, DASH-02: события календаря на главной
     server.use(overview({ events: [] }));
     renderPage();
     expect(await screen.findByText("Ближайших событий нет.")).toBeInTheDocument();
+  });
+});
+
+describe("AFF-01, DASH-02: «Могу ли я позволить покупку?» на главной", () => {
+  it("карточка со словами и кнопкой; сумма вводом уходит на экран покупки в адресе, пробелы разрядов не мешают", async () => {
+    server.use(overview());
+    const { router } = renderPage();
+    expect(
+      await screen.findByRole("heading", { name: "Могу ли я позволить покупку?" }),
+    ).toBeVisible();
+    await userEvent.type(screen.getByLabelText("Сумма покупки, BYN"), "3 000");
+    await userEvent.click(screen.getByRole("button", { name: "Рассчитать сценарии" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/afford"));
+    expect(router.state.location.search).toEqual({ sum: "3000" });
+  });
+
+  it("сумма не целая («abc») — экран покупки открывается без суммы: расчёт и проверка ввода — на его стороне", async () => {
+    server.use(overview());
+    const { router } = renderPage();
+    await userEvent.type(await screen.findByLabelText("Сумма покупки, BYN"), "abc");
+    await userEvent.click(screen.getByRole("button", { name: "Рассчитать сценарии" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/afford"));
+    expect(router.state.location.search).toEqual({});
+  });
+
+  it("в состоянии «первые шаги» (данных нет) карточки нет", async () => {
+    server.use(
+      overview({
+        hasData: false,
+        accounts: { total: null, items: [] },
+        categories: { rows: [], other: null },
+        months: [],
+        limits: [],
+        goals: [],
+        foundDeductions: [],
+        events: [],
+        upcoming: [],
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText("Добро пожаловать в Кошт")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Могу ли я позволить покупку?" })).toBeNull();
   });
 });

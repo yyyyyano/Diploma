@@ -33,6 +33,7 @@ import {
   StatCard,
   WhyButton,
 } from "../../ui/index.ts";
+import { AffordPromo } from "./AffordPromo.tsx";
 import classes from "./HomePage.module.css";
 import { monthRange, type Period } from "./model/period.ts";
 import type { HomeSearch } from "./model/search.ts";
@@ -239,6 +240,7 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
             {data.missingRates > 0 && (
               <p className={classes.muted}>{t("dashboard:categories.missingRates")}</p>
             )}
+            <AffordPromo />
 
             <div className={classes.columns}>
               <section className={classes.card} aria-labelledby="home-categories">

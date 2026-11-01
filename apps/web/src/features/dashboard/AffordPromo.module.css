@@ -1,0 +1,46 @@
+/* Карточка «Могу ли я позволить покупку?» на главной (design/screens/Main.dc.html .dash-aff): тёмный фон, светлый текст, токены темы. */
+.promo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding: var(--s-20) var(--s-24);
+  color: var(--surface);
+  background: var(--brand-ink);
+  border-radius: var(--r-md);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-10);
+  color: var(--amber);
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--surface);
+}
+
+.text {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--brand-soft-2);
+}
+
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--s-12);
+}
+
+.field {
+  flex: 1 1 220px;
+  max-width: 360px;
+}
+
+.label {
+  color: var(--surface);
+}

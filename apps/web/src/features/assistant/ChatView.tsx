@@ -16,10 +16,11 @@ import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { Composer } from "./Composer.tsx";
 import classes from "./ChatView.module.css";
 import { LocalModeBanner } from "./LocalModeBanner.tsx";
-import { MessageView } from "./MessageView.tsx";
+import { MessageView, textOf } from "./MessageView.tsx";
 import { VoiceHint } from "./VoiceHint.tsx";
 import { metadataOf, toUiMessages } from "./model/messages.ts";
 import { createChatTransport } from "./model/transport.ts";
+import { useAttachments } from "./model/use-attachments.ts";
 import { useVoiceInput } from "./model/use-voice-input.ts";
 
 /** Подсказки пустого диалога страницы (CHAT-09): четыре группы по сценариям макета. */
@@ -70,23 +71,22 @@ export function ChatView({
   const [stopped, setStopped] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef(status);
-  // Свежий статус для эффекта ниже — без записи в ref во время рендера.
-  useEffect(() => {
-    statusRef.current = status;
-  });
   const localBusy = status === "submitted" || status === "streaming";
   const last = serverMessages.at(-1);
   // Ответ пишет сервер, а вкладка его не слушает (перезагрузка, второй экран): ждём сигнал chat-message.
   const remoteBusy = !localBusy && last?.role === "assistant" && last.status === "streaming";
   const busy = localBusy || remoteBusy;
 
-  // Сервер дописал ответ или сообщения изменились в другой вкладке: берём историю, пока свой поток не идёт.
+  // Сервер дописал ответ или сообщения изменились в другой вкладке: берём историю, но только когда свой поток не идёт.
+  // Новая история, пришедшая посреди потока, не теряется: её запоминает `applied`, и применяется она, как только поток
+  // закончился (статус вернулся в ready/error) — иначе сигнал по этому же диалогу из другой вкладки пропадал бы.
+  const applied = useRef(serverMessages);
   useEffect(() => {
-    // Статус — из ref: перезапись нужна только при новых данных сервера, а не при смене статуса потока.
-    if (statusRef.current === "submitted" || statusRef.current === "streaming") return;
+    if (status === "submitted" || status === "streaming") return;
+    if (applied.current === serverMessages) return;
+    applied.current = serverMessages;
     setMessages(toUiMessages(serverMessages));
-  }, [serverMessages, setMessages]);
+  }, [serverMessages, status, setMessages]);
 
   // Первый ответ нового диалога называет его id (RunMetadata в куске start).
   const startedId = metadataOf(
@@ -121,12 +121,24 @@ export function ChatView({
     });
   }, []);
 
+  const attachments = useAttachments();
   const send = (question: string) => {
     const trimmed = question.trim();
-    if (trimmed === "" || busy) return;
+    const files = attachments.items.map(({ kind, id }) => ({ kind, id }));
+    // CHAT-03: вопрос может быть из одних вложений — тогда модель не зовётся, ответ — карточки.
+    if ((trimmed === "" && files.length === 0) || busy || attachments.uploading) return;
     setText("");
     setStopped(false);
-    void sendMessage({ text: trimmed }, { body: { page: getPage() } });
+    attachments.clear();
+    void sendMessage({ text: trimmed }, { body: { page: getPage(), attachments: files } });
+  };
+
+  // CHAT-10: «Спросить заново» возвращает прежний вопрос в поле — человек видит, что уйдёт, и может поправить.
+  const reask = (index: number) => {
+    const question = messages.slice(0, index).findLast((message) => message.role === "user");
+    if (question === undefined) return;
+    setText(textOf(question));
+    inputRef.current?.focus();
   };
 
   const onStop = () => {
@@ -179,8 +191,8 @@ export function ChatView({
             </div>
           )}
           <section className={classes.feed} role="log" aria-live="off" aria-label={t("feedLabel")}>
-            {messages.map((message) => (
-              <MessageView key={message.id} message={message} />
+            {messages.map((message, index) => (
+              <MessageView key={message.id} message={message} onReask={() => reask(index)} />
             ))}
             {failure !== undefined && (
               <p className={classes.error} role="alert">
@@ -215,6 +227,7 @@ export function ChatView({
           busy={busy}
           onStop={localBusy ? onStop : undefined}
           voice={voice}
+          attachments={attachments}
           inputRef={inputRef}
           placeholder={variant === "panel" ? t("placeholderShort") : t("placeholder")}
           {...(variant === "page" ? { note: t("note") } : {})}

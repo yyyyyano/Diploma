@@ -3,9 +3,16 @@
 // Те же сессия, ошибки и requestId, что у остальных процедур; через прокси Vite — как любой /api. Диалог транспорт
 // запоминает сам: из истории или из метаданных куска start первого ответа (RunMetadata).
 // Отмена запроса (useChat.stop) только отписывает вкладку — запуск на сервере останавливает chat.stop(runId).
-import { ConversationId, PageContext, RunMetadata } from "@kosht/contract";
+import {
+  ChatAttachment,
+  ConversationId,
+  MAX_ATTACHMENTS,
+  PageContext,
+  RunMetadata,
+} from "@kosht/contract";
 import { eventIteratorToUnproxiedDataStream } from "@orpc/client";
 import type { ChatTransport, UIMessage, UIMessageChunk } from "ai";
+import { z } from "zod";
 import type { ApiClient } from "../../../lib/api.ts";
 
 /** Текст вопроса — текстовые части последнего сообщения пользователя. */
@@ -16,6 +23,8 @@ export function questionOf(messages: readonly UIMessage[]): string {
     .join("\n")
     .trim();
 }
+
+const Attachments = z.array(ChatAttachment).max(MAX_ATTACHMENTS);
 
 /**
  * Контекст страницы (CHAT-08) приходит в `body` вопроса (`sendMessage(…, { body: { page } })`) — на момент вопроса, а не
@@ -29,11 +38,16 @@ export function createChatTransport(
   return {
     async sendMessages({ messages, abortSignal, body }) {
       const page = PageContext.safeParse((body as { page?: unknown } | undefined)?.page).data;
+      // CHAT-03: вложения уже приняты конвейером раздела, в body — только вид и id (не по схеме — не отправляются).
+      const attachments = Attachments.safeParse(
+        (body as { attachments?: unknown } | undefined)?.attachments,
+      ).data;
       const iterator = await client.chat.send(
         {
           text: questionOf(messages),
           ...(conversationId === undefined ? {} : { conversationId }),
           ...(page === undefined ? {} : { page }),
+          ...(attachments === undefined || attachments.length === 0 ? {} : { attachments }),
         },
         abortSignal === undefined ? {} : { signal: abortSignal },
       );

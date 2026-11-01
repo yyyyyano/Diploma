@@ -653,3 +653,252 @@ describe("DES-16: состояния", () => {
     expect(await screen.findByText("Загрузка…")).toBeInTheDocument();
   });
 });
+
+describe("CHAT-02: сигнал из другой вкладки во время своего потока", () => {
+  const user = (id: string, text: string) => ({
+    id,
+    role: "user",
+    status: "complete",
+    parts: [{ type: "text", text }],
+  });
+  const bot = (id: string, text: string) => ({
+    id,
+    role: "assistant",
+    status: "complete",
+    parts: [{ type: "text", text }],
+  });
+
+  it("история, пришедшая посреди потока, применяется, когда поток закончился (а не теряется)", async () => {
+    let other = false;
+    const before = [
+      user("0190f0a0-0000-7000-8000-0000000000f1", "Какие у меня счета?"),
+      bot("0190f0a0-0000-7000-8000-0000000000f2", "Один счёт."),
+    ];
+    const after = [
+      ...before,
+      user("0190f0a0-0000-7000-8000-0000000000f3", "Вопрос из другой вкладки"),
+      bot("0190f0a0-0000-7000-8000-0000000000f4", "Ответ из другой вкладки"),
+    ];
+    let histories = 0;
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    server.use(
+      http.get("*/api/chat/conversations", () =>
+        HttpResponse.json({ items: [item(D1, "Счета", new Date().toISOString())] }),
+      ),
+      http.get("*/api/chat/history", () => {
+        histories += 1;
+        return HttpResponse.json({
+          conversationId: D1,
+          title: "Счета",
+          messages: other ? after : before,
+        });
+      }),
+      http.get("*/api/privacy", () =>
+        HttpResponse.json({ cloud: { granted: true, since: null, outdated: false }, history: [] }),
+      ),
+      http.get("*/api/llm/models", () => HttpResponse.json({ items: [], selected: null })),
+      http.post("*/api/chat/send", () => {
+        const encoder = new TextEncoder();
+        const body = new ReadableStream({
+          async start(controller) {
+            controller.enqueue(
+              encoder.encode(sseText(answer.slice(0, 4)).replace("event: done\n\n", "")),
+            );
+            await gate;
+            controller.enqueue(encoder.encode(sseText(answer.slice(4))));
+            controller.close();
+          },
+        });
+        return new HttpResponse(body, { headers: { "content-type": "text/event-stream" } });
+      }),
+    );
+    const { queryClient } = renderPage();
+    expect(await screen.findByText("Один счёт.")).toBeInTheDocument();
+    await ask("А ещё?");
+    expect(await screen.findByText("Смотрю ваши счета…")).toBeInTheDocument();
+    // Другая вкладка дописала диалог, пока этот поток идёт: сигнал → перезапрос истории.
+    other = true;
+    const seen = histories;
+    await queryClient.invalidateQueries({ queryKey: orpc.chat.key() });
+    await waitFor(() => expect(histories).toBeGreaterThan(seen));
+    expect(screen.queryByText("Ответ из другой вкладки")).toBeNull();
+    release();
+    expect(await screen.findByText("Ответ из другой вкладки")).toBeInTheDocument();
+    expect(screen.getByText("Вопрос из другой вкладки")).toBeInTheDocument();
+  });
+});
+
+describe("CHAT-05, CHAT-06: правовой ответ в потоке", () => {
+  it("чип статьи раскрывает цитату; под ответом — «Не является юридической консультацией»", async () => {
+    backend();
+    const law = {
+      outcome: "cited",
+      parts: [
+        { type: "text", text: "Срок — 14 дней " },
+        { type: "cite", n: 1 },
+        { type: "text", text: "." },
+      ],
+      citations: [
+        {
+          n: 1,
+          kind: "quote",
+          versionId: "12",
+          pravoId: "H10200090",
+          actTitle: "Закон № 90-З",
+          label: "ст. 28",
+          path: "ст. 28",
+          text: "Потребитель вправе обменять товар в течение четырнадцати дней.",
+          edition: "в редакции на 21.10.2026",
+          editionOn: "2026-10-21",
+          url: "https://pravo.by/document/?guid=3871&p0=H10200090",
+          changedSince: false,
+          notes: [],
+        },
+      ],
+      notices: [{ kind: "disclaimer", text: "Не является юридической консультацией." }],
+      versionIds: ["12"],
+    };
+    sendOnce([start, { type: "data-law-answer", data: law }, { type: "finish" }]);
+    renderPage();
+    await ask("Можно ли вернуть пылесос?");
+    expect(await screen.findByText(/Срок — 14 дней/)).toBeInTheDocument();
+    expect(screen.getByText("Не является юридической консультацией.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Показать цитату: ст. 28" }));
+    expect(
+      await screen.findByText("Потребитель вправе обменять товар в течение четырнадцати дней."),
+    ).toBeInTheDocument();
+  });
+
+  it("CHAT-10: сохранённый ответ со статьёй, изменившейся позже, помечен «Статья изменилась после ответа»", async () => {
+    backend({
+      conversations: [item(D1, "Возврат", new Date().toISOString())],
+      histories: {
+        [D1]: {
+          title: "Возврат",
+          messages: [
+            {
+              id: "0190f0a0-0000-7000-8000-0000000000e1",
+              role: "user",
+              status: "complete",
+              parts: [{ type: "text", text: "Можно ли вернуть пылесос?" }],
+            },
+            {
+              id: "0190f0a0-0000-7000-8000-0000000000e2",
+              role: "assistant",
+              status: "complete",
+              parts: [{ type: "text", text: "Срок — 14 дней." }],
+              changedVersionIds: ["12"],
+            },
+          ],
+        },
+      },
+    });
+    renderPage();
+    expect(await screen.findByText("Статья изменилась после ответа")).toBeInTheDocument();
+    // «Спросить заново» возвращает прежний вопрос в поле ввода.
+    await userEvent.click(screen.getByRole("button", { name: "Спросить заново" }));
+    expect(screen.getByRole("textbox", { name: "Вопрос ассистенту" })).toHaveValue(
+      "Можно ли вернуть пылесос?",
+    );
+  });
+});
+
+describe("CHAT-03: вложения", () => {
+  const FILE = "0190f0a0-0000-7000-8000-0000000000aa";
+  const RECEIPT = "0190f0a0-0000-7000-8000-0000000000e1";
+
+  it("фото чека: загрузка и запуск конвейера, чип над полем, отправка одних вложений — в send только вид и id, ответ — карточка", async () => {
+    backend();
+    const calls: string[] = [];
+    server.use(
+      http.post("*/api/files", () => {
+        calls.push("files");
+        return HttpResponse.json({
+          files: [{ id: FILE, name: "check.jpg", mime: "image/jpeg", size: 1000 }],
+        });
+      }),
+      http.post("*/api/receipts", async ({ request }) => {
+        calls.push(`receipts ${JSON.stringify(await request.json())}`);
+        return HttpResponse.json({ items: [{ id: RECEIPT, fileId: FILE }] });
+      }),
+      http.get(`*/api/receipts/${RECEIPT}`, () =>
+        HttpResponse.json({
+          receipt: {
+            id: RECEIPT,
+            status: "processing",
+            stage: "reading",
+            disputedLines: [],
+            errorCode: null,
+            duplicateOf: null,
+            storeName: null,
+            purchaseDate: null,
+            purchaseTime: null,
+            total: null,
+            confirmed: false,
+            rechecks: 0,
+            createdAt: "2026-10-31T09:00:00.000Z",
+          },
+          unp: null,
+          address: null,
+          payment: null,
+          receiptDiscount: { minor: 0, currency: "BYN" },
+          remainder: { minor: 0, currency: "BYN" },
+          mismatches: [],
+          items: [],
+          attempts: [],
+          fileId: FILE,
+          operation: null,
+          mns: null,
+          traceId: null,
+        }),
+      ),
+    );
+    const sent = sendOnce([
+      start,
+      { type: "data-attachment", data: { kind: "receipt", id: RECEIPT } },
+      { type: "finish" },
+    ]);
+    renderPage();
+    const input = await screen.findByLabelText("Фото чека", { selector: "input" });
+    await userEvent.upload(input, new File(["x"], "check.jpg", { type: "image/jpeg" }));
+    const chips = await screen.findByRole("list", { name: "Вложения" });
+    expect(within(chips).getByText("check.jpg")).toBeInTheDocument();
+    expect(calls).toEqual(["files", `receipts ${JSON.stringify({ fileIds: [FILE] })}`]);
+    // Одни вложения без текста отправляются: кнопка «Отправить» доступна.
+    await userEvent.click(screen.getByRole("button", { name: "Отправить" }));
+    expect(await screen.findByText("Распознаётся")).toBeInTheDocument();
+    expect(sent).toEqual([
+      expect.objectContaining({
+        text: "",
+        attachments: [{ kind: "receipt", id: RECEIPT }],
+      }),
+    ]);
+    // Вложения ушли — чипов над полем больше нет.
+    expect(screen.queryByRole("list", { name: "Вложения" })).toBeNull();
+  });
+
+  it("файл не принят (тип не из белого списка) — причина словами, вложения нет, отправлять нечего", async () => {
+    backend();
+    server.use(
+      http.post("*/api/files", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "FILE_TYPE_NOT_ALLOWED",
+            status: 415,
+            message: "FILE_TYPE_NOT_ALLOWED",
+            data: { requestId: "req-00000001", params: { name: "virus.exe" } },
+          },
+          { status: 415 },
+        ),
+      ),
+    );
+    renderPage();
+    const input = await screen.findByLabelText("Выписка банка", { selector: "input" });
+    await userEvent.upload(input, new File(["x"], "virus.exe"), { applyAccept: false });
+    expect(await screen.findByRole("alert")).toHaveTextContent("Не удалось принять файл");
+    expect(screen.queryByRole("list", { name: "Вложения" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Отправить" })).toBeDisabled();
+  });
+});

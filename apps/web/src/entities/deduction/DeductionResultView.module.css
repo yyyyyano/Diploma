@@ -80,7 +80,7 @@
 
 .note svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-2);
 }
 
 .warn {
@@ -101,7 +101,7 @@
 
 .problem svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-2);
 }
 
 .heading {

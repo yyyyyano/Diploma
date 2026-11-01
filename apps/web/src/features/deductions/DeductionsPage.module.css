@@ -128,7 +128,7 @@
 
 .importantItem svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-2);
   color: var(--brand);
 }
 

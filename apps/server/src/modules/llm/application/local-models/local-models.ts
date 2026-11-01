@@ -47,7 +47,7 @@ export interface SelfTestView {
 }
 
 export interface LocalModelsOverview {
-  readonly state: "absent" | "downloading" | "ready" | "failed";
+  readonly state: "absent" | "pending" | "downloading" | "ready" | "failed";
   readonly bytesDone: number;
   readonly bytesTotal: number;
   readonly models: ModelView[];

@@ -14,6 +14,7 @@ import { ChecklistCard } from "./ChecklistCard.tsx";
 import classes from "./cards.module.css";
 import { ConfirmCard } from "./ConfirmCard.tsx";
 import { DeductionCard } from "./DeductionCard.tsx";
+import { EventCard } from "./EventCard.tsx";
 import { LawAnswerView } from "./LawAnswerView.tsx";
 import { TransactionResultCard } from "./TransactionResultCard.tsx";
 
@@ -67,6 +68,7 @@ export const TOOL_CARDS: Readonly<Record<string, ComponentType<ToolCardProps>>> 
   calculate_deduction: ({ output, messageId }) => (
     <DeductionCard output={output} messageId={messageId} />
   ),
+  create_event: ({ output }) => <EventCard output={output} />,
   get_receipt: Receipt,
   // Удаляющие и массовые действия — только вопрос «Да/Нет» (AGT-07): результат один и тот же у всех.
   delete_transaction: ({ output }) => <ConfirmCard output={output} />,

@@ -7,7 +7,10 @@ export function toUiMessages(messages: readonly ChatMessage[]): UIMessage[] {
     id: message.id,
     role: message.role,
     parts: message.parts as UIMessage["parts"],
-    metadata: { status: message.status },
+    metadata: {
+      status: message.status,
+      ...(message.answeredBy === undefined ? {} : { answeredBy: message.answeredBy }),
+    },
   }));
 }
 
@@ -16,6 +19,8 @@ export interface AnswerMetadata {
   readonly runId?: string;
   readonly conversationId?: string;
   readonly status?: ChatMessage["status"];
+  /** LLM-10: кто ответил — из куска finish (живой ответ) или из сохранённого сообщения. */
+  readonly answeredBy?: { readonly model: string; readonly unavailable: readonly string[] };
 }
 
 export function metadataOf(message: UIMessage | undefined): AnswerMetadata {

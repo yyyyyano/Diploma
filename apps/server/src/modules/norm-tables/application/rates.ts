@@ -5,8 +5,9 @@ import type { ProposeRateInput, RateRow, RatesTable } from "@kosht/contract";
 import type { Clock } from "@kosht/kernel";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
+import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
-import { paramDef, type RateUnit } from "../domain/params.ts";
+import { numberText, paramDef, textHasNumber, type RateUnit } from "../domain/params.ts";
 import { pathKeyOf } from "../domain/source.ts";
 import {
   allRates,
@@ -43,6 +44,8 @@ export type RateAnswer =
 
 export interface RatesDeps {
   readonly system: SystemDb;
+  /** Текст пункта нормы: версия, где найдено число, нужна ответу `rate` (основание в трассе); сверка LAW-33 пишет её только при изменениях. */
+  readonly legalBase: Pick<LegalBaseFacade, "fragmentsUnder">;
   readonly clock: Clock;
   /** Публикация `norm-tables.values-confirmed` в транзакции подтверждающего администратора. */
   readonly publishConfirmed: (tx: ScopedDb, ids: readonly string[]) => Promise<void>;
@@ -86,6 +89,13 @@ export function makeRates(d: RatesDeps) {
         reason: (await pendingAt(d.system, param, on)) ? "unconfirmed" : "no-data",
       };
     }
+    // Версия фрагмента, где найдено число: записанная сверкой LAW-33 или найденная сейчас в тексте пункта (акт загружен впервые, правок не было).
+    let versionId = row.sourceVersionId;
+    if (versionId === null && row.sourceAct !== null && row.sourcePath !== null) {
+      const fragments = await d.legalBase.fragmentsUnder(row.sourceAct, row.sourcePath);
+      const needle = numberText(def.unit, row.value);
+      versionId = fragments.find((f) => textHasNumber(f.text, needle))?.versionId ?? null;
+    }
     return {
       found: true,
       param,
@@ -101,7 +111,7 @@ export function makeRates(d: RatesDeps) {
       },
       confirmedBy: row.confirmedByKind === "developer" ? "developer" : "admin",
       confirmedOn: row.confirmedOn,
-      versionId: row.sourceVersionId,
+      versionId,
     };
   }
 

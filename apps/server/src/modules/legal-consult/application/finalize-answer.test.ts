@@ -315,6 +315,7 @@ describe("LEGAL-08: вопрос о прошлой дате", () => {
     source: { act: "Hk0900071", article: "209", point: "1.1", url: null },
     confirmedBy: "admin",
     confirmedOn: "2026-11-02",
+    versionId: null,
   };
   const asOf = (day: string, param?: string) => ({
     draft: `Вычет [[F${F209}]].`,

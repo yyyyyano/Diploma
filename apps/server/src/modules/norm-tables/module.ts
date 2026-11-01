@@ -24,6 +24,7 @@ export function createNormTablesModule({
 }: ModuleDeps<NormTablesFacades, SystemPlatform>) {
   const rates = makeRates({
     system: platform.system,
+    legalBase: facades.legalBase,
     clock: platform.clock,
     publishConfirmed: (tx, ids) => platform.events.publish(tx, valuesConfirmed, { ids: [...ids] }),
   });

@@ -22,9 +22,12 @@ afterAll(async () => {
   await db.drop();
 });
 
+/** Страницы НК в этом тесте не загружены: текста пункта нет, версии фрагмента тоже. */
+const noText = { fragmentsUnder: async () => [] };
 const rates = () =>
   makeRates({
     system,
+    legalBase: noText,
     clock,
     publishConfirmed: async (_tx, ids) => {
       published.push([...ids]);
@@ -88,7 +91,33 @@ describe("TAX-03, LEGAL-08: ответ калькулятору — только
       source: { act: "Hk0900071", article: "209", point: "1.2" },
       confirmedBy: "developer",
       confirmedOn: "2026-10-30",
-      // Акт ещё не проиндексирован (сверки LAW-33 не было) — версии фрагмента нет; после сверки она в ответе (main/admin-rates).
+      // Акт ещё не проиндексирован: текста пункта нет — версии фрагмента нет (с загруженным актом — ниже).
+      versionId: null,
+    });
+  });
+
+  it("с загруженным текстом пункта в ответе версия фрагмента, где найдено число — основание для «Откуда эта цифра?»", async () => {
+    const withText = makeRates({
+      system,
+      legalBase: {
+        fragmentsUnder: async (act, path) =>
+          act === "Hk0900071" && path === "a209/p1.2"
+            ? [
+                {
+                  versionId: "019e1111-0000-7000-8000-000000000001",
+                  text: "1.2. в размере 63 белорусских рублей в месяц на ребенка до восемнадцати лет",
+                } as never,
+              ]
+            : [],
+      },
+      clock,
+      publishConfirmed: async () => {},
+    });
+    expect(await withText.value("ndfl.std-deduction.child", "2026-05-17")).toMatchObject({
+      versionId: "019e1111-0000-7000-8000-000000000001",
+    });
+    // Число в тексте пункта не нашлось — версии нет: основанием служит только то, что действительно подтверждено текстом.
+    expect(await withText.value("ndfl.std-deduction.child-increased", "2026-05-17")).toMatchObject({
       versionId: null,
     });
   });
@@ -153,6 +182,7 @@ describe("ADM-11: правка и подтверждение", () => {
     const [id] = await ids("ndfl.std-deduction.child", "pending");
     const failing = makeRates({
       system,
+      legalBase: noText,
       clock,
       publishConfirmed: async () => {
         throw new Error("outbox down");

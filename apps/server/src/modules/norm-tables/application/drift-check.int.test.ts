@@ -20,7 +20,13 @@ afterAll(async () => {
   await db.drop();
 });
 
-const rates = () => makeRates({ system, clock, publishConfirmed: async () => {} });
+const rates = () =>
+  makeRates({
+    system,
+    legalBase: { fragmentsUnder: async () => [] },
+    clock,
+    publishConfirmed: async () => {},
+  });
 const adminScope = () => createScopedDb(db.pool, testScope({ user: 1, household: 1 }));
 const ids = async (param: string, status: string) =>
   (await rates().table()).items

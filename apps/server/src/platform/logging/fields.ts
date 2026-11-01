@@ -35,6 +35,8 @@ const TOKEN_FIELDS = [
   "listener",
   "template",
   "transport",
+  /** Публичное имя Telegram-бота (`telegram.started`): токена в нём нет. */
+  "bot",
 ] as const;
 
 type NumberField = (typeof NUMBER_FIELDS)[number];

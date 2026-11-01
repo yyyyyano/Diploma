@@ -30,6 +30,7 @@ import type { legal } from "./locales/ru/legal.ts";
 import type { xls } from "./locales/ru/xls.ts";
 import type { rates } from "./locales/ru/rates.ts";
 import type { weekly } from "./locales/ru/weekly.ts";
+import type { telegram } from "./locales/ru/telegram.ts";
 import type { afford } from "./locales/ru/afford.ts";
 import type { calendar } from "./locales/ru/calendar.ts";
 import type { deductions } from "./locales/ru/deductions.ts";
@@ -133,6 +134,8 @@ declare module "i18next" {
     afford: typeof afford;
     // Подгружается с карточкой «Итоги недели» и настройками (weeklyTexts), серверу — `createWeeklyT`; в `resources` не входит.
     weekly: typeof weekly;
+    // Только серверу (бот, `createTelegramT`) и вкладке «Telegram» настроек (telegramTexts); в `resources` не входит.
+    telegram: typeof telegram;
     // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.
     legal: typeof legal;
     // Только серверу (`createXlsT`): листы и шапки файла Excel; сайт словарь не грузит.

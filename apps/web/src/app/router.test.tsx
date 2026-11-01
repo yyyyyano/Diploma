@@ -44,6 +44,7 @@ const EMPTY_HOME = {
     window: null,
     reason: "insufficient-history",
   },
+  foundDeductions: [],
   upcoming: [],
 };
 

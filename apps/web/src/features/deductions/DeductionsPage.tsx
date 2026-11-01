@@ -14,12 +14,25 @@ import type { Money as MoneyValue } from "@kosht/kernel";
 import { Button, Radio, SegmentedControl, TextInput } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, ArrowLeftRight, CheckCircle2, Clock, ShieldCheck } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeftRight,
+  CheckCircle2,
+  Clock,
+  SearchX,
+  ShieldCheck,
+} from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { DeductionResultView, useDeductionTexts } from "../../entities/deduction/index.ts";
+import {
+  DeductionResultView,
+  FoundCard,
+  useDeductionTexts,
+  useFoundChange,
+  useMarkShown,
+} from "../../entities/deduction/index.ts";
 import { orpc } from "../../lib/api.ts";
-import { PageHeader, SkeletonCard } from "../../ui/index.ts";
+import { EmptyState, PageHeader, SkeletonCard } from "../../ui/index.ts";
 import classes from "./DeductionsPage.module.css";
 import { DeductionsSearch } from "./model/search.ts";
 
@@ -85,6 +98,8 @@ export function DeductionsPage({ search }: { readonly search: DeductionsSearch }
             </p>
           )}
         </section>
+
+        <FoundSection />
 
         <section className={classes.card} aria-labelledby="ded-calc">
           <div>
@@ -277,5 +292,82 @@ function CalcForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Найденные вычеты (TAX-20): активные и оформленные карточками, отклонённые — под спойлером с «Вернуть». */
+function FoundSection() {
+  const { t } = useTranslation("deductions");
+  const found = useQuery(orpc.tax.found.queryOptions());
+  const { change, pending, failed, toast } = useFoundChange();
+  const items = found.data?.items ?? [];
+  useMarkShown(items);
+  const active = items.filter((item) => item.status !== "dismissed");
+  const dismissed = items.filter((item) => item.status === "dismissed");
+  return (
+    <section aria-labelledby="ded-found" className={classes.foundSection}>
+      <div className={classes.foundHead}>
+        <h2 className={classes.heading} id="ded-found">
+          {t("found.title")}
+        </h2>
+        <p className={classes.muted}>{t("found.hint")}</p>
+      </div>
+      {found.isPending && <SkeletonCard />}
+      {found.isError && (
+        <p className={classes.error} role="alert">
+          <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+          {t("found.error")}
+        </p>
+      )}
+      {found.isSuccess && items.length === 0 && (
+        <EmptyState
+          icon={SearchX}
+          headingLevel={3}
+          title={t("found.empty.title")}
+          description={t("found.empty.text")}
+          actions={
+            <>
+              <Button component={Link} to="/documents">
+                {t("found.empty.upload")}
+              </Button>
+              <Button component={Link} to="/memory" variant="default">
+                {t("found.empty.profile")}
+              </Button>
+            </>
+          }
+        />
+      )}
+      {active.map((item) => (
+        <FoundCard
+          key={item.id}
+          item={item}
+          busy={pending}
+          onChange={(status) => change(item.id, status)}
+        />
+      ))}
+      {dismissed.length > 0 && (
+        <details>
+          <summary className={classes.summary}>
+            {t("found.dismissedTitle")} ({dismissed.length})
+          </summary>
+          <div className={classes.foundList}>
+            {dismissed.map((item) => (
+              <FoundCard
+                key={item.id}
+                item={item}
+                busy={pending}
+                onChange={(status) => change(item.id, status)}
+              />
+            ))}
+          </div>
+        </details>
+      )}
+      {failed && (
+        <p className={classes.error} role="alert">
+          {t("found.changeError")}
+        </p>
+      )}
+      {toast}
+    </section>
   );
 }

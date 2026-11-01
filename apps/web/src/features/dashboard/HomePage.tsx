@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { UndoActionToast } from "../../entities/action/index.ts";
 import { useAccountName } from "../../entities/account/index.ts";
 import { categoryRefOf, useCategoryLookup } from "../../entities/category/index.ts";
+import { FoundBanner } from "../../entities/deduction/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
 import { ContributeDialog, GoalCard } from "../../entities/goal/index.ts";
 import { orpc } from "../../lib/api.ts";
@@ -140,6 +141,9 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
               </>
             }
           />
+        )}
+        {data !== undefined && data.foundDeductions.length > 0 && (
+          <FoundBanner items={data.foundDeductions} />
         )}
         {data !== undefined && data.hasData && (
           <>

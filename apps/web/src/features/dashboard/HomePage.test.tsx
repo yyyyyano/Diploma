@@ -8,7 +8,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -119,6 +119,7 @@ const OVERVIEW = {
     window: { from: "2026-07-01", to: "2026-09-30" },
     reason: null,
   },
+  foundDeductions: [],
   upcoming: [
     {
       id: ID(5),
@@ -227,6 +228,7 @@ describe("DES-16: состояния «Главной»", () => {
         months: [],
         limits: [],
         goals: [],
+        foundDeductions: [],
         upcoming: [],
       }),
     );
@@ -435,5 +437,82 @@ describe("BUD-02, BUD-04, REC-03: лимиты, цели, платежи, сче
     expect(await screen.findByText(/Лимитов пока нет/)).toBeInTheDocument();
     expect(screen.getByText(/Целей пока нет/)).toBeInTheDocument();
     expect(screen.getByText("В ближайшие 30 дней регулярных платежей нет.")).toBeInTheDocument();
+  });
+});
+
+describe("TAX-20, DASH-02, P5: найденный вычет — янтарная карточка главной", () => {
+  const FOUND = {
+    id: "0190f0a0-0000-7000-8000-0000000000e1",
+    kind: "education",
+    status: "new",
+    reason: null,
+    year: 2026,
+    amount: { amount: byn(26_000), traceId: TRACE(8) },
+    payee: "БГУ",
+    operation: { id: ID(7), on: "2026-09-12", amount: byn(200_000) },
+    foundOn: "2026-10-28",
+  };
+
+  it("основание и сумма «до» с ⓘ; «Показать, как получить» ведёт в «Налоговые вычеты»; новая находка помечается показанной", async () => {
+    const shown: unknown[] = [];
+    server.use(
+      overview({ foundDeductions: [FOUND] }),
+      http.post("*/api/tax/found/shown", async ({ request }) => {
+        shown.push(await request.json());
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderPage();
+    expect(await screen.findByText("Кошт нашёл налоговый вычет")).toBeInTheDocument();
+    expect(screen.getByText(/Вы оплатили обучение: БГУ, 12\.09\.2026/u)).toBeInTheDocument();
+    expect(screen.getAllByText(/260,00/u)).not.toHaveLength(0);
+    expect(
+      screen.getByRole("button", { name: /Откуда эта цифра: Социальный вычет/u }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Показать, как получить" })).toHaveAttribute(
+      "href",
+      "/deductions",
+    );
+    await waitFor(() => expect(shown).toEqual([{ ids: [FOUND.id] }]));
+  });
+
+  it("«Это не моё» шлёт отклонение и показывает «Отменить»; вторая находка названа в «Ещё: …»", async () => {
+    const sent: unknown[] = [];
+    server.use(
+      overview({
+        foundDeductions: [
+          { ...FOUND, status: "shown" },
+          {
+            ...FOUND,
+            id: "0190f0a0-0000-7000-8000-0000000000e2",
+            kind: "children",
+            status: "shown",
+            payee: null,
+            operation: null,
+            amount: { amount: byn(819), traceId: TRACE(8) },
+          },
+        ],
+      }),
+      http.post("*/api/tax/found/status", async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json({
+          found: { ...FOUND, status: "dismissed" },
+          undoToken: "0190f0a0-0000-7000-8000-0000000000f9",
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByText(/Ещё: Стандартный вычет на детей/u)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Это не моё" }));
+    expect(await screen.findByRole("button", { name: "Отменить" })).toBeInTheDocument();
+    expect(sent).toEqual([{ id: FOUND.id, status: "dismissed" }]);
+  });
+
+  it("находок нет — карточки нет", async () => {
+    server.use(overview({ foundDeductions: [] }));
+    renderPage();
+    await screen.findByText("Главная");
+    expect(screen.queryByText("Кошт нашёл налоговый вычет")).toBeNull();
   });
 });

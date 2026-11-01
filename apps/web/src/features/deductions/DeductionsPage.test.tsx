@@ -96,13 +96,16 @@ function profile(types: readonly string[] | null) {
   return http.get("*/api/profile/facts", () => HttpResponse.json({ onDate: "2026-11-01", facts }));
 }
 
+/** Найденных вычетов нет — блок «Найденные вычеты» показывает пустое состояние и не мешает расчёту. */
+const noFound = http.get("*/api/tax/found", () => HttpResponse.json({ items: [] }));
+
 const checklistHandler = http.post("*/api/legal-consult/checklist", () =>
   HttpResponse.json(checklist),
 );
 
 describe("TAX-02, DES-16: профиль занятости", () => {
   it("загрузка — скелетон; потом тип занятости из профиля словами и ссылка «Изменить в профиле»", async () => {
-    server.use(profile(["employee"]), checklistHandler);
+    server.use(noFound, profile(["employee"]), checklistHandler);
     renderPage();
     expect(
       await screen.findByText(/Тип занятости \(из профиля\): Наёмный работник/u),
@@ -114,7 +117,7 @@ describe("TAX-02, DES-16: профиль занятости", () => {
   });
 
   it("профиль без типа занятости — считаем как наёмного работника, с этим сказано", async () => {
-    server.use(profile(null), checklistHandler);
+    server.use(noFound, profile(null), checklistHandler);
     renderPage();
     expect(await screen.findByText(/Тип занятости в профиле не указан/u)).toBeVisible();
   });
@@ -135,6 +138,7 @@ describe("TAX-07, пример 1: обучение", () => {
   it("пусто → сумма → «Посчитать» шлёт вид и сумму в копейках; ответ сервера показан как есть: до 260,00 BYN, ставка 13 %, «Откуда эта цифра?»", async () => {
     const sent: unknown[] = [];
     server.use(
+      noFound,
       profile(["employee"]),
       checklistHandler,
       http.post("*/api/tax/calculate", async ({ request }) => {
@@ -163,7 +167,7 @@ describe("TAX-07, пример 1: обучение", () => {
   });
 
   it("не число в поле — подсказка у поля, кнопка недоступна", async () => {
-    server.use(profile(["employee"]), checklistHandler);
+    server.use(noFound, profile(["employee"]), checklistHandler);
     const user = userEvent.setup();
     renderPage();
     await user.type(
@@ -177,6 +181,7 @@ describe("TAX-07, пример 1: обучение", () => {
   it("облагаемый доход за год уходит во входе расчёта, когда его указали", async () => {
     const sent: unknown[] = [];
     server.use(
+      noFound,
       profile(["employee"]),
       checklistHandler,
       http.post("*/api/tax/calculate", async ({ request }) => {
@@ -204,6 +209,7 @@ describe("TAX-07, пример 2 и 3: жильё и дети", () => {
   it("вкладка «Жильё» из адреса: поле расходов и зарплаты; ответ — срок «≈ 41 мес.» и пометка «оценка»", async () => {
     const sent: unknown[] = [];
     server.use(
+      noFound,
       profile(["employee"]),
       http.post("*/api/legal-consult/checklist", () =>
         HttpResponse.json({ ...checklist, id: "deduction-housing" }),
@@ -248,7 +254,7 @@ describe("TAX-07, пример 2 и 3: жильё и дети", () => {
   });
 
   it("вкладка «Дети»: суммы не вводят — считается по профилю; кнопка доступна сразу, есть ссылка на детей в профиле", async () => {
-    server.use(profile(["employee"]), checklistHandler);
+    server.use(noFound, profile(["employee"]), checklistHandler);
     renderPage({ kind: "children" });
     expect(await screen.findByRole("button", { name: "Посчитать" })).toBeEnabled();
     expect(screen.getByRole("link", { name: "Дети в профиле" })).toHaveAttribute("href", "/memory");
@@ -262,6 +268,7 @@ describe("TAX-02, TAX-03: нет расчёта — объяснение, а н�
     ["no-children", /нет детей до 18 лет/u],
   ] as const)("причина %s названа словами, суммы нет", async (reason, text) => {
     server.use(
+      noFound,
       profile(["employee"]),
       checklistHandler,
       http.post("*/api/tax/calculate", () =>
@@ -293,6 +300,7 @@ describe("TAX-02, TAX-03: нет расчёта — объяснение, а н�
 
   it("ошибка расчёта — что случилось и что сделать", async () => {
     server.use(
+      noFound,
       profile(["employee"]),
       checklistHandler,
       http.post("*/api/tax/calculate", () =>
@@ -324,6 +332,7 @@ describe("TAX-04, PROF-04: вопрос о зарплате до вычета н
     const facts: unknown[] = [];
     let calls = 0;
     server.use(
+      noFound,
       profile(["employee"]),
       checklistHandler,
       http.post("*/api/tax/calculate", () => {
@@ -357,7 +366,7 @@ describe("TAX-04, PROF-04: вопрос о зарплате до вычета н
 
 describe("важное и подпись", () => {
   it("«Важно знать», «Не является юридической консультацией» и ссылка на базу законов", async () => {
-    server.use(profile(["employee"]), checklistHandler);
+    server.use(noFound, profile(["employee"]), checklistHandler);
     renderPage();
     expect(await screen.findByRole("heading", { name: "Важно знать" })).toBeVisible();
     expect(screen.getByText("Не является юридической консультацией")).toBeVisible();
@@ -365,5 +374,179 @@ describe("важное и подпись", () => {
       "href",
       "/laws",
     );
+  });
+});
+
+describe("TAX-20, NOTIF-02, P5: найденные вычеты на экране", () => {
+  const BASE = {
+    status: "new",
+    reason: null,
+    year: 2026,
+    amount: { amount: byn(26_000), traceId: TRACE },
+    payee: "БГУ",
+    operation: {
+      id: "0190f0a0-0000-7000-8000-0000000000d1",
+      on: "2026-09-12",
+      amount: byn(200_000),
+    },
+    foundOn: "2026-10-28",
+  };
+  const EDU = { ...BASE, id: "0190f0a0-0000-7000-8000-0000000000e1", kind: "education" };
+  const HOUSING = {
+    ...BASE,
+    id: "0190f0a0-0000-7000-8000-0000000000e2",
+    kind: "housing",
+    reason: "ask-queue",
+    amount: null,
+    payee: "Беларусбанк",
+  };
+  const OLD = {
+    ...BASE,
+    id: "0190f0a0-0000-7000-8000-0000000000e3",
+    kind: "children",
+    status: "dismissed",
+    operation: null,
+  };
+  const found = (items: readonly unknown[]) =>
+    http.get("*/api/tax/found", () => HttpResponse.json({ items }));
+
+  it("новая находка: основание — оплата БГУ, сумма «до» 260,00 с ⓘ, статус «Новый», ссылка на операцию; её видели — «показан»", async () => {
+    const shown: unknown[] = [];
+    server.use(
+      found([EDU]),
+      profile(["employee"]),
+      checklistHandler,
+      http.post("*/api/tax/found/shown", async ({ request }) => {
+        shown.push(await request.json());
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderPage();
+    expect(
+      await screen.findByRole("heading", { name: "Социальный вычет на обучение" }),
+    ).toBeVisible();
+    expect(screen.getByText("Новый")).toBeVisible();
+    expect(screen.getByText(/Вы оплатили обучение: БГУ, 12\.09\.2026/u)).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /Откуда эта цифра: Социальный вычет/u }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: "Открыть операцию" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("op=0190f0a0-0000-7000-8000-0000000000d1"),
+    );
+    await waitFor(() => expect(shown).toEqual([{ ids: [EDU.id] }]));
+  });
+
+  it("«Это не моё»: сразу, с «Отменить»; «Отменить» шлёт токен", async () => {
+    const sent: unknown[] = [];
+    const undone: unknown[] = [];
+    server.use(
+      found([EDU]),
+      profile(["employee"]),
+      checklistHandler,
+      http.post("*/api/tax/found/shown", () => HttpResponse.json({ ok: true })),
+      http.post("*/api/tax/found/status", async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json({
+          found: { ...EDU, status: "dismissed" },
+          undoToken: "0190f0a0-0000-7000-8000-0000000000f9",
+        });
+      }),
+      http.post("*/api/actions/undo", async ({ request }) => {
+        undone.push(await request.json());
+        return HttpResponse.json({ status: "undone" });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: "Это не моё" }));
+    expect(sent).toEqual([{ id: EDU.id, status: "dismissed" }]);
+    expect(await screen.findByText(/Больше не предлагаю этот вычет/u)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Отменить" }));
+    await waitFor(() =>
+      expect(undone).toEqual([{ token: "0190f0a0-0000-7000-8000-0000000000f9" }]),
+    );
+  });
+
+  it("«Показать, как получить» раскрывает чек-лист за этим вычетом (субъект deduction:<id>)", async () => {
+    const asked: unknown[] = [];
+    server.use(
+      found([EDU]),
+      profile(["employee"]),
+      http.post("*/api/tax/found/shown", () => HttpResponse.json({ ok: true })),
+      http.post("*/api/legal-consult/checklist", async ({ request }) => {
+        asked.push(await request.json());
+        return HttpResponse.json(checklist);
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: "Показать, как получить" }));
+    expect(await screen.findByRole("heading", { name: "Вычет на обучение" })).toBeVisible();
+    expect(asked).toContainEqual({
+      id: "deduction-education",
+      subject: { kind: "deduction", id: EDU.id },
+    });
+  });
+
+  it("жильё без отмеченного учёта: «Нужно уточнить» и один вопрос; «Да» сохраняет факт housingQueue", async () => {
+    const facts: unknown[] = [];
+    server.use(
+      found([HOUSING]),
+      profile(["employee"]),
+      checklistHandler,
+      http.post("*/api/tax/found/shown", () => HttpResponse.json({ ok: true })),
+      http.post("*/api/profile/facts", async ({ request }) => {
+        facts.push(await request.json());
+        return HttpResponse.json({ fact: {}, undoToken: "x" });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    expect(await screen.findByText("Нужно уточнить")).toBeVisible();
+    expect(screen.getByText("Вы состояли на таком учёте?")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Да, состоял(а)" }));
+    await waitFor(() =>
+      expect(facts).toEqual([{ value: { key: "housingQueue", status: "now", since: null } }]),
+    );
+  });
+
+  it("отклонённые — под спойлером «Отклонённые (1)» с «Вернуть»", async () => {
+    const sent: unknown[] = [];
+    server.use(
+      found([OLD]),
+      profile(["employee"]),
+      checklistHandler,
+      http.post("*/api/tax/found/status", async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json({
+          found: { ...OLD, status: "shown" },
+          undoToken: "0190f0a0-0000-7000-8000-0000000000f8",
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByText("Отклонённые (1)"));
+    await user.click(screen.getByRole("button", { name: "Вернуть" }));
+    expect(sent).toEqual([{ id: OLD.id, status: "shown" }]);
+  });
+
+  it("находок нет — «Пока ничего не нашёл» и шаги", async () => {
+    server.use(found([]), profile(["employee"]), checklistHandler);
+    renderPage();
+    expect(await screen.findByText("Пока ничего не нашёл")).toBeVisible();
+    expect(screen.getByRole("link", { name: "Загрузить выписку" })).toBeVisible();
+  });
+
+  it("ошибка загрузки находок — что случилось, расчёт при этом работает", async () => {
+    server.use(
+      http.get("*/api/tax/found", () => HttpResponse.json({}, { status: 500 })),
+      profile(["employee"]),
+      checklistHandler,
+    );
+    renderPage();
+    expect(await screen.findByText(/Не удалось загрузить найденные вычеты/u)).toBeVisible();
+    expect(screen.getByRole("button", { name: "Посчитать" })).toBeVisible();
   });
 });

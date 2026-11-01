@@ -6,6 +6,7 @@ import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { AccountId, AccountKind, CurrencyCode } from "../accounts/accounts.contract.ts";
 import { BudgetGoal, BudgetLimit } from "../budgets/budgets.contract.ts";
+import { CalendarEntry } from "../calendar/calendar.contract.ts";
 import { LocalDate, Money } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 import { FreeBalanceReason } from "../fin/fin.contract.ts";
@@ -20,6 +21,8 @@ export type Amount = z.infer<typeof Amount>;
 export const MAX_CATEGORY_ROWS = 6;
 /** Найденных вычетов на главной — не больше: карточка не вытесняет остальное (DASH-02). */
 export const MAX_FOUND_ON_HOME = 3;
+/** События календаря на главной (CAL-01, DASH-02): ближайшие хранимые события — не больше стольких. */
+export const MAX_EVENTS_ON_HOME = 4;
 
 export const DashboardPeriod = z
   .strictObject({ from: LocalDate.schema, to: LocalDate.schema })
@@ -101,6 +104,8 @@ export const DashboardOverview = z.strictObject({
   upcoming: z.array(DashboardUpcoming).max(5),
   /** Найденные вычеты (TAX-20, DASH-02): новые и показанные, свежие первыми, не больше трёх — янтарная карточка. */
   foundDeductions: z.array(FoundDeduction).max(MAX_FOUND_ON_HOME),
+  /** Ближайшие события календаря на 30 дней: налоги, гарантии, страховки и свои (не платежи — они выше), не больше четырёх. */
+  events: z.array(CalendarEntry).max(MAX_EVENTS_ON_HOME),
 });
 export type DashboardOverview = z.infer<typeof DashboardOverview>;
 

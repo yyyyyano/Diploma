@@ -111,6 +111,10 @@ export const TRACE_KEYS = [
   "tax.saving.housingTotal",
   "tax.saving.housingYearly",
   "tax.saving.housingTwelveMonths",
+  // CAL-01: календарь — сумма события, итог платежей и итог поступлений за период.
+  "calendar.eventAmount",
+  "calendar.paymentsTotal",
+  "calendar.incomeTotal",
   // AGT-03: калькулятор агента — слагаемое, сумма, разность, произведение на дробь, доля и календарный промежуток.
   "calculator.operand",
   "calculator.sum",

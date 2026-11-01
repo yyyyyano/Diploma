@@ -400,7 +400,7 @@ export const MODULES: readonly ModuleDef[] = [
     tier: 3,
     spec: "XLS-01…04",
     responsibility: "Excel с живыми формулами (без диаграмм, R43)",
-    dependsOn: ["transactions", "categories", "budgets", "files"],
+    dependsOn: ["transactions", "categories", "budgets", "accounts"],
     tables: [],
     publishes: [],
   },

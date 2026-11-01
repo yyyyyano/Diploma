@@ -437,3 +437,5 @@ export {
   weeklyContract,
 } from "./weekly/weekly.contract.ts";
 export { contract } from "./router.ts";
+export { xlsExportContract } from "./xls-export/xls-export.contract.ts";
+export { XlsExportLink } from "./xls-export/xls-export.card.ts";

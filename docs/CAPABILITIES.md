@@ -70,7 +70,7 @@
 | `afford` | AFF-01…08 | три сценария покупки, просадки, безопасный платёж по ПДН | accounts, transactions, recurring, fin, budgets, calendar, norm-tables, profile, explain | — | — |
 | `weekly` | WEEK-01…03 | итоги недели: числа — `calc`, текст — модель | transactions, budgets, calendar, categories, recurring, tax, llm, notifications, explain, identity | user | — |
 | `dashboard` | DASH-01…04 | сборка главного экрана (только чтение, пачками) | accounts, transactions, fin, budgets, recurring, calendar, tax, weekly, explain | — | — |
-| `xls-export` | XLS-01…04 | Excel с живыми формулами (без диаграмм, R43) | transactions, categories, budgets, files | — | — |
+| `xls-export` | XLS-01…04 | Excel с живыми формулами (без диаграмм, R43) | transactions, categories, budgets, accounts | — | — |
 <!-- /capabilities:tier-3 -->
 
 ## Ярус 4 — входы и оркестрация

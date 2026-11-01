@@ -29,6 +29,7 @@ import { transactionsContract } from "./transactions/transactions.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 import { weeklyContract } from "./weekly/weekly.contract.ts";
 import { voiceContract } from "./voice/voice.contract.ts";
+import { xlsExportContract } from "./xls-export/xls-export.contract.ts";
 
 export const contract = {
   system: systemContract,
@@ -56,6 +57,7 @@ export const contract = {
   statements: statementsContract,
   chat: chatContract,
   voice: voiceContract,
+  xlsExport: xlsExportContract,
   llm: llmContract,
   legalBase: legalBaseContract,
   legalConsult: legalConsultContract,

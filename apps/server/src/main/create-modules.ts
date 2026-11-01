@@ -281,7 +281,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       transactions: transactionsModule.facade,
       categories: categoriesModule.facade,
       budgets: budgetsModule.facade,
-      files: filesModule.facade,
+      accounts: accountsModule.facade,
     },
   });
   const voiceModule = createVoiceModule({

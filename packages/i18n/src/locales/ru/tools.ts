@@ -39,4 +39,5 @@ export const tools = {
   law_act_card: "Смотрю карточку акта…",
   get_receipt: "Смотрю чек…",
   receipt_status: "Проверяю, как идёт разбор чека…",
+  export_excel: "Готовлю файл Excel…",
 } as const;

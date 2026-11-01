@@ -2,12 +2,12 @@
 // (scope конверта, перепроверенный identity); нагрузке не верим — строка создаётся по ctx.s, идемпотентно.
 import { defineSubscription } from "../../../platform/events/define-subscription.ts";
 import { userRegistered } from "../../identity/index.ts";
-import { ensurePreferences } from "../infrastructure/db/weekly.repo.ts";
+import { ensureWeeklyPreferences } from "../application/ensure-preferences.ts";
 
 export function onUserRegistered() {
   return defineSubscription({
     event: userRegistered,
     module: "weekly",
-    handle: (ctx) => ensurePreferences(ctx.s),
+    handle: (ctx) => ensureWeeklyPreferences(ctx.s),
   });
 }

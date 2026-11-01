@@ -21,6 +21,10 @@ export interface UpcomingPayment {
   readonly section: Section;
   readonly on: LocalDate;
   readonly amount: Calc<Money>;
+  /** Категория платежа (кредиты — `loans`: у календаря свой тип «кредит»); нет — null. */
+  readonly categoryCode: string | null;
+  /** Сумма — среднее по повторам, которые различаются (ЖКХ): календарь показывает «≈». */
+  readonly approx: boolean;
 }
 
 /** Не больше стольких шагов вперёд: недельный платёж на год — 52. */
@@ -83,6 +87,8 @@ export function makeRead(
             section: entry.section,
             on,
             amount: entry.average,
+            categoryCode: entry.categoryCode,
+            approx: entry.amountRange !== null,
           });
         }
         on = stepAfter(entry.period, on, entry.anchorDay);

@@ -22,10 +22,14 @@ export interface BotRuntimeDeps {
   readonly log: Logger;
   readonly handler: UpdateHandler;
   readonly now: () => Date;
+  /** Сборка бота для токена: в тестах — бот с готовой `botInfo` и записывающим трансформером (сети нет). */
+  readonly makeBot?: (token: string) => Bot;
 }
 
 function wait(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
+    // Сигнал уже подан — слушатель «abort» не сработает: ждать нечего (иначе остановка стоит весь срок паузы).
+    if (signal.aborted) return resolve();
     const timer = setTimeout(done, ms);
     signal.addEventListener("abort", done, { once: true });
     function done() {
@@ -77,7 +81,7 @@ export function createBotRuntime(d: BotRuntimeDeps) {
       d.log.info({ reason: "lock-busy" }, "telegram.waiting");
       return;
     }
-    const { bot } = createBot(token, d);
+    const bot = d.makeBot?.(token) ?? createBot(token, d).bot;
     const tokenChanged = (async () => {
       while (!stopping.signal.aborted) {
         await wait(retryMs, stopping.signal);

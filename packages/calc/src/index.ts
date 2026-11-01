@@ -64,4 +64,20 @@ export {
   type HousingDeduction,
   type HousingTerm,
 } from "./tax/deductions.ts";
+export {
+  annuityPrincipal,
+  firstBelowZero,
+  lowestBalance,
+  MAX_LOAN_MONTHS,
+  MAX_LOAN_RATE_BP,
+  monthsToCover,
+  safePayment,
+  savingsPlan,
+  scenarioBalances,
+  shortfall,
+  type LowestBalance,
+  type SafePayment,
+  type SavingsPlan,
+  type ScenarioBalancesInput,
+} from "./afford/afford.ts";
 export { TRACE_KEYS, type TraceKey } from "./trace-keys.ts";

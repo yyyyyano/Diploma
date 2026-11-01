@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "f194981ca8e0b989",
+      "fingerprint": "5663d2663d297760",
       "parts": [
         {
           "delayMs": 0,
@@ -22,7 +22,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "tool-input-delta",
             "id": "call-1",
@@ -74,7 +74,7 @@
     },
     {
       "kind": "stream",
-      "fingerprint": "2875b86882b0dd5b",
+      "fingerprint": "5422932e5100b572",
       "parts": [
         {
           "delayMs": 0,
@@ -123,7 +123,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -170,7 +170,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "finish",
             "finishReason": {

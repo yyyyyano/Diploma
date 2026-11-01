@@ -8,6 +8,9 @@ import {
 } from "@kosht/contract";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
+import type { Logger } from "../../../platform/logging/logger.ts";
+import type { LegalBaseFacade } from "../../legal-base/index.ts";
+import { lawVersionIdsOf, validParts } from "../domain/message-parts.ts";
 import {
   conversationTitleOf,
   deleteConversation,
@@ -21,6 +24,12 @@ import type { LiveRuns } from "./live-runs.ts";
 
 export interface DialogDeps {
   readonly live: LiveRuns;
+}
+
+export interface HistoryDeps extends DialogDeps {
+  /** CHAT-10: какие версии статей уже не текущие. */
+  readonly legalBase: Pick<LegalBaseFacade, "citations">;
+  readonly log: Pick<Logger, "warn">;
 }
 
 /** Сколько диалогов отдаёт список; старше — не видны (поиска по диалогам в MVP нет). */
@@ -61,15 +70,33 @@ export function makeConversations() {
   };
 }
 
+/**
+ * CHAT-10: из версий статей, названных в ответах, — те, что заменены новой редакцией. Сбой базы законов не роняет чтение
+ * диалога: пометки в этот раз нет (она появится при следующем чтении), в лог — ключ события.
+ */
+async function changedVersions(
+  d: HistoryDeps,
+  versionIds: readonly string[],
+): Promise<Set<string>> {
+  if (versionIds.length === 0) return new Set();
+  try {
+    const rows = await d.legalBase.citations(versionIds);
+    return new Set(rows.filter((row) => !row.isCurrent).map((row) => row.versionId));
+  } catch (error) {
+    d.log.warn({ err: error }, "chat.law-check-failed");
+    return new Set();
+  }
+}
+
 /** Диалог и сообщения; без id — последний. Чужой id неотличим от несуществующего (NOT_FOUND). */
-export function makeHistory(d: DialogDeps) {
+export function makeHistory(d: HistoryDeps) {
   return async function history(s: ScopedDb, conversationId?: ConversationId) {
     const id = conversationId ?? (await latestConversation(s));
     if (id === undefined) return { conversationId: null, title: null, messages: [] };
     const dialog = await conversationTitleOf(s, id);
     if (dialog === undefined) throw new AppError("NOT_FOUND");
     const rows = await listMessages(s, id);
-    const messages = await Promise.all(
+    const prepared = await Promise.all(
       rows.map(async (row) => {
         let status = row.status;
         if (status === "streaming" && !d.live.has(s.scope.householdId, row.id)) {
@@ -77,16 +104,27 @@ export function makeHistory(d: DialogDeps) {
           await finishMessage(s, row.id, row.parts, "interrupted");
           status = "interrupted";
         }
-        const answeredBy = AnswerMetadata.shape.answeredBy.safeParse(row.answeredBy);
-        return ChatMessage.parse({
-          id: row.id,
-          role: row.role,
-          parts: Array.isArray(row.parts) ? row.parts : [],
-          status,
-          ...(answeredBy.success ? { answeredBy: answeredBy.data } : {}),
-        });
+        const { parts, dropped } = validParts(row.parts);
+        // CHAT-04: часть, не прошедшая схему реестра, на сайт не уходит — без id и текста в логе (OBS-04).
+        if (dropped > 0) d.log.warn({ messageId: row.id, count: dropped }, "chat.part-dropped");
+        return { row, parts, status };
       }),
     );
+    const changed = await changedVersions(d, [
+      ...new Set(prepared.flatMap(({ parts }) => lawVersionIdsOf(parts))),
+    ]);
+    const messages = prepared.map(({ row, parts, status }) => {
+      const answeredBy = AnswerMetadata.shape.answeredBy.safeParse(row.answeredBy);
+      const stale = lawVersionIdsOf(parts).filter((versionId) => changed.has(versionId));
+      return ChatMessage.parse({
+        id: row.id,
+        role: row.role,
+        parts,
+        status,
+        ...(answeredBy.success ? { answeredBy: answeredBy.data } : {}),
+        ...(stale.length === 0 ? {} : { changedVersionIds: stale }),
+      });
+    });
     return { conversationId: ConversationId.parse(id), title: dialog.title, messages };
   };
 }

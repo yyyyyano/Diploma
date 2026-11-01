@@ -49,7 +49,7 @@ export function createChatModule({ platform, facades }: ModuleDeps<ChatFacades, 
   return defineModule({
     id: "chat",
     router: chatRouter({
-      history: makeHistory({ live }),
+      history: makeHistory({ live, legalBase: facades.legalBase, log: platform.log }),
       conversations: makeConversations(),
       rename: makeRenameConversation(),
       remove: makeRemoveConversation({ live }),

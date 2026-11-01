@@ -23,7 +23,8 @@ export interface ConversationRow {
   readonly lastParts: unknown;
 }
 
-export async function createConversation(s: ScopedDb, title: string): Promise<string> {
+/** Название — null у диалога, начатого одними вложениями (текста, из которого его сделать, нет). */
+export async function createConversation(s: ScopedDb, title: string | null): Promise<string> {
   const [row] = await s
     .insert(chatConversations)
     .values({ title })

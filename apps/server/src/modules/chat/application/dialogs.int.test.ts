@@ -1,5 +1,6 @@
-// CHAT-01, CHAT-02, SEC-02, CHAT-08: диалоги, зависшие и идущие ответы, сбой потока, ограничение частоты, контекст
-// страницы — через настоящие сценарии chat на Postgres; агент — заглушка с управляемым потоком (модель не нужна).
+// CHAT-01, CHAT-02, CHAT-03, CHAT-04, CHAT-10, SEC-02, CHAT-08: диалоги, зависшие и идущие ответы, сбой потока, ограничение
+// частоты, контекст страницы, вложения, «статья изменилась» — через настоящие сценарии chat на Postgres; агент и база
+// законов — заглушки с управляемым ответом (модель не нужна).
 import type { PageContext } from "@kosht/contract";
 import { makeScope, type Scope } from "@kosht/kernel";
 import { testScope } from "@kosht/testing";
@@ -11,7 +12,9 @@ import {
   waitForAppConnectionsClosed,
   type TestComposition,
 } from "../../../main/__fixtures__/compose-on-test-db.ts";
+import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import type { AgentFacade } from "../../agent/index.ts";
+import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import { insertMessage } from "../infrastructure/db/chat.repo.ts";
 import { RATE_PER_MINUTE } from "../settings.ts";
 import {
@@ -46,17 +49,46 @@ function user(): Scope {
   return makeScope(testScope({ user: household, household }));
 }
 
+/** База законов-заглушка: какие версии «уже не текущие» (CHAT-10); `fail` — база недоступна. */
+function legalBaseOf(stale: readonly string[], fail = false): Pick<LegalBaseFacade, "citations"> {
+  return {
+    citations: async (ids) => {
+      if (fail) throw new Error("база законов недоступна");
+      return ids.map((versionId) => ({
+        versionId,
+        isCurrent: !stale.includes(versionId),
+      })) as never;
+    },
+  };
+}
+
 /** Стенд сценариев chat с заглушкой агента: `make` строит поток ответа по запуску. */
-function chat(make: (run: Run) => ReadableStream<UIMessageChunk>) {
+function chat(
+  make: (run: Run) => ReadableStream<UIMessageChunk>,
+  options: { readonly stale?: readonly string[]; readonly legalFails?: boolean } = {},
+) {
   const runs = createRunRegistry(stand.composition.platform.log);
   const live = createLiveRuns();
-  const agent = { run: async (_s: unknown, run: Run) => make(run) } as unknown as AgentFacade;
+  const agentCalls: Run[] = [];
+  const agent = {
+    run: async (_s: unknown, run: Run) => {
+      agentCalls.push(run);
+      return make(run);
+    },
+  } as unknown as AgentFacade;
   const platform = stand.composition.platform;
+  const memory = memoryLogger();
   return {
     runs,
     live,
+    agentCalls,
+    memory,
     send: makeSendMessage({ agent, runs, live, platform }),
-    history: makeHistory({ live }),
+    history: makeHistory({
+      live,
+      legalBase: legalBaseOf(options.stale ?? [], options.legalFails ?? false),
+      log: memory.log,
+    }),
     conversations: makeConversations(),
     rename: makeRenameConversation(),
     remove: makeRemoveConversation({ live }),
@@ -297,5 +329,126 @@ describe("CHAT-08: контекст страницы доходит до аге�
       await app.send(app.scoped(user()), { text: "почему так много на такси?", page }, "r"),
     );
     expect(seen).toEqual(page);
+  });
+});
+
+const lawAnswerPart = (versionIds: string[]) => ({
+  type: "data-law-answer",
+  data: {
+    outcome: "cited",
+    parts: [{ type: "text", text: "Срок — 14 дней." }],
+    citations: [],
+    notices: [],
+    versionIds,
+  },
+});
+
+/** Диалог с сохранённым ответом `parts` (как после правового вопроса). */
+async function dialogWithAnswer(
+  app: ReturnType<typeof chat>,
+  parts: unknown[],
+): Promise<{ s: ReturnType<typeof app.scoped>; conversationId: never }> {
+  const s = app.scoped(user());
+  const chunks = await drain(await app.send(s, { text: "вопрос" }, "r"));
+  const conversationId = (chunks[0] as { messageMetadata: { conversationId: string } })
+    .messageMetadata.conversationId as never;
+  await db.owner.query(
+    "update chat_messages set parts = $2::jsonb where conversation_id = $1 and role = 'assistant'",
+    [conversationId, JSON.stringify(parts)],
+  );
+  return { s, conversationId };
+}
+
+describe("CHAT-10: «статья изменилась после ответа»", () => {
+  it("ответ называет версии, заменённые новой редакцией; ответ без таких версий — без пометки", async () => {
+    const app = chat(answer("Готово."), { stale: ["v2"] });
+    const { s, conversationId } = await dialogWithAnswer(app, [lawAnswerPart(["v1", "v2"])]);
+    const [question, reply] = (await app.history(s, conversationId)).messages;
+    expect(reply?.changedVersionIds).toEqual(["v2"]);
+    expect(question?.changedVersionIds).toBeUndefined();
+    const fresh = await dialogWithAnswer(app, [lawAnswerPart(["v1"])]);
+    expect(
+      (await app.history(fresh.s, fresh.conversationId)).messages.at(-1)?.changedVersionIds,
+    ).toBeUndefined();
+  });
+
+  it("база законов недоступна — диалог читается без пометки, в лог — ключ события", async () => {
+    const app = chat(answer("Готово."), { legalFails: true });
+    const { s, conversationId } = await dialogWithAnswer(app, [lawAnswerPart(["v1"])]);
+    const messages = (await app.history(s, conversationId)).messages;
+    expect(messages.at(-1)?.changedVersionIds).toBeUndefined();
+    expect(app.memory.lines().some((line) => line["msg"] === "chat.law-check-failed")).toBe(true);
+  });
+});
+
+describe("CHAT-04: строгие части в истории", () => {
+  it("испорченная данные-часть не доходит до сайта, остальные части на месте; в лог — ключ без текста", async () => {
+    const app = chat(answer("Готово."));
+    const text = { type: "text", text: "Вот график" };
+    const broken = { type: "data-chart", data: { kind: "bar", title: "x", series: [] } };
+    const { s, conversationId } = await dialogWithAnswer(app, [text, broken]);
+    const reply = (await app.history(s, conversationId)).messages.at(-1);
+    expect(reply?.parts).toEqual([text]);
+    const logged = app.memory.lines().find((line) => line["msg"] === "chat.part-dropped");
+    expect(logged).toMatchObject({ count: 1 });
+    expect(app.memory.text()).not.toContain("Вот график");
+  });
+});
+
+describe("CHAT-03: вложения в сообщении", () => {
+  const receipt = { kind: "receipt" as const, id: "0190f0a0-0000-7000-8000-000000000011" };
+  const statement = { kind: "statement" as const, id: "0190f0a0-0000-7000-8000-000000000012" };
+
+  it("вопрос с вложением: карточки идут в потоке сразу за start и сохраняются перед текстом агента; агент знает о вложении", async () => {
+    const app = chat(answer("Чек распознан."));
+    const s = app.scoped(user());
+    const chunks = await drain(
+      await app.send(s, { text: "Что в чеке?", attachments: [receipt] }, "r"),
+    );
+    expect(chunks.slice(0, 2).map((chunk) => chunk.type)).toEqual(["start", "data-attachment"]);
+    expect(chunks[1]).toMatchObject({ data: receipt });
+    const conversationId = (chunks[0] as { messageMetadata: { conversationId: string } })
+      .messageMetadata.conversationId as never;
+    const reply = (await app.history(s, conversationId)).messages.at(-1);
+    expect(reply?.parts).toEqual([
+      { type: "data-attachment", data: receipt },
+      { type: "text", text: "Чек распознан." },
+    ]);
+    // Агент видит вложение в последнем вопросе; в БД вопрос остался текстом.
+    const asked = app.agentCalls[0]?.messages.at(-1);
+    expect(asked?.parts).toEqual([
+      { type: "text", text: "Что в чеке?" },
+      { type: "data-attachment", data: receipt },
+    ]);
+    const stored = (await app.history(s, conversationId)).messages[0];
+    expect(stored?.parts).toEqual([{ type: "text", text: "Что в чеке?" }]);
+  });
+
+  it("одни вложения: модель не зовётся, ответ — карточки, диалог без названия, ответ «готов»", async () => {
+    const app = chat(answer("не должно быть"));
+    const s = app.scoped(user());
+    const chunks = await drain(
+      await app.send(s, { text: "", attachments: [receipt, statement] }, "r"),
+    );
+    expect(chunks.map((chunk) => chunk.type)).toEqual([
+      "start",
+      "data-attachment",
+      "data-attachment",
+      "finish",
+    ]);
+    expect(app.agentCalls).toHaveLength(0);
+    const conversationId = (chunks[0] as { messageMetadata: { conversationId: string } })
+      .messageMetadata.conversationId as never;
+    const history = await app.history(s, conversationId);
+    expect(history.title).toBeNull();
+    expect(history.messages.map((message) => [message.role, message.status])).toEqual([
+      ["user", "complete"],
+      ["assistant", "complete"],
+    ]);
+    expect(history.messages[0]?.parts).toEqual([]);
+    expect(history.messages[1]?.parts).toEqual([
+      { type: "data-attachment", data: receipt },
+      { type: "data-attachment", data: statement },
+    ]);
   });
 });

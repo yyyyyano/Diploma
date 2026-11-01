@@ -4,6 +4,7 @@
 // Модель зовётся вне транзакции (llm бросит LLM_IN_TRANSACTION). Ограничение частоты (SEC-02) — до записи вопроса.
 import {
   AnswerMetadata,
+  type ChatAttachment,
   ConversationId,
   RunId,
   type PageContext,
@@ -48,6 +49,52 @@ export function runKey(s: ScopedDb, runId: string): string {
   return `${s.scope.householdId}:${runId}`;
 }
 
+/** Вложения сообщения частями ответа: карточку чека или выписки сайт рисует по ним (CHAT-03). */
+function attachmentParts(attachments: readonly ChatAttachment[]) {
+  return attachments.map((data) => ({ type: "data-attachment" as const, data }));
+}
+
+/**
+ * Вложения идут в поток сразу за куском `start`: ответ начинается с карточек, а текст агента — под ними. Без этого
+ * живой ответ и сохранённый (`[…вложения, …части агента]`) выглядели бы по-разному.
+ */
+function withAttachments(
+  stream: ReadableStream<UIMessageChunk>,
+  parts: ReturnType<typeof attachmentParts>,
+): ReadableStream<UIMessageChunk> {
+  if (parts.length === 0) return stream;
+  return stream.pipeThrough(
+    new TransformStream<UIMessageChunk, UIMessageChunk>({
+      transform(chunk, controller) {
+        controller.enqueue(chunk);
+        if (chunk.type === "start") {
+          for (const part of parts) controller.enqueue({ type: part.type, data: part.data });
+        }
+      },
+    }),
+  );
+}
+
+/**
+ * Сообщение из одних вложений (CHAT-03): спрашивать модель не о чем, ответ — карточки; сохраняются до конца потока, чтобы
+ * вкладка, закрытая посреди ответа, нашла их в истории.
+ */
+function attachmentsOnly(
+  metadata: RunMetadata,
+  parts: ReturnType<typeof attachmentParts>,
+  save: () => Promise<void>,
+): ReadableStream<UIMessageChunk> {
+  return new ReadableStream<UIMessageChunk>({
+    async start(controller) {
+      controller.enqueue({ type: "start", messageMetadata: metadata });
+      for (const part of parts) controller.enqueue({ type: part.type, data: part.data });
+      await save();
+      controller.enqueue({ type: "finish" });
+      controller.close();
+    },
+  });
+}
+
 /**
  * Поток запуска, который гарантированно сообщает о конце: сбой посреди потока (ошибка агента, обрыв провайдера) не
  * вызывает `flush` у TransformStream, и ответ остался бы «идёт» навсегда — здесь и конец, и ошибка доводят `onEnd`.
@@ -84,6 +131,7 @@ export function makeSendMessage(d: SendDeps) {
       readonly conversationId?: ConversationId | undefined;
       readonly text: string;
       readonly page?: PageContext | undefined;
+      readonly attachments?: readonly ChatAttachment[] | undefined;
     },
     requestId: string,
   ): Promise<ReadableStream<UIMessageChunk>> {
@@ -92,11 +140,13 @@ export function makeSendMessage(d: SendDeps) {
     const controller = new AbortController();
     const assistantId = randomUUID();
     const householdId = s.scope.householdId;
+    const attached = attachmentParts(input.attachments ?? []);
     let conversationId: string;
     try {
       conversationId = await s.transaction(async (tx) => {
         const id =
-          input.conversationId ?? (await createConversation(tx, conversationTitle(input.text)));
+          input.conversationId ??
+          (await createConversation(tx, input.text === "" ? null : conversationTitle(input.text)));
         if (input.conversationId !== undefined && !(await conversationExists(tx, id))) {
           throw new AppError("NOT_FOUND");
         }
@@ -105,7 +155,7 @@ export function makeSendMessage(d: SendDeps) {
         await insertMessage(tx, {
           conversationId: id,
           role: "user",
-          parts: [{ type: "text", text: input.text }],
+          parts: input.text === "" ? [] : [{ type: "text", text: input.text }],
           status: "complete",
         });
         await insertMessage(tx, {
@@ -124,6 +174,11 @@ export function makeSendMessage(d: SendDeps) {
     const history = (await listMessages(s, conversationId))
       .filter((row) => row.id !== assistantId)
       .map(toUiMessage);
+    // Агент узнаёт о вложении из последнего вопроса (в памяти, в БД оно лежит в ответе): чек — «что в нём?» (CHAT-03).
+    const question = history.at(-1);
+    if (attached.length > 0 && question !== undefined) {
+      history[history.length - 1] = { ...question, parts: [...question.parts, ...attached] };
+    }
     const runId = randomUUID();
     const metadata: RunMetadata = {
       runId: RunId.parse(runId),
@@ -145,6 +200,20 @@ export function makeSendMessage(d: SendDeps) {
         d.live.remove(householdId, assistantId);
       }
     };
+    if (input.text === "") {
+      const key = runKey(s, runId);
+      d.runs.start(
+        key,
+        guarded(
+          attachmentsOnly(metadata, attached, () => save(attached, "complete")),
+          () => save(attached, "interrupted"),
+        ),
+        controller,
+      );
+      const subscription = d.runs.subscribe(key);
+      if (subscription === undefined) throw new AppError("UNAVAILABLE");
+      return subscription;
+    }
     let stream: ReadableStream<UIMessageChunk>;
     try {
       stream = await d.agent.run(s, {
@@ -157,19 +226,19 @@ export function makeSendMessage(d: SendDeps) {
         ...(input.page === undefined ? {} : { page: input.page }),
         onFinish: (message, aborted) =>
           save(
-            message.parts,
+            [...attached, ...message.parts],
             aborted ? "interrupted" : "complete",
             AnswerMetadata.safeParse(message.metadata).data?.answeredBy,
           ),
       });
     } catch (error) {
-      await save([], "interrupted");
+      await save(attached, "interrupted");
       throw error;
     }
     const key = runKey(s, runId);
     d.runs.start(
       key,
-      guarded(stream, () => save([], "interrupted")),
+      guarded(withAttachments(stream, attached), () => save(attached, "interrupted")),
       controller,
     );
     const subscription = d.runs.subscribe(key);

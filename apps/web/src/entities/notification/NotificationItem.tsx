@@ -2,8 +2,8 @@
 // словаря по виду, день, кнопки действия. «Да / Нет» — прямо в actions.answer по decisionId, «Отменить» — в
 // actions.undo по undoToken, «Показать» — ссылка на объект. Нажатие на любую кнопку отмечает уведомление прочитанным.
 import type { UserNotification } from "@kosht/contract";
-import { formatMoney, formatRelativeDay } from "@kosht/i18n";
-import { DEFAULT_TIME_ZONE, LocalDate, Money } from "@kosht/kernel";
+import { formatDayTime, formatMoney } from "@kosht/i18n";
+import { DEFAULT_TIME_ZONE, LocalDate, Money, timeOfDay } from "@kosht/kernel";
 import { Button } from "@mantine/core";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -55,10 +55,11 @@ export function objectHref(ref: UserNotification["objectRef"]): string | undefin
   return ref === null ? undefined : OBJECT_HREF[ref.entity]?.(ref.id);
 }
 
-/** День уведомления относительно сегодня («сегодня», «вчера», «21.10.2026»). */
+/** День и время уведомления («сегодня, 09:00», «вчера, 18:40», «21.10.2026, 09:00»; CAL-07: напоминание — не только день). */
 function dayOf(iso: string): string {
   const day = (instant: Date) => LocalDate.fromInstant(instant, DEFAULT_TIME_ZONE);
-  return formatRelativeDay(day(new Date(iso)), day(new Date()));
+  const at = new Date(iso);
+  return formatDayTime(day(at), timeOfDay(at, DEFAULT_TIME_ZONE), day(new Date()));
 }
 
 export interface NotificationItemProps {

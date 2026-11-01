@@ -53,4 +53,15 @@ export {
 } from "./money-ops.ts";
 export type { RoundingMode, RoundingRule, RoundingUnit } from "./rounding.ts";
 export { dayCount, ratioPercent, scaleMoney, type ScaleOptions } from "./calculator/calculator.ts";
+export {
+  childrenDeduction,
+  educationDeduction,
+  grossFromNet,
+  housingDeduction,
+  monthlyBase,
+  type ChildrenDeduction,
+  type EducationDeduction,
+  type HousingDeduction,
+  type HousingTerm,
+} from "./tax/deductions.ts";
 export { TRACE_KEYS, type TraceKey } from "./trace-keys.ts";

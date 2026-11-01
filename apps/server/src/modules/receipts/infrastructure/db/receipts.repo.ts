@@ -2,6 +2,7 @@
 // свой s.own (ADR-0006). Сценарии зовут эти функции, а не пишут SQL.
 import { and, asc, desc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import type { InsertValue, Patch, ScopedDb } from "../../../../platform/db/scoped-db.ts";
+import type { WarrantyItem } from "../../domain/warranty.ts";
 import { receiptAttempts, receiptItems, receipts } from "./schema.ts";
 
 export type ReceiptRow = typeof receipts.$inferSelect;
@@ -158,4 +159,40 @@ export async function findReceipts(s: ScopedDb, ids: readonly string[]): Promise
 /** Чек удаляется вместе с позициями и историей (каскад по составному FK). */
 export async function deleteReceipt(s: ScopedDb, id: string): Promise<void> {
   await s.delete(receipts, eq(receipts.id, id));
+}
+
+/**
+ * Позиции с признаком гарантии в чеках `receiptIds` (пусто — во всех чеках пользователя) с магазином и днём покупки; «не
+ * распознан» (`failed`) не берётся. Чужие и неизвестные чеки не видны: у обеих таблиц свой s.own.
+ */
+export async function warrantyItemsOf(
+  s: ScopedDb,
+  receiptIds: readonly string[],
+): Promise<WarrantyItem[]> {
+  return s.db
+    .select({
+      itemId: receiptItems.id,
+      receiptId: receiptItems.receiptId,
+      name: receiptItems.name,
+      store: receipts.storeName,
+      purchasedOn: receipts.purchaseDate,
+    })
+    .from(receiptItems)
+    .innerJoin(
+      receipts,
+      and(
+        eq(receipts.id, receiptItems.receiptId),
+        eq(receipts.householdId, receiptItems.householdId),
+        s.own(receipts),
+      ),
+    )
+    .where(
+      and(
+        s.own(receiptItems),
+        eq(receiptItems.warranty, true),
+        ne(receipts.status, "failed"),
+        receiptIds.length === 0 ? undefined : inArray(receiptItems.receiptId, [...receiptIds]),
+      ),
+    )
+    .orderBy(asc(receipts.purchaseDate), asc(receiptItems.receiptId), asc(receiptItems.position));
 }

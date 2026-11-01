@@ -16,6 +16,7 @@ import {
   lockReceipt,
   replaceItems,
   updateReceipt,
+  warrantyItemsOf,
 } from "./receipts.repo.ts";
 
 let db: TestDb;
@@ -129,5 +130,40 @@ describe("isUniqueViolation", () => {
     expect(isUniqueViolation(new Error("прочее"))).toBe(false);
     expect(isUniqueViolation("23505")).toBe(false);
     expect(isUniqueViolation(undefined)).toBe(false);
+  });
+});
+
+describe("RCPT-13, CAL-04: позиции с гарантией для календаря", () => {
+  it("только отмеченные, с магазином и днём покупки; по списку чеков и по всем; чужие и «не вышло» не видны", async () => {
+    const s = newScope(db);
+    const other = newScope(db);
+    const a = await insertReceipt(s, {
+      fileId: randomUUID(),
+      status: "ok",
+      storeName: "Электросила",
+      purchaseDate: "2024-11-18",
+    });
+    const b = await insertReceipt(s, {
+      fileId: randomUUID(),
+      status: "ok",
+      purchaseDate: "2026-05-03",
+    });
+    const failed = await insertReceipt(s, { fileId: randomUUID(), status: "failed" });
+    const foreign = await insertReceipt(other, { fileId: randomUUID(), status: "ok" });
+    await replaceItems(s, a.id, [
+      { ...item(1, "Наушники"), warranty: true },
+      { ...item(2, "Хлеб"), warranty: false },
+    ]);
+    await replaceItems(s, b.id, [{ ...item(1, "Пылесос"), warranty: true }]);
+    await replaceItems(s, failed.id, [{ ...item(1, "Чайник"), warranty: true }]);
+    await replaceItems(other, foreign.id, [{ ...item(1, "Телевизор"), warranty: true }]);
+
+    const all = await warrantyItemsOf(s, []);
+    expect(all.map((row) => [row.name, row.store, row.purchasedOn])).toEqual([
+      ["Наушники", "Электросила", "2024-11-18"],
+      ["Пылесос", null, "2026-05-03"],
+    ]);
+    expect((await warrantyItemsOf(s, [b.id])).map((row) => row.name)).toEqual(["Пылесос"]);
+    expect(await warrantyItemsOf(s, [foreign.id])).toEqual([]);
   });
 });

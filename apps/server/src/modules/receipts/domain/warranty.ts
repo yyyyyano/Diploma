@@ -7,3 +7,12 @@ const APPLIANCE =
 export function hasWarranty(categoryCode: string | null, name: string): boolean {
   return categoryCode === "electronics" || APPLIANCE.test(name);
 }
+
+/** Позиция чека с гарантией для календаря (CAL-04): что куплено, где и когда. */
+export interface WarrantyItem {
+  readonly itemId: string;
+  readonly receiptId: string;
+  readonly name: string;
+  readonly store: string | null;
+  readonly purchasedOn: string | null;
+}

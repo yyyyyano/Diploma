@@ -23,3 +23,6 @@ export { legal as legalTexts } from "./locales/ru/legal.ts";
 // Словарь агента: отказы стражей и пометки пишет программа (`agent`); в `resources` его нет.
 export { createAgentT, type AgentT } from "./create-agent-t.ts";
 export { agent as agentTexts } from "./locales/ru/agent.ts";
+// Словарь файла Excel: листы и шапки собирает сервер (`xls-export`); в `resources` его нет.
+export { createXlsT, type XlsT } from "./create-xls-t.ts";
+export { xls as xlsTexts } from "./locales/ru/xls.ts";

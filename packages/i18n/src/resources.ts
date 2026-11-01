@@ -27,6 +27,7 @@ import { dashboard } from "./locales/ru/dashboard.ts";
 import { laws } from "./locales/ru/laws.ts";
 import type { agent } from "./locales/ru/agent.ts";
 import type { legal } from "./locales/ru/legal.ts";
+import type { xls } from "./locales/ru/xls.ts";
 import type { rates } from "./locales/ru/rates.ts";
 import type { weekly } from "./locales/ru/weekly.ts";
 import type { afford } from "./locales/ru/afford.ts";
@@ -134,6 +135,8 @@ declare module "i18next" {
     weekly: typeof weekly;
     // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.
     legal: typeof legal;
+    // Только серверу (`createXlsT`): листы и шапки файла Excel; сайт словарь не грузит.
+    xls: typeof xls;
     // Только серверу (`createAgentT`): отказы стражей, пометки о числах и пределе шагов; сайт словарь не грузит.
     agent: typeof agent;
   }

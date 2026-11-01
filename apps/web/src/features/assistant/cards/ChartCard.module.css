@@ -36,7 +36,7 @@
 .swatch {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 .rows {
@@ -78,7 +78,7 @@
 .track {
   flex: 1;
   height: 10px;
-  border-radius: 5px;
+  border-radius: var(--r-pill);
   background: var(--surface-2);
   min-width: 0;
 }
@@ -86,7 +86,7 @@
 .fill {
   display: block;
   height: 100%;
-  border-radius: 5px;
+  border-radius: var(--r-pill);
 }
 
 .value {

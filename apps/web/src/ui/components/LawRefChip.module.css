@@ -21,3 +21,18 @@ a.chip:focus-visible {
   outline: 2px solid var(--law);
   outline-offset: 2px;
 }
+
+button.chip {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.chip:hover {
+  text-decoration: underline;
+}
+
+button.chip:focus-visible {
+  outline: 2px solid var(--law);
+  outline-offset: 2px;
+}

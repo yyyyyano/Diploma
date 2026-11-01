@@ -35,3 +35,4 @@ export { StatusBadge, type StatusBadgeProps, type StatusTone } from "./component
 export { UNDO_TOAST_MS, UndoToast, type UndoToastProps } from "./components/UndoToast.tsx";
 export { WhyButton, type WhyButtonProps } from "./components/WhyButton.tsx";
 export { CATEGORY_COLORS, type CategoryColorKey } from "./theme/category-colors.ts";
+export { SERIES_COLORS } from "./theme/chart-colors.ts";

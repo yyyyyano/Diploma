@@ -1,5 +1,6 @@
 // Ссылка на норму (DES-06, design/DESIGN.md §4): «ст. 210 НК» — чип со значком закона; со ссылкой — настоящая `<a>`,
-// внешняя (pravo.by) открывается в новой вкладке. Подпись всегда текстом: смысл не держится на одном цвете (NFR-20).
+// внешняя (pravo.by) открывается в новой вкладке; с `onClick` — кнопка, раскрывающая цитату (DES-12, CHAT-05). Подпись
+// всегда текстом: смысл не держится на одном цвете (NFR-20).
 import { ExternalLink, Scale } from "lucide-react";
 import classes from "./LawRefChip.module.css";
 
@@ -9,9 +10,21 @@ export interface LawRefChipProps {
   readonly href?: string;
   /** Ссылка ведёт на другой сайт (pravo.by): новая вкладка, `rel="noopener noreferrer"`, значок «внешняя». */
   readonly external?: boolean;
+  /** Чип раскрывает цитату: кнопка вместо ссылки; `expanded` — раскрыта ли она сейчас. */
+  readonly onClick?: () => void;
+  readonly expanded?: boolean;
+  /** Подпись для диктора, если она подробнее текста чипа («Показать цитату: ст. 210 НК»). */
+  readonly ariaLabel?: string;
 }
 
-export function LawRefChip({ label, href, external = false }: LawRefChipProps) {
+export function LawRefChip({
+  label,
+  href,
+  external = false,
+  onClick,
+  expanded,
+  ariaLabel,
+}: LawRefChipProps) {
   const content = (
     <>
       <Scale size={14} strokeWidth={1.8} aria-hidden />
@@ -19,6 +32,19 @@ export function LawRefChip({ label, href, external = false }: LawRefChipProps) {
       {external && <ExternalLink size={12} strokeWidth={1.8} aria-hidden />}
     </>
   );
+  if (onClick !== undefined) {
+    return (
+      <button
+        type="button"
+        className={classes.chip}
+        aria-expanded={expanded ?? false}
+        {...(ariaLabel === undefined ? {} : { "aria-label": ariaLabel })}
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
   if (href === undefined) return <span className={classes.chip}>{content}</span>;
   return (
     <a

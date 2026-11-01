@@ -1,6 +1,7 @@
 // DES-06, NFR-20: LawRefChip — подпись текстом, со ссылкой — настоящая `<a>`; внешняя открывается в новой вкладке.
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 import { renderWithProviders } from "../../test/render.tsx";
 import { LawRefChip } from "./LawRefChip.tsx";
 
@@ -29,5 +30,21 @@ describe("DES-06: LawRefChip", () => {
   it("внутренняя ссылка — без новой вкладки", () => {
     renderWithProviders(<LawRefChip label="ст. 13 ЗоЗПП" href="/laws/H10200090?article=13" />);
     expect(screen.getByRole("link")).not.toHaveAttribute("target");
+  });
+
+  it("CHAT-05: с onClick — кнопка, раскрывающая цитату; состояние — aria-expanded, подпись для диктора — своя", async () => {
+    const onClick = vi.fn<() => void>();
+    renderWithProviders(
+      <LawRefChip
+        label="ст. 28"
+        onClick={onClick}
+        expanded={false}
+        ariaLabel="Показать цитату: ст. 28"
+      />,
+    );
+    const button = screen.getByRole("button", { name: "Показать цитату: ст. 28" });
+    expect(button).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(button);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 });

@@ -46,6 +46,8 @@ export const LawCitationData = z.discriminatedUnion("kind", [
   }),
 ]);
 
+export type LawCitationData = z.infer<typeof LawCitationData>;
+
 export const LawNoticeData = z.strictObject({
   kind: z.enum(["past-date", "rate", "unresolved", "disclaimer"]),
   text: z.string().max(2000),

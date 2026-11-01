@@ -68,7 +68,7 @@
 | `tax` | TAX-01…07, TAX-20 | калькулятор вычетов (через `calc`), найденные вычеты по операциям | profile, transactions, categories, norm-tables, legal-base, legal-consult, notifications, actions, explain | user | — |
 | `calendar` | CAL-01…08, PROF-07 (вопрос об имуществе) | события, напоминания (таблица `reminders` + тик), сроки налогов, гарантии, страховки | profile, transactions, recurring, receipts, norm-tables, notifications, actions, explain, tax | user | — |
 | `afford` | AFF-01…08 | три сценария покупки, просадки, безопасный платёж по ПДН | accounts, transactions, recurring, fin, budgets, calendar, norm-tables, profile, explain | — | — |
-| `weekly` | WEEK-01…03 | итоги недели: числа — `calc`, текст — модель | transactions, budgets, calendar, recurring, tax, llm, notifications, explain | user | — |
+| `weekly` | WEEK-01…03 | итоги недели: числа — `calc`, текст — модель | transactions, budgets, calendar, categories, recurring, tax, llm, notifications, explain, identity | user | — |
 | `dashboard` | DASH-01…04 | сборка главного экрана (только чтение, пачками) | accounts, transactions, fin, budgets, recurring, calendar, tax, weekly, explain | — | — |
 | `xls-export` | XLS-01…04 | Excel с живыми формулами (без диаграмм, R43) | transactions, categories, budgets, files | — | — |
 <!-- /capabilities:tier-3 -->

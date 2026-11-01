@@ -2,6 +2,8 @@
 // внешняя (pravo.by) открывается в новой вкладке; с `onClick` — кнопка, раскрывающая цитату (DES-12, CHAT-05). Подпись
 // всегда текстом: смысл не держится на одном цвете (NFR-20).
 import { ExternalLink, Scale } from "lucide-react";
+import type { ButtonHTMLAttributes, Ref } from "react";
+import { cx } from "../cx.ts";
 import classes from "./LawRefChip.module.css";
 
 export interface LawRefChipProps {
@@ -15,6 +17,16 @@ export interface LawRefChipProps {
   readonly expanded?: boolean;
   /** Подпись для диктора, если она подробнее текста чипа («Показать цитату: ст. 210 НК»). */
   readonly ariaLabel?: string;
+  /**
+   * Для Popover.Target: он клонирует дочерний элемент, подмешивая ссылку, `id` и aria-атрибуты (`aria-haspopup`,
+   * `aria-controls`) — на кнопке они допустимы, на обёртке-`span` axe их отвергает.
+   */
+  readonly ref?: Ref<HTMLButtonElement>;
+  readonly id?: string;
+  readonly className?: string;
+  readonly "aria-haspopup"?: ButtonHTMLAttributes<HTMLButtonElement>["aria-haspopup"];
+  readonly "aria-controls"?: string;
+  readonly "aria-expanded"?: boolean;
 }
 
 export function LawRefChip({
@@ -24,6 +36,12 @@ export function LawRefChip({
   onClick,
   expanded,
   ariaLabel,
+  ref,
+  id,
+  className,
+  "aria-haspopup": haspopup,
+  "aria-controls": controls,
+  "aria-expanded": ariaExpanded,
 }: LawRefChipProps) {
   const content = (
     <>
@@ -35,9 +53,13 @@ export function LawRefChip({
   if (onClick !== undefined) {
     return (
       <button
+        ref={ref}
+        id={id}
         type="button"
-        className={classes.chip}
-        aria-expanded={expanded ?? false}
+        className={cx(classes.chip, className)}
+        aria-haspopup={haspopup}
+        aria-controls={controls}
+        aria-expanded={ariaExpanded ?? expanded ?? false}
         {...(ariaLabel === undefined ? {} : { "aria-label": ariaLabel })}
         onClick={onClick}
       >

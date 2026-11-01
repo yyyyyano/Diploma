@@ -7,7 +7,7 @@ import { LawAnswerData } from "@kosht/contract";
 import { Popover } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Info, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   CitationQuote,
@@ -27,6 +27,15 @@ function Cite({ citation }: { readonly citation: LawAnswerData["citations"][numb
   const { t } = useTranslation("assistant");
   const phone = useMediaQuery(PHONE_QUERY) === true;
   const [opened, setOpened] = useState(false);
+  // Esc закрывает цитату, пока фокус на чипе: Popover слушает клавишу только внутри своего окна, а фокус остаётся на кнопке.
+  useEffect(() => {
+    if (!opened) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpened(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [opened]);
   if (citation.kind === "link") {
     return (
       <span className={classes.link}>
@@ -70,9 +79,7 @@ function Cite({ citation }: { readonly citation: LawAnswerData["citations"][numb
       withArrow
       trapFocus={false}
     >
-      <Popover.Target>
-        <span>{chip}</span>
-      </Popover.Target>
+      <Popover.Target>{chip}</Popover.Target>
       <Popover.Dropdown aria-label={citationSource(citation)}>{quote}</Popover.Dropdown>
     </Popover>
   );

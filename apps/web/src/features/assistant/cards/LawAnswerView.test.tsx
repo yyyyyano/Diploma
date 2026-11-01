@@ -76,6 +76,16 @@ describe("CHAT-05: чипы статей и дословные цитаты", ()
     expect(screen.queryByText(QUOTE)).toBeNull();
   });
 
+  it("Esc закрывает раскрытую цитату, даже когда фокус остался на чипе", async () => {
+    renderWithProviders(<LawAnswerView data={answer} />);
+    const chip = screen.getByRole("button", { name: "Показать цитату: ст. 28, п. 1" });
+    await userEvent.click(chip);
+    expect(await screen.findByText(QUOTE)).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByText(QUOTE)).toBeNull();
+    expect(chip).toHaveAttribute("aria-expanded", "false");
+  });
+
   it("акт без текста — ссылка на pravo.by с пометкой, цитаты нет (LEGAL-06)", () => {
     renderWithProviders(<LawAnswerView data={answer} />);
     const link = screen.getByRole("link", { name: "ПСМ № 778" });

@@ -4,6 +4,7 @@
 // горизонтальной прокрутки при 1440 и 390 на обеих вкладках, с окном согласия и окном удаления.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { shownSettled } from "./support/settled.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -11,10 +12,19 @@ const VIEWPORTS = [
   { width: 390, height: 844 },
 ] as const;
 
-/** Окна и списки Mantine появляются с переходом прозрачности: axe посреди перехода видит бледный текст. */
+/**
+ * Конец конечных переходов (бесконечные — скелетоны — не ждём). Только после смены ширины: у только что появившегося окна
+ * переход Mantine начинается кадром позже, и здесь он бы ещё не виден — для окон есть `shownSettled`.
+ */
 async function animationsSettled(page: Page) {
   await page.waitForFunction(() =>
-    document.getAnimations().every((animation) => animation.playState !== "running"),
+    document
+      .getAnimations()
+      .every(
+        (animation) =>
+          animation.playState !== "running" ||
+          animation.effect?.getComputedTiming().iterations === Infinity,
+      ),
   );
 }
 
@@ -66,6 +76,7 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   await cloud.click({ force: true });
   const consent = page.getByRole("dialog", { name: "Согласие на облачную обработку" });
   await expect(consent).toBeVisible();
+  await shownSettled(consent);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await consent.getByRole("checkbox").check();
   await consent.getByRole("button", { name: "Дать согласие" }).click();
@@ -99,6 +110,7 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   await page.getByRole("button", { name: "Удалить аккаунт…" }).click();
   const dialog = page.getByRole("dialog", { name: "Удалить аккаунт безвозвратно" });
   await expect(dialog).toBeVisible();
+  await shownSettled(dialog);
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   await dialog.getByLabel("Пароль", { exact: true }).fill(password);
   await dialog.getByRole("button", { name: "Удалить навсегда" }).click();

@@ -175,4 +175,15 @@ describe("разбор частей", () => {
       pendingOf({ type: "tool-x", output: { ok: false, code: "NOT_FOUND" } } as never),
     ).toBeUndefined();
   });
+
+  it("CHAT-03: вложение (чек, выписка) — строка о нём в сообщении, чтобы вопрос «что в чеке?» не терял нить", async () => {
+    const id = "0190f0a0-0000-7000-8000-000000000009";
+    const result = await texts([
+      user("u1", "проверь"),
+      assistant("a1", [{ type: "data-attachment", data: { kind: "receipt", id } }]),
+      user("u2", "что в чеке?"),
+    ]);
+    expect(result[1]?.text).toContain("receipt");
+    expect(result[1]?.text).toContain(id);
+  });
 });

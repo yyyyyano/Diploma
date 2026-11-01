@@ -51,6 +51,12 @@ function partText(part: Part): string | undefined {
       ? "(The user confirmed the pending action; it was done.)"
       : "(The user declined the pending action; nothing changed.)";
   }
+  if (part.type === "data-attachment") {
+    const data = (part as { data?: { kind?: unknown; id?: unknown } }).data;
+    return typeof data?.kind === "string" && typeof data.id === "string"
+      ? `(The user attached a ${data.kind}, id ${data.id}; it is processed by the app, details are in the tools.)`
+      : undefined;
+  }
   if (part.type === "data-chart") {
     const title = (part as { data?: { title?: unknown } }).data?.title;
     return typeof title === "string" ? `(A chart was shown: ${title}.)` : undefined;

@@ -27,6 +27,7 @@ import { makeBotHandler } from "./application/handler.ts";
 import { makeLinkOps } from "./application/link.ts";
 import { createBotRuntime } from "./infrastructure/bot/bot-runtime.ts";
 import { createSenderProvider } from "./infrastructure/bot/sender.ts";
+import { linkedUserIds } from "./infrastructure/db/telegram.repo.ts";
 import { scopedForOwner } from "./infrastructure/scope.ts";
 import { TELEGRAM_SETTINGS, TELEGRAM_TOKEN } from "./settings.ts";
 import { onReceiptReady } from "./subscriptions/on-receipt-ready.ts";
@@ -78,7 +79,19 @@ export function createTelegramModule({
   });
   return defineModule({
     id: "telegram",
-    facade: { links, handler },
+    facade: {
+      links,
+      handler,
+      /** Админка (ADM-30, ADM-60): у кого подключён Telegram (только флаг) и токен бота — поле только для записи. */
+      admin: {
+        linkedUsers: () => linkedUserIds(platform.system),
+        tokenStatus: () => platform.secrets.status(TELEGRAM_TOKEN),
+        setToken: async (token: string | null) => {
+          if (token === null) await platform.secrets.clear(TELEGRAM_TOKEN);
+          else await platform.secrets.set(TELEGRAM_TOKEN, token);
+        },
+      },
+    },
     router: telegramRouter(links),
     subscriptions: onReceiptReady({ sender, deliver: handler.deliverReceipt }),
     userData: telegramUserData(platform.system),

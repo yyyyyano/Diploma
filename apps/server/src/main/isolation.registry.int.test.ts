@@ -209,6 +209,7 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     input: () => ({ host: "", port: 587, secure: false, user: "", from: "no-reply@kosht.local" }),
   },
   "admin.sendTestMail": { input: () => undefined },
+  "admin.setTelegramToken": { input: () => ({ token: null }) },
   "admin.setTimeZone": { input: () => ({ timeZone: "Europe/Minsk" }) },
   "admin.setLan": { input: () => ({ allowed: false, address: "" }) },
   "tool:search_law": {
@@ -512,6 +513,15 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     exempt:
       "вход — только запись самого пользователя: чужих id во входе нет, результат — её текст (voice/application/transcribe.int.test.ts)",
   },
+  // Владелец — из сессии, чужих id во входе нет: статус и отключение — по своей привязке, ссылка — своему аккаунту
+  // (main/telegram.int.test.ts: два домохозяйства, чужие чек и решение в кнопке бота — «Не нашёл»).
+  "telegram.status": { input: () => undefined },
+  "telegram.beginLink": {
+    exempt:
+      "вход — только версия текста согласия: чужих id нет; ссылка и код выдаются аккаунту сессии (main/telegram.int.test.ts)",
+  },
+  "telegram.cancelLink": { input: () => undefined },
+  "telegram.unlink": { input: () => undefined },
   "chat.send": {
     input: (b) => ({ conversationId: b.conversationId, text: "Какие у меня счета?" }),
   },
@@ -791,6 +801,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.setLan",
       "admin.setLawsSettings",
       "admin.setMail",
+      "admin.setTelegramToken",
       "admin.setTimeZone",
       "admin.system",
       "admin.testAiProvider",
@@ -881,6 +892,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "tax.found",
       "tax.markFoundShown",
       "tax.setFoundStatus",
+      "telegram.cancelLink",
+      "telegram.status",
+      "telegram.unlink",
       "transactions.create",
       "transactions.explainRate",
       "transactions.get",

@@ -272,6 +272,44 @@ describe("AUTH-05, R37: сброс пароля из админки", () => {
   });
 });
 
+describe("ADM-60, NFR-16: токен Telegram-бота", () => {
+  const token = "123456789:AAH-kosht_test_token_abcdefghij";
+
+  it("токен сохраняется как «задан» и не возвращается ни в одном ответе; снятие — «не задан»", async () => {
+    const saved = await stack.call("local", "/admin/system/telegram-token", {
+      cookie: root,
+      body: { token },
+    });
+    expect(saved.status).toBe(200);
+    const text = await saved.text();
+    expect(JSON.parse(text)).toMatchObject({ telegram: { token: "set" } });
+    expect(text).not.toContain("AAH-kosht");
+    expect(
+      await (await stack.call("local", "/admin/system", { cookie: root })).text(),
+    ).not.toContain("AAH-kosht");
+
+    const cleared = await stack.call("local", "/admin/system/telegram-token", {
+      cookie: root,
+      body: { token: null },
+    });
+    expect(await cleared.json()).toMatchObject({ telegram: { token: "unset" } });
+  });
+
+  it("не токен — 400, значение не записано; обычному пользователю — FORBIDDEN", async () => {
+    const bad = await stack.call("local", "/admin/system/telegram-token", {
+      cookie: root,
+      body: { token: "это не токен" },
+    });
+    expect(bad.status).toBe(400);
+    const user = await registerUser(stack, db, "tg-token-user@example.test");
+    const forbidden = await stack.call("local", "/admin/system/telegram-token", {
+      cookie: user.cookie,
+      body: { token },
+    });
+    expect(forbidden.status).toBe(403);
+  });
+});
+
 describe("ADM-60: «Система»", () => {
   it("пояс, доступ из сети, почта и тестовое письмо — на адрес администратора в локальный ящик", async () => {
     const overview = await json<{ timeZone: string; mail: { configured: boolean } }>(

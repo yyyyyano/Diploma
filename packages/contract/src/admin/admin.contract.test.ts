@@ -3,7 +3,13 @@
 // (суммы, операции, факты, переписку, счётчики их строк).
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
-import { AdminResetResult, AdminUser, JobRun, SystemOverview } from "./admin.contract.ts";
+import {
+  AdminResetResult,
+  AdminUser,
+  JobRun,
+  SetTelegramTokenInput,
+  SystemOverview,
+} from "./admin.contract.ts";
 import { AI_CAPABILITIES, AI_TASKS, AiProvider, AiProviders, AiUsage } from "./ai.contract.ts";
 import { RatesTable, RateRow } from "./rates.contract.ts";
 import {
@@ -58,6 +64,7 @@ describe("PRIV-07: ответы админки — без данных поль�
       "timeZone",
       "lan",
       "langfuse",
+      "telegram",
     ]);
     expect(all.filter((path) => FORBIDDEN.test(path))).toEqual([]);
     expect(paths(JobRun).filter((path) => FORBIDDEN.test(path))).toEqual([]);
@@ -67,6 +74,25 @@ describe("PRIV-07: ответы админки — без данных поль�
     const mail = paths(SystemOverview).filter((path) => path.startsWith("mail."));
     expect(mail).toContain("mail.passwordSet");
     expect(mail.filter((path) => /password$/i.test(path))).toEqual([]);
+  });
+
+  it("токен Telegram-бота наружу не отдаётся — только «задан / не задан / не читается»", () => {
+    expect(paths(SystemOverview).filter((path) => path.startsWith("telegram."))).toEqual([
+      "telegram.token",
+    ]);
+    expect(
+      SystemOverview.shape.telegram.safeParse({ token: "123456:ABCDEFGHIJKLMNOPQRSTUVWXYZ" })
+        .success,
+    ).toBe(false);
+  });
+
+  it("токен бота — вид «число:знаки» или null; произвольная строка отвергается", () => {
+    expect(SetTelegramTokenInput.safeParse({ token: null }).success).toBe(true);
+    expect(
+      SetTelegramTokenInput.safeParse({ token: "123456789:AAH-kosht_test_token_abcdefghij" })
+        .success,
+    ).toBe(true);
+    expect(SetTelegramTokenInput.safeParse({ token: "не токен" }).success).toBe(false);
   });
 
   it("ссылка сброса пароля — только в виде «показана администратору»", () => {

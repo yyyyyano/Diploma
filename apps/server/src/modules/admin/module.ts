@@ -16,6 +16,7 @@ import type { LegalBaseFacade } from "../legal-base/index.ts";
 import type { NormTablesFacade } from "../norm-tables/index.ts";
 import type { SystemFacade } from "../system/index.ts";
 import type { QualityFacade } from "../quality/index.ts";
+import type { TelegramFacade } from "../telegram/index.ts";
 import type { DemoFacade } from "../demo/index.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -28,6 +29,7 @@ export interface AdminFacades {
   readonly legalBase: LegalBaseFacade;
   readonly normTables: NormTablesFacade;
   readonly system: SystemFacade;
+  readonly telegram: TelegramFacade;
   readonly quality: QualityFacade;
   readonly demo: DemoFacade;
 }
@@ -36,9 +38,10 @@ export function createAdminModule({ facades }: ModuleDeps<AdminFacades, Platform
   return defineModule({
     id: "admin",
     router: adminRouter({
-      users: makeAdminUsers(facades),
+      users: makeAdminUsers({ ...facades, telegram: facades.telegram.admin }),
       identity: facades.identity,
       system: facades.system,
+      telegram: facades.telegram.admin,
       mail: facades.mail,
       llm: facades.llm.admin,
       laws: facades.legalBase.admin,

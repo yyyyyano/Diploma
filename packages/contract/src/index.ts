@@ -184,6 +184,7 @@ export {
   AdminUser,
   adminContract,
   JobRun,
+  SetTelegramTokenInput,
   SystemOverview,
 } from "./admin/admin.contract.ts";
 export {

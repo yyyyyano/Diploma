@@ -121,6 +121,8 @@ export const SystemOverview = z.strictObject({
   lan: z.strictObject({ allowed: z.boolean(), address: z.string() }),
   /** Langfuse (OBS-05): включён ли и адрес интерфейса — только на этом компьютере. */
   langfuse: z.strictObject({ enabled: z.boolean(), url: z.string().nullable() }),
+  /** Токен Telegram-бота (ADM-60, NFR-16): только статус — значение наружу не отдаётся. */
+  telegram: z.strictObject({ token: z.enum(["set", "unset", "unreadable"]) }),
 });
 export type SystemOverview = z.infer<typeof SystemOverview>;
 
@@ -132,6 +134,15 @@ export const SetMailInput = z.strictObject({
   from: Email,
   /** Новый пароль SMTP; не передан — прежний остаётся (поле только для записи). */
   password: z.string().min(1).max(256).optional(),
+});
+
+/** Токен Telegram-бота: выдаёт @BotFather, вид «123456:ABC…»; `null` — убрать значение админки (останется `.env`). */
+export const SetTelegramTokenInput = z.strictObject({
+  token: z
+    .string()
+    .trim()
+    .regex(/^\d{3,20}:[A-Za-z0-9_-]{20,100}$/)
+    .nullable(),
 });
 
 export const adminContract = {
@@ -179,6 +190,12 @@ export const adminContract = {
     .route({ method: "POST", path: "/admin/system/mail/test" })
     .output(Ok)
     .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN", "UNAVAILABLE")),
+  /** Токен Telegram-бота (поле только для записи): бот сам перезапустится с новым токеном. */
+  setTelegramToken: oc
+    .route({ method: "POST", path: "/admin/system/telegram-token" })
+    .input(SetTelegramTokenInput)
+    .output(SystemOverview)
+    .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
   setTimeZone: oc
     .route({ method: "POST", path: "/admin/system/time-zone" })
     .input(z.strictObject({ timeZone: z.string().min(1).max(64) }))

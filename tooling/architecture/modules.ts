@@ -503,6 +503,7 @@ export const MODULES: readonly ModuleDef[] = [
     tier: 4,
     spec: "ADM-01…60 (экраны)",
     responsibility: "раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет",
+    // telegram — токен бота (ADM-60): поле только для записи, секретом владеет модуль бота (T-052).
     dependsOn: [
       "identity",
       "privacy",
@@ -512,6 +513,7 @@ export const MODULES: readonly ModuleDef[] = [
       "legal-base",
       "norm-tables",
       "system",
+      "telegram",
       "quality",
       "demo",
     ],

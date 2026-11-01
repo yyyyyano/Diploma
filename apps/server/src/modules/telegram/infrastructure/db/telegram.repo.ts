@@ -204,3 +204,9 @@ export async function readBotName(db: SystemDb): Promise<string | undefined> {
 export async function clearBotName(db: SystemDb): Promise<void> {
   await db.delete(telegramBot).where(sql`true`);
 }
+
+/** Пользователи с привязанным Telegram (столбец «Telegram» админки, ADM-30): только флаг, без чата и имени. */
+export async function linkedUserIds(db: SystemDb): Promise<Set<string>> {
+  const rows = await db.select({ userId: telegramLinks.userId }).from(telegramLinks);
+  return new Set(rows.map((row) => row.userId));
+}

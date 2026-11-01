@@ -367,6 +367,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       legalBase: legalBaseModule.facade,
       normTables: normTablesModule.facade,
       system: systemModule.facade,
+      telegram: telegramModule.facade,
       quality: qualityModule.facade,
       demo: demoModule.facade,
     },

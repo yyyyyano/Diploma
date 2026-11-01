@@ -35,6 +35,8 @@ export function adminRouter(d: {
     "setStatus" | "setRole" | "removeUser" | "resetUserPassword" | "emailOf"
   >;
   readonly system: SystemFacade;
+  /** Токен Telegram-бота (ADM-60): только статус и запись. */
+  readonly telegram: Pick<TelegramFacade["admin"], "tokenStatus" | "setToken">;
   readonly mail: Pick<MailFacade, "smtp">;
   /** Админка ИИ (ADM-20, ADM-50): цифры и настройки — без текстов запросов (ADM-22). */
   readonly llm: LlmAdminFacade["admin"];
@@ -65,6 +67,7 @@ export function adminRouter(d: {
       timeZone: view.timeZone,
       lan: view.lan,
       langfuse: view.langfuse,
+      telegram: { token: await d.telegram.tokenStatus() },
     };
   }
 
@@ -95,6 +98,10 @@ export function adminRouter(d: {
     sendTestMail: admin.admin.sendTestMail.handler(async ({ context }) => {
       await d.mail.smtp.sendTest(await d.identity.emailOf(context.s));
       return { ok: true as const };
+    }),
+    setTelegramToken: admin.admin.setTelegramToken.handler(async ({ input }) => {
+      await d.telegram.setToken(input.token);
+      return overview();
     }),
     setTimeZone: admin.admin.setTimeZone.handler(async ({ input }) => {
       await d.system.setTimeZone(input.timeZone);

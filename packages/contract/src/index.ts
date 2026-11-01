@@ -423,4 +423,17 @@ export {
   ScenarioReason,
   ScenarioRisk,
 } from "./afford/afford.contract.ts";
+export {
+  Weekday,
+  WEEKLY_TEXT_SOURCES,
+  WEEKLY_TOP,
+  WEEKLY_UPCOMING_ITEMS,
+  WeeklyAmount,
+  WeeklyHistory,
+  WeeklyLatest,
+  WeeklyPreferences,
+  WeeklySummary,
+  WeeklyTextSource,
+  weeklyContract,
+} from "./weekly/weekly.contract.ts";
 export { contract } from "./router.ts";

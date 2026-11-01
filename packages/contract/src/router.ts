@@ -27,6 +27,7 @@ import { statementsContract } from "./statements/statements.contract.ts";
 import { taxContract } from "./tax/tax.contract.ts";
 import { transactionsContract } from "./transactions/transactions.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
+import { weeklyContract } from "./weekly/weekly.contract.ts";
 import { voiceContract } from "./voice/voice.contract.ts";
 
 export const contract = {
@@ -47,6 +48,7 @@ export const contract = {
   tax: taxContract,
   calendar: calendarContract,
   afford: affordContract,
+  weekly: weeklyContract,
   dashboard: dashboardContract,
   categories: categoriesContract,
   transactions: transactionsContract,

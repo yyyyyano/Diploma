@@ -113,7 +113,12 @@ export function createLegalBaseModule({
           now: () => platform.clock.now(),
         })
       : createPravoSource({ fetcher, baseUrl: await platform.settings.get(LEGAL_BASE_URL) });
+  // События общей базы — без своего владельца: от имени первого администратора, как identity.system-initialized.
+  const publish = makeSystemEvents({
+    publishSystemEvent: (event, ids) => facades.identity.publishSystemEvent(event, ids),
+  });
   const loadAct = makeLoadAct({
+    publish,
     system: platform.system,
     source,
     clock: platform.clock,
@@ -156,10 +161,6 @@ export function createLegalBaseModule({
     demand,
     embedQuery: async (text) => (await facades.llm.embed(caller, [text]))[0] ?? null,
     log: platform.log,
-  });
-  // События общей базы — без своего владельца: от имени первого администратора, как identity.system-initialized.
-  const publish = makeSystemEvents({
-    publishSystemEvent: (event, ids) => facades.identity.publishSystemEvent(event, ids),
   });
   const readCard = makeCardReader({ source, clock: platform.clock });
   const actCheck = makeActCheck({

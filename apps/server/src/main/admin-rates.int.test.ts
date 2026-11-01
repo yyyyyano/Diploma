@@ -180,6 +180,28 @@ describe("TAX-03, ADM-11: таблица и подтверждение", () => {
   });
 });
 
+describe("LAW-33: стартовая загрузка каталога", () => {
+  it("на свежей установке источники ставок и сроков привязаны к версиям фрагментов без единой смены редакции", async () => {
+    // T-048: первая загрузка акта сообщает `act-updated` — сверка не ждёт первой смены редакции закона.
+    await vi.waitFor(
+      async () => {
+        for (const param of [
+          "ndfl.std-deduction.base",
+          "deadline.property-tax",
+          "deadline.land-tax",
+          "deadline.transport-tax",
+          "deadline.npd-payment",
+          "deadline.declaration",
+        ]) {
+          const row = await rowOf(param);
+          expect([param, row?.source.linked, row?.drift]).toEqual([param, true, false]);
+        }
+      },
+      { timeout: 60_000, interval: 300 },
+    );
+  }, 90_000);
+});
+
 describe("LAW-33: новая редакция закона с другим числом", () => {
   it("в п. 1.1 ст. 209 вместо 216 стало 2300 — ставка помечена расхождением, администратор уведомлён, значение не изменилось", async () => {
     const before = await rowOf("ndfl.std-deduction.base");

@@ -8,6 +8,7 @@ import type { Clock } from "@kosht/kernel";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
+import { actUpdated } from "../events.ts";
 import { matchVersions } from "../domain/match-versions.ts";
 import { assessSnapshot, canaryOf } from "../domain/quarantine.ts";
 import {
@@ -23,6 +24,7 @@ import {
 import { startCatalogLabels } from "../infrastructure/db/dictionaries.repo.ts";
 import { parseActPage } from "../infrastructure/pravo-by/parse-act.ts";
 import { ActTextNotFound, type LegalSource } from "./ports.ts";
+import type { PublishSystemEvent } from "./system-events.ts";
 
 export type LoadOutcome =
   | "applied"
@@ -38,6 +40,8 @@ export interface LoadActDeps {
   readonly clock: Clock;
   readonly log: Logger;
   readonly notifications: Pick<NotificationsFacade, "notifyAdmins">;
+  /** LAW-33: первая загрузка акта сообщает `act-updated` — сверка ставок привязывает источники к версиям на свежей установке. */
+  readonly publish?: PublishSystemEvent;
 }
 
 export function makeLoadAct(d: LoadActDeps) {
@@ -128,6 +132,8 @@ export function makeLoadAct(d: LoadActDeps) {
       details: { fragments: parsed.fragments.length, articles: parsed.articleCount },
     });
     d.log.info({ actId: act.id, count: parsed.fragments.length }, "law.act.loaded");
+    // LAW-33 (T-048): до первой смены редакции у акта не было события — источники ставок и сроков оставались непривязанными.
+    await d.publish?.(actUpdated, [act.id]);
     return "applied";
   };
 }

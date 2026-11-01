@@ -1,0 +1,122 @@
+/* .as-card с мини-графиком из design/screens/Assistant.dc.html: полосы по рядам, подписи — текстом. */
+.chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  margin: 0;
+  padding: var(--s-14);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(70px, 28%) 1fr;
+  align-items: center;
+  gap: var(--s-10);
+  font-size: 13px;
+}
+
+.label {
+  min-width: 0;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.track {
+  flex: 1;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+}
+
+.value {
+  flex: none;
+  min-width: 72px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.svg {
+  width: 100%;
+  height: auto;
+  max-height: 120px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: var(--s-4) var(--s-6);
+  text-align: left;
+  border-bottom: 1px dashed var(--line);
+}
+
+.table td {
+  text-align: right;
+}

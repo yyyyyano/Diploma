@@ -11,6 +11,7 @@ import { makeSafeLoan } from "../../modules/afford/application/safe-loan.ts";
 import { affordTools } from "../../modules/afford/agent/tools.ts";
 import type { Deps } from "../../modules/afford/application/deps.ts";
 import { makeGoals } from "../../modules/budgets/application/goals.ts";
+import { makeLimits } from "../../modules/budgets/application/limits.ts";
 import { makeOverview } from "../../modules/budgets/application/overview.ts";
 import {
   makeRevisions,
@@ -48,6 +49,7 @@ export function affordWithJournal(db: TestDb) {
   const revisions = makeRevisions(budgetsDeps);
   const thresholds = makeThresholds(budgetsDeps, overview);
   const goals = makeGoals(budgetsDeps, overview, revisions, thresholds);
+  const limits = makeLimits(budgetsDeps, overview, revisions, thresholds);
   r.t.registerUndo(RESTORE_HANDLER, revisions.restore);
   r.t.registerUndo(UNCONTRIBUTE_HANDLER, goals.uncontribute);
 
@@ -81,6 +83,8 @@ export function affordWithJournal(db: TestDb) {
     r,
     s: r.s,
     goals,
+    limits,
+    overview,
     scenarios,
     safeLoan,
     confirmPdn,

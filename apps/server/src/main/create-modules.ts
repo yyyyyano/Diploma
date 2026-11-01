@@ -252,11 +252,13 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       transactions: transactionsModule.facade,
       budgets: budgetsModule.facade,
       calendar: calendarModule.facade,
+      categories: categoriesModule.facade,
       recurring: recurringModule.facade,
       tax: taxModule.facade,
       llm: llmModule.facade,
       notifications: notificationsModule.facade,
       explain: explainModule.facade,
+      identity: identityModule.facade,
     },
   });
   const dashboardModule = createDashboardModule({

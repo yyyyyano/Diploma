@@ -106,6 +106,17 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, $3, 7, '2099-11-24T06:00:00Z')`,
     [...ids, calendarEvent.rows[0]?.id],
   );
+  // Итоги недели: настройки и сводка (WEEK-01, WEEK-03) — строки пользователя, которые удаление аккаунта обязано убрать.
+  await db.owner.query(
+    `insert into weekly_preferences (household_id, user_id) values ($1, $2)
+     on conflict do nothing`,
+    ids,
+  );
+  await db.owner.query(
+    `insert into weekly_summaries (household_id, user_id, week_start, status, text, text_source)
+     values ($1, $2, '2026-10-26', 'ok', 'Итоги', 'template')`,
+    ids,
+  );
   // Профиль: анкета (признак и факт) и правка факта — строка ревизии для «Отменить».
   const onboarding = await stack.call("local", "/profile/onboarding", {
     cookie: user.cookie,

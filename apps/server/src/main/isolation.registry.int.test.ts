@@ -328,6 +328,11 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   // Сценарии покупки и безопасный платёж: вход — сумма, день и ставка; чужих id нет, данные — только `s`.
   "afford.scenarios": { input: () => ({ price: { minor: 100_000, currency: "BYN" } }) },
   "afford.safeLoan": { input: () => ({}) },
+  // Итоги недели: сводка и настройки — только вызывающего (`s`); во входе нет id, только день недели, время и флаг.
+  "weekly.latest": { input: () => ({}) },
+  "weekly.history": { input: () => ({}) },
+  "weekly.preferences": { input: () => ({}) },
+  "weekly.setPreferences": { input: () => ({ enabled: true, weekday: 1, time: "09:00" }) },
   "tool:afford_scenarios": { input: () => ({ price: { minor: 100_000, currency: "BYN" } }) },
   "tool:safe_loan_payment": { input: () => ({}) },
   "tool:calculate_deduction": {
@@ -884,6 +889,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "transactions.requestMarkTransfer",
       "transactions.unlinkReceipt",
       "transactions.update",
+      "weekly.history",
+      "weekly.latest",
+      "weekly.preferences",
+      "weekly.setPreferences",
       "add_transaction",
       "afford_scenarios",
       "aggregate_transactions",

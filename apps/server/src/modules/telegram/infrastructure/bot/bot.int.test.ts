@@ -584,6 +584,48 @@ describe("TG-03, TG-04: чеки и выписки", () => {
   });
 });
 
+describe("TG-03: карточка чека присылается один раз", () => {
+  const ownerScope = () =>
+    createScopedDb(
+      db.pool,
+      makeScope({
+        userId: UserId.parse(OWNER_A.userId),
+        householdId: HouseholdId.parse(OWNER_A.householdId),
+      }),
+    );
+
+  it("чек ещё распознаётся — карточки нет; потом подписка воркера присылает её, повторная доставка — нет", async () => {
+    const h = harness();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    h.state.ownReceipts.add(uuid(500));
+    h.state.receiptStatus = "processing";
+    await h.raw(chatId, { photo: [{ file_id: "p", file_unique_id: "p", width: 10, height: 10 }] });
+    expect(h.sent()).toEqual([t("bot.start.linked"), t("bot.receipt.received")]);
+
+    h.state.receiptStatus = "ok";
+    const delivered: string[] = [];
+    const sender = {
+      send: async (_chat: number, text: string) => (delivered.push(text), 1),
+      edit: async () => undefined,
+    };
+    expect(await h.handler.deliverReceipt(ownerScope(), uuid(500), sender)).toBe(true);
+    expect(await h.handler.deliverReceipt(ownerScope(), uuid(500), sender)).toBe(true);
+    expect(delivered).toHaveLength(1);
+  });
+
+  it("чек «не вышло» — объяснение вместо карточки, без кнопок", async () => {
+    const h = harness();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    h.state.ownReceipts.add(uuid(500));
+    h.state.receiptStatus = "failed";
+    await h.raw(chatId, { photo: [{ file_id: "p", file_unique_id: "p", width: 10, height: 10 }] });
+    expect(h.sent().at(-1)).toBe(t("bot.receipt.failed"));
+    expect(keyboardOf(h.calls.filter((c) => c.method === "sendMessage").at(-1))).toEqual([]);
+  });
+});
+
 describe("SEC-04: чужие id в кнопках", () => {
   it("чужой чек или решение в кнопке — «Не нашёл», ничего не изменено; ошибки без текстов в логе", async () => {
     const h = harness();

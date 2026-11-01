@@ -1,0 +1,457 @@
+/* Экран «Календарь» (design/screens/Calendar.dc.html): сетка месяца и список; ≤ 860 px — поля 16, ячейки с значками без текста. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+  width: 100%;
+  max-width: 1260px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}
+
+.views {
+  display: inline-flex;
+  margin: 0;
+  border: 0;
+  padding: var(--s-2);
+  background: var(--kit-neutral-soft);
+  border-radius: var(--r-sm);
+}
+
+.view {
+  min-height: 36px;
+  padding: 0 var(--s-14);
+  font-weight: 600;
+  color: var(--ink-2);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+}
+
+.view[aria-pressed="true"] {
+  color: var(--brand);
+  background: var(--surface);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.error {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.monthView {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14);
+}
+
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-12);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.navButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--ink);
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.monthLabel {
+  min-width: 140px;
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-14);
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+}
+
+.board {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+  overflow: hidden;
+}
+
+.weekdays,
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekday {
+  padding: var(--s-8);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: center;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.weekday[data-weekend="true"] {
+  color: var(--warn);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  min-height: 112px;
+  padding: var(--s-4);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cell:nth-child(7n) {
+  border-right: 0;
+}
+
+.cell[data-out="true"] {
+  background: var(--surface-2);
+}
+
+.cell[data-out="true"] .dayNumber {
+  color: var(--ink-3);
+}
+
+.cell[data-today="true"] {
+  background: var(--brand-soft);
+}
+
+.dayNumber {
+  align-self: flex-start;
+  min-width: 28px;
+  min-height: 28px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--r-sm);
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-2) var(--s-6);
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  background: var(--kit-neutral-soft);
+  border: 0;
+  border-radius: var(--s-6);
+}
+
+.pill[data-type="tax"] {
+  color: var(--law);
+  background: var(--law-soft);
+}
+
+.pill[data-type="credit"] {
+  color: var(--brand-ink);
+  background: var(--brand-soft-2);
+}
+
+.pill[data-type="income"] {
+  color: var(--income);
+  background: var(--income-soft);
+}
+
+.pill[data-type="warranty"] {
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+}
+
+.pill[data-type="insurance"] {
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+.pill[data-type="own"] {
+  color: var(--warn);
+  background: var(--warn-soft);
+}
+
+.pill[data-past="true"] {
+  color: var(--ink-2);
+  background: var(--kit-neutral-soft);
+}
+
+.pillTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pillAmount {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.more {
+  align-self: flex-start;
+  min-height: 24px;
+  padding: 0 var(--s-4);
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+/* Телефон: в ячейке — только цветные плашки без текста (подробности — в «Дне» и «Списке»). */
+@media (max-width: 860px) {
+  .cell {
+    min-height: 96px;
+    padding: var(--s-2);
+  }
+
+  .pillTitle,
+  .pillAmount {
+    display: none;
+  }
+
+  /* Цель касания не меньше 24 px (WCAG 2.2, 2.5.8): плашка без текста — цветной прямоугольник на всю ширину ячейки. */
+  .pill {
+    min-height: 24px;
+    padding: 0;
+  }
+
+  .dayNumber {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .more {
+    min-height: 24px;
+    min-width: 24px;
+    font-size: 11px;
+  }
+}
+
+.hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  font-size: 13px;
+}
+
+.legendItem > span {
+  width: var(--s-24);
+  height: var(--s-24);
+}
+
+.note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-3);
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+}
+
+.group {
+  padding: var(--s-16) var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.groupHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  margin-bottom: var(--s-4);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.groupSum {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--s-12);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.sheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+}
+
+.eventTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.eventWhen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8);
+  margin: 0;
+  font-size: 14px;
+}
+
+.rel {
+  padding: var(--s-2) var(--s-9);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--kit-neutral-soft);
+  border-radius: var(--r-pill);
+}
+
+.amountRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  padding: var(--s-12) var(--s-14);
+  margin: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.sheetLabel {
+  margin: 0 0 var(--s-6);
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-transform: none;
+}
+
+.source {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.dateEdit {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-12);
+}
+
+.links {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.links a {
+  display: inline-block;
+  padding: var(--s-6) 0;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-12);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}

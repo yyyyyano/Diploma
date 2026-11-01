@@ -72,6 +72,7 @@ const ENTITY_QUERIES: Readonly<Record<string, () => readonly QueryKey[]>> = {
   recurring: () => [orpc.recurring.key(), orpc.fin.key(), orpc.dashboard.key()],
   budget: () => [orpc.budgets.key(), orpc.dashboard.key()],
   goal: () => [orpc.budgets.key(), orpc.dashboard.key()],
+  "calendar-event": () => [orpc.calendar.key(), orpc.dashboard.key(), orpc.notifications.key()],
 };
 
 function apply(event: SiteEvent, queryClient: QueryClient): void {

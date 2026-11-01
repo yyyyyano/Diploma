@@ -2,14 +2,14 @@
 // пресеты, состояние для админки и самотест с откатом на процессор. «Интернет» и llama-server — локальные HTTP-серверы
 // (NFR-11); настоящие модели в этой фазе не скачиваются (решение пользователя 2026-10-29).
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createSystemDb } from "../../../../platform/db/system-db.ts";
 import { memoryLogger } from "../../../../platform/logging/__fixtures__/memory-logger.ts";
 import type { CatalogModel } from "./catalog.ts";
@@ -29,6 +29,7 @@ const sha = (buffer: Buffer) => createHash("sha256").update(buffer).digest("hex"
 const filesState = {
   cutBig: false,
   cutDone: false,
+  hangBig: false,
   ranges: [] as (string | undefined)[],
   status: 200,
 };
@@ -47,6 +48,11 @@ function serveFiles(request: IncomingMessage, response: ServerResponse): void {
     return void response.end(body.subarray(start));
   }
   response.writeHead(200, { "content-length": String(body.length) });
+  if (request.url === "/big" && filesState.hangBig && !filesState.cutDone) {
+    // источник замолкает посреди файла: соединение живо, пока клиент не оборвёт его сам (abort задачи)
+    filesState.cutDone = true;
+    return void response.write(body.subarray(0, 50_000));
+  }
   if (request.url === "/big" && filesState.cutBig && !filesState.cutDone) {
     filesState.cutDone = true;
     response.write(body.subarray(0, 50_000));
@@ -124,7 +130,13 @@ const catalog = (): CatalogModel[] => [
 
 beforeEach(async () => {
   dir = mkdtempSync(join(tmpdir(), "kosht-models-"));
-  Object.assign(filesState, { cutBig: false, cutDone: false, ranges: [], status: 200 });
+  Object.assign(filesState, {
+    cutBig: false,
+    cutDone: false,
+    hangBig: false,
+    ranges: [],
+    status: 200,
+  });
   Object.assign(llamaState, { chat: "4", embeddings: "good", calls: [], garbageUntilCpu: false });
   await db.owner.query("delete from llm_local_models");
 });
@@ -197,6 +209,28 @@ describe("NFR-25: скачивание набора моделей", () => {
     expect((await models.view()).state).toBe("ready");
     expect(readFileSync(join(dir, "llm/big.bin")).equals(BIG)).toBe(true);
     expect(existsSync(join(dir, "llm/big.bin.part"))).toBe(false);
+  });
+
+  it("задачу прервали (abort при перезапуске worker): строка не остаётся «скачивается» — повтор сразу докачивает с места и доводит до «готово»", async () => {
+    const { models, ctx, ready } = setup({ baseUrl: "http://127.0.0.1:1/v1" });
+    filesState.hangBig = true;
+    const controller = new AbortController();
+    const first = models.download({ ...ctx, signal: controller.signal });
+    const part = join(dir, "llm/big.bin.part");
+    await vi.waitFor(() => expect(existsSync(part) && statSync(part).size > 0).toBe(true));
+    controller.abort();
+    await expect(first).rejects.toBeDefined();
+    // без перемотки часов: свежая строка «скачивается» заблокировала бы повтор (anotherDownloader)
+    expect((await models.view()).models[0]?.state).toBe("pending");
+    expect(existsSync(part)).toBe(true);
+
+    filesState.ranges = [];
+    await models.download(ctx);
+    expect(filesState.ranges.some((range) => /^bytes=\d+-$/.test(range ?? ""))).toBe(true);
+    expect((await models.view()).state).toBe("ready");
+    expect(readFileSync(join(dir, "llm/big.bin")).equals(BIG)).toBe(true);
+    expect(readFileSync(join(dir, "presets.ini"), "utf8")).toContain("[qwen3.5-4b]");
+    expect(ready).toHaveLength(1);
   });
 
   it("404 у источника — не повторять (INTERNAL), код в состоянии без текста", async () => {

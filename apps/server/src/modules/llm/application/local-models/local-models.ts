@@ -305,7 +305,23 @@ export function makeLocalModels(d: LocalModelsDeps) {
         );
       } catch (error) {
         const code = error instanceof ModelDownloadError ? error.code : "UNKNOWN";
-        if (ctx.signal.aborted) throw error;
+        if (ctx.signal.aborted) {
+          // Прервали (перезапуск worker, остановка): строка «скачивается» со свежим updated_at отсекла бы повтор
+          // задачи как «чужую» загрузку на минуту (anotherDownloader) — возвращаем «ожидает», `.part` остаётся для
+          // докачки по Range. Сбой записи не должен заслонить причину прерывания.
+          const part = await stat(`${dest}.part`).then(
+            (info) => info.size,
+            () => 0,
+          );
+          await upsertLocalModel(system, {
+            ...base,
+            status: "pending",
+            bytesDone: Math.min(part, file.size),
+            errorCode: null,
+            at: clock.now(),
+          }).catch(() => undefined);
+          throw error;
+        }
         await upsertLocalModel(system, {
           ...base,
           status: "failed",

@@ -7,6 +7,7 @@ import { makeScope, type Scope } from "@kosht/kernel";
 import { CONSENT_VERSIONS } from "@kosht/i18n";
 import { cassetteFile, cassetteMode, FakeClock, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
+import { ChartData } from "@kosht/contract";
 import type { UIMessage } from "ai";
 import { copyFile, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { readdirSync, readFileSync } from "node:fs";
@@ -27,6 +28,9 @@ import { makeRunAgent } from "./run-agent.ts";
 
 // Запись идёт живой моделью с паузами между шагами (pacedForRecording): обычные 30 с теста не хватит.
 vi.setConfig({ testTimeout: 240_000 });
+
+// Запись идёт живой моделью с паузами: сценарию с длинной цепочкой нужно больше обычных 30 с теста.
+const SCENARIO_TIMEOUT = 900_000;
 
 const TODAY = "2026-10-31";
 const YESTERDAY = "2026-10-30";
@@ -217,12 +221,19 @@ async function ask(
   for await (const chunk of stream) void chunk;
   if (finished === undefined) throw new Error("запуск не вызвал onFinish");
   // Нет кассеты или сбой модели агент превращает в вежливую пометку: тест не должен принять её за ответ.
-  const failures = memory
+  const failed = memory
     .lines()
-    .map((line) => String(line["msg"]))
-    .filter((msg) => ["agent.model-failed", "agent.run-failed"].includes(msg));
-  if (failures.length > 0)
-    throw new Error(`Запуск упал (${failures.join(", ")}): нет кассеты или модель недоступна.`);
+    .filter((line) => ["agent.model-failed", "agent.run-failed"].includes(String(line["msg"])));
+  if (failed.length > 0) {
+    // Причина — в журнале расхода моделей (код ошибки каждого вызова цепочки): запись упирается то в лимиты провайдеров,
+    // то в ключи, и по одной пометке «модель недоступна» не понять.
+    const { rows } = await db.owner.query<Record<string, unknown>>(
+      "select task, provider, model, input_tokens, error_code from llm_usage order by created_at desc limit 8",
+    );
+    throw new Error(
+      `Запуск упал: нет кассеты или модель недоступна. Вызовы моделей: ${JSON.stringify(rows)}`,
+    );
+  }
   const text = finished.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
   return { message: finished, text, log: memory.lines() };
 }
@@ -323,4 +334,33 @@ describe("AGT-08: «а в августе?» после сентября", () => 
     ).toBe(true);
     expect(unverifiedNote(answer)).toBe(false);
   });
+});
+
+describe("AGT-02: «сколько на кафе за лето и сколько сэкономлю, если урежу на треть»", () => {
+  it(
+    "цепочка инструментов: данные по месяцам, расчёт калькулятором, график не больше шести рядов; чисел вне результатов нет",
+    async () => {
+      const user = await standFor("agent/cafe-summer");
+      await seedExpense(user, "2026-06-10", 4_000, "Кофейня");
+      await seedExpense(user, "2026-07-12", 6_000, "Кофейня");
+      await seedExpense(user, "2026-08-15", 5_000, "Кофейня");
+      const answer = await ask(
+        user,
+        "Сколько я потратил на кафе за лето и сколько сэкономлю за год, если урежу на треть? Покажи график по месяцам.",
+      );
+      const data = [
+        ...toolParts(answer, "aggregate_transactions"),
+        ...toolParts(answer, "search_transactions"),
+      ];
+      expect(data.length).toBeGreaterThanOrEqual(1);
+      expect(toolParts(answer, "calculator").length).toBeGreaterThanOrEqual(1);
+      const chart = answer.message.parts.find((part) => part.type === "data-chart") as
+        | { data: unknown }
+        | undefined;
+      expect(chart).toBeDefined();
+      expect(ChartData.parse(chart?.data).series.length).toBeLessThanOrEqual(6);
+      expect(unverifiedNote(answer)).toBe(false);
+    },
+    SCENARIO_TIMEOUT,
+  );
 });

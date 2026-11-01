@@ -1,0 +1,88 @@
+/* Экран «Могу ли я позволить покупку?» (design/screens/Afford.dc.html): форма, сценарии, график, безопасный платёж. */
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-20);
+  width: 100%;
+  max-width: 1260px;
+  padding: var(--s-28) var(--s-32) var(--s-120);
+}
+
+@media (max-width: 860px) {
+  .body {
+    padding-left: var(--s-16);
+    padding-right: var(--s-16);
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.heading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-20);
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sumField,
+.whenField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  min-width: 0;
+}
+
+.quick {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.loanControls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+}
+
+.loanFields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-12);
+}
+
+@media (max-width: 560px) {
+  .loanFields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

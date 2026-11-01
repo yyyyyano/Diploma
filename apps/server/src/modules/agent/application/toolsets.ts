@@ -26,9 +26,9 @@ const WORDS: readonly (readonly [NonCoreToolset, RegExp])[] = [
   ["reports", /excel|эксель|xlsx|отчет|выписк|импорт|распознан|чек[аие]?\b|фото чека/u],
 ];
 
-// Страницы сайта (маршрут из PageContext): законы — право, бюджет и регулярные — планирование, документы — отчёты.
+// Страницы сайта (маршрут из PageContext): законы и налоговые вычеты — право, бюджет и регулярные — планирование, документы — отчёты.
 const PAGES: readonly (readonly [NonCoreToolset, RegExp])[] = [
-  ["legal", /^\/laws(?:\/|$)/u],
+  ["legal", /^\/(?:laws|deductions)(?:\/|$)/u],
   ["planning", /^\/(?:budget|recurring|accounts|calendar)(?:\/|$)/u],
   ["reports", /^\/documents(?:\/|$)/u],
 ];

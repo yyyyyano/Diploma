@@ -357,6 +357,7 @@ export {
 } from "./transactions/transactions.contract.ts";
 export {
   CalculateDeductionInput,
+  CalculateDeductionToolInput,
   DEDUCTION_FLAGS,
   DEDUCTION_KINDS,
   DEDUCTION_WAYS,

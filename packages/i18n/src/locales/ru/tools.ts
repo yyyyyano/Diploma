@@ -26,6 +26,7 @@ export const tools = {
   delete_goal: "Готовлю удаление цели…",
   statement_import_status: "Проверяю, как идёт разбор выписки…",
   get_checklist: "Готовлю чек-лист документов…",
+  calculate_deduction: "Считаю вычет…",
   calculator: "Считаю…",
   make_chart: "Рисую график…",
   ask_user: "Уточняю…",

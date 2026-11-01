@@ -302,6 +302,13 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
     input: () => ({ target: { minor: 100_000, currency: "BYN" }, deadline: "2027-06-01" }),
   },
   "tool:list_budgets": { input: () => ({}) },
+  // Расчёт вычета: во входе только суммы и вид; профиль и трассы — домохозяйства вызова (`s`), чужих id во входе нет.
+  "tax.calculate": {
+    input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
+  },
+  "tool:calculate_deduction": {
+    input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
+  },
   "tool:set_limit": {
     input: () => ({ categoryKey: "system:taxi", limit: { minor: 10_000, currency: "BYN" } }),
   },
@@ -818,6 +825,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "statements.rollback",
       "statements.rollbackInfo",
       "statements.start",
+      "tax.calculate",
       "transactions.create",
       "transactions.explainRate",
       "transactions.get",
@@ -831,6 +839,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "add_transaction",
       "aggregate_transactions",
       "bulk_change_category",
+      "calculate_deduction",
       "calculator",
       "contribute_to_goal",
       "create_account",

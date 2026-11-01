@@ -43,6 +43,20 @@ export const CalculateDeductionInput = z.discriminatedUnion("kind", [
 ]);
 export type CalculateDeductionInput = z.input<typeof CalculateDeductionInput>;
 
+/**
+ * Вход инструмента агента `calculate_deduction`: плоский объект (схема инструмента — объект), поля по виду вычета —
+ * обучение: `paid` (и `annualTaxable`), жильё: `expenses` (и `income`), дети: только `income`. Сервер собирает из него
+ * `CalculateDeductionInput`; чего не хватает для вида — `VALIDATION` с названием поля, модель поправит вызов.
+ */
+export const CalculateDeductionToolInput = z.strictObject({
+  kind: DeductionKind,
+  paid: Money.schema.optional(),
+  annualTaxable: Money.schema.optional(),
+  expenses: Money.schema.optional(),
+  income: DeductionIncome.optional(),
+});
+export type CalculateDeductionToolInput = z.input<typeof CalculateDeductionToolInput>;
+
 /** Число расчёта с трассой «Откуда эта цифра?». */
 export const DeductionAmount = z.strictObject({ amount: Money.schema, traceId: TraceId });
 export type DeductionAmount = z.infer<typeof DeductionAmount>;

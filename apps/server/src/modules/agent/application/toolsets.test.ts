@@ -40,6 +40,8 @@ describe("selectToolset: страница", () => {
   it.each([
     ["/laws", "legal"],
     ["/laws/HK9800166", "legal"],
+    // T-045: на «Налоговых вычетах» вопрос идёт в набор с calculate_deduction и get_checklist.
+    ["/deductions", "legal"],
     ["/budget", "planning"],
     ["/recurring", "planning"],
     ["/accounts", "planning"],

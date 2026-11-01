@@ -1,5 +1,5 @@
 // Запросы календаря (CAL-01…07): первый аргумент — s: ScopedDb, у каждого обращения к таблице — свой s.own (ADR-0006).
-import { and, asc, eq, gte, inArray, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, isNull, like, lte, sql } from "drizzle-orm";
 import type { InsertValue, ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import type { SweepFind } from "../../../../platform/jobs/sweep.ts";
 import { calendarEvents, calendarReminders } from "./schema.ts";
@@ -37,6 +37,15 @@ export async function findByKey(s: ScopedDb, key: string): Promise<EventRow | un
     .from(calendarEvents)
     .where(and(s.own(calendarEvents), eq(calendarEvents.key, key)));
   return rows[0];
+}
+
+/** События правил сроков (CAL-02): ключ `rule:<правило>…` — для пересчёта по фактам профиля и таблице ставок. */
+export async function listRuleEvents(s: ScopedDb): Promise<EventRow[]> {
+  return s.db
+    .select()
+    .from(calendarEvents)
+    .where(and(s.own(calendarEvents), like(calendarEvents.key, "rule:%")))
+    .orderBy(asc(calendarEvents.day), asc(calendarEvents.id));
 }
 
 /** События с днём в `from…to` включительно (без конца — до бесконечности), по дню и id. Без дня (правила без даты) — отдельно. */

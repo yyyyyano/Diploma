@@ -312,6 +312,8 @@ export const MODULES: readonly ModuleDef[] = [
       "actions",
       // explain — трассы сумм событий и итогов месяца и списка (P1, P2).
       "explain",
+      // tax — найденный вычет через ИМНС даёт событие «Подать декларацию до 31.03» (T-048, CAL-02); тот же ярус, обратной связи нет.
+      "tax",
     ],
     tables: ["user"],
     publishes: [],

@@ -14,6 +14,7 @@ import type { NormTablesFacade } from "../norm-tables/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import type { ActionsFacade } from "../actions/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
+import type { TaxFacade } from "../tax/index.ts";
 import { calendarTools } from "./agent/tools.ts";
 import { calendarRouter } from "./api/router.ts";
 import {
@@ -24,12 +25,14 @@ import {
   UNDO_CREATE_HANDLER,
 } from "./application/events.ts";
 import { makeRead } from "./application/read.ts";
+import { makeDeadlines } from "./application/deadlines.ts";
 import { makeReminders } from "./application/reminders.ts";
 import { makeSync } from "./application/sync.ts";
 import { makeWarranty } from "./application/warranty.ts";
 import { deliverJob } from "./jobs/deliver.job.ts";
 import { deliverSweep } from "./jobs/deliver.sweep.ts";
 import { CALENDAR_SETTINGS } from "./settings.ts";
+import { onFactsChanged } from "./subscriptions/on-facts-changed.ts";
 import { onValuesConfirmed } from "./subscriptions/on-values-confirmed.ts";
 import { onWarrantyItemsFound } from "./subscriptions/on-warranty-items-found.ts";
 import { calendarUserData } from "./user-data.ts";
@@ -44,11 +47,14 @@ export interface CalendarFacades {
   readonly notifications: NotificationsFacade;
   readonly actions: ActionsFacade;
   readonly explain: ExplainFacade;
+  readonly tax: TaxFacade;
 }
 
 export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarFacades, Platform>) {
   const deps = {
     platform,
+    profile: facades.profile,
+    tax: facades.tax,
     recurring: facades.recurring,
     receipts: facades.receipts,
     normTables: facades.normTables,
@@ -58,7 +64,8 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
   };
   const reminders = makeReminders(deps);
   const warranty = makeWarranty(deps, reminders);
-  const sync = makeSync(deps, [(s) => warranty.sync(s, [])]);
+  const deadlines = makeDeadlines(deps, reminders);
+  const sync = makeSync(deps, [(s) => warranty.sync(s, []), deadlines.sync]);
   const read = makeRead(deps, sync.ensure);
   const events = makeEvents(deps, reminders);
   const tools = calendarTools(read, events);
@@ -71,7 +78,11 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
     settings: [...CALENDAR_SETTINGS],
     jobs: [deliver],
     sweeps: [deliverSweep(deliver)],
-    subscriptions: [onWarrantyItemsFound(warranty.sync), onValuesConfirmed(sync.run)],
+    subscriptions: [
+      onWarrantyItemsFound(warranty.sync),
+      onValuesConfirmed(sync.run),
+      onFactsChanged(sync.run),
+    ],
     tools: [tools.listEvents, tools.createEvent],
     undo: {
       [UNDO_CREATE_HANDLER]: events.undoCreate,

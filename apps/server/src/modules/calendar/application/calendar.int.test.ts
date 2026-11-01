@@ -414,3 +414,161 @@ describe("CAL-06, AGT-05: инструменты агента create_event и li
     expect(Object.keys(tools.createEvent.input.shape)).not.toContain("userId");
   }, 30_000);
 });
+
+const eventsOf = async (s: { scope: { householdId: unknown } }, rule: string) =>
+  (
+    await db.owner.query<{
+      id: string;
+      day: string | null;
+      key: string;
+      origin: string;
+      type: string;
+      params: Record<string, string | number>;
+    }>(
+      "select id, to_char(day, 'YYYY-MM-DD') as day, key, origin, type, params from calendar_events where rule = $1 and household_id = $2 order by day nulls last",
+      [rule, s.scope.householdId],
+    )
+  ).rows;
+
+describe("CAL-02: сроки налогов — только по фактам профиля и подтверждённым значениям таблицы", () => {
+  it("«есть автомобиль» → транспортный налог 15.11.2026 (ст. 307⁸ п. 2), напоминания за 7 и 1 день; повторный пересчёт дубль не создаёт", async () => {
+    const { s, setFact, sync, read } = stand();
+    expect(await sync.run(s)).toBe(0);
+    await setFact(s, { key: "property.car", value: true });
+    expect(await sync.run(s)).toBe(2);
+    expect(await sync.run(s)).toBe(0);
+    const [tax] = await eventsOf(s, "transport-tax");
+    expect(tax).toMatchObject({
+      day: "2026-11-15",
+      key: "rule:transport-tax:2026",
+      origin: "rule",
+      type: "tax",
+      params: { article: "307⁸", point: "2", confirmedOn: "2026-11-01" },
+    });
+    expect((await remindersOf(tax?.id ?? "")).map((x) => [x.offset, x.dueAt])).toEqual([
+      [7, "2026-11-08T06:00:00.000Z"],
+      [1, "2026-11-14T06:00:00.000Z"],
+    ]);
+    const month = await read.month(s, { month: "2026-11" });
+    expect(month.entries.find((e) => e.rule === "transport-tax")).toMatchObject({
+      type: "tax",
+      title: null,
+      on: "2026-11-15",
+      stored: true,
+      canDelete: false,
+      origin: { kind: "rule" },
+    });
+  }, 30_000);
+
+  it("квартира → налог на недвижимость, участок → земельный: оба 15 ноября, у каждого свой пункт нормы", async () => {
+    const { s, setFact, sync } = stand();
+    await setFact(s, { key: "property.apartment", value: true });
+    await setFact(s, { key: "property.land", value: true });
+    await sync.run(s);
+    expect((await eventsOf(s, "property-tax"))[0]).toMatchObject({
+      day: "2026-11-15",
+      params: { article: "233", point: "5" },
+    });
+    expect((await eventsOf(s, "land-tax"))[0]).toMatchObject({
+      day: "2026-11-15",
+      params: { article: "244", point: "8.1" },
+    });
+  }, 30_000);
+
+  it("факт без подтверждения («предположение») и «нет» событий не создают", async () => {
+    const { s, setFact, sync } = stand();
+    await setFact(s, { key: "property.car", value: true }, "assumed");
+    await setFact(s, { key: "property.land", value: false });
+    expect(await sync.run(s)).toBe(0);
+    expect(await eventsOf(s, "transport-tax")).toEqual([]);
+    expect(await eventsOf(s, "land-tax")).toEqual([]);
+  }, 30_000);
+
+  it("срок не подтверждён в таблице — события нет, числа из головы нет", async () => {
+    const { s, setFact, sync } = stand({ rateUp: false });
+    await setFact(s, { key: "property.apartment", value: true });
+    expect(await sync.run(s)).toBe(0);
+    expect(await eventsOf(s, "property-tax")).toEqual([]);
+  }, 30_000);
+
+  it("факт сменился на «нет» — будущие события правила уходят, а событие, которое уже прошло, остаётся историей", async () => {
+    const { s, setFact, sync } = stand();
+    await setFact(s, { key: "property.car", value: true });
+    await sync.run(s);
+    expect(await eventsOf(s, "transport-tax")).toHaveLength(1);
+    await setFact(s, { key: "property.car", value: false });
+    await sync.run(s);
+    expect(await eventsOf(s, "transport-tax")).toEqual([]);
+    expect(await eventsOf(s, "inspection")).toEqual([]);
+  }, 30_000);
+
+  it("норма изменилась (подтверждено 16 ноября) — день следует за таблицей; перенесённое человеком событие не трогается", async () => {
+    const { s, setFact, sync, events } = stand();
+    await setFact(s, { key: "property.apartment", value: true });
+    await setFact(s, { key: "property.land", value: true });
+    await sync.run(s);
+    const [land] = await eventsOf(s, "land-tax");
+    await events.update(s, { id: land?.id ?? "", on: LocalDate.parse("2026-11-10") }, "web");
+    await db.owner.query(
+      "update norm_rates set value = 1116 where param in ('deadline.property-tax', 'deadline.land-tax')",
+    );
+    try {
+      await sync.run(s);
+      expect((await eventsOf(s, "property-tax"))[0]?.day).toBe("2026-11-16");
+      expect((await eventsOf(s, "land-tax"))[0]?.day).toBe("2026-11-10");
+    } finally {
+      await db.owner.query(
+        "update norm_rates set value = 1115 where param in ('deadline.property-tax', 'deadline.land-tax')",
+      );
+    }
+  }, 30_000);
+
+  it("НПД → 22-е число каждого месяца, шесть ближайших; ИП → декларация до 31.03.2027", async () => {
+    const { s, setFact, sync } = stand();
+    await setFact(s, { key: "employment", types: ["npd", "ip"] });
+    await sync.run(s);
+    expect((await eventsOf(s, "npd-payment")).map((e) => e.day)).toEqual([
+      "2026-11-22",
+      "2026-12-22",
+      "2027-01-22",
+      "2027-02-22",
+      "2027-03-22",
+      "2027-04-22",
+    ]);
+    expect((await eventsOf(s, "declaration")).map((e) => [e.day, e.key])).toEqual([
+      ["2027-03-31", "rule:declaration:2027"],
+    ]);
+  }, 30_000);
+
+  it("найденный вычет (образование, 2026) → «Подать декларацию до 31.03.2027» по ст. 222; вычет отклонён — события нет", async () => {
+    const { s, sync, found } = stand();
+    found.push({ kind: "education", year: 2026 }, { kind: "children", year: 2026 });
+    await sync.run(s);
+    const events = await eventsOf(s, "declaration-deduction");
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      day: "2027-03-31",
+      key: "rule:declaration-deduction:2027",
+      params: { article: "222", point: "1", year: 2026 },
+    });
+    found.length = 0;
+    await sync.run(s);
+    expect(await eventsOf(s, "declaration-deduction")).toEqual([]);
+  }, 30_000);
+
+  it("техосмотр: правило без даты — событие без дня и без напоминаний; день назвал человек — напоминания появились", async () => {
+    const { s, setFact, sync, read, events } = stand();
+    await setFact(s, { key: "property.car", value: true });
+    await sync.run(s);
+    const [inspection] = await eventsOf(s, "inspection");
+    expect(inspection).toMatchObject({ day: null, key: "rule:inspection", type: "own" });
+    expect(await remindersOf(inspection?.id ?? "")).toEqual([]);
+    const { groups } = await read.upcoming(s);
+    expect(groups[0]?.key).toBe("undated");
+    expect(groups[0]?.entries.map((e) => [e.rule, e.on])).toEqual([["inspection", null]]);
+    await events.update(s, { id: inspection?.id ?? "", on: LocalDate.parse("2027-02-10") }, "web");
+    expect((await remindersOf(inspection?.id ?? "")).map((x) => x.offset)).toEqual([7, 1]);
+    await sync.run(s);
+    expect((await eventsOf(s, "inspection"))[0]?.day).toBe("2027-02-10");
+  }, 30_000);
+});

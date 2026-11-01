@@ -2,6 +2,8 @@
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { ActionsFacade } from "../../actions/index.ts";
 import type { ExplainFacade } from "../../explain/index.ts";
+import type { ProfileFacade } from "../../profile/index.ts";
+import type { TaxFacade } from "../../tax/index.ts";
 import type { NormTablesFacade } from "../../norm-tables/index.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
 import type { ReceiptsFacade } from "../../receipts/index.ts";
@@ -9,6 +11,8 @@ import type { RecurringFacade } from "../../recurring/index.ts";
 
 export interface Deps {
   readonly platform: Pick<Platform, "clock" | "log" | "realtime" | "settings">;
+  readonly profile: Pick<ProfileFacade, "getFacts">;
+  readonly tax: Pick<TaxFacade, "activeFound">;
   readonly recurring: Pick<RecurringFacade, "list" | "upcoming">;
   readonly receipts: Pick<ReceiptsFacade, "warrantyItems">;
   readonly normTables: Pick<NormTablesFacade, "rate">;

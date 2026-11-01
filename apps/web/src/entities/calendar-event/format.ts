@@ -70,7 +70,7 @@ export function relativeText(t: CalendarT, on: LocalDate, today: LocalDate): str
 }
 
 /** «Откуда это событие»: текст по виду источника и параметрам (магазин, день покупки, срок гарантии, имя платежа). */
-export function originText(t: CalendarT, entry: Pick<CalendarEntry, "origin">): string {
+export function originText(t: CalendarT, entry: Pick<CalendarEntry, "origin" | "rule">): string {
   const { kind, params } = entry.origin;
   const value = (key: string) => String(params[key] ?? "");
   const date = (key: string) => {
@@ -92,6 +92,17 @@ export function originText(t: CalendarT, entry: Pick<CalendarEntry, "origin">): 
       return t(`calendar:origin.${kind}`, { name: value("name") });
     case "insurance":
       return t("calendar:origin.insurance", { paidOn: date("paidOn") });
+    case "rule": {
+      // CAL-02: текст по правилу (факт профиля и норма НК); правило неизвестно сайту — общая подпись.
+      const key = `calendar:origin.rules.${entry.rule ?? ""}` as never;
+      return t(key, {
+        defaultValue: t("calendar:origin.rule"),
+        article: value("article"),
+        point: value("point"),
+        confirmedOn: date("confirmedOn"),
+        year: value("year"),
+      });
+    }
     default:
       return t(`calendar:origin.${kind}`);
   }

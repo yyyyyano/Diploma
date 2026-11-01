@@ -204,19 +204,6 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       explain: explainModule.facade,
     },
   });
-  const calendarModule = createCalendarModule({
-    platform: ports.platform,
-    facades: {
-      profile: profileModule.facade,
-      transactions: transactionsModule.facade,
-      recurring: recurringModule.facade,
-      receipts: receiptsModule.facade,
-      normTables: normTablesModule.facade,
-      notifications: notificationsModule.facade,
-      actions: actionsModule.facade,
-      explain: explainModule.facade,
-    },
-  });
   const taxModule = createTaxModule({
     platform: ports.platform,
     facades: {
@@ -229,6 +216,20 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       notifications: notificationsModule.facade,
       actions: actionsModule.facade,
       explain: explainModule.facade,
+    },
+  });
+  const calendarModule = createCalendarModule({
+    platform: ports.platform,
+    facades: {
+      profile: profileModule.facade,
+      transactions: transactionsModule.facade,
+      recurring: recurringModule.facade,
+      receipts: receiptsModule.facade,
+      normTables: normTablesModule.facade,
+      notifications: notificationsModule.facade,
+      actions: actionsModule.facade,
+      explain: explainModule.facade,
+      tax: taxModule.facade,
     },
   });
   const affordModule = createAffordModule({

@@ -83,6 +83,30 @@ const warranty = {
   ref: { entity: "receipt", id: ID(7) },
 };
 
+const transportTax = {
+  ...kindergarten,
+  id: ID(8),
+  type: "tax",
+  title: null,
+  rule: "transport-tax",
+  on: "2026-11-15",
+  canDelete: false,
+  origin: {
+    kind: "rule",
+    params: { article: "307⁸", point: "2", confirmedOn: "2026-11-01" },
+  },
+};
+const inspection = {
+  ...kindergarten,
+  id: ID(9),
+  type: "own",
+  title: null,
+  rule: "inspection",
+  on: null,
+  canDelete: false,
+  origin: { kind: "rule", params: { basis: "fact" } },
+};
+
 const MONTH = {
   today: "2026-10-21",
   month: "2026-10",
@@ -223,6 +247,51 @@ describe("CAL-01: список «Ближайшие»", () => {
     expect(screen.getByRole("heading", { name: "Ноябрь" })).toBeInTheDocument();
     expect(screen.getByText(/Кредит · пятница · через 2 дня/u)).toBeInTheDocument();
     expect(screen.getByText("Наушники")).toBeInTheDocument();
+  });
+});
+
+describe("CAL-02: события правил сроков", () => {
+  it("налог по правилу: название из словаря, «Откуда» — факт профиля, статья НК и дата подтверждения срока", async () => {
+    server.use(
+      upcoming({
+        groups: [
+          {
+            key: "month-2026-11",
+            from: "2026-11-02",
+            to: "2026-11-30",
+            entries: [transportTax],
+            totals: { payments: null, income: null },
+          },
+        ],
+      }),
+    );
+    renderPage({ view: "list", event: transportTax.id });
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Срок уплаты транспортного налога")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(
+        /По факту профиля «есть автомобиль» и таблице сроков.*НК, ст\. 307⁸, п\. 2; срок подтверждён 01\.11\.2026/u,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("правило без даты — группа «Укажите дату», у карточки нет напоминаний, пока день не назван", async () => {
+    server.use(
+      upcoming({
+        groups: [
+          {
+            key: "undated",
+            from: "2026-10-21",
+            to: null,
+            entries: [inspection],
+            totals: { payments: null, income: null },
+          },
+        ],
+      }),
+    );
+    renderPage({ view: "list" });
+    expect(await screen.findByText("Укажите дату")).toBeInTheDocument();
+    expect(screen.getByText("Техосмотр автомобиля")).toBeInTheDocument();
   });
 });
 

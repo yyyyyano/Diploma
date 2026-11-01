@@ -1,9 +1,8 @@
 // TAX-20: оплата обучения — категория «Образование» плюс признаки получателя (учреждение образования): словарь из настройки, без модели.
 import { describe, expect, it } from "vitest";
-import { EDUCATION_PAYEE_WORDS } from "../settings.ts";
-import { isEducationPayee } from "./education-payee.ts";
+import { DEFAULT_EDUCATION_PAYEE_WORDS, isEducationPayee } from "./education-payee.ts";
 
-const words = EDUCATION_PAYEE_WORDS.default;
+const words = DEFAULT_EDUCATION_PAYEE_WORDS;
 
 describe("TAX-20: получатель — учреждение образования", () => {
   it.each([

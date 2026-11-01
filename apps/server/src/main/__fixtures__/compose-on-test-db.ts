@@ -5,7 +5,7 @@ import { randomBytes } from "node:crypto";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { inject } from "vitest";
+import { expect, inject, vi } from "vitest";
 import { loadConfig } from "../../platform/config/config.ts";
 import { memoryLogger } from "../../platform/logging/__fixtures__/memory-logger.ts";
 import { compose, type Composition, type ProcessRole } from "../compose.ts";
@@ -57,4 +57,24 @@ export async function composeOnTestDb(
       await rm(dir, { recursive: true, force: true });
     },
   };
+}
+
+/**
+ * Ждёт, пока в базе файла не останется сеансов приложения (`application_name` = `kosht-…`, их ставит `createPool`).
+ * `composition.close()` вызывает `pool.end()`, а он отпускает простаивающие соединения, не дожидаясь их закрытия:
+ * `db.drop()` (`drop database … with (force)`) следом обрывает ещё закрывающиеся сеансы, и пул композиции — у которого,
+ * в отличие от пулов `createTestDb`, нет обработчика 57P01 — роняет прогон «Uncaught Exception: terminating
+ * connection» (гонка из T-031). Вызывать после `close()` всех стендов файла и до `db.drop()`.
+ */
+export async function waitForAppConnectionsClosed(db: TestDb): Promise<void> {
+  await vi.waitFor(
+    async () => {
+      const { rows } = await db.owner.query<{ n: number }>(
+        "select count(*)::int as n from pg_stat_activity where datname = $1 and application_name like 'kosht-%'",
+        [db.name],
+      );
+      expect(rows[0]?.n).toBe(0);
+    },
+    { timeout: 10_000, interval: 25 },
+  );
 }

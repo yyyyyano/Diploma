@@ -11,6 +11,7 @@ import { createRouterClient } from "@orpc/server";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   composeOnTestDb,
+  waitForAppConnectionsClosed,
   type TestComposition,
 } from "../../../main/__fixtures__/compose-on-test-db.ts";
 import type { HttpContext } from "../../../platform/http/procedures.ts";
@@ -70,6 +71,8 @@ afterAll(async () => {
   vi.useRealTimers();
   await fast.close();
   await paced.close().catch(() => undefined);
+  // Гонка закрытия пулов и drop database with (force): см. waitForAppConnectionsClosed (T-031).
+  await waitForAppConnectionsClosed(db);
   await db.drop();
 });
 
@@ -98,7 +101,7 @@ async function collect(iterator: AsyncIterable<Chunk>, until?: (chunk: Chunk) =>
 }
 
 const lastAnswer = async (composition: TestComposition, scope: Scope): Promise<ChatMessage> => {
-  const { messages } = await client(composition, scope).chat.history();
+  const { messages } = await client(composition, scope).chat.history({});
   const answer = messages.at(-1);
   if (answer?.role !== "assistant") throw new Error("нет ответа ассистента");
   return answer;
@@ -163,7 +166,7 @@ describe("CHAT-02: поток ответа на кассете", () => {
       text: QUESTION,
     });
     await expect(foreign).rejects.toMatchObject({ code: "NOT_FOUND" });
-    const { conversationId } = await client(fast, a.scope).chat.history();
+    const { conversationId } = await client(fast, a.scope).chat.history({});
     expect(conversationId).toBe(meta.conversationId);
   });
 });

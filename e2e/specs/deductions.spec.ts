@@ -109,3 +109,58 @@ test("«Налоговые вычеты»: расчёт вычета на обу
   await page.getByRole("button", { name: "Посчитать" }).click();
   await expect(page.getByText(/нет детей до 18 лет/)).toBeVisible();
 });
+
+test("найденный вычет: оплата обучения → карточка на «Налоговых вычетах» и на главной; «Это не моё» с «Отменить»; axe 0 при 1440 и 390", async ({
+  page,
+}) => {
+  const email = `found-${String(Date.now())}@example.test`;
+  const password = "кошт2026находка";
+  await page.goto("/register");
+  await page.getByRole("textbox", { name: "Email" }).fill(email);
+  await page.getByLabel("Пароль", { exact: true }).fill(password);
+  await page.getByLabel("Повторите пароль").fill(password);
+  await page.getByRole("checkbox", { name: /согласен/ }).check();
+  await page.getByRole("button", { name: "Создать аккаунт" }).click();
+  await page.getByRole("button", { name: "Продолжить" }).click();
+  await page.getByRole("button", { name: "Пропустить анкету" }).click();
+  await expect(page).toHaveURL(/\/home$/);
+
+  // TAX-20: оплата обучения учреждению образования (категория «Образование», получатель — БГУ).
+  const day = new Date(Date.now() - 10 * 86_400_000).toISOString().slice(0, 10);
+  const created = await page.request.post("/api/transactions", {
+    data: {
+      type: "expense",
+      occurredOn: day,
+      amount: { minor: 200_000, currency: "BYN" },
+      merchant: "БГУ",
+      category: { type: "system", code: "education" },
+    },
+  });
+  expect(created.ok()).toBe(true);
+
+  // КП TAX: «можно вернуть до 260 BYN» появляется сам (поиск оснований идёт фоном по событию операции).
+  await expect(async () => {
+    await page.goto("/deductions");
+    await expect(page.getByRole("heading", { name: "Социальный вычет на обучение" })).toBeVisible({
+      timeout: 2000,
+    });
+  }).toPass({ timeout: 30_000 });
+  await expect(page.getByText(/Вы оплатили обучение: БГУ/)).toBeVisible();
+  await expect(page.getByText(/260,00/).first()).toBeVisible();
+  await expect(page.getByRole("link", { name: "Открыть операцию" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+
+  // Главная: янтарная карточка с той же суммой и теми же действиями.
+  await page.goto("/home");
+  await expect(page.getByText("Кошт нашёл налоговый вычет")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Показать, как получить" })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+
+  // «Это не моё» — сразу, с «Отменить»; отклонённое уходит с главной и остаётся на странице вычетов.
+  await page.getByRole("button", { name: "Это не моё" }).click();
+  await expect(page.getByRole("button", { name: "Отменить" })).toBeVisible();
+  await expect(page.getByText("Кошт нашёл налоговый вычет")).toBeHidden();
+  await page.goto("/deductions");
+  await page.getByText(/Отклонённые \(1\)/).click();
+  await expect(page.getByRole("button", { name: "Вернуть" })).toBeVisible();
+});

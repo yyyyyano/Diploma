@@ -8,3 +8,7 @@ export { gatewayEmbedder } from "./application/embedder.ts";
 export { localModelsReady } from "./events.ts";
 // SEC-10: фильтр инструктивных фраз — им пользуются стражи агента (сообщения пользователя и данные страницы).
 export { INJECTION_MARK, prepareDocument } from "./domain/injection.ts";
+// AGT-04, WEEK-02, P1: проверка чисел текста модели — реестр разрешённых чисел и разбиение на предложения. Живёт в llm, чтобы ею
+// пользовались и агент (ярус 4), и итоги недели (ярус 3): ярус 3 от агента зависеть не может.
+export { extractNumbers, fromNumber, NumberLedger, type Canonical } from "./domain/numbers.ts";
+export { createSentenceSplitter, type SentenceSplitter } from "./domain/sentences.ts";

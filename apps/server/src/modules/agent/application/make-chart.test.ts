@@ -1,7 +1,7 @@
 // AGT-03, AGT-04: make_chart — не больше шести рядов; значения рядов обязаны быть в результатах инструментов.
 import { MAX_CHART_SERIES, type ChartData } from "@kosht/contract";
 import { describe, expect, it } from "vitest";
-import { NumberLedger } from "../domain/numbers.ts";
+import { NumberLedger } from "../../llm/index.ts";
 import { checkChart, makeChartTool, type MakeChartResult } from "./make-chart.ts";
 
 const ledger = new NumberLedger();

@@ -8,8 +8,7 @@ import { ChartData, type AnswerMetadata, type LawAnswerData } from "@kosht/contr
 import type { AgentT } from "@kosht/i18n";
 import type { UIMessageChunk } from "ai";
 import type { Logger } from "../../../platform/logging/logger.ts";
-import { createSentenceSplitter } from "../domain/sentences.ts";
-import type { NumberLedger } from "../domain/numbers.ts";
+import { createSentenceSplitter, type NumberLedger } from "../../llm/index.ts";
 import { MAKE_CHART } from "./make-chart.ts";
 
 /** Что набирается за запуск и нужно потоку к концу ответа. */

@@ -5,7 +5,7 @@
 import { ChartData } from "@kosht/contract";
 import { tool } from "ai";
 import { toolInputSchema } from "./tool-schema.ts";
-import type { NumberLedger } from "../domain/numbers.ts";
+import type { NumberLedger } from "../../llm/index.ts";
 
 export const MAKE_CHART = "make_chart";
 

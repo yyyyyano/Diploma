@@ -5,7 +5,7 @@ import { createAgentT } from "@kosht/i18n";
 import type { UIMessageChunk } from "ai";
 import { describe, expect, it } from "vitest";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
-import { NumberLedger } from "../domain/numbers.ts";
+import { NumberLedger } from "../../llm/index.ts";
 import { answerTransform, newRunState, type RunState } from "./answer-stream.ts";
 
 const t = createAgentT();

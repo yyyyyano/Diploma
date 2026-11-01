@@ -63,6 +63,8 @@ export function budgetsWithJournal(db: TestDb) {
     tax: { activeFound: async () => [] },
     // События календаря (T-047) — модуль calendar; сценарии дашборда на этом стенде их не создают: настоящие — calendar.int.test.ts.
     calendar: { homeEvents: async () => [] },
+    // Итоги недели (T-050) — модуль weekly; сценарии дашборда на этом стенде их не создают: настоящие — weekly.int.test.ts.
+    weekly: { latest: async () => null },
     explain: r.t.explain,
   } as unknown as DashboardDeps);
 

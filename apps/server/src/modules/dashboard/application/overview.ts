@@ -55,7 +55,7 @@ export function makeOverview(d: Deps) {
     const months = monthsEndingAt(monthOfDay(to), MONTHS);
     const firstMonth = months[0] ?? monthOfDay(to);
 
-    const [byCategory, byMonth, budgets, balances, free, upcoming, found, events] =
+    const [byCategory, byMonth, budgets, balances, free, upcoming, found, events, weekly] =
       await Promise.all([
         d.transactions.aggregate(s, { from, to, groupBy: "category" }),
         d.transactions.aggregate(s, {
@@ -69,6 +69,7 @@ export function makeOverview(d: Deps) {
         d.recurring.upcoming(s, { from: today, to: addDays(today, UPCOMING_DAYS) }),
         d.tax.activeFound(s),
         d.calendar.homeEvents(s, EVENTS_DAYS, MAX_EVENTS_ON_HOME),
+        d.weekly.latest(s),
       ]);
 
     // Категории: до шести рядов, остальное — одной суммой с трассой.
@@ -201,6 +202,8 @@ export function makeOverview(d: Deps) {
       foundDeductions: found.slice(0, MAX_FOUND_ON_HOME),
       // События календаря (CAL-01): хранимые — налоги, гарантии, страховки, свои; платежи — в «Ближайших платежах» выше.
       events,
+      // Итоги недели (WEEK-01): последняя сводка с готовыми числами и текстом; считает и пишет модуль weekly, дашборд только показывает.
+      weekly,
       upcoming: upcoming
         .filter((payment) => payment.flow === "expense")
         .slice(0, UPCOMING_MAX)

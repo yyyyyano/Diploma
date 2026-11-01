@@ -7,6 +7,7 @@ import { z } from "zod";
 import { AccountId, AccountKind, CurrencyCode } from "../accounts/accounts.contract.ts";
 import { BudgetGoal, BudgetLimit } from "../budgets/budgets.contract.ts";
 import { CalendarEntry } from "../calendar/calendar.contract.ts";
+import { WeeklySummary } from "../weekly/weekly.contract.ts";
 import { LocalDate, Money } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 import { FreeBalanceReason } from "../fin/fin.contract.ts";
@@ -106,6 +107,8 @@ export const DashboardOverview = z.strictObject({
   foundDeductions: z.array(FoundDeduction).max(MAX_FOUND_ON_HOME),
   /** Ближайшие события календаря на 30 дней: налоги, гарантии, страховки и свои (не платежи — они выше), не больше четырёх. */
   events: z.array(CalendarEntry).max(MAX_EVENTS_ON_HOME),
+  /** Последние итоги недели (WEEK-01, DASH-02): карточка с текстом и числами; сводки ещё не было — null. */
+  weekly: WeeklySummary.nullable(),
 });
 export type DashboardOverview = z.infer<typeof DashboardOverview>;
 

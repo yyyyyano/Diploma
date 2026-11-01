@@ -7,6 +7,7 @@ import type { ExplainFacade } from "../../explain/index.ts";
 import type { FinFacade } from "../../fin/index.ts";
 import type { RecurringFacade } from "../../recurring/index.ts";
 import type { TaxFacade } from "../../tax/index.ts";
+import type { WeeklyFacade } from "../../weekly/index.ts";
 import type { TransactionsFacade } from "../../transactions/index.ts";
 
 export interface Deps {
@@ -18,5 +19,6 @@ export interface Deps {
   readonly recurring: Pick<RecurringFacade, "upcoming">;
   readonly tax: Pick<TaxFacade, "activeFound">;
   readonly calendar: Pick<CalendarFacade, "homeEvents">;
+  readonly weekly: Pick<WeeklyFacade, "latest">;
   readonly explain: Pick<ExplainFacade, "saveMany">;
 }

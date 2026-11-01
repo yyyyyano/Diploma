@@ -39,16 +39,16 @@ describe("CAL-02: годовые сроки", () => {
       "2027-11-15",
     ]);
   });
-  it("31 марта: после срока — март следующего года", () => {
-    expect(ruleDays(rule("declaration"), "month-day", 331, none, day("2026-04-01"))).toEqual([
+  it("31 марта (значение таблицы): после срока — март следующего года", () => {
+    expect(ruleDays(rule("property-tax"), "month-day", 331, none, day("2026-04-01"))).toEqual([
       "2027-03-31",
     ]);
   });
   it("29 февраля в невисокосный год — 28 февраля, значение вне календаря — нет события", () => {
-    expect(ruleDays(rule("declaration"), "month-day", 229, none, day("2027-01-10"))).toEqual([
+    expect(ruleDays(rule("property-tax"), "month-day", 229, none, day("2027-01-10"))).toEqual([
       "2027-02-28",
     ]);
-    expect(ruleDays(rule("declaration"), "month-day", 1332, none, day("2027-01-10"))).toEqual([]);
+    expect(ruleDays(rule("property-tax"), "month-day", 1332, none, day("2027-01-10"))).toEqual([]);
   });
   it("единица не та (число месяца вместо дня года) — события нет: чужое значение не читается как дата", () => {
     expect(ruleDays(rule("property-tax"), "day-of-month", 22, none, day("2026-11-01"))).toEqual([]);
@@ -88,6 +88,12 @@ describe("CAL-02, TAX: декларация по найденному вычет
 });
 
 describe("CAL-02: правило без даты и ключи", () => {
+  it("ИП: декларация по подоходному налогу — правило без даты (ст. 217 п. 3: срок от отчётного периода и режима), 31 марта ему не выдаётся", () => {
+    expect(rule("declaration")).toMatchObject({ param: null, cadence: "undated", type: "tax" });
+    expect(ruleDays(rule("declaration"), "month-day", 331, none, day("2026-11-01"))).toEqual([]);
+    expect(eventKey(rule("declaration"), null)).toBe("rule:declaration");
+    expect(rule("declaration-deduction").param).toBe("deadline.declaration");
+  });
   it("правило без параметра — дней нет, ключ без года", () => {
     expect(rule("inspection").param).toBeNull();
     expect(ruleDays(rule("inspection"), "month-day", 0, none, day("2026-11-01"))).toEqual([]);

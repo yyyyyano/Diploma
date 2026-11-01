@@ -543,9 +543,9 @@ describe("CAL-02: сроки налогов — только по фактам �
     }
   }, 30_000);
 
-  it("НПД → 22-е число каждого месяца, шесть ближайших; ИП → декларация до 31.03.2027", async () => {
+  it("НПД → 22-е число каждого месяца, шесть ближайших", async () => {
     const { s, setFact, sync } = stand();
-    await setFact(s, { key: "employment", types: ["npd", "ip"] });
+    await setFact(s, { key: "employment", types: ["npd"] });
     await sync.run(s);
     expect((await eventsOf(s, "npd-payment")).map((e) => e.day)).toEqual([
       "2026-11-22",
@@ -555,9 +555,22 @@ describe("CAL-02: сроки налогов — только по фактам �
       "2027-03-22",
       "2027-04-22",
     ]);
-    expect((await eventsOf(s, "declaration")).map((e) => [e.day, e.key])).toEqual([
-      ["2027-03-31", "rule:declaration:2027"],
-    ]);
+  }, 30_000);
+
+  it("ИП без найденного вычета: декларация по подоходному налогу — событие без даты, 31 марта ему не выдаётся (ст. 222 п. 1 — доходы ст. 219)", async () => {
+    const { s, setFact, sync, events } = stand();
+    await setFact(s, { key: "employment", types: ["ip"] });
+    await sync.run(s);
+    const [declaration] = await eventsOf(s, "declaration");
+    expect(declaration).toMatchObject({ day: null, key: "rule:declaration", type: "tax" });
+    expect(await remindersOf(declaration?.id ?? "")).toEqual([]);
+    expect(await eventsOf(s, "declaration-deduction")).toEqual([]);
+    await events.update(
+      s,
+      { id: CalendarEventId.parse(declaration?.id), on: LocalDate.parse("2027-01-20") },
+      "web",
+    );
+    expect((await eventsOf(s, "declaration"))[0]?.day).toBe("2027-01-20");
   }, 30_000);
 
   it("найденный вычет (образование, 2026) → «Подать декларацию до 31.03.2027» по ст. 222; вычет отклонён — события нет", async () => {

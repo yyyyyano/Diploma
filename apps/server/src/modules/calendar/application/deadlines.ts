@@ -84,7 +84,7 @@ export function makeDeadlines(d: Deps, reminders: Reminders) {
     }
     const id = await s.transaction(async (tx) => {
       const eventId = await insertEvent(tx, {
-        type: rule.cadence === "undated" ? "own" : "tax",
+        type: rule.type,
         title: null,
         rule: rule.key,
         day,

@@ -31,6 +31,8 @@ export interface DeadlineRule {
   /** Параметр таблицы ставок со сроком; `null` — срок не привязан к дате (CAL-02). */
   readonly param: string | null;
   readonly cadence: "yearly" | "monthly" | "undated" | "per-deduction";
+  /** Тип события в календаре: налог или своё событие (техосмотр — не налог). */
+  readonly type: "tax" | "own";
   readonly enabled: (facts: RuleFacts) => boolean;
 }
 
@@ -40,30 +42,49 @@ export const DEADLINE_RULES: readonly DeadlineRule[] = [
     key: "property-tax",
     param: "deadline.property-tax",
     cadence: "yearly",
+    type: "tax",
     enabled: (f) => f.apartment,
   },
   // ст. 244 п. 8.1 НК — факт «есть участок»
-  { key: "land-tax", param: "deadline.land-tax", cadence: "yearly", enabled: (f) => f.land },
+  {
+    key: "land-tax",
+    param: "deadline.land-tax",
+    cadence: "yearly",
+    type: "tax",
+    enabled: (f) => f.land,
+  },
   // ст. 307⁸ п. 2 НК — факт «есть автомобиль»
   {
     key: "transport-tax",
     param: "deadline.transport-tax",
     cadence: "yearly",
+    type: "tax",
     enabled: (f) => f.car,
   },
   // ст. 381⁷ п. 2 НК — плательщик НПД: 22-е число каждого месяца
-  { key: "npd-payment", param: "deadline.npd-payment", cadence: "monthly", enabled: (f) => f.npd },
-  // ст. 222 п. 1 НК — ИП подаёт декларацию до 31 марта
-  { key: "declaration", param: "deadline.declaration", cadence: "yearly", enabled: (f) => f.ip },
-  // ст. 222 п. 1 НК — найденный вычет через ИМНС: декларация за год основания, до 31 марта следующего
+  {
+    key: "npd-payment",
+    param: "deadline.npd-payment",
+    cadence: "monthly",
+    type: "tax",
+    enabled: (f) => f.npd,
+  },
+  // ИП: декларация по подоходному налогу — ст. 217 п. 3 НК: «не позднее 20-го числа месяца, следующего за истекшим отчётным периодом», а отчётные
+  // периоды ИП — квартал, полугодие, девять месяцев и год (ст. 207). Какой срок и есть ли обязанность у конкретного ИП, зависит от режима налогообложения
+  // (особые режимы), а режима в профиле нет, — поэтому событие без дня: человек назовёт дату сам, срока «из головы» нет (CAL-02).
+  // Срок «31 марта» ст. 222 п. 1 относится к доходам ст. 219 (в них доходы ИП от предпринимательской деятельности не входят) — ИП он не выдаётся.
+  { key: "declaration", param: null, cadence: "undated", type: "tax", enabled: (f) => f.ip },
+  // ст. 222 п. 1–2 НК — найденный вычет через ИМНС: право подать декларацию (в том числе ради вычета) и срок «не позднее 31 марта года,
+  // следующего за истекшим налоговым периодом»; событие — за год основания, на 31 марта следующего
   {
     key: "declaration-deduction",
     param: "deadline.declaration",
     cadence: "per-deduction",
+    type: "tax",
     enabled: (f) => f.deductionYears.length > 0,
   },
   // Техосмотр: срок зависит от даты осмотра, а не от календаря — событие без дня, дату назовёт человек (CAL-02).
-  { key: "inspection", param: null, cadence: "undated", enabled: (f) => f.car },
+  { key: "inspection", param: null, cadence: "undated", type: "own", enabled: (f) => f.car },
 ];
 
 /** Сколько месяцев вперёд создаются ежемесячные события (НПД): дальше — при следующем открытии календаря. */

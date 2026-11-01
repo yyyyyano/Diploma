@@ -138,7 +138,7 @@ test("первый запуск → администратор → вход → 
   // CHAT-02, NFR-21: «Ассистент» на кассете — первое событие потока (подпись шага) не дольше 1 с после отправки,
   // ответ приходит по кускам (кассета с паузами ≥ 1,5 с), результат шага — карточка «Наличные».
   await page.goto("/assistant");
-  await expect(page.getByRole("heading", { level: 1, name: "Ассистент" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Новый диалог" })).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
   const feed = page.getByRole("log", { name: "Переписка с ассистентом" });
   await page.getByRole("textbox", { name: "Вопрос ассистенту" }).fill("Какие у меня счета?");

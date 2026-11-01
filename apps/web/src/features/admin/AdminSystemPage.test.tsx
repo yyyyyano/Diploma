@@ -25,6 +25,7 @@ const overview = (extra: Partial<SystemOverview> = {}): SystemOverview => ({
   timeZone: "Europe/Minsk",
   lan: { allowed: false, address: "" },
   langfuse: { enabled: true, url: "http://127.0.0.1:3001" },
+  telegram: { token: "unset" },
   ...extra,
 });
 
@@ -183,5 +184,33 @@ describe("NFR-23, NFR-24, OBS-05: время, сеть, Langfuse", () => {
       "href",
       "http://127.0.0.1:3001",
     );
+  });
+});
+
+describe("ADM-60, NFR-16: токен Telegram-бота", () => {
+  it("поле только для записи: токен уходит на сервер и очищается, значение не показывается", async () => {
+    const sent: unknown[] = [];
+    server.use(
+      http.post("*/api/admin/system/telegram-token", async ({ request }) => {
+        sent.push(await request.json());
+        return HttpResponse.json(overview({ telegram: { token: "set" } }));
+      }),
+    );
+    renderSystem();
+    expect(await screen.findByText("Токен не задан")).toBeInTheDocument();
+    const field = screen.getByLabelText("Токен бота");
+    await userEvent.type(field, "123456789:AAH-kosht_test_token_abcdefghij");
+    await userEvent.click(screen.getByRole("button", { name: "Сохранить токен" }));
+    expect(sent).toEqual([{ token: "123456789:AAH-kosht_test_token_abcdefghij" }]);
+    expect(await screen.findByText(/Токен сохранён/)).toBeInTheDocument();
+    expect(field).toHaveValue("");
+    expect(screen.queryByText(/AAH-kosht/)).not.toBeInTheDocument();
+  });
+
+  it("не токен — подсказка, «Сохранить» неактивна", async () => {
+    renderSystem();
+    await userEvent.type(await screen.findByLabelText("Токен бота"), "не токен");
+    expect(screen.getByRole("button", { name: "Сохранить токен" })).toBeDisabled();
+    expect(screen.getByText(/Токен выглядит иначе/)).toBeInTheDocument();
   });
 });

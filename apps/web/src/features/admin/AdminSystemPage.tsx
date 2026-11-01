@@ -63,6 +63,7 @@ export function AdminSystemPage() {
         <MailCard mail={system.data.mail} />
         <TimeCard overview={system.data} />
       </div>
+      <TelegramCard telegram={system.data.telegram} />
     </>
   );
 }
@@ -184,6 +185,93 @@ function JobsCard({ jobs }: { readonly jobs: SystemOverview["jobs"] }) {
             ))}
           </tbody>
         </table>
+      )}
+    </section>
+  );
+}
+
+/** Токен Telegram-бота (ADM-60, NFR-16): поле только для записи — значение после сохранения не показывается. */
+const TELEGRAM_TOKEN_SHAPE = /^\d{3,20}:[A-Za-z0-9_-]{20,100}$/u;
+
+function TelegramCard({ telegram }: { readonly telegram: SystemOverview["telegram"] }) {
+  const { t } = useTranslation(["admin", "errors"]);
+  const queryClient = useQueryClient();
+  const [token, setToken] = useState("");
+  const save = useMutation(
+    orpc.admin.setTelegramToken.mutationOptions({
+      onSuccess: (next) => {
+        queryClient.setQueryData(orpc.admin.system.queryKey(), next);
+        setToken("");
+      },
+    }),
+  );
+  const trimmed = token.trim();
+  const invalid = trimmed !== "" && !TELEGRAM_TOKEN_SHAPE.test(trimmed);
+  return (
+    <section className={classes.card} aria-labelledby="admin-telegram">
+      <div className={classes.cardHead}>
+        <h2 id="admin-telegram" className={classes.cardTitle}>
+          {t("admin:system.telegram.title")}
+        </h2>
+        {telegram.token === "set" ? (
+          <StatusBadge tone="ok" icon={CheckCircle2}>
+            {t("admin:system.telegram.set")}
+          </StatusBadge>
+        ) : (
+          <StatusBadge tone="warn" icon={MinusCircle}>
+            {t(`admin:system.telegram.${telegram.token}`)}
+          </StatusBadge>
+        )}
+      </div>
+      <form
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (trimmed !== "" && !invalid) save.mutate({ token: trimmed });
+        }}
+      >
+        <PasswordInput
+          label={t("admin:system.telegram.token")}
+          description={t("admin:system.telegram.tokenHint")}
+          autoComplete="off"
+          placeholder={
+            telegram.token === "set"
+              ? t("admin:system.telegram.placeholderSet")
+              : t("admin:system.telegram.placeholderUnset")
+          }
+          value={token}
+          error={invalid ? t("admin:system.telegram.invalid") : undefined}
+          onChange={(event) => setToken(event.currentTarget.value)}
+        />
+        <div className={classes.actions}>
+          <Button type="submit" disabled={trimmed === "" || invalid} loading={save.isPending}>
+            {t("admin:system.telegram.save")}
+          </Button>
+          <Button
+            variant="default"
+            disabled={telegram.token === "unset"}
+            loading={save.isPending}
+            onClick={() => save.mutate({ token: null })}
+          >
+            {t("admin:system.telegram.clear")}
+          </Button>
+        </div>
+      </form>
+      {save.isSuccess && (
+        <output className={classes.ok}>
+          <CheckCircle2 size={18} strokeWidth={1.8} aria-hidden />
+          {t(
+            save.variables.token === null
+              ? "admin:system.telegram.cleared"
+              : "admin:system.telegram.saved",
+          )}
+        </output>
+      )}
+      {save.isError && (
+        <p className={classes.error} role="alert">
+          <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+          {t(`errors:${errorCodeOf(save.error)}`, errorParamsOf(save.error))}
+        </p>
       )}
     </section>
   );

@@ -4,6 +4,7 @@
 import { CONSENT_VERSIONS, createTelegramT } from "@kosht/i18n";
 import { makeScope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
+import type { UserFromGetMe } from "grammy/types";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import type { ActionsFacade } from "../modules/actions/index.ts";
@@ -20,7 +21,12 @@ import {
 
 const t = createTelegramT();
 const TOKEN = "222222:stack-token";
-const BOT = { id: 222222, is_bot: true, first_name: "Кошт", username: "kosht_stack_bot" } as const;
+const BOT = {
+  id: 222222,
+  is_bot: true,
+  first_name: "Кошт",
+  username: "kosht_stack_bot",
+} as UserFromGetMe;
 
 let db: TestDb;
 let stack: HttpStack;
@@ -108,7 +114,10 @@ function bot() {
   };
 }
 
-async function beginLink(cookie: string, version = CONSENT_VERSIONS.telegram): Promise<Response> {
+async function beginLink(
+  cookie: string,
+  version: string = CONSENT_VERSIONS.telegram,
+): Promise<Response> {
   return stack.call("local", "/telegram/link", { cookie, body: { version } });
 }
 

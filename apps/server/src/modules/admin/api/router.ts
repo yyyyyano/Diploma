@@ -7,6 +7,7 @@ import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import type { LlmAdminFacade } from "../../llm/index.ts";
 import type { MailFacade } from "../../mail/index.ts";
 import type { NormTablesFacade } from "../../norm-tables/index.ts";
+import type { TelegramFacade } from "../../telegram/index.ts";
 import type { SystemFacade } from "../../system/index.ts";
 import { admin } from "../../../platform/http/procedures.ts";
 import type { AdminUserView } from "../application/admin-users.ts";

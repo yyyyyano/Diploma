@@ -2,7 +2,13 @@
 // «архив готов» — my-data). Неизвестная — первая.
 import { z } from "zod";
 
-export const SETTINGS_TABS = ["profile", "privacy", "notifications", "my-data"] as const;
+export const SETTINGS_TABS = [
+  "profile",
+  "privacy",
+  "telegram",
+  "notifications",
+  "my-data",
+] as const;
 
 export const SettingsSearch = z.object({
   tab: z.enum(SETTINGS_TABS).optional().catch(undefined),

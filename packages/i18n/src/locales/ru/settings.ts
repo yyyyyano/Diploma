@@ -8,6 +8,7 @@ export const settings = {
     label: "Разделы настроек",
     profile: "Профиль и вход",
     privacy: "Конфиденциальность",
+    telegram: "Telegram",
     myData: "Мои данные",
   },
   adminReset: {

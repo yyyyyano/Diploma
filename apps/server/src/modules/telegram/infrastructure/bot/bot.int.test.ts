@@ -5,6 +5,7 @@ import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { CONSENT_VERSIONS, createTelegramT, formatMoney } from "@kosht/i18n";
 import type { UIMessageChunk } from "ai";
+import type { UserFromGetMe } from "grammy/types";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { createSystemDb } from "../../../../platform/db/system-db.ts";
@@ -20,7 +21,12 @@ import { createBot } from "./bot-runtime.ts";
 
 const t = createTelegramT();
 const TOKEN = "111111:test-token";
-const BOT = { id: 111111, is_bot: true, first_name: "Кошт", username: "kosht_test_bot" } as const;
+const BOT = {
+  id: 111111,
+  is_bot: true,
+  first_name: "Кошт",
+  username: "kosht_test_bot",
+} as UserFromGetMe;
 
 let db: TestDb;
 beforeAll(async () => {

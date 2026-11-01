@@ -131,16 +131,4 @@ export const telegram = {
     close: "Закрыть",
     error: "Не получилось. Попробуйте ещё раз.",
   },
-  admin: {
-    title: "Telegram-бот",
-    token: "Токен бота",
-    tokenHint:
-      "Выдаёт @BotFather. Значение хранится зашифрованным и после сохранения не показывается.",
-    tokenSet: "Токен задан ✓",
-    tokenUnset: "Токен не задан",
-    tokenUnreadable: "Токен не читается — введите заново",
-    tokenSave: "Сохранить токен",
-    tokenClear: "Удалить токен",
-    restartNote: "Бот перезапустится сам в течение минуты.",
-  },
 } as const;

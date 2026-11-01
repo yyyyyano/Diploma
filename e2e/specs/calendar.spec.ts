@@ -128,3 +128,45 @@ test("«Календарь»: пустой месяц, новое событие
   await undoDelete.click();
   await expect(row).toHaveCount(1);
 });
+
+test("«Календарь»: вопрос «У вас есть автомобиль?» → «Да» → налог и техосмотр в списке; «Отменить» возвращает вопрос; axe 0 при 1440 и 390", async ({
+  page,
+}) => {
+  const email = `calendar-car-${String(Date.now())}@example.test`;
+  const password = "кошт2026автомобиль";
+  await page.goto("/register");
+  await page.getByRole("textbox", { name: "Email" }).fill(email);
+  await page.getByLabel("Пароль", { exact: true }).fill(password);
+  await page.getByLabel("Повторите пароль").fill(password);
+  await page.getByRole("checkbox", { name: /согласен/ }).check();
+  await page.getByRole("button", { name: "Создать аккаунт" }).click();
+  await page.getByRole("button", { name: "Продолжить" }).click();
+  await page.getByRole("button", { name: "Пропустить анкету" }).click();
+  await expect(page).toHaveURL(/\/home$/);
+
+  // PROF-07: первое открытие календаря без признаков — один вопрос про автомобиль.
+  await page.goto("/calendar?view=list");
+  const banner = page.getByRole("region", { name: "У вас есть автомобиль?" });
+  await expect(banner).toBeVisible();
+  await expect(banner.getByText(/Тогда я напомню о транспортном налоге/u)).toBeVisible();
+  await shownSettled(banner);
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+
+  // «Да» → факт подтверждён, срок транспортного налога (ст. 307⁸) и техосмотр без даты — в списке.
+  await banner.getByRole("button", { name: "Да, есть автомобиль" }).click();
+  const undo = await holdUndoToast(page, /Запомнил: есть автомобиль/u);
+  await expect(banner).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /^Срок уплаты транспортного налога,/u }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Укажите дату" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Техосмотр автомобиля/u })).toBeVisible();
+  expect(await accessibleAtBothWidths(page)).toEqual([]);
+
+  // P5: «Отменить» — события уходят, вопрос возвращается.
+  await undo.click();
+  await expect(page.getByRole("region", { name: "У вас есть автомобиль?" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /^Срок уплаты транспортного налога,/u }),
+  ).toHaveCount(0);
+});

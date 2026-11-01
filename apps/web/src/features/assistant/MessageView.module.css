@@ -76,3 +76,10 @@
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--s-12);
 }
+
+.changed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8);
+}

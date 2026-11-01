@@ -10,6 +10,9 @@ export function toUiMessages(messages: readonly ChatMessage[]): UIMessage[] {
     metadata: {
       status: message.status,
       ...(message.answeredBy === undefined ? {} : { answeredBy: message.answeredBy }),
+      ...(message.changedVersionIds === undefined
+        ? {}
+        : { changedVersionIds: message.changedVersionIds }),
     },
   }));
 }
@@ -21,6 +24,8 @@ export interface AnswerMetadata {
   readonly status?: ChatMessage["status"];
   /** LLM-10: кто ответил — из куска finish (живой ответ) или из сохранённого сообщения. */
   readonly answeredBy?: { readonly model: string; readonly unavailable: readonly string[] };
+  /** CHAT-10: версии статей ответа, заменённые новой редакцией, — из истории (у живого ответа их нет). */
+  readonly changedVersionIds?: readonly string[];
 }
 
 export function metadataOf(message: UIMessage | undefined): AnswerMetadata {

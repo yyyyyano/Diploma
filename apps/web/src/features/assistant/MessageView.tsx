@@ -1,17 +1,19 @@
-// Сообщение ленты (DES-10, DES-11, CHAT-02): вопрос — тёмный пузырь справа; ответ — слева, на подложке `--surface-2` с
-// аватаром. Ответ — части по порядку: текст модели (безопасный Markdown, SEC-05), шаг агента подписью из словаря
-// tools по имени инструмента (не текстом модели), карточки счетов, правовой ответ целиком. Под ответом — пометка
-// «Модель X недоступна, ответила Y» (LLM-10) и состояние: «ещё отвечает» / «прерван».
-import { LawAnswerData, type AccountListItem } from "@kosht/contract";
+// Сообщение ленты (DES-10, DES-11, CHAT-02, CHAT-04): вопрос — тёмный пузырь справа; ответ — слева, на подложке `--surface-2`
+// с аватаром. Ответ — части по порядку: текст модели (безопасный Markdown, SEC-05), шаг агента подписью из словаря
+// tools по имени инструмента (не текстом модели), карточки и правовой ответ по реестру частей (`cards/registry.tsx`).
+// Над правовым ответом — «Статья изменилась после ответа» (CHAT-10); под ответом — пометка «Модель X недоступна, ответила
+// Y» (LLM-10) и состояние: «ещё отвечает» / «прерван».
 import { resources } from "@kosht/i18n";
-import { VisuallyHidden } from "@mantine/core";
+import { Button, VisuallyHidden } from "@mantine/core";
 import type { UIMessage } from "ai";
-import { CheckCircle2, Info, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Info, Loader2, Sparkles, TriangleAlert } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { AccountCard } from "../../entities/account/index.ts";
+import { DATA_CARDS, isDataCard, TOOL_CARDS } from "./cards/registry.tsx";
+import { Unavailable } from "./cards/Unavailable.tsx";
 import { Markdown } from "./Markdown.tsx";
 import classes from "./MessageView.module.css";
 import { metadataOf } from "./model/messages.ts";
+import { StatusBadge } from "../../ui/index.ts";
 
 const toolLabels = resources.ru.tools;
 type ToolKey = keyof typeof toolLabels;
@@ -25,13 +27,21 @@ export function textOf(message: UIMessage): string {
   return message.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n");
 }
 
-export function MessageView({ message }: { readonly message: UIMessage }) {
+export interface MessageViewProps {
+  readonly message: UIMessage;
+  /** «Спросить заново» под ответом, где статья изменилась (CHAT-10): вопрос возвращается в поле ввода. */
+  readonly onReask?: (() => void) | undefined;
+}
+
+export function MessageView({ message, onReask }: MessageViewProps) {
   const { t } = useTranslation(["assistant", "tools"]);
   if (message.role === "user") {
+    // Сообщение из одних вложений текста не имеет: пузырь не пустой, диктор слышит, что было отправлено.
+    const text = textOf(message);
     return (
       <div className={classes.user}>
         <VisuallyHidden>{t("you")}</VisuallyHidden>
-        <p className={classes.bubble}>{textOf(message)}</p>
+        <p className={classes.bubble}>{text === "" ? t("attach.only") : text}</p>
       </div>
     );
   }
@@ -39,14 +49,28 @@ export function MessageView({ message }: { readonly message: UIMessage }) {
   const streaming = meta.status === "streaming";
   const interrupted = meta.status === "interrupted";
   const unavailable = meta.answeredBy?.unavailable ?? [];
+  const changed = (meta.changedVersionIds ?? []).length > 0;
   return (
     <article className={classes.answer} aria-label={t("bot")}>
       <span className={classes.avatar}>
         <Sparkles size={18} strokeWidth={1.8} aria-hidden />
       </span>
       <div className={classes.parts}>
+        {changed && (
+          <div className={classes.changed}>
+            <StatusBadge tone="warn" icon={TriangleAlert}>
+              {t("law.changed")}
+            </StatusBadge>
+            <span className={classes.muted}>{t("law.changedHint")}</span>
+            {onReask !== undefined && (
+              <Button variant="default" size="xs" onClick={onReask}>
+                {t("law.reask")}
+              </Button>
+            )}
+          </div>
+        )}
         {message.parts.map((part, index) => (
-          <Part key={`${message.id}-${String(index)}`} part={part} />
+          <Part key={`${message.id}-${String(index)}`} part={part} messageId={message.id} />
         ))}
         {streaming && (
           <p className={classes.muted}>
@@ -71,20 +95,31 @@ export function MessageView({ message }: { readonly message: UIMessage }) {
 }
 
 /**
- * Часть ответа. Шаг остаётся в ленте подписью из словаря (CHAT-02: видно, что агент делал) — с вращающимся значком,
- * пока идёт, и галочкой после; результат list_accounts — карточки счетов, ошибка шага — «Шаг не удался». Правовой
- * ответ (`data-law-answer`) рисуется текстом по частям: цитаты и чипы статей — T-044.
+ * Часть ответа по реестру (`cards/registry.tsx`). Шаг остаётся в ленте подписью из словаря (CHAT-02: видно, что агент
+ * делал) — с вращающимся значком, пока идёт, и галочкой после; результат инструмента с карточкой рисует она, ошибка шага —
+ * «Шаг не удался». Данные-часть — своя карточка; неизвестный вид `data-…` — запасной вид, а не пустота и не падение.
  */
-function Part({ part }: { readonly part: UIMessage["parts"][number] }) {
+function Part({
+  part,
+  messageId,
+}: {
+  readonly part: UIMessage["parts"][number];
+  readonly messageId: string;
+}) {
   const { t } = useTranslation(["assistant", "tools"]);
   if (part.type === "text") return part.text === "" ? null : <Markdown>{part.text}</Markdown>;
-  if (part.type === "data-law-answer") return <LawAnswerFallback data={part.data} />;
+  if (part.type.startsWith("data-")) {
+    if (!isDataCard(part.type)) return <Unavailable />;
+    const Card = DATA_CARDS[part.type];
+    return <Card data={"data" in part ? part.data : undefined} />;
+  }
   if (!part.type.startsWith("tool-") || !("state" in part)) return null;
-  const label = t(`tools:${toolKey(part.type.slice("tool-".length))}`);
+  const name = part.type.slice("tool-".length);
+  const label = t(`tools:${toolKey(name)}`);
   const done = part.state === "output-available" || part.state === "output-error";
-  const items = part.state === "output-available" ? accountsOf(part.output) : undefined;
-  const failed =
-    part.state === "output-error" || (part.state === "output-available" && isFailure(part.output));
+  const output = part.state === "output-available" && "output" in part ? part.output : undefined;
+  const failed = part.state === "output-error" || (output !== undefined && isFailure(output));
+  const Card = output !== undefined && !failed ? TOOL_CARDS[name] : undefined;
   return (
     <>
       <p className={classes.step}>
@@ -95,42 +130,10 @@ function Part({ part }: { readonly part: UIMessage["parts"][number] }) {
         )}
         {label}
       </p>
-      {items !== undefined && (
-        <div className={classes.cards}>
-          {items.map((account) => (
-            <AccountCard key={account.id} account={account} />
-          ))}
-        </div>
-      )}
+      {Card !== undefined && <Card output={output} messageId={messageId} />}
       {failed && <p className={classes.muted}>{t("toolFailed")}</p>}
     </>
   );
-}
-
-/** Правовой ответ без оформления: текст целиком и пометки — чтобы ответ не терялся до карточек цитат (T-044). */
-function LawAnswerFallback({ data }: { readonly data: unknown }) {
-  const parsed = LawAnswerData.safeParse(data);
-  if (!parsed.success) return null;
-  const text = parsed.data.parts
-    .map((part) => (part.type === "text" ? part.text : `[${String(part.n)}]`))
-    .join("");
-  return (
-    <>
-      {text !== "" && <Markdown>{text}</Markdown>}
-      {parsed.data.notices.map((notice) => (
-        <p key={`${notice.kind}-${notice.text}`} className={classes.muted}>
-          {notice.text}
-        </p>
-      ))}
-    </>
-  );
-}
-
-/** Результат list_accounts — { items: AccountListItem[] } (карточка из @kosht/contract). */
-function accountsOf(output: unknown): AccountListItem[] | undefined {
-  if (typeof output !== "object" || output === null || !("items" in output)) return undefined;
-  const { items } = output;
-  return Array.isArray(items) ? (items as AccountListItem[]) : undefined;
 }
 
 function isFailure(output: unknown): boolean {

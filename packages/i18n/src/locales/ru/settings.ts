@@ -104,6 +104,7 @@ export const settings = {
       kinds: {
         "personal-data": "Обработка персональных данных",
         cloud: "Облачные ИИ-модели",
+        telegram: "Передача данных через Telegram",
       },
       given: "Дано",
       notGiven: "Не дано",

@@ -15,8 +15,8 @@ export const RegistrationConsents = z.strictObject({
 });
 export type RegistrationConsents = z.infer<typeof RegistrationConsents>;
 
-/** Вид согласия: обработка ПД (PRIV-01) или облачные модели (PRIV-02). */
-export const ConsentKind = z.enum(["personal-data", "cloud"]);
+/** Вид согласия: обработка ПД (PRIV-01), облачные модели (PRIV-02) или Telegram (PRIV-08). */
+export const ConsentKind = z.enum(["personal-data", "cloud", "telegram"]);
 export type ConsentKind = z.infer<typeof ConsentKind>;
 
 /** Строка «Истории согласий»: решение, версия текста, момент (ISO UTC). */

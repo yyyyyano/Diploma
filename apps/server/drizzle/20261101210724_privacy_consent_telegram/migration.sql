@@ -1,0 +1,1 @@
+ALTER TABLE "privacy_consents" DROP CONSTRAINT "privacy_consents_kind_check", ADD CONSTRAINT "privacy_consents_kind_check" CHECK ("kind" in ('personal-data', 'cloud', 'telegram'));

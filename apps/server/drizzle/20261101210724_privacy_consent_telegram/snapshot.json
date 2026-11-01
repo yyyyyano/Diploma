@@ -1,0 +1,30 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "2f04810a-ee6e-4f61-9d32-c4887d405d2f",
+  "prevIds": ["aedc757f-cd18-412a-adcd-c5b10115fc9e"],
+  "footprints": [
+    {
+      "statementType": "alter_check",
+      "statementTarget": ["table", "public", "privacy_consents"],
+      "writes": ["s|ck|public.privacy_consents.privacy_consents_kind_check"],
+      "reads": [
+        "n|tbl|public.privacy_consents",
+        "n|sch|public",
+        "n|col|public.privacy_consents.kind",
+        "e|col|public.privacy_consents.kind"
+      ],
+      "sqlHash": "18c23cf4041f8239"
+    }
+  ],
+  "deltas": [
+    {
+      "op": "alter",
+      "key": "checks\u0000[\"public\",\"privacy_consents\",\"privacy_consents_kind_check\"]",
+      "set": {
+        "value": "\"kind\" in ('personal-data', 'cloud', 'telegram')"
+      }
+    }
+  ]
+}

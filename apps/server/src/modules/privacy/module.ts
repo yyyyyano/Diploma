@@ -10,6 +10,7 @@ import { privacyRouter } from "./api/router.ts";
 import { makeCloudConsentSource } from "./application/cloud-consent.ts";
 import { makeCloudConsentSettings } from "./application/cloud-consent-settings.ts";
 import { makeDataExport } from "./application/data-export.ts";
+import { makeTelegramConsent } from "./application/telegram-consent.ts";
 import { makePurgeAccount } from "./application/purge-account.ts";
 import { makeRecordRegistrationConsents } from "./application/record-registration-consents.ts";
 import { consentChanged, exportReady } from "./events.ts";
@@ -27,6 +28,7 @@ export function createPrivacyModule({
   facades,
 }: ModuleDeps<PrivacyFacades, SystemPlatform>) {
   // Сценарий ставит задачу, задача зовёт сценарий: задача берётся при вызове, когда обе уже созданы.
+  const telegramConsent = makeTelegramConsent(platform);
   const dataExport = makeDataExport({
     ...platform,
     files: facades.files,
@@ -39,6 +41,9 @@ export function createPrivacyModule({
       recordRegistrationConsents: makeRecordRegistrationConsents(platform),
       purge: makePurgeAccount(platform),
       isExportReady: dataExport.isReady,
+      /** PRIV-08: согласие на Telegram — дать (подключение бота) и отозвать (отключение, /unlink). */
+      setTelegramConsent: telegramConsent.set,
+      telegramConsentGiven: telegramConsent.given,
       /** Админка «Пользователи» (ADM-30): id пользователей в облачном режиме — только флаг, без согласий. */
       cloudUsers: () => cloudUsers(platform.system),
     },

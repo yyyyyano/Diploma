@@ -14,8 +14,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { systemTable, userOwnedTable } from "../../../../platform/db/tables.ts";
 
-/** Вид согласия: обработка ПД (PRIV-01) или облачные модели (PRIV-02). */
-export const CONSENT_KINDS = ["personal-data", "cloud"] as const;
+/** Вид согласия: обработка ПД (PRIV-01), облачные модели (PRIV-02) или Telegram (PRIV-08). */
+export const CONSENT_KINDS = ["personal-data", "cloud", "telegram"] as const;
 export type ConsentKind = (typeof CONSENT_KINDS)[number];
 
 export const privacyConsents = userOwnedTable(
@@ -26,7 +26,7 @@ export const privacyConsents = userOwnedTable(
     textVersion: text().notNull(),
   },
   (t) => [
-    check("privacy_consents_kind_check", sql`${t.kind} in ('personal-data', 'cloud')`),
+    check("privacy_consents_kind_check", sql`${t.kind} in ('personal-data', 'cloud', 'telegram')`),
     index("privacy_consents_kind_idx").on(t.householdId, t.userId, t.kind, t.createdAt),
   ],
 );

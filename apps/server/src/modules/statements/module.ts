@@ -18,6 +18,8 @@ import type { NotificationsFacade } from "../notifications/index.ts";
 import { makeParseStatement } from "./application/parse-statement.ts";
 import type { DocumentReader } from "./application/ports.ts";
 import { statementsTools } from "./agent/tools.ts";
+import type { ScopedDb } from "../../platform/db/scoped-db.ts";
+import { toSummary } from "./application/mapping.ts";
 import { statementsRouter } from "./api/router.ts";
 import { makeBuildPreview } from "./application/build-preview.ts";
 import { makeImports, ROLLBACK_HANDLER } from "./application/imports.ts";
@@ -96,7 +98,14 @@ export function createStatementsModule({
   });
   return defineModule({
     id: "statements",
-    facade: { parseStatement, parseBytes, rememberFormat, ...imports },
+    facade: {
+      parseStatement,
+      parseBytes,
+      rememberFormat,
+      ...imports,
+      // TG-04: итоги разбора для бота — тот же DTO, что у процедуры `get` сайта (found, duplicates, newCount).
+      summary: async (s: ScopedDb, id: string) => toSummary(await imports.get(s, id)),
+    },
     router: statementsRouter(imports, platform.settings),
     tools: [statementsTools(imports).status],
     events: [statementsImported, statementsRolledBack],

@@ -82,6 +82,10 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
       // CHAT-03: какие из id — чеки этого домохозяйства (чужие и удалённые не попадают в список).
       existing: async (s: ScopedDb, ids: readonly string[]): Promise<readonly string[]> =>
         (await findReceipts(s, ids)).map((row) => row.id),
+      // TG-03: карточка чека и кнопки «Верно» / «Отменить» бота — те же сценарии, что у процедур сайта; чужой id — NOT_FOUND.
+      card: review.get,
+      confirm: review.confirm,
+      cancel: review.cancel,
     },
     router: receiptsRouter(flow, review),
     tools: [tools.get, tools.status],

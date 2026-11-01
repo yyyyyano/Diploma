@@ -140,7 +140,15 @@ export interface ModuleParts {
    * пула. Корень композиции зовёт её первой при close().
    */
   readonly stop?: () => Promise<void>;
+  /**
+   * Запуск работы модуля в процессе роли после очереди задач (`bot` — опрос Telegram, TG-10): корень композиции зовёт
+   * `startModules()` у своей роли; остановка — `stop` модуля. Роли, которой нет в записи, запускать нечего.
+   */
+  readonly start?: Readonly<Partial<Record<ModuleRole, () => void | Promise<void>>>>;
 }
+
+/** Роли процесса, которым модуль может задать запуск (ARCHITECTURE §3). */
+export type ModuleRole = "api" | "worker" | "bot";
 
 /** Модуль после defineModule: все списки есть (пустые — тоже), реестры читают их без проверок. */
 export interface ModuleDescriptor<F = unknown> {
@@ -166,6 +174,7 @@ export interface ModuleDescriptor<F = unknown> {
   readonly consentSource: ConsentSource | undefined;
   readonly knownNamesSource: KnownNamesSource | undefined;
   readonly stop: (() => Promise<void>) | undefined;
+  readonly start: Readonly<Partial<Record<ModuleRole, () => void | Promise<void>>>>;
 }
 
 /** id модуля — как в tooling/architecture/modules.ts. */
@@ -210,6 +219,7 @@ export function defineModule(
     consentSource: spec.consentSource,
     knownNamesSource: spec.knownNamesSource,
     stop: spec.stop,
+    start: spec.start ?? {},
   };
   // id — префикс событий, задач и действий (docs/CAPABILITIES.md «Как читать»): по префиксу видно владельца.
   const owned = [

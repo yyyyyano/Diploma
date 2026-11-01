@@ -18,6 +18,7 @@ import {
   type ActionHandler,
   type DeliveryChannel,
   type ModuleDescriptor,
+  type ModuleRole,
 } from "../platform/module/define-module.ts";
 import type { RateRule } from "../platform/rate-limit/rate-limit.ts";
 import type { SecretDef } from "../platform/secrets/secrets.ts";
@@ -52,6 +53,8 @@ export interface Registries {
   readonly knownNamesSource: KnownNamesSource | undefined;
   /** Остановки модулей в порядке, обратном созданию: верхние модули останавливаются раньше нижних. */
   readonly stops: readonly (() => Promise<void>)[];
+  /** Запуски модулей по ролям процесса (опрос Telegram у `bot`), в порядке создания. */
+  readonly starts: Readonly<Record<ModuleRole, readonly (() => void | Promise<void>)[]>>;
 }
 
 /** Повторное имя в реестре: в тексте — вид реестра, имя и оба модуля. */
@@ -158,6 +161,11 @@ export function buildRegistries(
   const consentSource = new Registry<ConsentSource>("источник облачного согласия");
   const knownNamesSource = new Registry<KnownNamesSource>("источник имён пользователя");
   const stops: (() => Promise<void>)[] = [];
+  const starts: Record<ModuleRole, (() => void | Promise<void>)[]> = {
+    api: [],
+    worker: [],
+    bot: [],
+  };
   const sameObject = (a: unknown, b: unknown) => a === b;
 
   for (const m of modules) {
@@ -200,6 +208,10 @@ export function buildRegistries(
       knownNamesSource.add("known-names", m.knownNamesSource, m.id);
     }
     if (m.stop !== undefined) stops.unshift(m.stop);
+    for (const role of ["api", "worker", "bot"] as const) {
+      const start = m.start[role];
+      if (start !== undefined) starts[role].push(start);
+    }
   }
 
   return {
@@ -223,5 +235,6 @@ export function buildRegistries(
     consentSource: consentSource.values()[0],
     knownNamesSource: knownNamesSource.values()[0],
     stops,
+    starts,
   };
 }

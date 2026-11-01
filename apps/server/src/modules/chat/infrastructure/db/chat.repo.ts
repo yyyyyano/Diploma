@@ -3,6 +3,8 @@ import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { chatConversations, chatMessages, type ChatChannel } from "./schema.ts";
 
+export type { ChatChannel };
+
 /**
  * Порядок сообщений: время, затем вопрос раньше ответа, затем id. Вопрос и строка ответа «идёт» пишутся одной транзакцией, а `now()` —
  * время её начала: у обеих строк одно `created_at`, и порядок решал бы случайный id ответа (v4 против v7 вопроса). Одинаковое время

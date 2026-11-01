@@ -223,6 +223,18 @@ describe("PRIV-02, ADR-0009: облачное согласие и останов
     ]);
     expect(stops).toEqual([second, first]);
   });
+
+  it("запуски модулей раскладываются по ролям процесса: bot не запускает работу worker", () => {
+    const polling = () => {};
+    const sweeping = async () => {};
+    const { starts } = buildRegistries([
+      defineModule({ id: "telegram", start: { bot: polling } }),
+      defineModule({ id: "chat", start: { worker: sweeping } }),
+    ]);
+    expect(starts.bot).toEqual([polling]);
+    expect(starts.worker).toEqual([sweeping]);
+    expect(starts.api).toEqual([]);
+  });
 });
 
 describe("T-007 находка: ключи настроек и секретов — с префиксом владельца", () => {

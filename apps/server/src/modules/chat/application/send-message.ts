@@ -28,9 +28,9 @@ import {
   insertMessage,
   latestChannelConversation,
   listMessages,
+  type ChatChannel,
   type MessageRow,
 } from "../infrastructure/db/chat.repo.ts";
-import type { ChatChannel } from "../infrastructure/db/schema.ts";
 import type { LiveRuns } from "./live-runs.ts";
 import { enforceChatRate } from "./rate-limit.ts";
 import type { RunRegistry } from "./runs.ts";

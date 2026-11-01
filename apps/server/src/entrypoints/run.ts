@@ -114,9 +114,10 @@ async function startRole(
 ): Promise<Running> {
   // Очередь — до слушателей: процедуры api ставят задачи сразу; worker обрабатывает их и ведёт расписания.
   await app.startJobs();
+  await app.startModules();
   if (app.role !== "api") {
-    // Опрос Telegram у bot — T-033, задачи worker — из реестров модулей (T-007): процесс держит явный таймер, а не
-    // таймеры очереди или пул (простаивающие соединения закрываются).
+    // Опрос Telegram у bot — модуль telegram (`start.bot`, T-052), задачи worker — из реестров модулей (T-007): процесс
+    // держит явный таймер, а не таймеры очереди или пул (простаивающие соединения закрываются).
     const keepAlive = setInterval(() => {}, 60_000);
     return {
       async stop() {

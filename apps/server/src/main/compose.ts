@@ -88,6 +88,11 @@ export interface Composition {
    * задачи и api, и bot (незарегистрированную Jobs не поставит), а worker ещё обрабатывает их и ведёт расписания.
    */
   startJobs(): Promise<void>;
+  /**
+   * Запустить работу модулей своей роли после очереди задач (`bot` — опрос Telegram): остановка — через `close()`
+   * (`stop` модулей). У ролей без запусков ничего не делает.
+   */
+  startModules(): Promise<void>;
   /** Дерево процедур oRPC (main/router.ts). */
   readonly router: Router;
   /** Сессия запроса сайта по заголовкам. */
@@ -288,6 +293,9 @@ export async function compose(
         schedules: registries.schedules,
         sweeps: registries.sweeps,
       }),
+    startModules: async () => {
+      for (const start of registries.starts[role]) await start();
+    },
     router,
     session: (headers) => openSession(sessions, pool, headers),
     ready: () => pingDb(pool),

@@ -33,7 +33,7 @@ const texts = {
 };
 const text = texts.Hk0900071;
 
-const articles = [...text.matchAll(/^Статья (\d+[¹²³]?)\./gmu)].map((m) => m[1]);
+const articles = [...text.matchAll(/^Статья (\d+[⁰¹²³⁴⁵⁶⁷⁸⁹]?)\./gmu)].map((m) => m[1]);
 
 /** Текст пункта («1.2», «3») статьи до следующего пункта того же уровня. */
 function pointText(article: string, point: string, act: keyof typeof texts = "Hk0900071"): string {
@@ -73,6 +73,11 @@ describe("TAX-03: начальное наполнение", () => {
       "npd.rate.high",
       "npd.rate.high-from",
       "warranty.default-months",
+      "deadline.property-tax",
+      "deadline.land-tax",
+      "deadline.transport-tax",
+      "deadline.npd-payment",
+      "deadline.declaration",
     ]);
     for (const rate of checked) {
       const unit = paramDef(rate.param)?.unit ?? "byn-minor";
@@ -101,6 +106,37 @@ describe("TAX-03: начальное наполнение", () => {
       verifiedOn: CONSUMER_LAW_VERIFIED_ON,
     });
     expect(pointText("21", "1", "H10200090")).toContain("в течение двух лет со дня передачи");
+  });
+
+  it("сроки налогов граждан (CAL-02): число и день сверены с пунктом НК, период без конца, день сверки — 01.11.2026", () => {
+    const deadlines = SEED_RATES.filter((r) => r.param.startsWith("deadline."));
+    expect(
+      deadlines.map((r) => [r.param, r.value, r.sourceArticle, r.sourcePoint, r.sourcePath]),
+    ).toEqual([
+      ["deadline.property-tax", 1115, "233", "5", "a233/p5"],
+      ["deadline.land-tax", 1115, "244", "8.1", "a244/p8.1"],
+      ["deadline.transport-tax", 1115, "307⁸", "2", "a307.8/p2"],
+      ["deadline.npd-payment", 22, "381⁷", "2", "a381.7"],
+      ["deadline.declaration", 331, "222", "1", "a222"],
+    ]);
+    for (const rate of deadlines) {
+      expect([rate.param, rate.validTo, rate.verifiedOn]).toEqual([
+        rate.param,
+        null,
+        NK_VERIFIED_ON,
+      ]);
+      expect(paramDef(rate.param)?.group).toBe("deadline");
+    }
+    expect(articles).toEqual(expect.arrayContaining(["233", "244", "307⁸", "381⁷", "222"]));
+    expect(pointText("233", "5")).toContain(
+      "физическими лицами производится единым имущественным платежом",
+    );
+    expect(pointText("307⁸", "2")).toContain(
+      "транспортного налога плательщиками – физическими лицами",
+    );
+    expect(pointText("381⁷", "2")).toContain(
+      "не позднее 22-го числа месяца, следующего за истекшим налоговым периодом",
+    );
   });
 
   it("значения без нормы в сохранённой странице (взнос ФСЗН, пределы ПДН) не выданы за проверенные и не ссылаются на страницу", () => {

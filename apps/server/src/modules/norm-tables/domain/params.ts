@@ -15,7 +15,15 @@ export interface RateParamDef {
   readonly param: string;
   readonly unit: RateUnit;
   /** Группа в админке и в словаре: стандартные вычеты, ставки подоходного налога, ИП, НПД, взнос ФСЗН, долговая нагрузка. */
-  readonly group: "std-deduction" | "ndfl-rate" | "ip" | "npd" | "fszn" | "pdn" | "warranty";
+  readonly group:
+    | "std-deduction"
+    | "ndfl-rate"
+    | "ip"
+    | "npd"
+    | "fszn"
+    | "pdn"
+    | "warranty"
+    | "deadline";
 }
 
 export const RATE_PARAMS: readonly RateParamDef[] = [
@@ -41,6 +49,12 @@ export const RATE_PARAMS: readonly RateParamDef[] = [
   { param: "pdn.limit.domestic-goods", unit: "percent-bp", group: "pdn" },
   // CAL-04: гарантийный срок по умолчанию — ст. 21 Закона № 90-З («в течение двух лет со дня передачи»).
   { param: "warranty.default-months", unit: "months", group: "warranty" },
+  // CAL-02: сроки уплаты налогов граждан и подачи декларации (T-048). Календарь берёт срок по коду; «15 ноября» хранится как 1115.
+  { param: "deadline.property-tax", unit: "month-day", group: "deadline" },
+  { param: "deadline.land-tax", unit: "month-day", group: "deadline" },
+  { param: "deadline.transport-tax", unit: "month-day", group: "deadline" },
+  { param: "deadline.npd-payment", unit: "day-of-month", group: "deadline" },
+  { param: "deadline.declaration", unit: "month-day", group: "deadline" },
 ];
 
 const BY_PARAM = new Map(RATE_PARAMS.map((p) => [p.param, p]));

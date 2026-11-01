@@ -34,9 +34,13 @@
   2 мин / 10 мин, остановка цикла при 403/429 или > 20 % ошибок), честный User-Agent с контактом, **robots-parser**
   на каждый адрес, `HEAD` с `Accept-Encoding: identity` для лёгкой проверки, **cheerio** для разбора, сохранённые
   страницы в `__fixtures__/` для офлайн-тестов и карантин (LAW-39).
-- **Telegram**: **grammY** (+ `files`, `auto-retry`, `transformer-throttler`), long polling под консультативной
-  блокировкой Postgres; без `conversations`/session — состояние в нашей БД, тяжёлое — в очередь; потоковый ответ —
-  `sendMessageDraft` (запасной — `editMessageText` ≤ 1/с). grammY импортируется только в `telegram/infrastructure/`.
+- **Telegram**: **grammY** (+ `auto-retry`, `@grammyjs/stream`), long polling под консультативной блокировкой Postgres
+  (`pg_try_advisory_xact_lock` в открытой транзакции с пульсом: потеря соединения останавливает опрос); без
+  `conversations`/session — состояние в нашей БД, тяжёлое — в очередь процесса по чатам; потоковый ответ —
+  `replyWithStream` плагина `@grammyjs/stream` (черновики `sendMessageDraft`, деление на сообщения по 4096 знаков), при
+  ошибке черновика ответ уходит одним сообщением (дополнено T-052; прежняя запись — «запасной `editMessageText` ≤ 1/с»).
+  `@grammyjs/files` и `transformer-throttler` не нужны: файл скачивается `getFile` + `fetch` с пределом размера за
+  портом, лимиты 429 держит `auto-retry`. grammY импортируется только в `telegram/infrastructure/`.
 - **НБРБ**: свой клиент с кэшем в БД, запрос по ISO-коду (не `Cur_ID`), учёт `Cur_Scale`, диапазон ≤ 365 дней,
   выходной — последний установленный курс.
 - **Нормализация и сравнение названий**: `Az.js` за интерфейсом `Lemmatizer`, `transliteration` + справочник

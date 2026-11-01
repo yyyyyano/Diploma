@@ -33,6 +33,13 @@ export const UPCOMING_DAYS = defineSetting({
   default: 90,
 });
 
+/** CAL-05: за сколько дней напомнить о продлении страховки (12.03 → 5 марта). */
+export const INSURANCE_REMIND_DAYS = defineSetting({
+  key: "calendar.insurance-remind-days",
+  schema: Days,
+  default: [7] as (0 | 1 | 7 | 30)[],
+});
+
 const Words = z.array(z.string().trim().min(1).max(60)).max(40);
 
 /**
@@ -62,6 +69,7 @@ export const CALENDAR_SETTINGS = [
   WARRANTY_REMIND_DAYS,
   REMIND_TIME,
   UPCOMING_DAYS,
+  INSURANCE_REMIND_DAYS,
   EVIDENCE_WORDS,
   EVIDENCE_DAYS,
 ] as const;

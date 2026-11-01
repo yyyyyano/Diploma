@@ -15,6 +15,7 @@ import {
   Link2,
   Percent,
   Repeat,
+  ShieldCheck,
   Target,
   TrendingUp,
   type LucideIcon,
@@ -33,6 +34,7 @@ const ICONS: Readonly<Record<UserNotification["kind"], LucideIcon>> = {
   "receipt-review": AlertTriangle,
   "statement-imported": FileText,
   "calendar-reminder": CalendarClock,
+  "insurance-renewal": ShieldCheck,
   "weekly-summary": TrendingUp,
   "recurring-missed": Repeat,
   "data-export-ready": Download,
@@ -114,6 +116,14 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
     };
     textKey = `notifications:kinds.deduction.${variants[String(notification.params["kind"] ?? "")] ?? "text"}`;
     Object.assign(params, { amount: formatMoney(Money.of(num("amount"), "BYN")) });
+  } else if (notification.kind === "insurance-renewal") {
+    // CAL-05: вопрос «напомнить о продлении?» — по виду страховки; дни — готовой строкой «ДД.ММ.ГГГГ».
+    const variants: Record<string, string> = { osago: "textOsago", kasko: "textKasko" };
+    textKey = `notifications:kinds.insurance-renewal.${variants[String(notification.params["kind"] ?? "")] ?? "text"}`;
+    Object.assign(params, {
+      paidOn: String(notification.params["paidOn"] ?? ""),
+      remindOn: String(notification.params["remindOn"] ?? ""),
+    });
   } else if (notification.kind === "calendar-reminder") {
     // CAL-07: «когда» — по числу дней до события; гарантия и срок по правилу — свои тексты, прочее — название события.
     const days = num("days");

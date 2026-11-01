@@ -19,6 +19,7 @@ export const USER_NOTIFICATION_KINDS = [
   "receipt-review",
   "statement-imported",
   "calendar-reminder",
+  "insurance-renewal",
   "weekly-summary",
   "recurring-missed",
   "data-export-ready",

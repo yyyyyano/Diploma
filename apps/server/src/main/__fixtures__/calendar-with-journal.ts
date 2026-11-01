@@ -18,6 +18,7 @@ import { makeRead } from "../../modules/calendar/application/read.ts";
 import { makeReminders } from "../../modules/calendar/application/reminders.ts";
 import { makeSync } from "../../modules/calendar/application/sync.ts";
 import { calendarTools } from "../../modules/calendar/agent/tools.ts";
+import { makeInsurance, RENEW_HANDLER } from "../../modules/calendar/application/insurance.ts";
 import { makeProperties } from "../../modules/calendar/application/properties.ts";
 import { makeDeadlines } from "../../modules/calendar/application/deadlines.ts";
 import { makeWarranty } from "../../modules/calendar/application/warranty.ts";
@@ -63,13 +64,20 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
   const warranty = makeWarranty(deps, reminders);
   const deadlines = makeDeadlines(deps, reminders);
   const properties = makeProperties(deps);
-  const sync = makeSync(deps, [(s) => warranty.sync(s, []), properties.derive, deadlines.sync]);
+  const insurance = makeInsurance(deps, reminders);
+  const sync = makeSync(deps, [
+    (s) => warranty.sync(s, []),
+    properties.derive,
+    deadlines.sync,
+    insurance.scan,
+  ]);
   const read = makeRead(deps, sync.ensure);
   const events = makeEvents(deps, reminders);
   r.t.registerUndo(UNDO_CREATE_HANDLER, events.undoCreate);
   r.t.registerUndo(RESTORE_HANDLER, events.restore);
   r.t.registerUndo(UNDELETE_HANDLER, events.undelete);
   r.t.registerConfirm(DELETE_HANDLER, events.confirmDelete);
+  r.t.registerConfirm(RENEW_HANDLER, insurance.confirm);
 
   /** Чек с одной позицией с гарантией (RCPT-13): настоящие строки receipts и receipt_items. */
   async function warrantyReceipt(
@@ -119,6 +127,7 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
     s: r.s(),
     deadlines,
     properties,
+    insurance,
     found,
     setFact,
     reminders,
@@ -128,6 +137,7 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
     events,
     warrantyReceipt,
     tools: calendarTools(read, events),
+    insuranceNotices: () => r.notices.filter((n) => n.kind === "insurance-renewal"),
     calendarNotices: () => r.notices.filter((n) => n.kind === "calendar-reminder"),
   };
 }

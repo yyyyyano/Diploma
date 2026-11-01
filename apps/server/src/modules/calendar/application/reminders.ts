@@ -8,7 +8,12 @@ import {
   markReminders,
   replaceReminders,
 } from "../infrastructure/db/calendar.repo.ts";
-import { REMIND_DAYS, REMIND_TIME, WARRANTY_REMIND_DAYS } from "../settings.ts";
+import {
+  INSURANCE_REMIND_DAYS,
+  REMIND_DAYS,
+  REMIND_TIME,
+  WARRANTY_REMIND_DAYS,
+} from "../settings.ts";
 import { TIME_ZONE } from "../../../platform/settings/time-zone.ts";
 import type { Deps } from "./deps.ts";
 
@@ -20,6 +25,7 @@ export function makeReminders(d: Deps) {
     return defaultRemindDays(type, {
       general: await settings.get(REMIND_DAYS),
       warranty: await settings.get(WARRANTY_REMIND_DAYS),
+      insurance: await settings.get(INSURANCE_REMIND_DAYS),
     });
   }
 

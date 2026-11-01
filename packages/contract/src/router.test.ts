@@ -101,6 +101,8 @@ describe("дерево процедур", () => {
       "calendar.create",
       "calendar.update",
       "calendar.requestDelete",
+      "calendar.propertyQuestion",
+      "calendar.answerProperty",
       "dashboard.overview",
       "categories.list",
       "categories.create",

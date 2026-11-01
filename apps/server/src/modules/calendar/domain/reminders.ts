@@ -30,12 +30,18 @@ export function planReminders(input: {
     .filter((plan) => plan.dueAt.getTime() > input.now.getTime());
 }
 
-/** CAL-07, CAL-04: напоминания по умолчанию — гарантия ещё и за 30 дней, остальное — как настроено (7 и 1). */
+/** CAL-07, CAL-04, CAL-05: по умолчанию — гарантия ещё и за 30 дней, страховка за 7, остальное — как настроено (7 и 1). */
 export function defaultRemindDays(
   type: string,
-  settings: { readonly general: readonly number[]; readonly warranty: readonly number[] },
+  settings: {
+    readonly general: readonly number[];
+    readonly warranty: readonly number[];
+    readonly insurance: readonly number[];
+  },
 ): number[] {
-  return [...(type === "warranty" ? settings.warranty : settings.general)];
+  if (type === "warranty") return [...settings.warranty];
+  if (type === "insurance") return [...settings.insurance];
+  return [...settings.general];
 }
 
 export interface DueReminder {

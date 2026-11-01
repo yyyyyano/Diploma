@@ -26,6 +26,7 @@ import {
 } from "./application/events.ts";
 import { makeRead } from "./application/read.ts";
 import { makeDeadlines } from "./application/deadlines.ts";
+import { makeInsurance, RENEW_HANDLER } from "./application/insurance.ts";
 import { makeProperties } from "./application/properties.ts";
 import { makeReminders } from "./application/reminders.ts";
 import { makeSync } from "./application/sync.ts";
@@ -69,8 +70,14 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
   const warranty = makeWarranty(deps, reminders);
   const deadlines = makeDeadlines(deps, reminders);
   const properties = makeProperties(deps);
+  const insurance = makeInsurance(deps, reminders);
   // Порядок важен: сначала факты об имуществе (вывод из операций), затем события по ним и вопрос о страховке.
-  const sync = makeSync(deps, [(s) => warranty.sync(s, []), properties.derive, deadlines.sync]);
+  const sync = makeSync(deps, [
+    (s) => warranty.sync(s, []),
+    properties.derive,
+    deadlines.sync,
+    insurance.scan,
+  ]);
   const read = makeRead(deps, sync.ensure);
   const events = makeEvents(deps, reminders);
   const tools = calendarTools(read, events);
@@ -95,7 +102,7 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
       [RESTORE_HANDLER]: events.restore,
       [UNDELETE_HANDLER]: events.undelete,
     },
-    confirm: { [DELETE_HANDLER]: events.confirmDelete },
+    confirm: { [DELETE_HANDLER]: events.confirmDelete, [RENEW_HANDLER]: insurance.confirm },
     userData: calendarUserData,
   });
 }

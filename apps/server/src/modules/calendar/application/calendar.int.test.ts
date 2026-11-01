@@ -431,6 +431,21 @@ const eventsOf = async (s: { scope: { householdId: unknown } }, rule: string) =>
     )
   ).rows;
 
+const eventsOfKey = async (s: { scope: { householdId: unknown } }, keyLike: string) =>
+  (
+    await db.owner.query<{
+      id: string;
+      day: string | null;
+      type: string;
+      rule: string | null;
+      origin: string;
+      params: Record<string, string | number>;
+    }>(
+      "select id, to_char(day, 'YYYY-MM-DD') as day, type, rule, origin, params from calendar_events where key like $1 and household_id = $2 order by day",
+      [keyLike, s.scope.householdId],
+    )
+  ).rows;
+
 describe("CAL-02: сроки налогов — только по фактам профиля и подтверждённым значениям таблицы", () => {
   it("«есть автомобиль» → транспортный налог 15.11.2026 (ст. 307⁸ п. 2), напоминания за 7 и 1 день; повторный пересчёт дубль не создаёт", async () => {
     const { s, setFact, sync, read } = stand();
@@ -633,5 +648,60 @@ describe("PROF-07: имущество выводится из операций �
       [s.scope.householdId],
     );
     expect(Number(rows.rows[0]?.n)).toBe(1);
+  }, 30_000);
+});
+
+describe("CAL-05: годовой платёж страховой компании → «напомнить о продлении?»", () => {
+  const decisionOf = (notice: unknown) => (notice as { decisionId: string }).decisionId;
+
+  it("ОСАГО 12.03.2026: вопрос с уведомлением; «Да» → «Продлить ОСАГО» 12.03.2027, напоминание за 7 дней — 05.03.2027 09:00; «Отменить» убирает событие", async () => {
+    const { s, r, sync, insuranceNotices } = stand();
+    await r.seed(s, [spend("2026-03-12", "Белгосстрах ОСАГО", "other", 9000)]);
+    await sync.run(s);
+    expect(insuranceNotices()).toHaveLength(1);
+    expect(insuranceNotices()[0]).toMatchObject({
+      kind: "insurance-renewal",
+      params: { kind: "osago", paidOn: "12.03.2026", remindOn: "05.03.2027" },
+    });
+    const decision = await r.t.actions.decision(s, decisionOf(insuranceNotices()[0]));
+    expect(decision.summary).toMatchObject({ key: "decisions.insuranceRenew.osago" });
+    const answer = await r.t.actions.answer(s, decisionOf(insuranceNotices()[0]), "yes", "web");
+    expect(answer.status).toBe("yes");
+    const [event] = await eventsOfKey(s, "insurance:%");
+    expect(event).toMatchObject({
+      day: "2027-03-12",
+      type: "insurance",
+      rule: "osago",
+      origin: "insurance",
+      params: { paidOn: "2026-03-12", kind: "osago" },
+    });
+    expect((await remindersOf(event?.id ?? "")).map((x) => [x.offset, x.dueAt])).toEqual([
+      [7, "2027-03-05T06:00:00.000Z"],
+    ]);
+    expect(answer.undoToken).not.toBeNull();
+    await r.t.actions.undo(s, answer.undoToken ?? "");
+    expect(await eventsOfKey(s, "insurance:%")).toEqual([]);
+  }, 30_000);
+
+  it("тот же платёж второй раз не спрашивается; «Нет» помнится — события нет, нового вопроса нет", async () => {
+    const { s, r, sync, insuranceNotices } = stand();
+    await r.seed(s, [spend("2026-03-12", "Белгосстрах КАСКО", "other", 90000)]);
+    await sync.run(s);
+    await sync.run(s);
+    expect(insuranceNotices()).toHaveLength(1);
+    await r.t.actions.answer(s, decisionOf(insuranceNotices()[0]), "no", "web");
+    await sync.run(s);
+    expect(insuranceNotices()).toHaveLength(1);
+    expect(await eventsOfKey(s, "insurance:%")).toEqual([]);
+  }, 30_000);
+
+  it("платёж не страховщику и платёж, чьё продление уже прошло, вопроса не вызывают", async () => {
+    const { s, r, sync, insuranceNotices } = stand();
+    await r.seed(s, [
+      spend("2026-03-12", "Евроопт", "groceries"),
+      spend("2025-06-01", "Белгосстрах", "other"),
+    ]);
+    await sync.run(s);
+    expect(insuranceNotices()).toEqual([]);
   }, 30_000);
 });

@@ -66,11 +66,14 @@ describe("CAL-07: напоминания события — за 7 и 1 день
 });
 
 describe("CAL-04, CAL-07: напоминания по умолчанию — по типу события", () => {
-  const settings = { general: [7, 1], warranty: [30, 7, 1] };
+  const settings = { general: [7, 1], warranty: [30, 7, 1], insurance: [7] };
   it("гарантия — ещё и за 30 дней; остальное — за 7 и 1", () => {
     expect(defaultRemindDays("warranty", settings)).toEqual([30, 7, 1]);
     expect(defaultRemindDays("own", settings)).toEqual([7, 1]);
     expect(defaultRemindDays("tax", settings)).toEqual([7, 1]);
+  });
+  it("CAL-05: страховка — одно напоминание за 7 дней (12.03 → 5 марта)", () => {
+    expect(defaultRemindDays("insurance", settings)).toEqual([7]);
   });
 });
 

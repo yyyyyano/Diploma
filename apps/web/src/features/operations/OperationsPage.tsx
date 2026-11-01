@@ -2,7 +2,7 @@
 // страницами по 50 (на телефоне — карточки и «Показать ещё»), поиск и фильтры в адресе, ручной ввод и правка — сразу и с
 // «Отменить», карточка операции в боковой панели, удаление — только после «Да» (DecisionDialog) и снова «Отменить»,
 // «Откуда курс?» у валютной операции. Четыре состояния (DES-16); обновления — поток событий (`transaction`).
-// Показ «есть чек», «регулярный» и импорт в карточке — задачи T-028, T-030, T-026; «Выгрузить в Excel» — T-051.
+// Показ «есть чек», «регулярный» и импорт в карточке — задачи T-028, T-030, T-026; «Выгрузить в Excel» — `entities/xls-export` (T-051).
 import { MARKERS_MAX, type Transaction } from "@kosht/contract";
 import { formatMoney } from "@kosht/i18n";
 import type { TraceId } from "@kosht/kernel";
@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { DecisionDialog, UndoActionToast, type UndoResult } from "../../entities/action/index.ts";
 import { useCategoryLookup } from "../../entities/category/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
+import { ExportExcelButton } from "../../entities/xls-export/index.ts";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf } from "../../lib/errors.ts";
 import { EmptyState, PageHeader, Sheet, SkeletonList } from "../../ui/index.ts";
@@ -224,12 +225,19 @@ export function OperationsPage({ search }: { readonly search: OperationsSearch }
             : undefined
         }
         actions={
-          <Button
-            leftSection={<Plus size={18} aria-hidden />}
-            onClick={() => setDialog({ kind: "add" })}
-          >
-            {t("operations:add.button")}
-          </Button>
+          <>
+            <ExportExcelButton
+              from={search.from}
+              to={search.to}
+              disabled={!loaded || total === 0}
+            />
+            <Button
+              leftSection={<Plus size={18} aria-hidden />}
+              onClick={() => setDialog({ kind: "add" })}
+            >
+              {t("operations:add.button")}
+            </Button>
+          </>
         }
       />
       <div className={classes.body}>

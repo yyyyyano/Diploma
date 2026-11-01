@@ -19,6 +19,7 @@ import { EventRow, useCalendarTexts } from "../../entities/calendar-event/index.
 import { categoryRefOf, useCategoryLookup } from "../../entities/category/index.ts";
 import { FoundBanner, useFoundChange } from "../../entities/deduction/index.ts";
 import { WeeklyCard } from "../../entities/weekly/index.ts";
+import { ExportExcelButton } from "../../entities/xls-export/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
 import { ContributeDialog, GoalCard } from "../../entities/goal/index.ts";
 import { orpc } from "../../lib/api.ts";
@@ -90,9 +91,12 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
         title={t("dashboard:title")}
         actions={
           period === undefined ? undefined : (
-            <Suspense fallback={null}>
-              <PeriodBar period={period} onChange={setPeriod} />
-            </Suspense>
+            <>
+              <Suspense fallback={null}>
+                <PeriodBar period={period} onChange={setPeriod} />
+              </Suspense>
+              <ExportExcelButton from={period.from} to={period.to} disabled={!data?.hasData} />
+            </>
           )
         }
       />

@@ -498,3 +498,28 @@ describe("AGT-07, TXN-03: удаление — после «Да», затем �
     await expect.poll(() => undone).toEqual({ token: TOKEN });
   });
 });
+
+describe("XLS-01: «Выгрузить в Excel» на «Операциях»", () => {
+  it("ссылка ведёт на выгрузку за период из адреса", async () => {
+    server.use(
+      ...baseHandlers(),
+      list(() => page([coffee], 1)),
+    );
+    renderPage("/operations?from=2026-09-01&to=2026-09-30");
+    expect(await screen.findByText("Найдено: 1 операция")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Выгрузить в Excel" })).toHaveAttribute(
+      "href",
+      "/api/xls-export?from=2026-09-01&to=2026-09-30",
+    );
+  });
+
+  it("операций нет — кнопка выключена", async () => {
+    server.use(
+      ...baseHandlers(),
+      list(() => page([])),
+    );
+    renderPage();
+    expect(await screen.findByText("Операций пока нет")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Выгрузить в Excel" })).toBeDisabled();
+  });
+});

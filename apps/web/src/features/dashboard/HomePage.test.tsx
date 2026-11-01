@@ -247,6 +247,17 @@ describe("DES-16: состояния «Главной»", () => {
   });
 });
 
+describe("XLS-01: «Выгрузить в Excel» на главной", () => {
+  it("ссылка ведёт на выгрузку за период главной", async () => {
+    server.use(overview());
+    renderPage();
+    expect(await screen.findByRole("link", { name: "Выгрузить в Excel" })).toHaveAttribute(
+      "href",
+      "/api/xls-export?from=2026-10-01&to=2026-10-31",
+    );
+  });
+});
+
 describe("DASH-02: числа периода", () => {
   it("всего на счетах, доходы, расходы и свободный остаток — с подписями и ⓘ у каждого", async () => {
     server.use(overview());

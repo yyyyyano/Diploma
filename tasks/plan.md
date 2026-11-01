@@ -2254,7 +2254,7 @@
 - Зависимости: T-041, T-010, T-018
 
 ### T-043 · Чат на сайте: диалоги, панель «Спросить ассистента», вложения, голос и выбор модели
-- Статус: todo
+- Статус: in-progress
 - Модули: `chat`, `voice`, `agent`, `llm` (адаптер whisper.cpp, строка реестра, миграция цепочки `transcribe`),
   `contract`, `i18n`, `features/assistant`, `apps/web/src/lib`, `compose.yaml`
 - SPEC: CHAT-01, CHAT-02, CHAT-07, CHAT-08, CHAT-09, VOICE-02, VOICE-03, LLM-10, PRIV-02, SEC-02, SEC-05,

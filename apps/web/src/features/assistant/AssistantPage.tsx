@@ -25,6 +25,11 @@ import type { AssistantSearch } from "./model/search.ts";
 
 const PHONE_QUERY = "(max-width: 860px)";
 
+/** Имя для приветствия: у пользователя без имени сессия подставляет email — «Здравствуйте, a@b.by!» не пишем. */
+function greetingName(user: { readonly name: string; readonly email: string } | null | undefined) {
+  return user === null || user === undefined || user.name === user.email ? undefined : user.name;
+}
+
 export function AssistantPage({ search }: { readonly search: AssistantSearch }) {
   const { t } = useTranslation("assistant");
   const initial = useInitialConversation(search.c);
@@ -145,7 +150,7 @@ function Layout({ initial }: { readonly initial: ConversationId | null }) {
           conversationId={opened.target}
           getPage={() => seen.context}
           onConversation={named}
-          userName={user.data?.name}
+          userName={greetingName(user.data)}
         />
       </section>
       {isPhone && (

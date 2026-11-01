@@ -99,7 +99,13 @@ function backend(b: Backend = {}) {
   );
 }
 
-function renderPage(search: Record<string, unknown> = {}) {
+interface Viewer {
+  readonly name: string;
+  readonly email: string;
+  readonly role: "user";
+}
+
+function renderPage(search: Record<string, unknown> = {}, viewer?: Viewer) {
   const root = createRootRoute();
   const page = createRoute({
     getParentRoute: () => root,
@@ -117,7 +123,9 @@ function renderPage(search: Record<string, unknown> = {}) {
     history: createMemoryHistory({
       initialEntries: [`/assistant${query === "" ? "" : `?${query}`}`],
     }),
-    context: {},
+    context: {
+      session: { current: async () => viewer, signOut: async () => undefined },
+    } as never,
   });
   renderWithProviders(
     <QueryClientProvider client={queryClient}>
@@ -251,6 +259,24 @@ describe("SEC-05: вредная разметка в ответе", () => {
     );
     expect(within(feed).queryByRole("link", { name: "чужая" })).toBeNull();
     expect(feed.querySelector("img")).toBeNull();
+  });
+});
+
+describe("CHAT-01: приветствие", () => {
+  it("по имени пользователя; без имени (сессия подставила email) — без имени", async () => {
+    backend();
+    renderPage({}, { name: "Ирина", email: "irina@example.test", role: "user" });
+    expect(
+      await screen.findByRole("heading", { name: "Здравствуйте, Ирина! Чем помочь?" }),
+    ).toBeInTheDocument();
+  });
+
+  it("имя совпадает с email — приветствие без него", async () => {
+    backend();
+    renderPage({}, { name: "a@example.test", email: "a@example.test", role: "user" });
+    expect(
+      await screen.findByRole("heading", { name: "Здравствуйте! Чем помочь?" }),
+    ).toBeInTheDocument();
   });
 });
 

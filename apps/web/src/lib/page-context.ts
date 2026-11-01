@@ -16,6 +16,15 @@ const SELECTED_PARAM: Readonly<Record<string, { param: string; entity: string }>
   "/operations": { param: "op", entity: "transaction" },
 };
 
+/** Значение `period` для «текущего месяца»: агент берёт месяц из `today` в блоке контекста. */
+export const CURRENT_MONTH = "current-month";
+
+/**
+ * Страницы с периодом «по умолчанию»: без `from`/`to` в адресе главная показывает текущий месяц по часам сервера
+ * (DASH-01) — в адресе его нет, а агент должен знать, о каком периоде спрашивают («почему так много на такси?»).
+ */
+const DEFAULT_PERIOD: Readonly<Record<string, string>> = { "/home": CURRENT_MONTH };
+
 export interface PageContextInput {
   readonly pathname: string;
   /** Разобранная строка запроса: значения-примитивы идут в params, массивы и объекты — нет. */
@@ -42,6 +51,15 @@ export function buildPageContext(input: PageContextInput): PageContext {
     }
   }
   const route = input.pathname.startsWith("/") ? input.pathname.slice(0, MAX_ROUTE) : "/";
+  const defaultPeriod = DEFAULT_PERIOD[route];
+  if (
+    defaultPeriod !== undefined &&
+    params["from"] === undefined &&
+    params["to"] === undefined &&
+    params["period"] === undefined
+  ) {
+    params["period"] = defaultPeriod;
+  }
   const selector = SELECTED_PARAM[route];
   const id = selector === undefined ? undefined : params[selector.param];
   const selected =

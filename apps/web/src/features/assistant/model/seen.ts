@@ -2,7 +2,8 @@
 // параметров адреса: `period=2026-09` (админка), `from`/`to` (главная, операции) — целый календарный месяц называется
 // словами, остальное — диапазоном дат; страницы без периода называются только по имени.
 import type { resources } from "@kosht/i18n";
-import { LocalDate } from "@kosht/kernel";
+import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
+import { CURRENT_MONTH } from "../../../lib/page-context.ts";
 
 export type NavKey = keyof (typeof resources)["ru"]["shell"]["nav"];
 
@@ -46,7 +47,14 @@ function monthEnd(day: LocalDate): LocalDate {
   return LocalDate.addDays(LocalDate.parse(next), -1);
 }
 
-export function seenPeriod(params: Readonly<Record<string, string>>): SeenPeriod | undefined {
+export function seenPeriod(
+  params: Readonly<Record<string, string>>,
+  today: LocalDate = LocalDate.fromInstant(new Date(), DEFAULT_TIME_ZONE),
+): SeenPeriod | undefined {
+  // Главная без периода в адресе показывает текущий месяц (DASH-01).
+  if (params["period"] === CURRENT_MONTH) {
+    return { kind: "month", month: today.slice(5, 7), year: today.slice(0, 4) };
+  }
   const month = MONTH.exec(params["period"] ?? "");
   if (month?.[1] !== undefined && month[2] !== undefined) {
     return { kind: "month", month: month[2], year: month[1] };

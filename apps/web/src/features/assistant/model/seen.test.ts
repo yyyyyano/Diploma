@@ -1,4 +1,5 @@
 // CHAT-08: «Вижу: Главная · Октябрь 2026» — период страницы из адреса, целый месяц словами.
+import { LocalDate } from "@kosht/kernel";
 import { describe, expect, it } from "vitest";
 import { navKeyOf, seenPeriod } from "./seen.ts";
 
@@ -26,6 +27,14 @@ describe("CHAT-08: период страницы для подписи", () => {
     expect(seenPeriod({ period: "2026-09" })).toEqual({ kind: "month", month: "09", year: "2026" });
     expect(seenPeriod({ period: "сентябрь", from: "вчера" })).toBeUndefined();
     expect(seenPeriod({})).toBeUndefined();
+  });
+
+  it("главная без периода в адресе — текущий месяц по сегодняшнему дню", () => {
+    expect(seenPeriod({ period: "current-month" }, LocalDate.parse("2026-10-31"))).toEqual({
+      kind: "month",
+      month: "10",
+      year: "2026",
+    });
   });
 
   it("одна граница — день как диапазон из одной даты", () => {

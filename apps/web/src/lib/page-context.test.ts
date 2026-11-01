@@ -15,6 +15,16 @@ describe("CHAT-08: контекст страницы", () => {
     expect(PageContext.safeParse(context).success).toBe(true);
   });
 
+  it("главная без периода в адресе: сервер покажет текущий месяц — контекст говорит об этом прямо", () => {
+    expect(buildPageContext({ pathname: "/home", search: {} }).params).toEqual({
+      period: "current-month",
+    });
+    // Свой период из адреса не перекрывается.
+    expect(buildPageContext({ pathname: "/home", search: { from: "2026-09-01" } }).params).toEqual({
+      from: "2026-09-01",
+    });
+  });
+
   it("фильтры операций и открытая операция: страница называет объект", () => {
     const context = buildPageContext({
       pathname: "/operations",

@@ -7,8 +7,8 @@ export type RateUnit = (typeof RATE_UNITS)[number];
 export interface RateParamDef {
   readonly param: string;
   readonly unit: RateUnit;
-  /** Группа в админке и в словаре: стандартные вычеты, ставки подоходного налога, ИП, НПД, долговая нагрузка. */
-  readonly group: "std-deduction" | "ndfl-rate" | "ip" | "npd" | "pdn";
+  /** Группа в админке и в словаре: стандартные вычеты, ставки подоходного налога, ИП, НПД, взнос ФСЗН, долговая нагрузка. */
+  readonly group: "std-deduction" | "ndfl-rate" | "ip" | "npd" | "fszn" | "pdn";
 }
 
 export const RATE_PARAMS: readonly RateParamDef[] = [
@@ -29,6 +29,7 @@ export const RATE_PARAMS: readonly RateParamDef[] = [
   { param: "npd.rate.base", unit: "percent-bp", group: "npd" },
   { param: "npd.rate.high", unit: "percent-bp", group: "npd" },
   { param: "npd.rate.high-from", unit: "byn-minor", group: "npd" },
+  { param: "fszn.employee-rate", unit: "percent-bp", group: "fszn" },
   { param: "pdn.limit.default", unit: "percent-bp", group: "pdn" },
   { param: "pdn.limit.domestic-goods", unit: "percent-bp", group: "pdn" },
 ];

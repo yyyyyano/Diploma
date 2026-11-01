@@ -11,7 +11,7 @@ export type RateStatus = z.infer<typeof RateStatus>;
 export const RateUnit = z.enum(["byn-minor", "percent-bp"]);
 export type RateUnit = z.infer<typeof RateUnit>;
 
-export const RateGroup = z.enum(["std-deduction", "ndfl-rate", "ip", "npd", "pdn"]);
+export const RateGroup = z.enum(["std-deduction", "ndfl-rate", "ip", "npd", "fszn", "pdn"]);
 export type RateGroup = z.infer<typeof RateGroup>;
 
 export const RateRow = z.strictObject({

@@ -52,7 +52,7 @@ describe("TAX-03: начальное наполнение — умолчания
     }
   });
 
-  it("вычеты ст. 209 подтверждены разработчиком в день сверки; ставки и ПДН ждут «Подтвердить»", async () => {
+  it("вычеты ст. 209 и ставки ст. 214, 381² подтверждены разработчиком в день сверки; взнос ФСЗН и ПДН ждут «Подтвердить»", async () => {
     const { items, counts } = await rates().table();
     const base = items.find((r) => r.param === "ndfl.std-deduction.base");
     expect(base).toMatchObject({
@@ -61,7 +61,17 @@ describe("TAX-03: начальное наполнение — умолчания
       source: { act: "Hk0900071", article: "209", point: "1.1" },
     });
     expect(items.find((r) => r.param === "ndfl.rate.base")).toMatchObject({
+      status: "confirmed",
+      confirmed: { by: "developer", on: "2026-11-01" },
+      source: { act: "Hk0900071", article: "214", point: "1.1" },
+    });
+    expect(items.find((r) => r.param === "npd.rate.base")).toMatchObject({
+      status: "confirmed",
+      source: { act: "Hk0900071", article: "381²", point: "1" },
+    });
+    expect(items.find((r) => r.param === "fszn.employee-rate")).toMatchObject({
       status: "pending",
+      value: 100,
       confirmed: null,
     });
     expect(items.find((r) => r.param === "pdn.limit.default")?.source.url).toContain("nbrb.by");
@@ -86,7 +96,7 @@ describe("TAX-03, LEGAL-08: ответ калькулятору — только
       found: false,
       reason: "no-data",
     });
-    expect(await rates().value("ndfl.rate.base", "2026-06-01")).toEqual({
+    expect(await rates().value("fszn.employee-rate", "2026-06-01")).toEqual({
       found: false,
       reason: "unconfirmed",
     });

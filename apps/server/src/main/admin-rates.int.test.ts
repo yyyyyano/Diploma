@@ -103,15 +103,19 @@ describe("ADM-11: доступ", () => {
 });
 
 describe("TAX-03, ADM-11: таблица и подтверждение", () => {
-  it("вычеты ст. 209 — подтверждены разработчиком с источником; ставки и ПДН ждут «Подтвердить»", async () => {
+  it("вычеты ст. 209 и ставки ст. 214 — подтверждены разработчиком с источником; взнос ФСЗН и ПДН ждут «Подтвердить»", async () => {
     const t = await table();
     expect(await rowOf("ndfl.std-deduction.base")).toMatchObject({
       value: 21_600,
       confirmed: { by: "developer", on: "2026-10-30" },
       source: { act: "Hk0900071", article: "209", point: "1.1" },
     });
-    expect(await rowOf("ndfl.rate.base", "pending")).toMatchObject({
+    expect(await rowOf("ndfl.rate.base")).toMatchObject({
       value: 1300,
+      confirmed: { by: "developer", on: "2026-11-01" },
+    });
+    expect(await rowOf("fszn.employee-rate", "pending")).toMatchObject({
+      value: 100,
       confirmed: null,
     });
     expect(t.counts.pending).toBeGreaterThan(0);
@@ -205,6 +209,19 @@ describe("LAW-33: новая редакция закона с другим чи�
     expect(after).toMatchObject({ value: 21_600, drift: true });
     // Остальные вычеты ст. 209 на месте: число 63, 120, 306, 860 в тексте есть.
     expect((await rowOf("ndfl.std-deduction.child"))?.drift).toBe(false);
+    // T-045: числа ставок ст. 214 и 381² тоже найдены в тексте своего пункта — источник привязан к версии фрагмента, расхождения нет.
+    for (const param of [
+      "ndfl.rate.base",
+      "ndfl.rate.high-from",
+      "ip.rate.high-from",
+      "npd.rate.high-from",
+    ]) {
+      expect([param, (await rowOf(param))?.source.linked, (await rowOf(param))?.drift]).toEqual([
+        param,
+        true,
+        false,
+      ]);
+    }
     // Значение 2025 года (5800) в сверке не участвует: действующая редакция отвечает за числа сегодняшнего периода.
     expect(
       (await table()).items.find((r) => r.validFrom === "2025-01-01" && r.status === "confirmed")

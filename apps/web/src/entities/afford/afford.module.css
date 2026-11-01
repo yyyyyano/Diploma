@@ -38,7 +38,7 @@
   font-size: 12.5px;
   color: var(--ink-2);
   background: var(--surface-2);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .consideredBlock {
@@ -71,7 +71,7 @@
   font-size: 13.5px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .warning {
@@ -85,7 +85,7 @@
   font-size: 13.5px;
   color: var(--amber-ink);
   background: var(--amber-soft);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .scenarios {
@@ -133,7 +133,7 @@
   font-weight: 600;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 
 .badges {
@@ -191,7 +191,7 @@
 
 .messages svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-4);
 }
 
 .good {
@@ -446,7 +446,7 @@
 
 .problem svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-4);
 }
 
 .disclaimer {
@@ -460,7 +460,7 @@
 
 .disclaimer svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: var(--s-4);
 }
 
 .incomeForm {

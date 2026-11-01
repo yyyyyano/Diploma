@@ -42,27 +42,19 @@ export function AffordPage({ search }: { readonly search: AffordSearch }) {
   const price = parseMoney(sumText, "BYN");
   const priceValid = price !== undefined && price.minor > 0;
   const dayValid = when === "now" || /^\d{4}-\d{2}-\d{2}$/u.test(day);
-  const inputKey = JSON.stringify([
-    priceValid ? price : null,
-    when === "other" && dayValid ? day : null,
-    income,
-  ]);
-  const input = useMemo<AffordInput | null>(
-    () =>
-      priceValid && dayValid
-        ? {
-            price,
-            ...(when === "other" ? { on: day } : {}),
-            ...(income === null
-              ? {}
-              : { expectedIncome: income.amount, expectedIncomeOn: income.on }),
-          }
-        : null,
-    // Состав входа определяет `inputKey`: объект пересоздаётся только при смене значений.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ключ вместо самих значений
-    [inputKey],
-  );
-  const [committed] = useDebouncedValue(input, DEBOUNCE_MS);
+  const input: AffordInput | null =
+    priceValid && dayValid
+      ? {
+          price,
+          ...(when === "other" ? { on: day } : {}),
+          ...(income === null
+            ? {}
+            : { expectedIncome: income.amount, expectedIncomeOn: income.on }),
+        }
+      : null;
+  // Задерживается ключ-строка, а не объект: значение сравнивается по содержимому, лишних пересчётов и циклов нет.
+  const [committedKey] = useDebouncedValue(JSON.stringify(input), DEBOUNCE_MS);
+  const committed = useMemo(() => JSON.parse(committedKey) as AffordInput | null, [committedKey]);
   const scenarios = useQuery({
     ...orpc.afford.scenarios.queryOptions({ input: committed ?? skipToken }),
     placeholderData: keepPreviousData,
@@ -219,13 +211,8 @@ function LoanSection() {
     ...(rate !== undefined && months !== undefined ? { rateBp: rate, months } : {}),
     ...(income === null ? {} : { income }),
   };
-  const key = JSON.stringify(input);
-  const stable = useMemo<SafeLoanInput>(
-    () => input,
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- ключ вместо самих значений
-    [key],
-  );
-  const [committed] = useDebouncedValue(stable, DEBOUNCE_MS);
+  const [committedKey] = useDebouncedValue(JSON.stringify(input), DEBOUNCE_MS);
+  const committed = useMemo(() => JSON.parse(committedKey) as SafeLoanInput, [committedKey]);
   const loan = useQuery({
     ...orpc.afford.safeLoan.queryOptions({ input: committed }),
     placeholderData: keepPreviousData,

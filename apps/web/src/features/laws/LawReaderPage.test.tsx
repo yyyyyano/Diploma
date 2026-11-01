@@ -12,9 +12,10 @@ import {
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse, type JsonBodyType } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
+import { assistantBridge } from "../../lib/assistant-bridge.ts";
 import { LawReaderPage } from "./LawReaderPage.tsx";
 import { ReaderSearch } from "./model/search.ts";
 
@@ -94,7 +95,9 @@ const error = (code: string, status: number) =>
     { status },
   );
 
-function renderPage(search: Record<string, unknown> = { article: 210 }) {
+const USER = { name: "Ирина", email: "irina@example.test", role: "user" as const };
+
+function renderPage(search: Record<string, unknown> = { article: 210 }, signedIn = false) {
   const root = createRootRoute();
   const readerRoute = createRoute({
     getParentRoute: () => root,
@@ -108,6 +111,7 @@ function renderPage(search: Record<string, unknown> = { article: 210 }) {
   const routes = [
     readerRoute,
     createRoute({ getParentRoute: () => root, path: "/laws", component: () => null }),
+    createRoute({ getParentRoute: () => root, path: "/login", component: () => null }),
   ];
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const query = new URLSearchParams(
@@ -117,7 +121,10 @@ function renderPage(search: Record<string, unknown> = { article: 210 }) {
     routeTree: root.addChildren(routes),
     history: createMemoryHistory({ initialEntries: [`/laws/Hk0900071?${query}`] }),
     context: {
-      session: { current: async () => undefined, signOut: async () => undefined },
+      session: {
+        current: async () => (signedIn ? USER : undefined),
+        signOut: async () => undefined,
+      },
       queryClient,
     } as never,
   });
@@ -278,5 +285,30 @@ describe("LEGAL-05: читалка", () => {
     );
     renderPage();
     expect(await screen.findByText("Акт утратил силу с 23.04.2025.")).toBeVisible();
+  });
+});
+
+describe("CHAT-08: «Спросить ассистента об этой статье»", () => {
+  afterEach(() => assistantBridge.reset());
+
+  it("вошедшему — кнопка: вопрос об этой статье ложится в поле ассистента, не отправляется", async () => {
+    server.use(act(), fragments());
+    renderPage({ article: 210 }, true);
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Спросить ассистента об этой статье" }),
+    );
+    expect(assistantBridge.getState().openRequest).toBe(1);
+    expect(assistantBridge.getState().pendingQuestion).toBe(
+      "Объясните простыми словами, что сказано в ст. 210 акта «НК (Особенная часть)».",
+    );
+  });
+
+  it("гостю — «Войдите, чтобы спросить ассистента» со ссылкой на вход; кнопки вопроса нет", async () => {
+    server.use(act(), fragments());
+    renderPage({ article: 210 }, false);
+    expect(
+      await screen.findByRole("link", { name: "Войдите, чтобы спросить ассистента" }),
+    ).toHaveAttribute("href", "/login");
+    expect(screen.queryByRole("button", { name: "Спросить ассистента об этой статье" })).toBeNull();
   });
 });

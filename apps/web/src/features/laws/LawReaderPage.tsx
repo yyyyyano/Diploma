@@ -15,16 +15,20 @@ import {
   ExternalLink,
   FileText,
   Info,
+  Lock,
   ShieldCheck,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LawStatusBadge } from "../../entities/law/index.ts";
+import { assistantBridge } from "../../lib/assistant-bridge.ts";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf } from "../../lib/errors.ts";
 import { EmptyState, LawRefChip, PageHeader, SkeletonList, SkeletonText } from "../../ui/index.ts";
 import classes from "./LawReaderPage.module.css";
 import type { ReaderSearch } from "./model/search.ts";
+import { useViewer } from "./model/viewer.ts";
 
 const day = (iso: string): string => formatDate(LocalDate.parse(iso.slice(0, 10)));
 
@@ -103,6 +107,7 @@ function Reader({
   const { t } = useTranslation("laws");
   const { act, toc } = view;
   const [copied, setCopied] = useState(false);
+  const viewer = useViewer();
   const key = article ?? toc[0]?.key;
   const index = toc.findIndex((entry) => entry.key === key);
   const current = index < 0 ? undefined : toc[index];
@@ -122,6 +127,13 @@ function Reader({
       // Буфер обмена недоступен (запрет браузера): ссылка остаётся в адресной строке — молча, это не ошибка данных.
       () => undefined,
     );
+  };
+
+  // CHAT-08: вопрос об этой статье — в поле ассистента (не отправлен); о статье он знает и из контекста страницы.
+  const ask = (entry: LawTocEntry) => {
+    const number = numberLabel(entry.number);
+    const part = t(entry.kind === "page" ? "reader.askPage" : "reader.askArticle", { number });
+    assistantBridge.open(t("reader.askQuestion", { part, act: act.shortName ?? act.title }));
   };
 
   const subtitle =
@@ -266,6 +278,18 @@ function Reader({
                   <Copy size={16} strokeWidth={1.8} aria-hidden />
                   {t("reader.copyLink")}
                 </button>
+                {!viewer.pending && viewer.user !== undefined && current !== undefined && (
+                  <button type="button" className={classes.button} onClick={() => ask(current)}>
+                    <Sparkles size={16} strokeWidth={1.8} aria-hidden />
+                    {t("reader.ask")}
+                  </button>
+                )}
+                {!viewer.pending && viewer.user === undefined && (
+                  <Link to="/login" className={classes.button}>
+                    <Lock size={16} strokeWidth={1.8} aria-hidden />
+                    {t("reader.askGuest")}
+                  </Link>
+                )}
                 <a
                   className={classes.link}
                   href={view.url}

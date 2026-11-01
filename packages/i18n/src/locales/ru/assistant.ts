@@ -141,9 +141,4 @@ export const assistant = {
   mobile: {
     context: "Контекст: {{page}}",
   },
-  ask: {
-    law: "Спросить ассистента об этой статье",
-    lawQuestion: "Что сказано в этой норме простыми словами? {{article}}",
-    guest: "Войдите, чтобы спросить ассистента",
-  },
 } as const;

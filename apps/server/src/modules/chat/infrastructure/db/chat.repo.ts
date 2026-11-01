@@ -1,7 +1,14 @@
 // Запросы к таблицам chat: первый аргумент — s: ScopedDb, у каждого обращения свой s.own (ADR-0006).
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { chatConversations, chatMessages } from "./schema.ts";
+
+/**
+ * Порядок сообщений: время, затем вопрос раньше ответа, затем id. Вопрос и строка ответа «идёт» пишутся одной транзакцией, а `now()` —
+ * время её начала: у обеих строк одно `created_at`, и порядок решал бы случайный id ответа (v4 против v7 вопроса). Одинаковое время
+ * бывает только у пары одного обмена, а в паре вопрос всегда первый — это и есть правило ничьей.
+ */
+const askedFirst = sql`(${chatMessages.role} = 'assistant')`;
 
 export type MessageRole = "user" | "assistant";
 export type MessageStatus = "streaming" | "complete" | "interrupted";
@@ -82,7 +89,12 @@ export async function listConversations(s: ScopedDb, limit: number): Promise<Con
         ),
       ),
     )
-    .orderBy(chatMessages.conversationId, desc(chatMessages.createdAt), desc(chatMessages.id));
+    .orderBy(
+      chatMessages.conversationId,
+      desc(chatMessages.createdAt),
+      desc(askedFirst),
+      desc(chatMessages.id),
+    );
   const last = new Map(lasts.map((row) => [row.conversationId, row]));
   return conversations
     .map((row) => ({
@@ -151,7 +163,7 @@ export async function listMessages(s: ScopedDb, conversationId: string): Promise
     })
     .from(chatMessages)
     .where(and(s.own(chatMessages), eq(chatMessages.conversationId, conversationId)))
-    .orderBy(asc(chatMessages.createdAt), asc(chatMessages.id));
+    .orderBy(asc(chatMessages.createdAt), asc(askedFirst), asc(chatMessages.id));
 }
 
 /** Ответ ассистента дописан: части сообщения и итоговое состояние. */

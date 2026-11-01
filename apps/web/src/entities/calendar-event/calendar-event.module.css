@@ -1,0 +1,124 @@
+/* Событие календаря: плашка с значком типа (цвет — токены темы, DES-14), строка списка, карточка в чате. */
+.badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--s-32);
+  height: var(--s-32);
+  border-radius: var(--r-sm);
+  background: var(--kit-neutral-soft);
+  color: var(--ink-2);
+}
+
+.badge[data-type="tax"] {
+  background: var(--law-soft);
+  color: var(--law);
+}
+
+.badge[data-type="credit"] {
+  background: var(--brand-soft-2);
+  color: var(--brand-ink);
+}
+
+.badge[data-type="income"] {
+  background: var(--income-soft);
+  color: var(--income);
+}
+
+.badge[data-type="warranty"] {
+  background: var(--amber-soft);
+  color: var(--amber-ink);
+}
+
+.badge[data-type="insurance"] {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.badge[data-type="own"] {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  width: 100%;
+  min-width: 0;
+  padding: var(--s-10) 0;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: 0;
+}
+
+.dateBox {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: var(--s-40);
+  line-height: 1.1;
+}
+
+.dateBox b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dateBox small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.amount {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: var(--s-12);
+  padding: var(--s-12) var(--s-14);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.cardText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cardLabel {
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.cardTitle {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

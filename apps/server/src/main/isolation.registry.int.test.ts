@@ -465,7 +465,15 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "profile.deleteFact": { input: (b) => ({ id: b.factId }) },
   "tool:read_profile_facts": { input: () => ({}) },
   "tool:upsert_profile_fact": { input: () => ({ value: { key: "largeFamily", value: true } }) },
-  "chat.history": { input: () => undefined },
+  // Чужой диалог неотличим от несуществующего: history, rename и remove отвечают NOT_FOUND, список — только свои.
+  "chat.history": { input: (b) => ({ conversationId: b.conversationId }) },
+  "chat.conversations": { input: () => undefined },
+  "chat.rename": { input: (b) => ({ conversationId: b.conversationId, title: "чужое" }) },
+  "chat.remove": { input: (b) => ({ conversationId: b.conversationId }) },
+  "voice.transcribe": {
+    exempt:
+      "вход — только запись самого пользователя: чужих id во входе нет, результат — её текст (voice/application/transcribe.int.test.ts)",
+  },
   "chat.send": {
     input: (b) => ({ conversationId: b.conversationId, text: "Какие у меня счета?" }),
   },
@@ -748,7 +756,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "categories.list",
       "categories.rename",
       "categories.setHidden",
+      "chat.conversations",
       "chat.history",
+      "chat.remove",
+      "chat.rename",
       "chat.send",
       "chat.stop",
       "dashboard.overview",

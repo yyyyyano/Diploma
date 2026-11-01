@@ -33,9 +33,35 @@ export const UPCOMING_DAYS = defineSetting({
   default: 90,
 });
 
+const Words = z.array(z.string().trim().min(1).max(60)).max(40);
+
+/**
+ * PROF-07, CAL-05: слова названия контрагента или описания операции — признаки страховщика и имущества (в нижнем регистре, поиск по
+ * подстроке). Операции не хранят MCC, поэтому страховщик определяется только по словарю названий. Автомобиль — ещё и по расходам
+ * категории «Авто» (топливо).
+ */
+export const EVIDENCE_WORDS = defineSetting({
+  key: "calendar.evidence-words",
+  schema: z.strictObject({ insurer: Words, apartment: Words, land: Words }),
+  default: {
+    insurer: ["страх", "стравита"],
+    apartment: ["налог на недвижимость"],
+    land: ["земельный налог"],
+  },
+});
+
+/** Как далеко назад (дней) искать в операциях признаки имущества и годовой платёж страховщику. */
+export const EVIDENCE_DAYS = defineSetting({
+  key: "calendar.evidence-days",
+  schema: z.int().min(30).max(800),
+  default: 400,
+});
+
 export const CALENDAR_SETTINGS = [
   REMIND_DAYS,
   WARRANTY_REMIND_DAYS,
   REMIND_TIME,
   UPCOMING_DAYS,
+  EVIDENCE_WORDS,
+  EVIDENCE_DAYS,
 ] as const;

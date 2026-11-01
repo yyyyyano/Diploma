@@ -26,6 +26,7 @@ import {
 } from "./application/events.ts";
 import { makeRead } from "./application/read.ts";
 import { makeDeadlines } from "./application/deadlines.ts";
+import { makeProperties } from "./application/properties.ts";
 import { makeReminders } from "./application/reminders.ts";
 import { makeSync } from "./application/sync.ts";
 import { makeWarranty } from "./application/warranty.ts";
@@ -33,6 +34,7 @@ import { deliverJob } from "./jobs/deliver.job.ts";
 import { deliverSweep } from "./jobs/deliver.sweep.ts";
 import { CALENDAR_SETTINGS } from "./settings.ts";
 import { onFactsChanged } from "./subscriptions/on-facts-changed.ts";
+import { onTransactionsChanged } from "./subscriptions/on-transactions-changed.ts";
 import { onValuesConfirmed } from "./subscriptions/on-values-confirmed.ts";
 import { onWarrantyItemsFound } from "./subscriptions/on-warranty-items-found.ts";
 import { calendarUserData } from "./user-data.ts";
@@ -54,6 +56,7 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
   const deps = {
     platform,
     profile: facades.profile,
+    transactions: facades.transactions,
     tax: facades.tax,
     recurring: facades.recurring,
     receipts: facades.receipts,
@@ -65,7 +68,9 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
   const reminders = makeReminders(deps);
   const warranty = makeWarranty(deps, reminders);
   const deadlines = makeDeadlines(deps, reminders);
-  const sync = makeSync(deps, [(s) => warranty.sync(s, []), deadlines.sync]);
+  const properties = makeProperties(deps);
+  // Порядок важен: сначала факты об имуществе (вывод из операций), затем события по ним и вопрос о страховке.
+  const sync = makeSync(deps, [(s) => warranty.sync(s, []), properties.derive, deadlines.sync]);
   const read = makeRead(deps, sync.ensure);
   const events = makeEvents(deps, reminders);
   const tools = calendarTools(read, events);
@@ -74,7 +79,7 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
     id: "calendar",
     // Соседям: ближайшие хранимые события для главной (DASH-02) и диапазон событий с итогами (итоги недели, сценарии покупки).
     facade: { homeEvents: read.homeEvents, range: read.range },
-    router: calendarRouter(read, events),
+    router: calendarRouter(read, events, properties, sync.run),
     settings: [...CALENDAR_SETTINGS],
     jobs: [deliver],
     sweeps: [deliverSweep(deliver)],
@@ -82,6 +87,7 @@ export function createCalendarModule({ platform, facades }: ModuleDeps<CalendarF
       onWarrantyItemsFound(warranty.sync),
       onValuesConfirmed(sync.run),
       onFactsChanged(sync.run),
+      onTransactionsChanged(sync.run),
     ],
     tools: [tools.listEvents, tools.createEvent],
     undo: {

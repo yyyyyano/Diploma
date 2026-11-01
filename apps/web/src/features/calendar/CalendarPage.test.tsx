@@ -12,7 +12,7 @@ import {
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { delay, http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
 import { CalendarPage } from "./CalendarPage.tsx";
@@ -143,6 +143,14 @@ const month = (over: Record<string, unknown> = {}) =>
 const upcoming = (over: Record<string, unknown> = {}) =>
   http.get("*/api/calendar/upcoming", () => HttpResponse.json({ ...UPCOMING, ...over }));
 
+const propertyQuestion = (question: unknown) =>
+  http.get("*/api/calendar/property-question", () => HttpResponse.json({ question }));
+
+// По умолчанию спрашивать нечего: баннер появляется только в тестах PROF-07 (их обработчик ставится позже и берёт верх).
+beforeEach(() => {
+  server.use(propertyQuestion(null));
+});
+
 function renderPage(search: CalendarSearch = {}) {
   const root = createRootRoute();
   const page = createRoute({
@@ -247,6 +255,56 @@ describe("CAL-01: список «Ближайшие»", () => {
     expect(screen.getByRole("heading", { name: "Ноябрь" })).toBeInTheDocument();
     expect(screen.getByText(/Кредит · пятница · через 2 дня/u)).toBeInTheDocument();
     expect(screen.getByText("Наушники")).toBeInTheDocument();
+  });
+});
+
+describe("PROF-07: баннер «У вас есть автомобиль?»", () => {
+  it("предположение по топливу: «Похоже, у вас есть автомобиль» → «Да» уходит на сервер, тост с «Отменить»", async () => {
+    let body: unknown;
+    server.use(
+      month(),
+      propertyQuestion({ kind: "car", evidence: "fuel" }),
+      http.post("*/api/calendar/property-answer", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ undoToken: TOKEN });
+      }),
+    );
+    renderPage();
+    expect(
+      await screen.findByRole("heading", { name: "Похоже, у вас есть автомобиль" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Вижу траты на топливо/u)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Да, есть автомобиль" }));
+    await waitFor(() => expect(body).toEqual({ kind: "car", has: true }));
+    expect(
+      await screen.findByText("Запомнил: есть автомобиль. Напомню о транспортном налоге"),
+    ).toBeInTheDocument();
+  });
+
+  it("первое открытие без признаков — «У вас есть автомобиль?»; «Нет» отправляет has: false", async () => {
+    let body: unknown;
+    server.use(
+      month(),
+      propertyQuestion({ kind: "car", evidence: null }),
+      http.post("*/api/calendar/property-answer", async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ undoToken: TOKEN });
+      }),
+    );
+    renderPage();
+    expect(
+      await screen.findByRole("heading", { name: "У вас есть автомобиль?" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Тогда я напомню о транспортном налоге/u)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Нет" }));
+    await waitFor(() => expect(body).toEqual({ kind: "car", has: false }));
+  });
+
+  it("вопроса нет — баннера нет", async () => {
+    server.use(month());
+    renderPage();
+    await screen.findByText(/В октябре/u);
+    expect(screen.queryByRole("button", { name: "Нет" })).toBeNull();
   });
 });
 

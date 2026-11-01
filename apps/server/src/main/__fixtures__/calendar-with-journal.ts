@@ -18,6 +18,7 @@ import { makeRead } from "../../modules/calendar/application/read.ts";
 import { makeReminders } from "../../modules/calendar/application/reminders.ts";
 import { makeSync } from "../../modules/calendar/application/sync.ts";
 import { calendarTools } from "../../modules/calendar/agent/tools.ts";
+import { makeProperties } from "../../modules/calendar/application/properties.ts";
 import { makeDeadlines } from "../../modules/calendar/application/deadlines.ts";
 import { makeWarranty } from "../../modules/calendar/application/warranty.ts";
 import type { Deps } from "../../modules/calendar/application/deps.ts";
@@ -43,7 +44,8 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
   const found: { kind: "education" | "housing" | "children"; year: number }[] = [];
   const deps = {
     platform: r.deps.platform,
-    profile: r.deps.profile,
+    profile: { ...r.deps.profile, setFact: r.facts.set },
+    transactions: { list: r.t.ops.list },
     tax: { activeFound: async () => found },
     recurring: { list: r.read.list, upcoming: r.read.upcoming },
     receipts: { warrantyItems: warrantyItemsOf },
@@ -60,7 +62,8 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
   const reminders = makeReminders(deps);
   const warranty = makeWarranty(deps, reminders);
   const deadlines = makeDeadlines(deps, reminders);
-  const sync = makeSync(deps, [(s) => warranty.sync(s, []), deadlines.sync]);
+  const properties = makeProperties(deps);
+  const sync = makeSync(deps, [(s) => warranty.sync(s, []), properties.derive, deadlines.sync]);
   const read = makeRead(deps, sync.ensure);
   const events = makeEvents(deps, reminders);
   r.t.registerUndo(UNDO_CREATE_HANDLER, events.undoCreate);
@@ -115,6 +118,7 @@ export function calendarWithJournal(db: TestDb, options: { rateUp?: boolean } = 
     r,
     s: r.s(),
     deadlines,
+    properties,
     found,
     setFact,
     reminders,

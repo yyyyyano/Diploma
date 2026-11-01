@@ -455,3 +455,50 @@
   flex-wrap: wrap;
   gap: var(--s-8);
 }
+
+/* Баннер вопроса об имуществе (PROF-07): карточка с значком, текстом и двумя кнопками; на телефоне кнопки переносятся под текст. */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-14);
+  padding: var(--s-16) var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.bannerIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--r-sm);
+}
+
+.bannerText {
+  flex: 1;
+  min-width: 260px;
+}
+
+.bannerTitle {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.bannerHint {
+  margin: var(--s-2) 0 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.bannerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}

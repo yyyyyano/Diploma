@@ -1,6 +1,7 @@
 // CAL-01, CAL-03, CAL-04, CAL-06, CAL-07, NFR-22, P5, AGT-07 на Postgres: свои события с «Отменить» и удалением через решение «Да»,
 // напоминания за 7 и 1 день и тик по FakeClock (в том числе пропуск при выключенном компьютере), гарантии по чекам со сроком из
 // настоящей таблицы ставок, платежи и кредиты из `recurring` при запросе без копий в таблице событий.
+import { CalendarEventId } from "@kosht/contract";
 import { LocalDate } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { randomUUID } from "node:crypto";
@@ -508,7 +509,11 @@ describe("CAL-02: сроки налогов — только по фактам �
     await setFact(s, { key: "property.land", value: true });
     await sync.run(s);
     const [land] = await eventsOf(s, "land-tax");
-    await events.update(s, { id: land?.id ?? "", on: LocalDate.parse("2026-11-10") }, "web");
+    await events.update(
+      s,
+      { id: CalendarEventId.parse(land?.id), on: LocalDate.parse("2026-11-10") },
+      "web",
+    );
     await db.owner.query(
       "update norm_rates set value = 1116 where param in ('deadline.property-tax', 'deadline.land-tax')",
     );
@@ -566,9 +571,67 @@ describe("CAL-02: сроки налогов — только по фактам �
     const { groups } = await read.upcoming(s);
     expect(groups[0]?.key).toBe("undated");
     expect(groups[0]?.entries.map((e) => [e.rule, e.on])).toEqual([["inspection", null]]);
-    await events.update(s, { id: inspection?.id ?? "", on: LocalDate.parse("2027-02-10") }, "web");
+    await events.update(
+      s,
+      { id: CalendarEventId.parse(inspection?.id), on: LocalDate.parse("2027-02-10") },
+      "web",
+    );
     expect((await remindersOf(inspection?.id ?? "")).map((x) => x.offset)).toEqual([7, 1]);
     await sync.run(s);
     expect((await eventsOf(s, "inspection"))[0]?.day).toBe("2027-02-10");
+  }, 30_000);
+});
+
+const spend = (
+  date: string,
+  merchant: string,
+  category: string,
+  amountMinor = 5000,
+): Parameters<ReturnType<typeof calendarWithJournal>["r"]["seed"]>[1][number] => ({
+  date,
+  merchant,
+  type: "expense",
+  amountMinor,
+  category,
+});
+
+describe("PROF-07: имущество выводится из операций и спрашивается один раз", () => {
+  it("первое открытие календаря без признаков — один вопрос про автомобиль; «Нет» — факт, второй раз не спрашивается, событий нет", async () => {
+    const { s, properties, sync } = stand();
+    expect(await properties.question(s)).toEqual({ kind: "car", evidence: null });
+    await properties.answer(s, { kind: "car", has: false });
+    await sync.run(s);
+    expect(await properties.question(s)).toBeNull();
+    expect(await eventsOf(s, "transport-tax")).toEqual([]);
+  }, 30_000);
+
+  it("расходы на топливо → предположение «есть автомобиль» (топливо), событий до ответа нет; «Да» — налог и техосмотр, «Отменить» возвращает предположение", async () => {
+    const { s, r, properties, sync } = stand();
+    await r.seed(s, [spend("2026-10-02", "АЗС Белоруснефть", "car")]);
+    await sync.run(s);
+    expect(await properties.question(s)).toEqual({ kind: "car", evidence: "fuel" });
+    expect(await eventsOf(s, "transport-tax")).toEqual([]);
+    const { undoToken } = await properties.answer(s, { kind: "car", has: true });
+    await sync.run(s);
+    expect(await properties.question(s)).toBeNull();
+    expect((await eventsOf(s, "transport-tax"))[0]?.day).toBe("2026-11-15");
+    expect(await eventsOf(s, "inspection")).toHaveLength(1);
+    await r.t.actions.undo(s, undoToken);
+    await sync.run(s);
+    expect(await properties.question(s)).toEqual({ kind: "car", evidence: "fuel" });
+    expect(await eventsOf(s, "transport-tax")).toEqual([]);
+  }, 30_000);
+
+  it("уплата налога на недвижимость в операциях → предположение «есть квартира» (налог); повторный пересчёт факт не дублирует", async () => {
+    const { s, r, properties, sync } = stand();
+    await r.seed(s, [spend("2026-09-20", "Налог на недвижимость, ЕРИП", "taxes", 8000)]);
+    await sync.run(s);
+    await sync.run(s);
+    expect(await properties.question(s)).toEqual({ kind: "apartment", evidence: "tax" });
+    const rows = await db.owner.query<{ n: string }>(
+      "select count(*) as n from profile_facts where household_id = $1 and value->>'key' = 'property.apartment'",
+      [s.scope.householdId],
+    );
+    expect(Number(rows.rows[0]?.n)).toBe(1);
   }, 30_000);
 });

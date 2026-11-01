@@ -29,6 +29,8 @@ export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFac
       getFacts: facts.getFacts,
       upsertDerivedFact: facts.upsertDerivedFact,
       recordAnswer: facts.recordAnswer,
+      // Ответ человека на вопрос системы вне чата (T-048: «У вас есть автомобиль?» в календаре): факт «подтверждён», с «Отменить».
+      setFact: facts.set,
     },
     router: profileRouter(facts),
     events: [factsChanged],

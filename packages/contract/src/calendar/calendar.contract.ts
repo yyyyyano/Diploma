@@ -164,6 +164,21 @@ export const UpdateEventInput = z.strictObject({
 });
 export type UpdateEventInput = z.infer<typeof UpdateEventInput>;
 
+/** PROF-07: что спрашивает баннер календаря — автомобиль, квартира или дом, земельный участок. */
+export const PROPERTY_KINDS = ["car", "apartment", "land"] as const;
+export const PropertyKind = z.enum(PROPERTY_KINDS);
+export type PropertyKind = z.infer<typeof PropertyKind>;
+
+/**
+ * Вопрос об имуществе: `evidence` — на чём основано предположение (топливо, платёж страховщику, уплата налога); `null` — признаков в
+ * операциях нет, это единственный вопрос про автомобиль при первом открытии календаря.
+ */
+export const PropertyQuestion = z.strictObject({
+  kind: PropertyKind,
+  evidence: z.enum(["fuel", "insurance", "tax"]).nullable(),
+});
+export type PropertyQuestion = z.infer<typeof PropertyQuestion>;
+
 const EventChange = z.strictObject({ event: CalendarEntry, undoToken: UndoToken });
 
 const ReadErrors = pickErrors("UNAUTHORIZED", "VALIDATION");
@@ -198,4 +213,15 @@ export const calendarContract = {
     .input(z.strictObject({ id: CalendarEventId }))
     .output(z.strictObject({ decisionId: DecisionId }))
     .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND", "VALIDATION")),
+  /** Вопрос об имуществе для баннера (PROF-07); `null` — спрашивать нечего. */
+  propertyQuestion: oc
+    .route({ method: "GET", path: "/calendar/property-question" })
+    .output(z.strictObject({ question: PropertyQuestion.nullable() }))
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Ответ «да» или «нет»: факт профиля «подтверждён» с «Отменить»; налоги и страховки пересчитываются сразу. */
+  answerProperty: oc
+    .route({ method: "POST", path: "/calendar/property-answer" })
+    .input(z.strictObject({ kind: PropertyKind, has: z.boolean() }))
+    .output(z.strictObject({ undoToken: UndoToken }))
+    .errors(pickErrors("UNAUTHORIZED", "VALIDATION")),
 };

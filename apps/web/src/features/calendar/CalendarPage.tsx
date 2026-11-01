@@ -50,6 +50,7 @@ import { EmptyState, Money, PageHeader, Sheet, SkeletonCard, WhyButton } from ".
 import classes from "./CalendarPage.module.css";
 import { buildCells, shiftMonth } from "./model/grid.ts";
 import type { CalendarSearch } from "./model/search.ts";
+import { PropertyBanner } from "./PropertyBanner.tsx";
 
 type Toast = { readonly token: string; readonly message: string };
 
@@ -156,6 +157,10 @@ export function CalendarPage({ search }: { readonly search: CalendarSearch }) {
             }
           />
         )}
+        <PropertyBanner
+          onAnswered={(token, message) => setToast({ token, message })}
+          onError={setNotice}
+        />
         {notice !== null && (
           <p className={classes.error} role="alert">
             <AlertTriangle size={18} aria-hidden />

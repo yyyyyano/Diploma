@@ -5,11 +5,14 @@
 import {
   CalculateDeductionToolInput,
   DeductionResult,
+  FoundList,
   type CalculateDeductionInput,
 } from "@kosht/contract";
+import { z } from "zod";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
 import type { Calculate } from "../application/calculate.ts";
+import type { Found } from "../application/found.ts";
 
 /** Плоский вход модели → вход калькулятора; не хватает поля вида вычета — `VALIDATION` с названием поля. */
 export function toCalculateInput(input: CalculateDeductionToolInput): CalculateDeductionInput {
@@ -29,7 +32,7 @@ export function toCalculateInput(input: CalculateDeductionToolInput): CalculateD
   return { kind: "children", ...income };
 }
 
-export function taxTools(calculate: Calculate) {
+export function taxTools(calculate: Calculate, found: Found) {
   return {
     calculateDeduction: defineTool({
       name: "calculate_deduction",
@@ -40,6 +43,18 @@ export function taxTools(calculate: Calculate) {
       input: CalculateDeductionToolInput,
       output: DeductionResult,
       execute: (ctx, input) => calculate(ctx.s, toCalculateInput(input)),
+    }),
+    foundDeductions: defineTool({
+      name: "found_deductions",
+      toolset: "legal",
+      kind: "read",
+      description:
+        "List tax deductions the system found in the user's operations and profile (education payment, children, housing loan): kind, status, amount up to, payee, operation. Dismissed ones are not included. Amounts in BYN minor units.",
+      input: z.strictObject({}),
+      output: FoundList,
+      execute: async (ctx) => ({
+        items: (await found.list(ctx.s)).items.filter((item) => item.status !== "dismissed"),
+      }),
     }),
   };
 }

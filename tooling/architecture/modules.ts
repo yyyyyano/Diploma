@@ -327,6 +327,7 @@ export const MODULES: readonly ModuleDef[] = [
       "legal-base",
       "legal-consult",
       "notifications",
+      "actions",
       "explain",
     ],
     tables: ["user"],

@@ -226,6 +226,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       legalBase: legalBaseModule.facade,
       legalConsult: legalConsultModule.facade,
       notifications: notificationsModule.facade,
+      actions: actionsModule.facade,
       explain: explainModule.facade,
     },
   });

@@ -79,6 +79,7 @@ export function createTransactionsModule({
       countEditedInImport,
       recurringHistory,
       aggregate: ops.aggregate,
+      list: ops.list,
       firstOperationOn: ops.firstOperationOn,
       requestMarkTransfer: ops.requestMarkTransfer,
       recordFromReceipt: ops.recordFromReceipt,

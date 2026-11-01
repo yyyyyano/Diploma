@@ -39,6 +39,8 @@ const NORM_REF =
   /(?<![\p{L}\d])(?:ст|статья|статьи|статье|статью|п|пп|пункт|пункта|пункте|ч|часть|части|абз|абзац|подп|подпункт|гл|глава|главе|разд|раздел|№)\.?\s*\d+(?:\.\d+)*(?:-\d+)?/giu;
 const OPAQUE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const URL = /https?:\/\/\S+/giu;
+// LEGAL-03: метки цитат черновика — `[[F<uuid версии>]]` и `[[A<акт>]]`: цифры в id — не количества.
+const CITE_LABEL = /\[\[[FA][^\]\s]*\]\]/gu;
 const LIST_MARKER = /^[ \t]*\d{1,3}[.)](?=\s)/gmu;
 // «2-х комнатная», «3-й»: числительное с окончанием — не количество.
 const ORDINAL = /(?<![\p{L}\d_])\d+-(?:х|й|я|е|го|му|м|ми|ю|ом|ая|ой|ые|ых)(?![\p{L}])/giu;
@@ -48,7 +50,11 @@ const NUMBER =
 /** Числа текста в канонической форме, без номеров норм, ссылок, нумерации списков и дат (их части — по отдельности). */
 export function extractNumbers(text: string): Canonical[] {
   const found: Canonical[] = [];
-  let rest = text.replace(URL, " ").replace(LIST_MARKER, " ").replace(NORM_REF, " ");
+  let rest = text
+    .replace(CITE_LABEL, " ")
+    .replace(URL, " ")
+    .replace(LIST_MARKER, " ")
+    .replace(NORM_REF, " ");
   rest = rest.replace(DATE_LIKE, (date) => {
     for (const part of date.match(/\d+/gu) ?? []) found.push(fromText(part));
     return " ";

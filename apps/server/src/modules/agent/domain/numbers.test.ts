@@ -38,6 +38,12 @@ describe("extractNumbers: что в тексте считается числом
     ]);
   });
 
+  it("LEGAL-03: метки цитат [[F<uuid>]] и [[A<акт>]] — не числа: цифры в id версии не «выдуманные суммы»", () => {
+    const draft =
+      "Срок назван в норме [[F01a196e1-3f38-7e58-b726-69e5cf1abac7]] и акте [[AC20200778]], а ещё 14 дней.";
+    expect(extractNumbers(draft)).toEqual(["14"]);
+  });
+
   it("числа внутри слов и ссылок — не числа: A4, https://pravo.by/x?p=123", () => {
     expect(extractNumbers("Формат A4, ссылка https://pravo.by/doc?p0=123")).toEqual([]);
   });

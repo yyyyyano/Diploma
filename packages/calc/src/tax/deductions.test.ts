@@ -151,6 +151,7 @@ describe("TAX-07, пример 2: квартира 120 000 BYN", () => {
     expect(result.term?.fullMonths.value).toBe(48);
     expect(result.term?.lastMonth.value).toEqual(rubles(0));
     expect(result.term?.monthlySaving.value).toEqual(rubles(325));
+    expect(result.term?.yearlySaving.value).toEqual(rubles(3900));
     expect(result.term?.months.trace.inputs.map((input) => input.key)).toEqual([
       "tax.housing.expenses",
       "tax.housing.monthlyBase",

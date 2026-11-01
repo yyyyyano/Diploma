@@ -109,6 +109,8 @@ export const TRACE_KEYS = [
   "tax.saving.childrenMonthly",
   "tax.saving.childrenYearly",
   "tax.saving.housingTotal",
+  "tax.saving.housingYearly",
+  "tax.saving.housingTwelveMonths",
   // AGT-03: калькулятор агента — слагаемое, сумма, разность, произведение на дробь, доля и календарный промежуток.
   "calculator.operand",
   "calculator.sum",

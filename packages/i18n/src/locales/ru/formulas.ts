@@ -51,7 +51,9 @@ export const formulas = {
       education: "Экономия на обучении",
       childrenMonthly: "Экономия на детях в месяц",
       childrenYearly: "Экономия на детях в год",
-      housingTotal: "Экономия на жилье за весь вычет",
+      housingTotal: "Экономия на жильё за весь вычет",
+      housingYearly: "Экономия на жильё за год",
+      housingTwelveMonths: "Экономия на жильё за двенадцать месяцев",
     },
   },
   budgets: {

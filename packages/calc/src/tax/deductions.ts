@@ -174,6 +174,8 @@ export interface HousingTerm {
   /** Облагаемая база месяца, из которой вычитается имущественный вычет. */
   readonly monthlyBase: Calc<Money>;
   readonly monthlySaving: Calc<Money>;
+  /** Экономия за год: двенадцать месяцев, но не больше экономии за весь вычет (срок короче года). */
+  readonly yearlySaving: Calc<Money>;
   /** Срок в месяцах: целое — как есть, дробное — округлено до ближайшего (в трассе — помесячный план). */
   readonly months: Calc<number>;
   /** Срок округлён: показывается «≈ N мес.». */
@@ -233,11 +235,21 @@ export function housingDeduction(input: {
       `расходы ÷ база месяца; ${roundingNote(ROUNDING.rounding)}`,
     ),
   };
+  const monthlySaving = mulRate("tax.housing.monthlySaving", base, input.rateBp, ROUNDING);
   return {
     totalSaving,
     term: {
       monthlyBase: base,
-      monthlySaving: mulRate("tax.housing.monthlySaving", base, input.rateBp, ROUNDING),
+      monthlySaving,
+      yearlySaving: minMoney(
+        "tax.saving.housingYearly",
+        mul(
+          "tax.saving.housingTwelveMonths",
+          monthlySaving,
+          node("tax.monthsInYear", MONTHS_IN_YEAR),
+        ),
+        totalSaving,
+      ),
       months,
       approx: lastMonth.value.minor !== 0,
       fullMonths,

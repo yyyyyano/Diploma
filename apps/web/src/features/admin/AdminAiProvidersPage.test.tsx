@@ -52,6 +52,7 @@ const view = (patch: Partial<AiProviders> = {}): AiProviders => ({
     { task: "classify.category", custom: false, models: [] },
     { task: "classify.off-topic", custom: false, models: [] },
     { task: "law.topic", custom: false, models: [] },
+    { task: "weekly.summary", custom: false, models: [] },
     { task: "embed", custom: false, models: [] },
     { task: "transcribe", custom: false, models: [] },
   ],

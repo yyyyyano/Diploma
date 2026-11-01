@@ -12,12 +12,18 @@ import { listChains, listModels } from "./llm.repo.ts";
 
 const MIGRATIONS = join(import.meta.dirname, "../../../../../drizzle");
 
-/** SQL «руками» миграций llm (providers, statement-scan): вставки и выключение тестовой модели — по порядку. */
+/** SQL «руками» миграций llm (providers, statement-scan, weekly_summary): вставки и выключение тестовой модели — по порядку. */
 function seedStatements(): string[] {
   const dirs = readdirSync(MIGRATIONS)
-    .filter((name) => name.endsWith("_llm-providers") || name.endsWith("_llm-statement-scan"))
+    .filter(
+      (name) =>
+        name.endsWith("_llm-providers") ||
+        name.endsWith("_llm-statement-scan") ||
+        name.endsWith("_llm_weekly_summary"),
+    )
     .toSorted();
-  if (dirs.length < 2) throw new Error("нет миграций llm-providers и llm-statement-scan");
+  if (dirs.length < 3)
+    throw new Error("нет миграций llm-providers, llm-statement-scan и llm_weekly_summary");
   const sql = dirs
     .map((dir) => readFileSync(join(MIGRATIONS, dir, "migration.sql"), "utf8"))
     .join("--> statement-breakpoint");
@@ -59,6 +65,7 @@ describe("LLM-02: цепочка по умолчанию — Groq, затем Z.
     "classify.category",
     "classify.off-topic",
     "law.topic",
+    "weekly.summary",
   ] as const)("задача %s: Groq → Z.ai → локальная", async (task) => {
     expect(await providersOf(task, true)).toEqual(["groq", "zai", "llama"]);
   });

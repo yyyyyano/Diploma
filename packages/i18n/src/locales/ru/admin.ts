@@ -152,6 +152,7 @@ export const admin = {
       "classify.category": { title: "Категоризация", hint: "пакетами, после правил" },
       "classify.off-topic": { title: "Защитный фильтр", hint: "«вне темы» перед ответом" },
       "law.topic": { title: "Право", hint: "темы новых актов" },
+      "weekly.summary": { title: "Итоги недели", hint: "текст по готовым числам" },
       embed: { title: "Эмбеддинги", hint: "только на этом компьютере" },
       transcribe: { title: "Голос", hint: "русский и белорусский" },
     },

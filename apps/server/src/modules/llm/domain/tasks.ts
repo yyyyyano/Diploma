@@ -22,6 +22,7 @@ export const TASKS = {
   "classify.category": ["structured"],
   "classify.off-topic": ["structured"],
   "law.topic": ["structured"],
+  "weekly.summary": ["structured"],
   embed: ["embeddings"],
   transcribe: ["speech"],
 } as const satisfies Record<string, readonly Capability[]>;
@@ -34,7 +35,8 @@ export type StructuredTask =
   | "statement.columns"
   | "classify.category"
   | "classify.off-topic"
-  | "law.topic";
+  | "law.topic"
+  | "weekly.summary";
 
 /** Эмбеддинги — только локально, при любом согласии (NFR-05). */
 export const LOCAL_ONLY_TASKS: ReadonlySet<LlmTask> = new Set(["embed"]);

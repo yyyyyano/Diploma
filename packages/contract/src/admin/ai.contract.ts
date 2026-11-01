@@ -13,6 +13,7 @@ export const AI_TASKS = [
   "classify.category",
   "classify.off-topic",
   "law.topic",
+  "weekly.summary",
   "embed",
   "transcribe",
 ] as const;

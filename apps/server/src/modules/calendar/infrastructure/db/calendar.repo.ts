@@ -84,14 +84,6 @@ export async function removeEvent(s: ScopedDb, id: string): Promise<void> {
   await s.delete(calendarEvents, eq(calendarEvents.id, id));
 }
 
-/** События пользователя с ключом по префиксу (`rule:` — пересчёт сроков налогов). */
-export async function listByKeyPrefix(s: ScopedDb, prefix: string): Promise<EventRow[]> {
-  return s.db
-    .select()
-    .from(calendarEvents)
-    .where(and(s.own(calendarEvents), sql`${calendarEvents.key} like ${`${prefix}%`}`));
-}
-
 /**
  * Заменить напоминания события. Неотправленные прежние уходят, новые встают на их место; отправленные сохраняются
  * (тот же «за сколько дней» второй раз не шлём), если день не менялся — иначе (`all`) уходят все: новый день, новые напоминания.
@@ -126,14 +118,6 @@ export async function replaceReminders(
         calendarReminders.offsetDays,
       ],
     });
-}
-
-export async function remindersOf(s: ScopedDb, eventId: string): Promise<ReminderRow[]> {
-  return s.db
-    .select()
-    .from(calendarReminders)
-    .where(and(s.own(calendarReminders), eq(calendarReminders.eventId, eventId)))
-    .orderBy(asc(calendarReminders.offsetDays));
 }
 
 export interface DueRow {

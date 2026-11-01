@@ -73,8 +73,8 @@ describe("AUTH-10, LAW-10: стартовый каталог после перв
     expect(acts.rows).toEqual([
       { pravo_id: "C21300569", load_state: "loaded", article_count: 12 },
       { pravo_id: "H10200090", load_state: "loaded", article_count: 51 },
-      // 13 статей: 7 первой выборки и ст. 211, 214, 222, 223, 380, 381² (T-045).
-      { pravo_id: "Hk0900071", load_state: "loaded", article_count: 13 },
+      // 17 статей: 7 первой выборки, ст. 211, 214, 222, 223, 380, 381² (T-045) и 233, 244, 307⁸, 381⁷ (сроки налогов, T-048).
+      { pravo_id: "Hk0900071", load_state: "loaded", article_count: 17 },
     ]);
   });
 

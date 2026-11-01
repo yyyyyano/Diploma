@@ -317,6 +317,9 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "calendar.create": { input: () => ({ title: "своё", on: "2099-01-01" }) },
   "calendar.update": { input: (b) => ({ id: b.calendarEventId, remindDays: [1] }) },
   "calendar.requestDelete": { input: (b) => ({ id: b.calendarEventId }) },
+  // Имущество: вопрос и ответ — факты профиля вызывающего (`s`), чужих id во входе нет.
+  "calendar.propertyQuestion": { input: () => undefined },
+  "calendar.answerProperty": { input: () => ({ kind: "car", has: true }) },
   "tool:list_events": { input: () => ({}) },
   "tool:create_event": { input: () => ({ title: "своё", on: "2099-01-01" }) },
   "tax.calculate": {
@@ -787,8 +790,10 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "budgets.requestDeleteLimit",
       "budgets.setLimit",
       "budgets.updateGoal",
+      "calendar.answerProperty",
       "calendar.create",
       "calendar.month",
+      "calendar.propertyQuestion",
       "calendar.requestDelete",
       "calendar.upcoming",
       "calendar.update",

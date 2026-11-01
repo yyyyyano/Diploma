@@ -48,6 +48,20 @@ describe("AGT-05: add_transaction и update_transaction — сразу, с «О�
     expect((await t.ops.list(s, { page: 1, pageSize: 50 })).total).toBe(0);
   });
 
+  it("ответ называет категорию словами («Кафе, рестораны и доставка»), а не кодом: по коду модель называла её как придётся", async () => {
+    const { tools, ctx } = await setup();
+    const result = await tools.add.execute(
+      ctx(),
+      tools.add.input.parse({ ...ADD, merchant: "кофе" }),
+    );
+    expect(result.categoryName).toBe("Кафе, рестораны и доставка");
+    const edited = await tools.update.execute(
+      ctx(),
+      tools.update.input.parse({ id: result.transaction.id, categoryCode: "taxi" }),
+    );
+    expect(edited.categoryName).toBe("Такси");
+  });
+
   it("из Telegram канал отмены и истории — telegram", async () => {
     const { s, t, tools, ctx } = await setup();
     const { transaction } = await tools.add.execute(ctx("telegram"), tools.add.input.parse(ADD));
@@ -236,6 +250,11 @@ describe("FIN-01: aggregate_transactions", () => {
       truncated: false,
     });
     expect(output.groups).toHaveLength(1);
+    // Название категории словами: по ключу «system:cafes» модель писала бы «cafes».
+    expect(output.groups[0]).toMatchObject({
+      key: "system:cafes",
+      label: "Кафе, рестораны и доставка",
+    });
   });
 
   it("день не по формату — VALIDATION, а не сбой программы", async () => {

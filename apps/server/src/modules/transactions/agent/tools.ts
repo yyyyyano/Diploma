@@ -10,6 +10,7 @@
 // подбирает сервер (правила, затем модель) — ассистенту её называть не нужно.
 import {
   AccountId,
+  AggregateGroup,
   CreateTransactionInput,
   RowCount,
   SystemCategoryCode,
@@ -26,7 +27,18 @@ import { AppError } from "../../../platform/errors/app-error.ts";
 import { defineTool } from "../../../platform/tools/define-tool.ts";
 import type { Operations } from "../application/operations.ts";
 
-const Change = z.strictObject({ transaction: Transaction, undoToken: UndoToken });
+/** Название категории словами («Кафе, рестораны и доставка»): по коду `cafes` модель называла бы категорию как придётся. */
+const CategoryName = z.string().nullable();
+const Change = z.strictObject({
+  transaction: Transaction,
+  undoToken: UndoToken,
+  categoryName: CategoryName,
+});
+const Changed = UpdateResult.extend({ categoryName: CategoryName });
+/** Итоги периода; у групп-категорий — название словами (по ключу `system:taxi` модель писала бы «taxi»). */
+const AggregateWithNames = TransactionAggregate.extend({
+  groups: z.array(AggregateGroup.extend({ label: z.string().nullable() })).max(100),
+});
 
 const Id = z.string().length(36);
 // Строгий разбор дня — в execute (`LocalDate`); в схеме только длина: регулярка в JSON-схеме дороже в токенах.
@@ -55,6 +67,25 @@ function minor(value: number): number {
 }
 
 export function transactionsTools(ops: Operations) {
+  /** Название категории операции словами; нет категории (перевод) — null. */
+  const nameOf = async (
+    s: Parameters<Operations["categoryLabel"]>[0],
+    category: Parameters<Operations["categoryLabel"]>[1] | null,
+  ): Promise<string | null> => (category === null ? null : ops.categoryLabel(s, category));
+
+  /** Название группы итогов: встроенная категория — словами, остальное (месяц, контрагент, своя категория) — ключ как есть. */
+  const groupLabel = async (
+    s: Parameters<Operations["categoryLabel"]>[0],
+    groupBy: "category" | "month" | "counterparty",
+    key: string,
+  ): Promise<string | null> => {
+    const code = groupBy === "category" && key.startsWith("system:") ? key.slice(7) : undefined;
+    const parsedCode = SystemCategoryCode.safeParse(code);
+    return parsedCode.success
+      ? ops.categoryLabel(s, { type: "system", code: parsedCode.data })
+      : null;
+  };
+
   return {
     aggregate: defineTool({
       name: "aggregate_transactions",
@@ -67,20 +98,30 @@ export function transactionsTools(ops: Operations) {
         to: Day,
         group_by: z.enum(["category", "month", "counterparty"]),
       }),
-      output: TransactionAggregate,
-      execute: async (ctx, input) =>
-        ops.aggregateWithTraces(ctx.s, {
+      output: AggregateWithNames,
+      execute: async (ctx, input) => {
+        const result = await ops.aggregateWithTraces(ctx.s, {
           from: parsed(LocalDate.schema, input.from),
           to: parsed(LocalDate.schema, input.to),
           groupBy: input.group_by,
-        }),
+        });
+        return {
+          ...result,
+          groups: await Promise.all(
+            result.groups.map(async (group) => ({
+              ...group,
+              label: await groupLabel(ctx.s, input.group_by, group.key),
+            })),
+          ),
+        };
+      },
     }),
     search: defineTool({
       name: "search_transactions",
       toolset: "core",
       kind: "read",
       description:
-        "Find transactions, newest first; filters optional; amounts in kopecks. Returns up to `limit` rows and the total.",
+        "Find transactions, newest first; filters optional; amounts in kopecks. Returns up to `limit` rows (max 50) and the total.",
       input: z.strictObject({
         query: z.string().max(100).optional(),
         from: Day.optional(),
@@ -141,7 +182,11 @@ export function transactionsTools(ops: Operations) {
           ...(input.merchant === undefined ? {} : { merchant: input.merchant }),
           ...(input.note === undefined ? {} : { note: input.note }),
         });
-        return ops.create(ctx.s, request, { channel: ctx.channel, source: "assistant" });
+        const created = await ops.create(ctx.s, request, {
+          channel: ctx.channel,
+          source: "assistant",
+        });
+        return { ...created, categoryName: await nameOf(ctx.s, created.transaction.category) };
       },
     }),
     update: defineTool({
@@ -158,12 +203,12 @@ export function transactionsTools(ops: Operations) {
         note: z.string().max(500).optional(),
         categoryCode: SystemCategoryCode.optional(),
       }),
-      output: UpdateResult,
+      output: Changed,
       execute: async (ctx, input) => {
         const id = parsed(TransactionId, input.id);
         const current =
           input.amountMinor === undefined ? undefined : (await ops.get(ctx.s, id)).transaction;
-        return ops.update(
+        const updated = await ops.update(
           ctx.s,
           {
             id,
@@ -181,6 +226,7 @@ export function transactionsTools(ops: Operations) {
           },
           { channel: ctx.channel, source: "assistant" },
         );
+        return { ...updated, categoryName: await nameOf(ctx.s, updated.transaction.category) };
       },
     }),
     changeCategory: defineTool({

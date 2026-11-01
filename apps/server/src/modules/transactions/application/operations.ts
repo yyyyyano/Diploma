@@ -33,6 +33,7 @@ export function makeOperations(d: Deps, base: ReturnType<typeof makeBase>, jobs:
     ...makeReceiptOps(d, parts),
     ...makeMatch(d, parts),
     ...makeRestore(d, parts, rule),
+    categoryLabel: bulk.categoryLabel,
     requestChangeCategory: bulk.requestChangeCategory,
     requestMarkTransfer: bulk.requestMarkTransfer,
     confirmChangeCategory: bulk.confirmChangeCategory,

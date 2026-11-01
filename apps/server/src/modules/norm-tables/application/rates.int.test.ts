@@ -88,6 +88,8 @@ describe("TAX-03, LEGAL-08: ответ калькулятору — только
       source: { act: "Hk0900071", article: "209", point: "1.2" },
       confirmedBy: "developer",
       confirmedOn: "2026-10-30",
+      // Акт ещё не проиндексирован (сверки LAW-33 не было) — версии фрагмента нет; после сверки она в ответе (main/admin-rates).
+      versionId: null,
     });
   });
 

@@ -36,6 +36,8 @@ export type RateAnswer =
       };
       readonly confirmedBy: "developer" | "admin";
       readonly confirmedOn: string;
+      /** Версия фрагмента нормы, где найдено число (сверка LAW-33): основание в трассе «Откуда эта цифра?»; нет — null. */
+      readonly versionId: string | null;
     }
   | { readonly found: false; readonly reason: "no-data" | "unconfirmed" };
 
@@ -99,6 +101,7 @@ export function makeRates(d: RatesDeps) {
       },
       confirmedBy: row.confirmedByKind === "developer" ? "developer" : "admin",
       confirmedOn: row.confirmedOn,
+      versionId: row.sourceVersionId,
     };
   }
 

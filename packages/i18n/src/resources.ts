@@ -28,6 +28,7 @@ import { laws } from "./locales/ru/laws.ts";
 import type { agent } from "./locales/ru/agent.ts";
 import type { legal } from "./locales/ru/legal.ts";
 import type { rates } from "./locales/ru/rates.ts";
+import type { calendar } from "./locales/ru/calendar.ts";
 import type { deductions } from "./locales/ru/deductions.ts";
 
 export const NAMESPACES = [
@@ -123,6 +124,8 @@ declare module "i18next" {
     rates: typeof rates;
     // Подгружается со страницей «Налоговые вычеты» и карточкой расчёта в чате (deductionsTexts), в `resources` не входит.
     deductions: typeof deductions;
+    // Подгружается со страницей «Календарь», карточкой события в чате и блоком на главной (calendarTexts), в `resources` не входит.
+    calendar: typeof calendar;
     // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.
     legal: typeof legal;
     // Только серверу (`createAgentT`): отказы стражей, пометки о числах и пределе шагов; сайт словарь не грузит.

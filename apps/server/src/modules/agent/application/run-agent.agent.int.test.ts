@@ -376,6 +376,58 @@ describe("AGT-04, P1: ни одного числа вне результатов
   });
 });
 
+describe("AGT-03, AGT-04, TAX-07: вычет считает инструмент, ставка в ответе не вырезается", () => {
+  it("«Вычет на обучение 2 000 рублей»: calculate_deduction → «до 260,00 BYN» и «13 %» проходят проверку чисел, выдуманная сумма — нет", async () => {
+    const user = newUser();
+    const turn = await ask(user, "Сколько вернут налога за обучение, я заплатил 2000 рублей?", [
+      {
+        tools: [
+          {
+            name: "calculate_deduction",
+            input: { kind: "education", paid: { minor: 200_000, currency: "BYN" } },
+          },
+        ],
+      },
+      {
+        text: "За обучение можно вернуть до 260,00 BYN: вычет 2 000,00 BYN по ставке 13 %. Это на 999,00 BYN больше, чем в прошлом году.",
+      },
+    ]);
+    expect(shown(turn)).toContain("можно вернуть до 260,00 BYN");
+    expect(shown(turn)).toContain("по ставке 13 %");
+    expect(shown(turn)).not.toContain("999,00");
+    expect(turn.log.map((line) => line["msg"])).toContain("agent.number-unverified");
+    const card = turn.chunks.find(
+      (chunk) => chunk.type === "tool-output-available" && chunk.toolCallId.startsWith("call-0"),
+    );
+    expect(card).toMatchObject({ output: { kind: "education", status: "ok", ratePercent: 13 } });
+  });
+
+  it("только НПД: инструмент возвращает «не считается» без сумм — ответ называет причину", async () => {
+    const user = newUser();
+    await facade<ProfileFacade>("profile").recordAnswer(user.s, {
+      value: { key: "employment", types: ["npd"] },
+      messageId: "019e3333-0000-7000-8000-000000000001",
+      channel: "web",
+    });
+    const turn = await ask(user, "Положен ли мне вычет за обучение?", [
+      {
+        tools: [
+          {
+            name: "calculate_deduction",
+            input: { kind: "education", paid: { minor: 200_000, currency: "BYN" } },
+          },
+        ],
+      },
+      { text: "Нет: к доходу на НПД вычеты не применяются, поэтому считать нечего." },
+    ]);
+    const output = turn.chunks.find((chunk) => chunk.type === "tool-output-available");
+    expect(output).toMatchObject({
+      output: { status: "not-applicable", reason: "npd-only", savingTotal: null },
+    });
+    expect(shown(turn)).toContain("не применяются");
+  });
+});
+
 describe("AGT-08, AGT-10: нить диалога и белорусский", () => {
   it("«а в августе?» после сентября: модель получает прошлый вопрос и ответ, блок контекста и дату; страж не зовёт модель", async () => {
     const user = newUser();

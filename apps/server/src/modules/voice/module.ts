@@ -5,9 +5,9 @@ import {
   type ModuleDeps,
   type Platform,
 } from "../../platform/module/define-module.ts";
-import type { ScopedDb } from "../../platform/db/scoped-db.ts";
-import { gatewayTranscriber, type LlmFacade } from "../llm/index.ts";
+import type { LlmFacade } from "../llm/index.ts";
 import { voiceRouter } from "./api/router.ts";
+import { makeTranscribeMessage } from "./application/transcribe-message.ts";
 import { makeTranscribeRecording } from "./application/transcribe.ts";
 import { VOICE_SETTINGS } from "./settings.ts";
 
@@ -23,9 +23,8 @@ export function createVoiceModule({ platform, facades }: ModuleDeps<VoiceFacades
       transcribe: makeTranscribeRecording({ llm: facades.llm, platform }),
     }),
     facade: {
-      /** Текст из записи (WAV, MP3 или FLAC) для сценариев без сайта: голосовые сообщения бота. */
-      transcribe: (s: ScopedDb, audio: Uint8Array) =>
-        gatewayTranscriber(facades.llm, s.scope).transcribe(audio),
+      /** Текст голосового сообщения бота (OGG/Opus или WAV): частота, размер и тип проверяются, как у процедуры сайта. */
+      transcribe: makeTranscribeMessage({ llm: facades.llm, platform }),
     },
     settings: VOICE_SETTINGS,
   });

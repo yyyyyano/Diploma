@@ -16,7 +16,7 @@ export interface VoiceDeps {
   readonly platform: Pick<Platform, "rateLimiter" | "settings" | "log" | "clock">;
 }
 
-async function enforceRate(platform: VoiceDeps["platform"], userId: string): Promise<void> {
+export async function enforceRate(platform: VoiceDeps["platform"], userId: string): Promise<void> {
   const [perMinute, perDay] = await Promise.all([
     platform.settings.get(VOICE_RATE_PER_MINUTE),
     platform.settings.get(VOICE_RATE_PER_DAY),
@@ -33,7 +33,7 @@ async function enforceRate(platform: VoiceDeps["platform"], userId: string): Pro
 }
 
 /** Предел текста: поле ввода чата принимает 4000 знаков (SendInput), запись на 60 с столько не даёт. */
-const TEXT_MAX = 4000;
+export const TEXT_MAX = 4000;
 
 /** Распознавание записи с сайта: WAV 16 кГц ≤ 60 с (`contract.voice.transcribe`). */
 export function makeTranscribeRecording(d: VoiceDeps) {

@@ -1,5 +1,6 @@
-// Модуль afford (паспорт — CLAUDE.md): пустой, но живой (T-007) — фабрика и описание для корня композиции.
-// Сгенерирован make new-module из tooling/architecture/modules.ts; дальше правится задачей модуля.
+// Модуль afford (паспорт — CLAUDE.md): «Могу ли я позволить покупку?» (T-049, AFF-01…08) — три сценария покупки с прогнозом
+// остатка по дням, просадки и безопасный платёж по ПДН. Своих таблиц нет: данные — фасады соседей, числа — `@kosht/calc`,
+// каждое показываемое число сохраняет explain.
 import {
   defineModule,
   type ModuleDeps,
@@ -14,6 +15,11 @@ import type { CalendarFacade } from "../calendar/index.ts";
 import type { NormTablesFacade } from "../norm-tables/index.ts";
 import type { ProfileFacade } from "../profile/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
+import { affordTools } from "./agent/tools.ts";
+import { affordRouter } from "./api/router.ts";
+import { makeSafeLoan } from "./application/safe-loan.ts";
+import { makeScenarios } from "./application/scenarios.ts";
+import { AFFORD_SETTINGS } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface AffordFacades {
@@ -28,9 +34,20 @@ export interface AffordFacades {
   readonly explain: ExplainFacade;
 }
 
-export function createAffordModule(_deps: ModuleDeps<AffordFacades, Platform>) {
-  return defineModule({ id: "afford" });
+export function createAffordModule({ platform, facades }: ModuleDeps<AffordFacades, Platform>) {
+  const deps = { platform, ...facades };
+  const scenarios = makeScenarios(deps);
+  const safeLoan = makeSafeLoan(deps);
+  const tools = affordTools(scenarios, safeLoan);
+  return defineModule({
+    id: "afford",
+    // Соседям: расчёт сценариев и безопасного платежа (дашборд, итоги недели) тем же кодом, что у сайта и агента.
+    facade: { scenarios, safeLoan },
+    router: affordRouter(scenarios, safeLoan),
+    settings: [...AFFORD_SETTINGS],
+    tools: [tools.affordScenarios, tools.safeLoanPayment],
+  });
 }
 
-/** Что модуль даёт соседям: пока ничего (undefined). */
+/** Что модуль даёт соседям: `scenarios(s, input)` → `AffordResult`, `safeLoan(s, input)` → `SafeLoanResult`. */
 export type AffordFacade = ReturnType<typeof createAffordModule>["facade"];

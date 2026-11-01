@@ -325,6 +325,11 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "tax.calculate": {
     input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
   },
+  // Сценарии покупки и безопасный платёж: вход — сумма, день и ставка; чужих id нет, данные — только `s`.
+  "afford.scenarios": { input: () => ({ price: { minor: 100_000, currency: "BYN" } }) },
+  "afford.safeLoan": { input: () => ({}) },
+  "tool:afford_scenarios": { input: () => ({ price: { minor: 100_000, currency: "BYN" } }) },
+  "tool:safe_loan_payment": { input: () => ({}) },
   "tool:calculate_deduction": {
     input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
   },
@@ -782,6 +787,8 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "admin.setTimeZone",
       "admin.system",
       "admin.testAiProvider",
+      "afford.safeLoan",
+      "afford.scenarios",
       "budgets.contribute",
       "budgets.createGoal",
       "budgets.overview",
@@ -878,6 +885,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "transactions.unlinkReceipt",
       "transactions.update",
       "add_transaction",
+      "afford_scenarios",
       "aggregate_transactions",
       "bulk_change_category",
       "calculate_deduction",
@@ -902,6 +910,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "read_profile_facts",
       "receipt_status",
       "rename_account",
+      "safe_loan_payment",
       "search_transactions",
       "set_limit",
       "statement_import_status",

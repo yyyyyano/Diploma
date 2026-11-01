@@ -428,6 +428,44 @@ describe("AGT-03, AGT-04, TAX-07: вычет считает инструмент
   });
 });
 
+describe("AFF-01, AFF-06, P1, P6: покупка — сценарии считает программа, выдуманное число не проходит", () => {
+  const price = { minor: 300_000, currency: "BYN" };
+
+  it("«Могу ли я купить ноутбук за 3 000?» → набор planning, afford_scenarios; сумма нехватки из результата проходит, выдуманный кредит — нет", async () => {
+    const user = newUser();
+    const turn = await ask(user, "Могу ли я купить ноутбук за 3 000?", [
+      { tools: [{ name: "afford_scenarios", input: { price } }] },
+      {
+        text: "Сейчас не получится: остаток уйдёт в минус на 3 000,00 BYN. Кредит на 7 777,00 BYN вам одобрят.",
+      },
+    ]);
+    const output = turn.chunks.find(
+      (chunk) => chunk.type === "tool-output-available" && chunk.toolCallId.startsWith("call-0"),
+    );
+    expect(output).toMatchObject({
+      output: { price, scenarios: [{ kind: "now" }, { kind: "after-income" }, { kind: "save" }] },
+    });
+    expect(shown(turn)).toContain("остаток уйдёт в минус на 3 000,00 BYN");
+    expect(shown(turn)).not.toContain("7 777,00");
+    expect(turn.log.map((line) => line["msg"])).toContain("agent.number-unverified");
+  });
+
+  it("«Какой безопасный платёж по кредиту?»: предел ПДН не подтверждён — no-limit без чисел, модель честно говорит «нет предела»", async () => {
+    const user = newUser();
+    const turn = await ask(user, "Какой безопасный платёж по кредиту?", [
+      { tools: [{ name: "safe_loan_payment", input: {} }] },
+      {
+        text: "Подтверждённого предела долговой нагрузки пока нет, поэтому платёж назвать не могу.",
+      },
+    ]);
+    const output = turn.chunks.find((chunk) => chunk.type === "tool-output-available");
+    expect(output).toMatchObject({
+      output: { status: "no-limit", safePayment: null, limitAmount: null, maxLoan: null },
+    });
+    expect(shown(turn)).toContain("предела долговой нагрузки пока нет");
+  });
+});
+
 describe("AGT-08, AGT-10: нить диалога и белорусский", () => {
   it("«а в августе?» после сентября: модель получает прошлый вопрос и ответ, блок контекста и дату; страж не зовёт модель", async () => {
     const user = newUser();

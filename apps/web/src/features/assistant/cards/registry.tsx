@@ -1,8 +1,8 @@
 // Реестр частей ответа (CHAT-04, ARCHITECTURE §10.3): `data-<вид>` и `tool-<имя>` → компонент. Виды данных-частей берутся
 // из контракта (`DATA_PARTS`): компилятор не даст добавить вид на сервере без карточки здесь (`satisfies`). Результат
 // инструмента показывается карточкой, только если он имеет ожидаемую форму; иначе — ничего (шаг остаётся подписью в ленте),
-// а данные-часть не по схеме или неизвестного вида — запасной вид `Unavailable`. Карточки вычета и сценариев покупки
-// подключат T-045 и T-049 строкой в `TOOL_CARDS` / `DATA_CARDS`.
+// а данные-часть не по схеме или неизвестного вида — запасной вид `Unavailable`. Карточка вычета — T-045; карточку сценариев
+// покупки подключит T-049 строкой в `TOOL_CARDS` / `DATA_CARDS`.
 import { type AccountListItem, type DATA_PARTS, ReceiptCard } from "@kosht/contract";
 import type { ComponentType, ReactNode } from "react";
 import { AccountCard } from "../../../entities/account/index.ts";
@@ -13,6 +13,7 @@ import { ChartCard } from "./ChartCard.tsx";
 import { ChecklistCard } from "./ChecklistCard.tsx";
 import classes from "./cards.module.css";
 import { ConfirmCard } from "./ConfirmCard.tsx";
+import { DeductionCard } from "./DeductionCard.tsx";
 import { LawAnswerView } from "./LawAnswerView.tsx";
 import { TransactionResultCard } from "./TransactionResultCard.tsx";
 
@@ -63,6 +64,9 @@ export const TOOL_CARDS: Readonly<Record<string, ComponentType<ToolCardProps>>> 
   add_transaction: ({ output }) => <TransactionResultCard output={output} changed={false} />,
   update_transaction: ({ output }) => <TransactionResultCard output={output} changed />,
   get_checklist: ({ output, messageId }) => <ChecklistCard output={output} messageId={messageId} />,
+  calculate_deduction: ({ output, messageId }) => (
+    <DeductionCard output={output} messageId={messageId} />
+  ),
   get_receipt: Receipt,
   // Удаляющие и массовые действия — только вопрос «Да/Нет» (AGT-07): результат один и тот же у всех.
   delete_transaction: ({ output }) => <ConfirmCard output={output} />,

@@ -42,6 +42,7 @@ function cacheWithData(): QueryClient {
   seed(orpc.accounts.list.queryKey());
   seed(orpc.transactions.list.queryKey({ input: { page: 1 } }));
   seed(orpc.categories.list.queryKey());
+  seed(orpc.calendar.upcoming.queryKey());
   return queryClient;
 }
 
@@ -105,7 +106,7 @@ describe("NFR-21: клиент events.stream", () => {
     expect(invalidated(queryClient)).toEqual(["transactions.list"]);
   });
 
-  it("changed незнакомой сущности — безопасное умолчание: перезапрос всех запросов", async () => {
+  it("CAL-07: changed по событию календаря — запросы календаря (напоминание пришло, событие создано), прочее не тронуто", async () => {
     const queryClient = cacheWithData();
     const controller = new AbortController();
     scripted(
@@ -121,10 +122,33 @@ describe("NFR-21: клиент events.stream", () => {
       signal: controller.signal,
       sleep: noWait,
     });
+    expect(invalidated(queryClient)).toEqual(["calendar.upcoming"]);
+  });
+
+  it("changed незнакомой сущности — безопасное умолчание: перезапрос всех запросов", async () => {
+    const queryClient = cacheWithData();
+    const controller = new AbortController();
+    scripted(
+      [
+        () =>
+          sse({
+            event: "message",
+            data: { type: "changed", entity: "some-future-entity", id: ID },
+          }),
+      ],
+      controller,
+    );
+    await runEventStream({
+      client: createApiClient(() => ORIGIN),
+      queryClient,
+      signal: controller.signal,
+      sleep: noWait,
+    });
     expect(invalidated(queryClient)).toEqual([
       "accounts.list",
       "transactions.list",
       "categories.list",
+      "calendar.upcoming",
     ]);
   });
 
@@ -169,6 +193,7 @@ describe("NFR-21: клиент events.stream", () => {
       "accounts.list",
       "transactions.list",
       "categories.list",
+      "calendar.upcoming",
     ]);
   });
 
@@ -195,6 +220,7 @@ describe("NFR-21: клиент events.stream", () => {
       "accounts.list",
       "transactions.list",
       "categories.list",
+      "calendar.upcoming",
     ]);
   });
 

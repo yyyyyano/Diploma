@@ -124,6 +124,12 @@ export {
 } from "./legal-consult/legal-consult.contract.ts";
 export { llmContract, LlmModelChoice, LlmModels } from "./llm/llm.contract.ts";
 export {
+  Transcript,
+  VOICE_MAX_BYTES,
+  VOICE_MAX_SECONDS,
+  voiceContract,
+} from "./voice/voice.contract.ts";
+export {
   AI_CAPABILITIES,
   AI_TASKS,
   AiCapability,

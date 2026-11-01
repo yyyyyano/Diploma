@@ -160,8 +160,8 @@ describe("AFF-01, AFF-03: сумма уходит на сервер, ответ 
         request
           .clone()
           .json()
-          .then((body: { on?: string }) =>
-            body.on === undefined
+          .then((body: unknown) =>
+            (body as { on?: string }).on === undefined
               ? HttpResponse.json(RISKY)
               : HttpResponse.json(
                   {

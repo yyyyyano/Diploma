@@ -1,6 +1,6 @@
 // Ответы сервера для тестов экрана, карточки чата и сущности «сценарии покупки»: числа взяты из примера макета и SPEC
 // (минимум −739,44, безопасный платёж 480 из дохода 3 200 и платежей 800). Тесты ничего не считают — проверяют показ.
-import type { AffordResult, SafeLoanResult } from "@kosht/contract";
+import { AffordResult, SafeLoanResult } from "@kosht/contract";
 
 export const TRACE = "0190f0a0-0000-7000-8000-0000000000a1";
 const byn = (minor: number) => ({ minor, currency: "BYN" }) as const;
@@ -9,7 +9,7 @@ const amount = (minor: number) => ({ amount: byn(minor), traceId: TRACE });
 const flat = (value: number, count = 91) => Array.from({ length: count }, () => value);
 
 /** Покупка 3 000: «сейчас» и «после дохода» уходят в минус, «накопить» — 342,23 в месяц, 9 месяцев. */
-export const RISKY = {
+export const RISKY = AffordResult.parse({
   today: "2026-10-21",
   price: byn(300_000),
   purchaseOn: "2026-10-21",
@@ -78,10 +78,10 @@ export const RISKY = {
     afterIncome: [...flat(283_964, 5), ...flat(-42_445, 86)],
     obligationsMonthly: byn(67_777),
   },
-} satisfies AffordResult;
+});
 
 /** Покупка 1 500 без риска. */
-export const SAFE = {
+export const SAFE = AffordResult.parse({
   ...RISKY,
   price: byn(150_000),
   unpriced: [],
@@ -103,10 +103,10 @@ export const SAFE = {
     },
     { ...RISKY.scenarios[2], recommended: false },
   ],
-} satisfies AffordResult;
+});
 
 /** AFF-08: регулярного дохода нет — нужен ответ человека. */
-export const NEEDS_INCOME = {
+export const NEEDS_INCOME = AffordResult.parse({
   ...RISKY,
   needs: ["income"],
   considered: { ...RISKY.considered, monthlyIncome: null, monthlyObligations: null },
@@ -130,10 +130,10 @@ export const NEEDS_INCOME = {
     },
   ],
   chart: { ...RISKY.chart, afterIncome: null },
-} satisfies AffordResult;
+});
 
 /** Пример AFF-05: доход 3 200, кредиты 800, предел 40 % → 1 280 → до 480; ставка 14 %, срок 60 мес. */
-export const LOAN_OK = {
+export const LOAN_OK = SafeLoanResult.parse({
   status: "ok",
   domesticGoods: false,
   limitPercent: 40,
@@ -145,9 +145,9 @@ export const LOAN_OK = {
   safePayment: amount(48_000),
   exceeded: false,
   maxLoan: { amount: amount(2_062_896), rateBp: 1400, months: 60 },
-} satisfies SafeLoanResult;
+});
 
-export const LOAN_NO_LIMIT = {
+export const LOAN_NO_LIMIT = SafeLoanResult.parse({
   ...LOAN_OK,
   status: "no-limit",
   limitPercent: null,
@@ -155,4 +155,4 @@ export const LOAN_NO_LIMIT = {
   limitAmount: null,
   safePayment: null,
   maxLoan: null,
-} satisfies SafeLoanResult;
+});

@@ -2,6 +2,7 @@
 // нему клиент. Процедуры модулей добавляют их задачи: `<модуль>/<модуль>.contract.ts` и ветка здесь.
 import { accountsContract } from "./accounts/accounts.contract.ts";
 import { budgetsContract } from "./budgets/budgets.contract.ts";
+import { affordContract } from "./afford/afford.contract.ts";
 import { calendarContract } from "./calendar/calendar.contract.ts";
 import { dashboardContract } from "./dashboard/dashboard.contract.ts";
 import { finContract } from "./fin/fin.contract.ts";
@@ -45,6 +46,7 @@ export const contract = {
   budgets: budgetsContract,
   tax: taxContract,
   calendar: calendarContract,
+  afford: affordContract,
   dashboard: dashboardContract,
   categories: categoriesContract,
   transactions: transactionsContract,

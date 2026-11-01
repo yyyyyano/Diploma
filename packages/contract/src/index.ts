@@ -405,4 +405,22 @@ export {
   SettableFoundStatus,
   taxContract,
 } from "./tax/tax.contract.ts";
+export {
+  affordContract,
+  AffordAmount,
+  AffordChart,
+  AffordConsidered,
+  AffordCount,
+  AffordInput,
+  AffordResult,
+  AffordScenario,
+  AffordUnpriced,
+  SCENARIO_KINDS,
+  SafeLoanInput,
+  SafeLoanResult,
+  ScenarioGoal,
+  ScenarioKind,
+  ScenarioReason,
+  ScenarioRisk,
+} from "./afford/afford.contract.ts";
 export { contract } from "./router.ts";

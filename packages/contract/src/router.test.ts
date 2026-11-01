@@ -103,6 +103,8 @@ describe("дерево процедур", () => {
       "calendar.requestDelete",
       "calendar.propertyQuestion",
       "calendar.answerProperty",
+      "afford.scenarios",
+      "afford.safeLoan",
       "dashboard.overview",
       "categories.list",
       "categories.create",

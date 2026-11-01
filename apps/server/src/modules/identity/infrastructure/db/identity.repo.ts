@@ -144,6 +144,26 @@ export async function isActiveMember(
   return rows.length === 1;
 }
 
+/** Состояние пользователя для бота (AUTH-11): активен, заблокирован или такого (в этом домохозяйстве) нет. */
+export type MemberState = "active" | "blocked" | "absent";
+
+export async function memberState(
+  db: IdentityDb,
+  candidate: { readonly userId: UserId; readonly householdId: HouseholdId },
+): Promise<MemberState> {
+  const rows = await db
+    .select({ status: identityUsers.status })
+    .from(identityUsers)
+    .where(
+      and(
+        eq(identityUsers.id, candidate.userId),
+        eq(identityUsers.householdId, candidate.householdId),
+      ),
+    );
+  const status = rows[0]?.status;
+  return status === "active" || status === "blocked" ? status : "absent";
+}
+
 /** Карточка пользователя для каркаса сайта и настроек. */
 export interface UserCard {
   readonly email: string;

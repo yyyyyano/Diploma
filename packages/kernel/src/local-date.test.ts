@@ -1,7 +1,7 @@
 // NFR-23: календарный день считается по часовому поясу системы (по умолчанию Минск, UTC+3); часовой пояс —
 // настройка, поэтому он всегда приходит аргументом.
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TIME_ZONE, LocalDate } from "./local-date.ts";
+import { DEFAULT_TIME_ZONE, LocalDate, timeOfDay } from "./local-date.ts";
 
 describe("NFR-23: LocalDate.fromInstant", () => {
   it("21:30 UTC 21 октября — в Минске уже 22 октября", () => {
@@ -89,5 +89,17 @@ describe("AGT-03: календарная арифметика — дата + N �
     for (let days = -20_000; days <= 20_000; days += 997) {
       expect(LocalDate.daysBetween(start, LocalDate.addDays(start, days))).toBe(days);
     }
+  });
+});
+
+describe("NFR-23: время суток по поясу", () => {
+  it("12:39 UTC — 15:39 в Минске; полночь по Минску — 00:00, а не 24:00", () => {
+    expect(timeOfDay(new Date("2026-10-31T12:39:00Z"), "Europe/Minsk")).toBe("15:39");
+    expect(timeOfDay(new Date("2026-10-31T21:00:00Z"), "Europe/Minsk")).toBe("00:00");
+  });
+
+  it("недействительный момент и неизвестный пояс — RangeError", () => {
+    expect(() => timeOfDay(new Date("не дата"), "Europe/Minsk")).toThrow(RangeError);
+    expect(() => timeOfDay(new Date(), "Mars/Olympus")).toThrow(RangeError);
   });
 });

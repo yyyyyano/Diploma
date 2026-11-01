@@ -46,6 +46,22 @@ function fromEpochDay(epochDay: number): LocalDate {
   );
 }
 
+/**
+ * Время суток «чч:мм» в часовом поясе `timeZone` в момент `instant` (NFR-23): подпись «10:42» в списке диалогов.
+ * Неизвестный пояс — `RangeError` (Intl).
+ */
+export function timeOfDay(instant: Date, timeZone: TimeZone): string {
+  if (Number.isNaN(instant.getTime())) throw new RangeError("Недействительный момент времени.");
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+  const part = (type: "hour" | "minute") => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("hour")}:${part("minute")}`;
+}
+
 /** Календарный день «ГГГГ-ММ-ДД» по часовому поясу системы. Строки сравниваются по порядку дат. */
 export type LocalDate = z.infer<typeof schema>;
 

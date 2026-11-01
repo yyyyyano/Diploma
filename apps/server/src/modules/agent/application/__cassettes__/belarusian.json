@@ -1,0 +1,1796 @@
+{
+  "version": 1,
+  "scenario": "agent/belarusian",
+  "steps": [
+    {
+      "kind": "stream",
+      "fingerprint": "17cbf5d37a0023b7",
+      "parts": [
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "stream-start",
+            "warnings": []
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-start",
+            "id": "reasoning-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "We"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " need"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " answer"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ":"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " \""
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "How"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " much"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " did"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " I"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " spend"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " on"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " taxi"
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " in"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " September"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "?\""
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Need"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " aggregate"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " transactions"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " category"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " \""
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "tax"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "i"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "\""
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " for"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " period"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Sep"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "1"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "30"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Use"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " aggregate"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_transactions"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " tool"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ".\n\n"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "We"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " need"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " from"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " and"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " dates"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ":"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " from"
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " \""
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "09"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "01"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "\","
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " \""
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "09"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "30"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "\"."
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Group"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_by"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " category"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "?"
+          }
+        },
+        {
+          "delayMs": 5,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Actually"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " we"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " just"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " need"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " total"
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " for"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " taxi"
+          }
+        },
+        {
+          "delayMs": 5,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " aggregate"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_transactions"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " returns"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " totals"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " by"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " group"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " If"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " we"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " group"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_by"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " category"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ","
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " we"
+          }
+        },
+        {
+          "delayMs": 5,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " can"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " extract"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " taxi"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " amount"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Let's"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " call"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " aggregate"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_transactions"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " with"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " from"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "09"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "01"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "09"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "-"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "30"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ","
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " group"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "_by"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " category"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ".\n\n"
+          }
+        },
+        {
+          "delayMs": 135,
+          "part": {
+            "type": "reasoning-end",
+            "id": "reasoning-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "tool-input-start",
+            "id": "fc_ac7b5b5f-1f4e-499d-8293-3d3bdf06f410",
+            "toolName": "aggregate_transactions"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "tool-input-delta",
+            "id": "fc_ac7b5b5f-1f4e-499d-8293-3d3bdf06f410",
+            "delta": "{\"from\":\"2026-09-01\",\"group_by\":\"category\",\"to\":\"2026-09-30\"}"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "tool-input-end",
+            "id": "fc_ac7b5b5f-1f4e-499d-8293-3d3bdf06f410"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "tool-call",
+            "toolCallId": "fc_ac7b5b5f-1f4e-499d-8293-3d3bdf06f410",
+            "toolName": "aggregate_transactions",
+            "input": "{\"from\":\"2026-09-01\",\"group_by\":\"category\",\"to\":\"2026-09-30\"}"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "finish",
+            "finishReason": {
+              "unified": "tool-calls",
+              "raw": "tool_calls"
+            },
+            "usage": {
+              "inputTokens": {
+                "total": 2548,
+                "noCache": 244,
+                "cacheRead": 2304
+              },
+              "outputTokens": {
+                "total": 179,
+                "text": 52,
+                "reasoning": 127
+              },
+              "raw": {
+                "prompt_tokens": 2548,
+                "completion_tokens": 179,
+                "total_tokens": 2727,
+                "prompt_tokens_details": {
+                  "cached_tokens": 2304
+                },
+                "completion_tokens_details": {
+                  "reasoning_tokens": 127
+                }
+              }
+            },
+            "providerMetadata": {
+              "kosht": {
+                "model": "groq/openai/gpt-oss-120b",
+                "unavailable": []
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "stream",
+      "fingerprint": "f9782c707aabd0a1",
+      "parts": [
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "stream-start",
+            "warnings": []
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-start",
+            "id": "reasoning-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "The"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " result"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " shows"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " expense"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " for"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " taxi"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "120"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "00"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " ko"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "pe"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "cks"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " ="
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "120"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "00"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " BY"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "N"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Need"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " to"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " format"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " as"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " \""
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "120"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ","
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "00"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " BY"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "N"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": "\"."
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " Provide"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": " answer"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-delta",
+            "id": "reasoning-0",
+            "delta": ".\n\n"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "reasoning-end",
+            "id": "reasoning-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-start",
+            "id": "txt-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "Вы"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " пот"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "рати"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "ли"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " на"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " так"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "си"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " в"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "с"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "ент"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "ябре"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "202"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "6"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "г"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "ода"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "120"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": ","
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "00"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " "
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "BY"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "N"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "."
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " ("
+          }
+        },
+        {
+          "delayMs": 4,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "Это"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " сумма"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " всех"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " расходов"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " по"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " категории"
+          }
+        },
+        {
+          "delayMs": 1,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " «"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "так"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "си"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "»"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " за"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " указ"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": "анный"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": " месяц"
+          }
+        },
+        {
+          "delayMs": 2,
+          "part": {
+            "type": "text-delta",
+            "id": "txt-0",
+            "delta": ".)"
+          }
+        },
+        {
+          "delayMs": 3,
+          "part": {
+            "type": "text-end",
+            "id": "txt-0"
+          }
+        },
+        {
+          "delayMs": 0,
+          "part": {
+            "type": "finish",
+            "finishReason": {
+              "unified": "stop",
+              "raw": "stop"
+            },
+            "usage": {
+              "inputTokens": {
+                "total": 2906,
+                "noCache": 2906
+              },
+              "outputTokens": {
+                "total": 86,
+                "text": 51,
+                "reasoning": 35
+              },
+              "raw": {
+                "prompt_tokens": 2906,
+                "completion_tokens": 86,
+                "total_tokens": 2992,
+                "completion_tokens_details": {
+                  "reasoning_tokens": 35
+                }
+              }
+            },
+            "providerMetadata": {
+              "kosht": {
+                "model": "groq/openai/gpt-oss-120b",
+                "unavailable": []
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

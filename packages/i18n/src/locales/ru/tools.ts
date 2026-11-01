@@ -27,6 +27,8 @@ export const tools = {
   statement_import_status: "Проверяю, как идёт разбор выписки…",
   get_checklist: "Готовлю чек-лист документов…",
   calculate_deduction: "Считаю вычет…",
+  afford_scenarios: "Считаю сценарии покупки…",
+  safe_loan_payment: "Считаю безопасный платёж по кредиту…",
   list_events: "Смотрю календарь…",
   create_event: "Создаю событие…",
   calculator: "Считаю…",

@@ -1,12 +1,13 @@
 // Чат (CHAT-01, CHAT-02, NFR-21, ARCHITECTURE §8.3): поток ответа ассистента — итератор событий oRPC. Тела событий —
 // куски UI-сообщения AI SDK (UIMessageChunk), сохранённые сообщения — его части (UIMessage.parts). Контракт не
-// импортирует `ai` (ADR-0005: только zod, @orpc/contract, kernel), поэтому схемы здесь слабые — «объект с type»:
-// форму кусков и частей проверяет AI SDK на сайте (useChat), а сервер отдаёт только то, что построил AI SDK.
+// импортирует `ai` (ADR-0005: только zod, @orpc/contract, kernel), поэтому куски и части AI SDK (текст, вызовы
+// инструментов, шаги) здесь слабые — «объект с type»: их форму проверяет AI SDK на сайте (useChat). Данные-части нашего
+// реестра (`DATA_PARTS`) — строгие: тип и схема данных вместе, неизвестный `data-…` не проходит (CHAT-04).
 // Запуск агента не привязан к соединению: закрыли вкладку — ответ дописывается и сохраняется; «Стоп» — stop(runId).
 import { eventIterator, oc } from "@orpc/contract";
 import { z } from "zod";
 import { pickErrors } from "../errors.ts";
-import { AnswerMetadata } from "./agent-parts.ts";
+import { AnswerMetadata, ChatAttachment, DATA_PARTS, MAX_ATTACHMENTS } from "./agent-parts.ts";
 import { PageContext } from "./page-context.ts";
 
 export const ConversationId = z.uuid().brand<"ConversationId">();
@@ -19,8 +20,21 @@ export type RunId = z.infer<typeof RunId>;
 /** Кусок потока UI-сообщения AI SDK (`text-delta`, `tool-output-available`…) — слабая схема, см. шапку. */
 export const UiMessageChunk = z.looseObject({ type: z.string().min(1).max(64) });
 
-/** Часть сохранённого сообщения (UIMessage.parts) — слабая схема, см. шапку. */
-export const UiMessagePart = z.looseObject({ type: z.string().min(1).max(64) });
+/** Данные-часть реестра: `{ type: "data-<вид>", id?, data }` с настоящей схемой данных (по одной на вид). */
+const registeredDataParts = Object.entries(DATA_PARTS).map(([type, data]) =>
+  z.strictObject({ type: z.literal(type), id: z.string().max(100).optional(), data }),
+);
+
+/**
+ * Часть сохранённого сообщения (UIMessage.parts): данные-части реестра — строго, остальное — как строит AI SDK (текст,
+ * `tool-<имя>`, `step-start`); `data-…` вне реестра не проходит.
+ */
+export const UiMessagePart = z.union([
+  ...(registeredDataParts as [(typeof registeredDataParts)[number], ...typeof registeredDataParts]),
+  z
+    .looseObject({ type: z.string().min(1).max(64) })
+    .refine((part) => !part.type.startsWith("data-")),
+]);
 
 /** Состояние ответа: идёт, готов или оборван («Стоп», остановка сервера). */
 export const MessageStatus = z.enum(["streaming", "complete", "interrupted"]);
@@ -32,6 +46,8 @@ export const ChatMessage = z.strictObject({
   status: MessageStatus,
   /** Кто ответил (LLM-10): сохраняется с ответом, чтобы пометка «Модель X недоступна, ответила Y» пережила перезагрузку. */
   answeredBy: AnswerMetadata.shape.answeredBy.optional(),
+  /** CHAT-10: версии статей ответа, которые с тех пор заменены новой редакцией; пусто — поле нет. */
+  changedVersionIds: z.array(z.string().max(64)).max(200).optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessage>;
 
@@ -53,13 +69,21 @@ export const ConversationItem = z.strictObject({
 });
 export type ConversationItem = z.infer<typeof ConversationItem>;
 
-export const SendInput = z.strictObject({
-  /** Нет — новый диалог. */
-  conversationId: ConversationId.optional(),
-  text: z.string().trim().min(1).max(4000),
-  /** Что пользователь видит сейчас (CHAT-08): агент получает это блоком данных, а не инструкцией. */
-  page: PageContext.optional(),
-});
+export const SendInput = z
+  .strictObject({
+    /** Нет — новый диалог. */
+    conversationId: ConversationId.optional(),
+    /** Пустой текст — только вложения (CHAT-03): тогда модель не зовётся, ответ — карточки вложений. */
+    text: z.string().trim().max(4000),
+    /** Что пользователь видит сейчас (CHAT-08): агент получает это блоком данных, а не инструкцией. */
+    page: PageContext.optional(),
+    /** Чек или выписка, уже принятые конвейером раздела «Чеки и документы» (CHAT-03). */
+    attachments: z.array(ChatAttachment).max(MAX_ATTACHMENTS).optional(),
+  })
+  .refine((input) => input.text !== "" || (input.attachments?.length ?? 0) > 0, {
+    message: "empty-message",
+    path: ["text"],
+  });
 
 export const chatContract = {
   /** Диалог и его сообщения; без `conversationId` — последний. Чужой или несуществующий — NOT_FOUND. */

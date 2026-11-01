@@ -4,6 +4,7 @@ import {
   ActionResultData,
   AnswerMetadata,
   ChartData,
+  ChatAttachment,
   DATA_PARTS,
   LawAnswerData,
 } from "./agent-parts.ts";
@@ -101,11 +102,26 @@ describe("метаданные ответа и реестр частей", () =>
     ).toEqual({ answeredBy: { model: "zai/glm", unavailable: ["groq/llama"] } });
   });
 
-  it("реестр называет три вида данных-частей", () => {
+  it("реестр называет четыре вида данных-частей", () => {
     expect(Object.keys(DATA_PARTS)).toEqual([
       "data-law-answer",
       "data-action-result",
       "data-chart",
+      "data-attachment",
     ]);
+  });
+});
+
+describe("CHAT-03: вложение сообщения", () => {
+  const id = "0190f0a0-0000-7000-8000-000000000009";
+
+  it("чек и выписка — вид и id; другой вид и лишнее поле не проходят", () => {
+    expect(ChatAttachment.parse({ kind: "receipt", id })).toEqual({ kind: "receipt", id });
+    expect(ChatAttachment.parse({ kind: "statement", id }).kind).toBe("statement");
+    expect(ChatAttachment.safeParse({ kind: "photo", id }).success).toBe(false);
+    expect(ChatAttachment.safeParse({ kind: "receipt", id, path: "/etc/passwd" }).success).toBe(
+      false,
+    );
+    expect(ChatAttachment.safeParse({ kind: "receipt", id: "не-uuid" }).success).toBe(false);
   });
 });

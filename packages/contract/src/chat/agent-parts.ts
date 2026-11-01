@@ -1,5 +1,6 @@
-// Данные-части ответа агента (AGT-04, AGT-05, AGT-07, LEGAL-03, CHAT-04, ARCHITECTURE §8.2): `data-law-answer` (правовой
-// ответ с дословными цитатами), `data-action-result` (итог «Да»/«Нет» без модели), `data-chart` (мини-график). Сервер пишет
+// Данные-части ответа агента (AGT-04, AGT-05, AGT-07, LEGAL-03, CHAT-03, CHAT-04, ARCHITECTURE §8.2): `data-law-answer`
+// (правовой ответ с дословными цитатами), `data-action-result` (итог «Да»/«Нет» без модели), `data-chart` (мини-график),
+// `data-attachment` (вложенный чек или выписка: карточку рисует сайт по id). Сервер пишет
 // их в поток и сохраняет в `chat_messages.parts`, сайт рисует по `type`. Схемы строгие: что не описано здесь, в часть не
 // попадает. Поля только добавляются (.claude/rules/api-contract.md). Схема `LawAnswer` — зеркало результата
 // `legal-consult.finalizeAnswer`; тип рядом с ней — в модуле legal-consult.
@@ -91,6 +92,19 @@ export const ChartData = z.strictObject({
 });
 export type ChartData = z.infer<typeof ChartData>;
 
+/** Максимум вложений в одном сообщении (CHAT-03): столько же фото чека берёт одна загрузка раздела — но чат не склад. */
+export const MAX_ATTACHMENTS = 4;
+
+/**
+ * Вложение сообщения (CHAT-03): файл уже принят конвейером (`files.upload` → `receipts.start` | `statements.start`), здесь —
+ * только ссылка. Карточку рисует сайт, состояние берёт у `receipts.get` / `statements.get` (чужой id — NOT_FOUND).
+ */
+export const ChatAttachment = z.strictObject({
+  kind: z.enum(["receipt", "statement"]),
+  id: z.uuid(),
+});
+export type ChatAttachment = z.infer<typeof ChatAttachment>;
+
 /** Кто ответил (LLM-10): модель цепочки и модели, которые были недоступны; идёт в метаданных куска `finish`. */
 export const AnswerMetadata = z.strictObject({
   answeredBy: z.strictObject({
@@ -105,4 +119,5 @@ export const DATA_PARTS = {
   "data-law-answer": LawAnswerData,
   "data-action-result": ActionResultData,
   "data-chart": ChartData,
+  "data-attachment": ChatAttachment,
 } as const;

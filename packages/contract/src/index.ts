@@ -200,11 +200,13 @@ export {
   ActionResultData,
   AnswerMetadata,
   ChartData,
+  ChatAttachment,
   DATA_PARTS,
   LawAnswerData,
   LawCitationData,
   LawNoticeData,
   LawPartData,
+  MAX_ATTACHMENTS,
   MAX_CHART_SERIES,
 } from "./chat/agent-parts.ts";
 export { PageContext } from "./chat/page-context.ts";

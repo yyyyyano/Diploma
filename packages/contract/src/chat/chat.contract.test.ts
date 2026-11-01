@@ -7,6 +7,7 @@ import {
   RunMetadata,
   SendInput,
   UiMessageChunk,
+  UiMessagePart,
 } from "./chat.contract.ts";
 
 describe("CHAT-02: поток ответа", () => {
@@ -83,5 +84,94 @@ describe("LLM-10: кто ответил хранится с сообщением
     expect(ChatMessage.parse(base).answeredBy).toBeUndefined();
     const answeredBy = { model: "zai/glm-4.7-flash", unavailable: ["groq/llama-3.3-70b"] };
     expect(ChatMessage.parse({ ...base, answeredBy }).answeredBy).toEqual(answeredBy);
+  });
+});
+
+describe("CHAT-03: вложения во входе send", () => {
+  const id = "0190f0a0-0000-7000-8000-000000000009";
+
+  it("вложение без текста проходит, пустое сообщение без вложений — нет", () => {
+    expect(SendInput.safeParse({ text: "", attachments: [{ kind: "receipt", id }] }).success).toBe(
+      true,
+    );
+    expect(SendInput.safeParse({ text: "", attachments: [] }).success).toBe(false);
+    expect(SendInput.safeParse({ text: "  " }).success).toBe(false);
+  });
+
+  it("не больше четырёх вложений за сообщение", () => {
+    const attachments = Array.from({ length: 5 }, () => ({ kind: "statement", id }));
+    expect(SendInput.safeParse({ text: "вот", attachments }).success).toBe(false);
+    expect(SendInput.safeParse({ text: "вот", attachments: attachments.slice(0, 4) }).success).toBe(
+      true,
+    );
+  });
+});
+
+describe("CHAT-04: часть сохранённого сообщения строгая по реестру частей", () => {
+  const id = "0190f0a0-0000-7000-8000-000000000009";
+  const chart = {
+    kind: "bar",
+    title: "Кафе по месяцам",
+    unit: "money",
+    currency: "BYN",
+    labels: ["июн", "июл"],
+    series: [{ name: "Кафе", values: [1200, 3400] }],
+  };
+
+  it("текст, вызов инструмента и шаг AI SDK проходят как есть (форму проверяет AI SDK)", () => {
+    for (const part of [
+      { type: "text", text: "Привет" },
+      { type: "step-start" },
+      { type: "tool-search_transactions", state: "output-available", toolCallId: "c1", input: {} },
+    ]) {
+      expect(UiMessagePart.safeParse(part).success).toBe(true);
+    }
+  });
+
+  it("данные-части реестра проходят со своей схемой", () => {
+    expect(UiMessagePart.safeParse({ type: "data-chart", data: chart }).success).toBe(true);
+    expect(
+      UiMessagePart.safeParse({ type: "data-attachment", data: { kind: "receipt", id } }).success,
+    ).toBe(true);
+    expect(
+      UiMessagePart.safeParse({
+        type: "data-action-result",
+        data: { decisionId: id, status: "no", undoToken: null },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("данные-часть с неверной схемой данных или неизвестного вида не проходит", () => {
+    expect(
+      UiMessagePart.safeParse({ type: "data-chart", data: { ...chart, series: [] } }).success,
+    ).toBe(false);
+    expect(UiMessagePart.safeParse({ type: "data-chart", data: { ...chart, x: 1 } }).success).toBe(
+      false,
+    );
+    expect(UiMessagePart.safeParse({ type: "data-unknown", data: {} }).success).toBe(false);
+    expect(UiMessagePart.safeParse({ type: "data-chart", data: chart, extra: 1 }).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("CHAT-10: сообщение называет версии статей, которые изменились позже", () => {
+  it("changedVersionIds необязательны; список не длиннее 200", () => {
+    const base = {
+      id: "0190f0a0-0000-7000-8000-000000000003",
+      role: "assistant" as const,
+      parts: [],
+      status: "complete" as const,
+    };
+    expect(ChatMessage.parse(base).changedVersionIds).toBeUndefined();
+    expect(ChatMessage.parse({ ...base, changedVersionIds: ["12"] }).changedVersionIds).toEqual([
+      "12",
+    ]);
+    expect(
+      ChatMessage.safeParse({
+        ...base,
+        changedVersionIds: Array.from({ length: 201 }, (_, i) => String(i)),
+      }).success,
+    ).toBe(false);
   });
 });

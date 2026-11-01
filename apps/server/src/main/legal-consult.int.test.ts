@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { CHECKLISTS, UNSAVED_REFS } from "../modules/legal-consult/domain/checklists.ts";
+import { CHECKLISTS } from "../modules/legal-consult/domain/checklists.ts";
 import { isVerbatim } from "../modules/legal-consult/domain/verbatim.ts";
 import type { LegalBaseFacade } from "../modules/legal-base/index.ts";
 import type { LegalConsultFacade } from "../modules/legal-consult/index.ts";
@@ -230,7 +230,7 @@ describe("LEGAL-12, P3: нормы чек-листов найдены точны
 
   it("каждая ссылка на норму в шаблонах находится точным обращением; слова-основание пункта есть в найденном тексте", async () => {
     const checked = norms.filter(({ norm }) => norm.unsaved !== true);
-    expect(checked.length).toBeGreaterThan(40);
+    expect(checked.length).toBeGreaterThan(50);
     const problems: string[] = [];
     for (const { where, norm } of checked) {
       const found = await legalBase.search(norm.ref);
@@ -245,18 +245,14 @@ describe("LEGAL-12, P3: нормы чек-листов найдены точны
     expect(problems).toEqual([]);
   });
 
-  it("нормы без сохранённой страницы (ст. 211, 222, 223 НК) в базе пока не находятся — список явный; найдутся — пометку снять и добавить слова-основание", async () => {
-    const unsaved = [
-      ...new Set(norms.filter(({ norm }) => norm.unsaved === true).map(({ norm }) => norm.ref)),
-    ];
-    expect(unsaved.toSorted()).toEqual([...UNSAVED_REFS].toSorted());
-    for (const ref of unsaved) {
-      const article = /ст\. (\d+)/u.exec(ref)?.[1] ?? "";
+  it("ст. 211, 222, 223 НК добавлены в сохранённую страницу (2026-11-01): пунктов с пометкой «текста нет» не осталось", async () => {
+    expect(norms.filter(({ norm }) => norm.unsaved === true)).toEqual([]);
+    for (const article of ["211", "222", "223"]) {
       const rows = await db.owner.query(
         "select 1 from legal_fragments f join legal_acts a on a.id = f.act_id where a.pravo_id = 'Hk0900071' and f.article_no = $1",
         [article],
       );
-      expect([ref, rows.rowCount]).toEqual([ref, 0]);
+      expect([article, (rows.rowCount ?? 0) > 0]).toEqual([article, true]);
     }
   });
 

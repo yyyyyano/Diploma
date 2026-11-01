@@ -1,9 +1,9 @@
 // LEGAL-12, LEGAL-10, P1: шаблоны чек-листов — полнота и честность содержания без БД: у каждого пункта есть текст в словаре, у срока — подпись, у
-// инстанции — название; нормы без сохранённой страницы помечены и перечислены явно; сумм вычетов и ставок в тексте нет (их даёт таблица ставок).
+// инстанции — название; сумм вычетов и ставок в тексте нет (их даёт таблица ставок).
 import { CHECKLIST_IDS, CHECKLIST_INSTANCES } from "@kosht/contract";
 import { createLegalT, legalTexts } from "@kosht/i18n";
 import { describe, expect, it } from "vitest";
-import { CHECKLISTS, UNSAVED_REFS, checklistById } from "./checklists.ts";
+import { CHECKLISTS, checklistById } from "./checklists.ts";
 
 const t = createLegalT();
 interface Entry {
@@ -97,19 +97,12 @@ describe("P3: у каждого пункта есть норма; у пункт�
     expect(bare).toEqual([]);
   });
 
-  it("слова нормы (`evidence`) обязательны всюду, кроме норм без сохранённой страницы; такие нормы — только из явного списка", () => {
-    const allowed = UNSAVED_REFS as readonly string[];
-    const problems = norms.flatMap(({ list, item, norm }) => {
-      const where = `${list}/${item}`;
-      if (norm.unsaved === true) {
-        return allowed.includes(norm.ref) && norm.evidence === undefined
-          ? []
-          : [`${where}: ${norm.ref}`];
-      }
-      return norm.evidence !== undefined && norm.evidence !== "" && !allowed.includes(norm.ref)
+  it("слова нормы (`evidence`) обязательны у каждого пункта с нормой; пометки «текста нет в базе» нет ни у одного (T-045: ст. 211, 222, 223 сохранены)", () => {
+    const problems = norms.flatMap(({ list, item, norm }) =>
+      norm.unsaved !== true && norm.evidence !== undefined && norm.evidence !== ""
         ? []
-        : [`${where}: ${norm.ref}`];
-    });
+        : [`${list}/${item}: ${norm.ref}`],
+    );
     expect(problems).toEqual([]);
   });
 

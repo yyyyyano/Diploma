@@ -1,7 +1,7 @@
 // Чек-лист документов (`get_checklist`, LEGAL-12, CHAT-04): шаблон из кода, а не текст модели; галочки сохраняются на
 // сервере за этим сообщением (`legalConsult.setChecked`, subject `message`). Из результата инструмента берётся только id
 // шаблона — состояние и тексты приходят процедурой `legalConsult.checklist`, чтобы не показывать устаревшие галочки.
-// Норма — чип со ссылкой на pravo.by; «текста нормы в базе нет» — явная пометка (ст. 211, 222, 223 НК).
+// Норма — чип со ссылкой на pravo.by; «текста нормы в базе нет» — явная пометка (сейчас её нет ни у одного пункта: ст. 211, 222, 223 НК сохранены).
 import { ChecklistId, type ChecklistView } from "@kosht/contract";
 import { Checkbox, Skeleton } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

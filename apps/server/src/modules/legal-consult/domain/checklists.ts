@@ -2,8 +2,8 @@
 // составленное содержание, а не текст модели. Тексты — словарь `legal` (`checklists.<id>.items.<item>`), здесь — структура и источники.
 // Каждая ссылка на норму — в формате точного обращения legal-base («п. 3 ст. 210 НК») и, где норма есть в сохранённой странице pravo.by,
 // с `evidence` — словами нормы, на которых держится пункт: тест находит норму точным обращением и сверяет эти слова с её текстом.
-// Нормы вне сохранённых страниц помечены `unsaved`: их содержание — из SPEC §9.1 (проверено по pravo.by 2026-10-12), а не из текста,
-// лежащего в базе; когда страницу сохранят, пометку снимает тест (UNSAVED_REFS ниже).
+// Статьи 211, 222, 223 НК добавлены в сохранённую страницу 2026-11-01 (T-045): пункты по ним теперь тоже с `evidence`. Пометка `unsaved`
+// осталась механизмом на случай нормы, которой ещё нет в базе: сейчас ею не помечен ни один пункт (тест это проверяет).
 import { CHECKLIST_IDS, type CHECKLIST_INSTANCES, type ChecklistId } from "@kosht/contract";
 
 export { CHECKLIST_IDS, type ChecklistId };
@@ -42,11 +42,7 @@ export interface ChecklistTemplate {
 const NK = "Hk0900071";
 const ZOZPP = "H10200090";
 const nk = (ref: string, evidence: string): NormRef => ({ ref, pravoId: NK, evidence });
-const nkUnsaved = (ref: string): NormRef => ({ ref, pravoId: NK, unsaved: true });
 const zozpp = (ref: string, evidence: string): NormRef => ({ ref, pravoId: ZOZPP, evidence });
-
-/** Нормы, которых нет в сохранённых страницах pravo.by (30.10.2026): ст. 211, 222, 223 НК. Другим пометку ставить нельзя. */
-export const UNSAVED_REFS = ["ст. 211 НК", "ст. 222 НК", "ст. 223 НК"] as const;
 
 export const CHECKLISTS: readonly ChecklistTemplate[] = [
   {
@@ -119,7 +115,10 @@ export const CHECKLISTS: readonly ChecklistTemplate[] = [
         kind: "step",
         instance: "tax-office",
         deadline: true,
-        norm: nkUnsaved("ст. 222 НК"),
+        norm: nk(
+          "п. 1 ст. 222 НК",
+          "не позднее 31 марта года, следующего за истекшим налоговым периодом",
+        ),
       },
       {
         id: "carry-over",
@@ -129,19 +128,117 @@ export const CHECKLISTS: readonly ChecklistTemplate[] = [
           "переносятся на последующие налоговые периоды до полного их использования",
         ),
       },
-      { id: "refund-term", kind: "note", norm: nkUnsaved("ст. 223 НК") },
+      {
+        id: "refund-term",
+        kind: "note",
+        norm: nk("п. 1 ст. 223 НК", "не позднее пяти лет со дня уплаты в бюджет такого налога"),
+      },
     ],
   },
   {
     id: "deduction-housing",
     items: [
-      { id: "queue", kind: "step", instance: "executive-committee", norm: nkUnsaved("ст. 211 НК") },
-      { id: "expenses", kind: "step", norm: nkUnsaved("ст. 211 НК") },
-      { id: "one-home", kind: "note", norm: nkUnsaved("ст. 211 НК") },
-      { id: "subsidy", kind: "note", norm: nkUnsaved("ст. 211 НК") },
-      { id: "way", kind: "step", instance: "employer", norm: nkUnsaved("ст. 211 НК") },
-      { id: "documents", kind: "document", norm: nkUnsaved("ст. 211 НК") },
-      { id: "carry-over", kind: "note", norm: nkUnsaved("ст. 211 НК") },
+      {
+        id: "queue",
+        kind: "step",
+        instance: "executive-committee",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "состоящими на учете нуждающихся в улучшении жилищных условий или состоявшими на таком учете на момент заключения договора",
+        ),
+      },
+      {
+        id: "expenses",
+        kind: "step",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "включая проценты по ним, за исключением процентов, уплаченных за несвоевременное погашение",
+        ),
+      },
+      {
+        id: "one-home",
+        kind: "note",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "не вправе получить вычет в отношении иной квартиры или иного одноквартирного жилого дома",
+        ),
+      },
+      {
+        id: "subsidy",
+        kind: "note",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "являющихся членами многодетной семьи на дату заключения договоров",
+        ),
+      },
+      {
+        id: "way",
+        kind: "step",
+        instance: "employer",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "налоговым агентом, являющимся для него местом основной работы",
+        ),
+      },
+      {
+        id: "queue-certificate",
+        kind: "document",
+        instance: "executive-committee",
+        norm: nk(
+          "п. 2 ст. 211 НК",
+          "справки (ее копии) местного исполнительного и распорядительного органа",
+        ),
+      },
+      {
+        id: "property-documents",
+        kind: "document",
+        norm: nk(
+          "п. 2 ст. 211 НК",
+          "копий документов, подтверждающих регистрацию права собственности на одноквартирный жилой дом или квартиру",
+        ),
+      },
+      {
+        id: "payment-documents",
+        kind: "document",
+        norm: nk("п. 4 ст. 211 НК", "должны содержать информацию о фамилии, имени, отчестве"),
+      },
+      {
+        id: "loan-documents",
+        kind: "document",
+        norm: nk("п. 2 ст. 211 НК", "копии кредитного договора"),
+      },
+      {
+        id: "income-proof",
+        kind: "document",
+        instance: "tax-office",
+        norm: nk(
+          "п. 2 ст. 211 НК",
+          "справки о доходах, исчисленных и удержанных суммах подоходного налога",
+        ),
+      },
+      {
+        id: "copies",
+        kind: "step",
+        norm: nk("п. 4 ст. 211 НК", "представленные копии сверяются с оригиналами"),
+      },
+      {
+        id: "declaration",
+        kind: "step",
+        instance: "tax-office",
+        deadline: true,
+        norm: nk(
+          "п. 1 ст. 222 НК",
+          "не позднее 31 марта года, следующего за истекшим налоговым периодом",
+        ),
+      },
+      {
+        id: "carry-over",
+        kind: "note",
+        norm: nk(
+          "п. 1.1 ст. 211 НК",
+          "неиспользованная сумма переносится на последующие налоговые периоды до полного ее использования",
+        ),
+      },
     ],
   },
   {

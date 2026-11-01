@@ -175,9 +175,9 @@ describe("LEGAL-12: чек-лист с состоянием галочек", () 
     expect(checklists.template("warranty").done).toBe(0);
   });
 
-  it("чек-лист на жильё: нормы ст. 211 помечены «текста нет в базе» — сверить по ссылке", async () => {
+  it("чек-лист на жильё: нормы ст. 211, 222 найдены в базе — ни один пункт не помечен «текста нет»", async () => {
     const view = await checklists.get(household1(), { id: "deduction-housing", subject: general });
-    expect(view.items.every((i) => i.norm?.unsaved === true)).toBe(true);
+    expect(view.items.every((i) => i.norm !== null && i.norm.unsaved === false)).toBe(true);
     expect(view.items.some((i) => i.instance?.id === "executive-committee")).toBe(true);
   });
 });

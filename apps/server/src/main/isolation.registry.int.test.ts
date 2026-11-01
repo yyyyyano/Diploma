@@ -64,6 +64,8 @@ interface Household {
   readonly goalId: string;
   /** Найденный вычет B (TAX-20). */
   readonly foundId: string;
+  /** Событие календаря B (CAL-06). */
+  readonly calendarEventId: string;
   /** Сообщение, к которому B отметил пункт чек-листа (состояние галочек — таблица домохозяйства). */
   readonly checklistSubjectId: string;
 }
@@ -309,6 +311,14 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "tax.markFoundShown": { input: (b) => ({ ids: [b.foundId] }) },
   "tax.setFoundStatus": { input: (b) => ({ id: b.foundId, status: "dismissed" }) },
   "tool:found_deductions": { input: () => ({}) },
+  // Календарь: чужое событие неотличимо от несуществующего; список и создание работают только со своим календарём.
+  "calendar.month": { input: () => ({}) },
+  "calendar.upcoming": { input: () => undefined },
+  "calendar.create": { input: () => ({ title: "своё", on: "2099-01-01" }) },
+  "calendar.update": { input: (b) => ({ id: b.calendarEventId, remindDays: [1] }) },
+  "calendar.requestDelete": { input: (b) => ({ id: b.calendarEventId }) },
+  "tool:list_events": { input: () => ({}) },
+  "tool:create_event": { input: () => ({ title: "своё", on: "2099-01-01" }) },
   "tax.calculate": {
     input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
   },
@@ -593,6 +603,11 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'children', 'facts:children', 2026, '2026-10-28') returning id`,
     [ids.household_id, ids.user_id],
   );
+  const calendarEvent = await db.owner.query<{ id: string }>(
+    `insert into calendar_events (household_id, user_id, type, title, day, origin)
+     values ($1, $2, 'own', $3, '2099-01-02', 'user') returning id`,
+    [ids.household_id, ids.user_id, `событие ${email}`],
+  );
   const goal = await db.owner.query<{ id: string }>(
     `insert into budget_goals (household_id, user_id, name, kind, target_minor, deadline, created_on)
      values ($1, $2, $3, 'piggy', 300000, '2027-06-01', '2026-10-28') returning id`,
@@ -632,6 +647,7 @@ async function seedHousehold(email: string): Promise<Household> {
     limitId: limit.rows[0]?.id ?? "",
     goalId: goal.rows[0]?.id ?? "",
     foundId: foundDeduction.rows[0]?.id ?? "",
+    calendarEventId: calendarEvent.rows[0]?.id ?? "",
     checklistSubjectId,
   };
 }
@@ -771,6 +787,11 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "budgets.requestDeleteLimit",
       "budgets.setLimit",
       "budgets.updateGoal",
+      "calendar.create",
+      "calendar.month",
+      "calendar.requestDelete",
+      "calendar.upcoming",
+      "calendar.update",
       "categories.create",
       "categories.list",
       "categories.rename",
@@ -858,6 +879,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "calculator",
       "contribute_to_goal",
       "create_account",
+      "create_event",
       "create_goal",
       "delete_account",
       "delete_goal",
@@ -870,6 +892,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "get_receipt",
       "list_accounts",
       "list_budgets",
+      "list_events",
       "list_recurring",
       "read_profile_facts",
       "receipt_status",
@@ -901,6 +924,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.limitId,
       b.goalId,
       b.foundId,
+      b.calendarEventId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

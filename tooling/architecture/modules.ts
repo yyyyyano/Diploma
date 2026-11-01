@@ -310,6 +310,8 @@ export const MODULES: readonly ModuleDef[] = [
       "norm-tables",
       "notifications",
       "actions",
+      // explain — трассы сумм событий и итогов месяца и списка (P1, P2).
+      "explain",
     ],
     tables: ["user"],
     publishes: [],

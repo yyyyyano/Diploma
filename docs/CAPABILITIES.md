@@ -65,7 +65,7 @@
 |---|---|---|---|---|---|
 | `fin` | FIN-01/20/21/22 | свободный остаток, средний регулярный доход, прогноз остатка по дням | accounts, transactions, recurring, profile, explain | — | — |
 | `budgets` | BUD-01…07 | лимиты, цели, копилка, рекомендуемый взнос, пороги уведомлений | accounts, transactions, categories, fin, notifications, actions, explain | user | — |
-| `calendar` | CAL-01…08, PROF-07 (вопрос об имуществе) | события, напоминания (таблица `reminders` + тик), сроки налогов, гарантии, страховки | profile, transactions, recurring, receipts, norm-tables, notifications, actions | user | — |
+| `calendar` | CAL-01…08, PROF-07 (вопрос об имуществе) | события, напоминания (таблица `reminders` + тик), сроки налогов, гарантии, страховки | profile, transactions, recurring, receipts, norm-tables, notifications, actions, explain | user | — |
 | `tax` | TAX-01…07, TAX-20 | калькулятор вычетов (через `calc`), найденные вычеты по операциям | profile, transactions, categories, norm-tables, legal-base, legal-consult, notifications, actions, explain | user | — |
 | `afford` | AFF-01…08 | три сценария покупки, просадки, безопасный платёж по ПДН | accounts, transactions, recurring, fin, budgets, calendar, norm-tables, profile, explain | — | — |
 | `weekly` | WEEK-01…03 | итоги недели: числа — `calc`, текст — модель | transactions, budgets, calendar, recurring, tax, llm, notifications, explain | user | — |

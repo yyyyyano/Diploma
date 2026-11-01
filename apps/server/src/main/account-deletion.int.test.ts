@@ -95,6 +95,17 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, 'children', 'facts:children', 2026, '2026-10-01')`,
     ids,
   );
+  // Календарь: событие и его напоминание (CAL-06, CAL-07) — строки пользователя, которые удаление аккаунта обязано убрать.
+  const calendarEvent = await db.owner.query<{ id: string }>(
+    `insert into calendar_events (household_id, user_id, type, title, day, origin, remind_days)
+     values ($1, $2, 'own', 'Оплатить садик', '2099-12-01', 'user', '{7,1}') returning id`,
+    ids,
+  );
+  await db.owner.query(
+    `insert into calendar_reminders (household_id, user_id, event_id, offset_days, due_at)
+     values ($1, $2, $3, 7, '2099-11-24T06:00:00Z')`,
+    [...ids, calendarEvent.rows[0]?.id],
+  );
   // Профиль: анкета (признак и факт) и правка факта — строка ревизии для «Отменить».
   const onboarding = await stack.call("local", "/profile/onboarding", {
     cookie: user.cookie,

@@ -61,6 +61,8 @@ export function budgetsWithJournal(db: TestDb) {
     recurring: { upcoming: r.read.upcoming },
     // Найденные вычеты — модуль tax (T-046); сценарии дашборда на этом стенде их не создают: настоящие — main/tax-found.int.test.ts.
     tax: { activeFound: async () => [] },
+    // События календаря (T-047) — модуль calendar; сценарии дашборда на этом стенде их не создают: настоящие — calendar.int.test.ts.
+    calendar: { homeEvents: async () => [] },
     explain: r.t.explain,
   } as unknown as DashboardDeps);
 

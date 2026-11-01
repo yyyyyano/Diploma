@@ -214,6 +214,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       normTables: normTablesModule.facade,
       notifications: notificationsModule.facade,
       actions: actionsModule.facade,
+      explain: explainModule.facade,
     },
   });
   const taxModule = createTaxModule({

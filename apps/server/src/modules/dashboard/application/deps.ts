@@ -2,6 +2,7 @@
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { AccountsFacade } from "../../accounts/index.ts";
 import type { BudgetsFacade } from "../../budgets/index.ts";
+import type { CalendarFacade } from "../../calendar/index.ts";
 import type { ExplainFacade } from "../../explain/index.ts";
 import type { FinFacade } from "../../fin/index.ts";
 import type { RecurringFacade } from "../../recurring/index.ts";
@@ -16,5 +17,6 @@ export interface Deps {
   readonly budgets: Pick<BudgetsFacade, "overview">;
   readonly recurring: Pick<RecurringFacade, "upcoming">;
   readonly tax: Pick<TaxFacade, "activeFound">;
+  readonly calendar: Pick<CalendarFacade, "homeEvents">;
   readonly explain: Pick<ExplainFacade, "saveMany">;
 }

@@ -62,6 +62,8 @@ interface Household {
   /** Лимит B на категорию и его цель-копилка. */
   readonly limitId: string;
   readonly goalId: string;
+  /** Найденный вычет B (TAX-20). */
+  readonly foundId: string;
   /** Сообщение, к которому B отметил пункт чек-листа (состояние галочек — таблица домохозяйства). */
   readonly checklistSubjectId: string;
 }
@@ -303,6 +305,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   },
   "tool:list_budgets": { input: () => ({}) },
   // Расчёт вычета: во входе только суммы и вид; профиль и трассы — домохозяйства вызова (`s`), чужих id во входе нет.
+  "tax.found": { input: () => undefined },
+  "tax.markFoundShown": { input: (b) => ({ ids: [b.foundId] }) },
+  "tax.setFoundStatus": { input: (b) => ({ id: b.foundId, status: "dismissed" }) },
+  "tool:found_deductions": { input: () => ({}) },
   "tax.calculate": {
     input: () => ({ kind: "education", paid: { minor: 200_000, currency: "BYN" } }),
   },
@@ -582,6 +588,11 @@ async function seedHousehold(email: string): Promise<Household> {
      values ($1, $2, 'system:cafes', 20000) returning id`,
     [ids.household_id, ids.user_id],
   );
+  const foundDeduction = await db.owner.query<{ id: string }>(
+    `insert into found_deductions (household_id, user_id, kind, basis_key, year, found_on)
+     values ($1, $2, 'children', 'facts:children', 2026, '2026-10-28') returning id`,
+    [ids.household_id, ids.user_id],
+  );
   const goal = await db.owner.query<{ id: string }>(
     `insert into budget_goals (household_id, user_id, name, kind, target_minor, deadline, created_on)
      values ($1, $2, $3, 'piggy', 300000, '2027-06-01', '2026-10-28') returning id`,
@@ -620,6 +631,7 @@ async function seedHousehold(email: string): Promise<Household> {
     recurringId: recurring.rows[0]?.id ?? "",
     limitId: limit.rows[0]?.id ?? "",
     goalId: goal.rows[0]?.id ?? "",
+    foundId: foundDeduction.rows[0]?.id ?? "",
     checklistSubjectId,
   };
 }
@@ -826,6 +838,9 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "statements.rollbackInfo",
       "statements.start",
       "tax.calculate",
+      "tax.found",
+      "tax.markFoundShown",
+      "tax.setFoundStatus",
       "transactions.create",
       "transactions.explainRate",
       "transactions.get",
@@ -849,6 +864,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       "delete_limit",
       "delete_transaction",
       "explain_number",
+      "found_deductions",
       "get_checklist",
       "get_free_balance",
       "get_receipt",
@@ -884,6 +900,7 @@ describe("ROLE-01, SEC-04: пользователь A с id из B — NOT_FOUND
       b.recurringId,
       b.limitId,
       b.goalId,
+      b.foundId,
     ];
     const violations: string[] = [];
     for (const c of cases) {

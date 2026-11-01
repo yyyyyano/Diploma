@@ -89,6 +89,12 @@ async function seedUser(email: string): Promise<Seeded> {
      values ($1, $2, 'goal', 'g-1', '{}', true)`,
     ids,
   );
+  // Налоги: найденный вычет (TAX-20) — строка пользователя, которую удаление аккаунта обязано убрать.
+  await db.owner.query(
+    `insert into found_deductions (household_id, user_id, kind, basis_key, year, found_on)
+     values ($1, $2, 'children', 'facts:children', 2026, '2026-10-01')`,
+    ids,
+  );
   // Профиль: анкета (признак и факт) и правка факта — строка ревизии для «Отменить».
   const onboarding = await stack.call("local", "/profile/onboarding", {
     cookie: user.cookie,

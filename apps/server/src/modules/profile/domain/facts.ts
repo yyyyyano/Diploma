@@ -20,6 +20,7 @@ export function topicOf(value: FactValue): FactTopic {
     case "youngSpecialist":
       return "benefits";
     case "income.salary":
+    case "income.gross":
     case "income.regular":
     case "finance.freeBalance":
       return "income";

@@ -93,6 +93,7 @@ export function draftOf(fact: ProfileFact | undefined): Draft {
     case "youngSpecialist":
       return { ...EMPTY, flag: value.value ? "yes" : "no", date: value.until ?? "" };
     case "income.salary":
+    case "income.gross":
     case "income.regular":
     case "obligations.regular":
     case "finance.freeBalance": {
@@ -135,6 +136,7 @@ export function toInput(key: FactKey, draft: Draft): FactValueInput | undefined 
     "property.land": { key, value: flag },
     "property.car": { key, value: flag },
     "income.salary": { key, amount: parseMoney(draft.amount, "BYN") },
+    "income.gross": { key, amount: parseMoney(draft.amount, "BYN") },
     "income.regular": { key, amount: parseMoney(draft.amount, "BYN") },
     "obligations.regular": { key, amount: parseMoney(draft.amount, "BYN") },
     "finance.freeBalance": { key, amount: parseMoney(draft.amount, "BYN"), months: draft.months },
@@ -259,6 +261,7 @@ export function FactEditor({
           </>
         )}
         {(factKey === "income.salary" ||
+          factKey === "income.gross" ||
           factKey === "income.regular" ||
           factKey === "obligations.regular" ||
           factKey === "finance.freeBalance") && (

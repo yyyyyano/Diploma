@@ -25,6 +25,7 @@ export const profile = {
     "property.land": "Земельный участок",
     "property.car": "Автомобиль",
     "income.salary": "Зарплата «на руки»",
+    "income.gross": "Начисленная зарплата в месяц (до вычета налогов)",
     "income.regular": "Регулярный доход в месяц",
     "obligations.regular": "Обязательные платежи в месяц",
     "finance.freeBalance": "Свободный остаток в месяц",

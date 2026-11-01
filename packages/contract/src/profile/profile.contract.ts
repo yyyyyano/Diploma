@@ -96,6 +96,8 @@ const commonValues = [
   yesNo("property.land"),
   yesNo("property.car"),
   z.strictObject({ key: z.literal("income.salary"), amount: Money.schema }),
+  // TAX-04: начисленная зарплата в месяц (до вычета налогов, из расчётного листка) — база вычетов; ответ на вопрос калькулятора.
+  z.strictObject({ key: z.literal("income.gross"), amount: Money.schema }),
   // PROF-03, REC-04: регулярный доход и обязательные платежи в месяц — вывод из регулярных платежей («предположение»).
   z.strictObject({ key: z.literal("income.regular"), amount: Money.schema }),
   z.strictObject({ key: z.literal("obligations.regular"), amount: Money.schema }),
@@ -149,6 +151,7 @@ export const FACT_KEYS = [
   "property.land",
   "property.car",
   "income.salary",
+  "income.gross",
   "income.regular",
   "obligations.regular",
   "finance.freeBalance",

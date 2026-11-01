@@ -70,6 +70,7 @@ export function factValueNode(t: ProfileT, fact: ProfileFact): ReactNode {
     case "property.car":
       return hasNot(value.value);
     case "income.salary":
+    case "income.gross":
     case "income.regular":
     case "obligations.regular":
       return <Money value={value.amount} />;

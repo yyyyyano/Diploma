@@ -15,7 +15,7 @@ import type { ActionsFacade } from "../actions/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
 import type { ScopedDb } from "../../platform/db/scoped-db.ts";
-import { warrantyItemsOf } from "./infrastructure/db/receipts.repo.ts";
+import { findReceipts, warrantyItemsOf } from "./infrastructure/db/receipts.repo.ts";
 import { makeRecognize } from "./application/recognize.ts";
 import { makeReview } from "./application/review.ts";
 import { receiptsTools } from "./agent/tools.ts";
@@ -79,6 +79,9 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
       start: flow.start,
       // CAL-04: позиции с гарантией для календаря (чеки по списку; пусто — все чеки пользователя).
       warrantyItems: (s: ScopedDb, receiptIds: readonly string[]) => warrantyItemsOf(s, receiptIds),
+      // CHAT-03: какие из id — чеки этого домохозяйства (чужие и удалённые не попадают в список).
+      existing: async (s: ScopedDb, ids: readonly string[]): Promise<readonly string[]> =>
+        (await findReceipts(s, ids)).map((row) => row.id),
     },
     router: receiptsRouter(flow, review),
     tools: [tools.get, tools.status],
@@ -95,5 +98,5 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
   });
 }
 
-/** Что модуль даёт соседям: `start(s, fileId)` — чек «распознаётся» и задача receipts.recognize; `warrantyItems(s, receiptIds)` — позиции с гарантией (CAL-04). */
+/** Что модуль даёт соседям: `start(s, fileId)` — чек «распознаётся» и задача receipts.recognize; `warrantyItems(s, receiptIds)` — позиции с гарантией (CAL-04); `existing(s, ids)` — id своих чеков (CHAT-03). */
 export type ReceiptsFacade = ReturnType<typeof createReceiptsModule>["facade"];

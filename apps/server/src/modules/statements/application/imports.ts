@@ -20,6 +20,7 @@ import { statementsImported, statementsRolledBack } from "../events.ts";
 import type { ImportPayload, PreviewRow } from "../domain/import-types.ts";
 import {
   deleteImportRow,
+  existingImportIds,
   findImport,
   insertImport,
   listImports,
@@ -425,6 +426,8 @@ export function makeImports(d: ImportDeps) {
     discard,
     get: own,
     list: listImports,
+    /** CHAT-03: id своих импортов среди переданных. */
+    existing: existingImportIds,
   };
 }
 

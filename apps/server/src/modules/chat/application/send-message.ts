@@ -16,6 +16,8 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { AgentFacade } from "../../agent/index.ts";
+import type { ReceiptsFacade } from "../../receipts/index.ts";
+import type { StatementsFacade } from "../../statements/index.ts";
 import { conversationTitle } from "../domain/conversation-title.ts";
 import {
   conversationExists,
@@ -34,6 +36,32 @@ export interface SendDeps {
   readonly runs: RunRegistry;
   readonly live: LiveRuns;
   readonly platform: Pick<Platform, "realtime" | "log" | "rateLimiter" | "settings">;
+  /** CHAT-03: вложение — только чек и выписка своего домохозяйства. */
+  readonly receipts: Pick<ReceiptsFacade, "existing">;
+  readonly statements: Pick<StatementsFacade, "existing">;
+}
+
+/**
+ * CHAT-03, SEC-04: id вложения приходит от клиента, поэтому каждый проверяется на свой домохозяйство до записи вопроса. Чужой и
+ * удалённый id неразличимы — `NOT_FOUND` (не `FORBIDDEN`: наличие чужого чека не раскрывается); хоть один чужой — отказ целиком.
+ */
+async function requireOwnAttachments(
+  d: Pick<SendDeps, "receipts" | "statements">,
+  s: ScopedDb,
+  attachments: readonly ChatAttachment[],
+): Promise<void> {
+  const idsOf = (kind: ChatAttachment["kind"]) => [
+    ...new Set(attachments.filter((a) => a.kind === kind).map((a) => a.id)),
+  ];
+  const checks = [
+    [idsOf("receipt"), d.receipts] as const,
+    [idsOf("statement"), d.statements] as const,
+  ];
+  for (const [ids, source] of checks) {
+    if (ids.length === 0) continue;
+    const found = new Set(await source.existing(s, ids));
+    if (ids.some((id) => !found.has(id))) throw new AppError("NOT_FOUND");
+  }
 }
 
 /** Сохранённое сообщение → UI-сообщение AI SDK для истории агента (строки «идёт» и оборванные — как есть). */
@@ -137,6 +165,7 @@ export function makeSendMessage(d: SendDeps) {
   ): Promise<ReadableStream<UIMessageChunk>> {
     // SEC-02: до записи вопроса, чтобы отказ не оставлял сообщение без ответа.
     await enforceChatRate(d.platform, s.scope.userId);
+    await requireOwnAttachments(d, s, input.attachments ?? []);
     const controller = new AbortController();
     const assistantId = randomUUID();
     const householdId = s.scope.householdId;

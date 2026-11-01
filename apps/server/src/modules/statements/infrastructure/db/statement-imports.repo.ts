@@ -23,6 +23,16 @@ export async function findImport(s: ScopedDb, id: string): Promise<ImportRow | u
   return rows[0];
 }
 
+/** Какие из id — импорты этого домохозяйства; чужие и удалённые в список не попадают (CHAT-03). */
+export async function existingImportIds(s: ScopedDb, ids: readonly string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const rows = await s.db
+    .select({ id: statementImports.id })
+    .from(statementImports)
+    .where(and(s.own(statementImports), inArray(statementImports.id, [...ids])));
+  return rows.map((row) => row.id);
+}
+
 /** Тот же импорт под блокировкой строки: импорт и откат идут по очереди. */
 export async function lockImport(s: ScopedDb, id: string): Promise<ImportRow | undefined> {
   const rows = await s.db

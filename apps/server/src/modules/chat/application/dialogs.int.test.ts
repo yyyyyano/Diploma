@@ -15,6 +15,13 @@ import {
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
 import type { AgentFacade } from "../../agent/index.ts";
 import type { LegalBaseFacade } from "../../legal-base/index.ts";
+import type { ReceiptsFacade } from "../../receipts/index.ts";
+import { deleteReceipt, insertReceipt } from "../../receipts/infrastructure/db/receipts.repo.ts";
+import type { StatementsFacade } from "../../statements/index.ts";
+import {
+  deleteImportRow,
+  insertImport,
+} from "../../statements/infrastructure/db/statement-imports.repo.ts";
 import { insertMessage } from "../infrastructure/db/chat.repo.ts";
 import { RATE_PER_MINUTE } from "../settings.ts";
 import {
@@ -25,7 +32,7 @@ import {
 } from "./dialogs.ts";
 import { createLiveRuns } from "./live-runs.ts";
 import { createRunRegistry } from "./runs.ts";
-import { makeSendMessage } from "./send-message.ts";
+import { makeSendMessage, type SendDeps } from "./send-message.ts";
 
 type Run = Parameters<AgentFacade["run"]>[1];
 
@@ -65,7 +72,12 @@ function legalBaseOf(stale: readonly string[], fail = false): Pick<LegalBaseFaca
 /** Стенд сценариев chat с заглушкой агента: `make` строит поток ответа по запуску. */
 function chat(
   make: (run: Run) => ReadableStream<UIMessageChunk>,
-  options: { readonly stale?: readonly string[]; readonly legalFails?: boolean } = {},
+  options: {
+    readonly stale?: readonly string[];
+    readonly legalFails?: boolean;
+    /** Настоящие соседи: по умолчанию вложение «существует» (проверка своего домохозяйства — отдельный describe). */
+    readonly attachments?: Pick<SendDeps, "receipts" | "statements">;
+  } = {},
 ) {
   const runs = createRunRegistry(stand.composition.platform.log);
   const live = createLiveRuns();
@@ -83,7 +95,16 @@ function chat(
     live,
     agentCalls,
     memory,
-    send: makeSendMessage({ agent, runs, live, platform }),
+    send: makeSendMessage({
+      agent,
+      runs,
+      live,
+      platform,
+      ...(options.attachments ?? {
+        receipts: { existing: async (_s: unknown, ids: readonly string[]) => ids },
+        statements: { existing: async (_s: unknown, ids: readonly string[]) => ids },
+      }),
+    }),
     history: makeHistory({
       live,
       legalBase: legalBaseOf(options.stale ?? [], options.legalFails ?? false),
@@ -450,5 +471,71 @@ describe("CHAT-03: вложения в сообщении", () => {
       { type: "data-attachment", data: receipt },
       { type: "data-attachment", data: statement },
     ]);
+  });
+});
+
+describe("CHAT-03, SEC-04: вложение — только из своего домохозяйства", () => {
+  const real = (): Pick<SendDeps, "receipts" | "statements"> => ({
+    receipts: stand.composition.modules.find((m) => m.id === "receipts")?.facade as ReceiptsFacade,
+    statements: stand.composition.modules.find((m) => m.id === "statements")
+      ?.facade as StatementsFacade,
+  });
+  const fileId = "0190f0a0-0000-7000-8000-0000000000f1";
+
+  async function ownReceiptAndImport(app: ReturnType<typeof chat>, owner: Scope) {
+    const s = app.scoped(owner);
+    const receipt = await insertReceipt(s, { fileId, status: "ok" });
+    const imported = await insertImport(s, { fileId, status: "ready" });
+    return {
+      s,
+      receipt: { kind: "receipt" as const, id: receipt.id as never },
+      statement: { kind: "statement" as const, id: imported.id as never },
+    };
+  }
+
+  it("свои чек и выписка проходят: вопрос записан, агент зовётся", async () => {
+    const app = chat(answer("Вижу чек."), { attachments: real() });
+    const mine = await ownReceiptAndImport(app, user());
+    const chunks = await drain(
+      await app.send(
+        mine.s,
+        { text: "Что в чеке?", attachments: [mine.receipt, mine.statement] },
+        "r",
+      ),
+    );
+    expect(chunks.map((chunk) => chunk.type)).toContain("data-attachment");
+    expect(app.agentCalls).toHaveLength(1);
+  });
+
+  it("чужой чек и чужая выписка — NOT_FOUND, в chat_messages ничего не попало, агент не зовётся", async () => {
+    const app = chat(answer("не должно быть"), { attachments: real() });
+    const owner = await ownReceiptAndImport(app, user());
+    const stranger = app.scoped(user());
+    for (const attachment of [owner.receipt, owner.statement]) {
+      await expect(
+        app.send(stranger, { text: "Что в чеке?", attachments: [attachment] }, "r"),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    }
+    expect(app.agentCalls).toHaveLength(0);
+    expect(await app.conversations(stranger)).toEqual({ items: [] });
+  });
+
+  it("свой чек вместе с чужим — отказ целиком; удалённые чек и выписка — NOT_FOUND", async () => {
+    const app = chat(answer("не должно быть"), { attachments: real() });
+    const mine = await ownReceiptAndImport(app, user());
+    const other = await ownReceiptAndImport(app, user());
+    await expect(
+      app.send(mine.s, { text: "?", attachments: [mine.receipt, other.receipt] }, "r"),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+
+    await mine.s.transaction((tx) => deleteReceipt(tx, mine.receipt.id));
+    await mine.s.transaction((tx) => deleteImportRow(tx, mine.statement.id));
+    for (const attachment of [mine.receipt, mine.statement]) {
+      await expect(
+        app.send(mine.s, { text: "?", attachments: [attachment] }, "r"),
+      ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    }
+    expect(app.agentCalls).toHaveLength(0);
+    expect(await app.conversations(mine.s)).toEqual({ items: [] });
   });
 });

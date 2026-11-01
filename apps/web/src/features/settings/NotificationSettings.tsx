@@ -1,6 +1,6 @@
 // Вкладка «Уведомления» (NOTIF-04, design/screens/Settings.dc.html — Settings--notifications-settings): матрица вид ×
-// канал, сохраняется сразу. Столбец Telegram неактивен, пока бот не подключён (T-052, T-053). «Итоги недели» и
-// «Напоминания календаря по умолчанию» — задачи своих модулей (T-050, T-047).
+// канал, сохраняется сразу. Столбец Telegram неактивен, пока бот не подключён (T-052, T-053). «Итоги недели» — свой блок ниже
+// (`WeeklySettings`, T-050, WEEK-03); напоминания календаря по умолчанию — настройки события (T-047).
 import { USER_NOTIFICATION_KINDS, type UserNotificationKind } from "@kosht/contract";
 import { Switch } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { SkeletonList } from "../../ui/index.ts";
 import classes from "./SettingsPage.module.css";
+import { WeeklySettings } from "./WeeklySettings.tsx";
 
 export function NotificationSettings() {
   const { t } = useTranslation("notifications");
@@ -88,6 +89,7 @@ export function NotificationSettings() {
           </div>
         )}
       </section>
+      <WeeklySettings />
     </>
   );
 }

@@ -258,6 +258,9 @@ describe("NOTIF-04: вкладка «Уведомления»", () => {
         saved = await request.json();
         return HttpResponse.json({ ok: true });
       }),
+      http.get("*/api/weekly/preferences", () =>
+        HttpResponse.json({ enabled: true, weekday: 1, time: "09:00" }),
+      ),
     );
     renderSettings(true, null, "/settings?tab=notifications");
     expect(

@@ -289,3 +289,16 @@
 .warnNote > svg {
   flex: none;
 }
+
+.weeklyForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-16);
+  align-items: end;
+}
+
+@media (max-width: 860px) {
+  .weeklyForm {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

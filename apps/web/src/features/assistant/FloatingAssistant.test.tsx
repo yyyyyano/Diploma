@@ -18,6 +18,8 @@ import { server } from "../../test/msw.ts";
 import { renderWithProviders } from "../../test/render.tsx";
 import { FloatingAssistant } from "./FloatingAssistant.tsx";
 
+/** Панель — ленивый чанк: под нагрузкой полного прогона его загрузка дольше секунды по умолчанию. */
+const SLOW = { timeout: 5000 };
 const D1 = "0190f0a0-0000-7000-8000-0000000000d1";
 const RUN = "0190f0a0-0000-7000-8000-0000000000a1";
 
@@ -109,7 +111,7 @@ describe("CHAT-08: кнопка и панель", () => {
     const sent = backend();
     renderAt("/home?from=2026-09-01&to=2026-09-30");
     await userEvent.click(await screen.findByRole("button", { name: "Спросить ассистента" }));
-    const panel = await screen.findByRole("dialog");
+    const panel = await screen.findByRole("dialog", {}, SLOW);
     expect(await within(panel).findByText("Вижу: Главная · Сентябрь 2026")).toBeInTheDocument();
     await userEvent.type(
       await within(panel).findByRole("textbox", { name: "Вопрос ассистенту" }),
@@ -129,7 +131,7 @@ describe("CHAT-08: кнопка и панель", () => {
     const sent = backend();
     renderAt("/home");
     await userEvent.click(await screen.findByRole("button", { name: "Спросить ассистента" }));
-    const panel = await screen.findByRole("dialog");
+    const panel = await screen.findByRole("dialog", {}, SLOW);
     await userEvent.click(
       await within(panel).findByRole("button", { name: "Почему так много на такси?" }),
     );
@@ -157,7 +159,7 @@ describe("CHAT-08: кнопка и панель", () => {
     renderAt("/home");
     await screen.findByRole("button", { name: "Спросить ассистента" });
     act(() => assistantBridge.open("Что сказано в ст. 210 НК простыми словами?"));
-    const panel = await screen.findByRole("dialog");
+    const panel = await screen.findByRole("dialog", {}, SLOW);
     const field = await within(panel).findByRole("textbox", { name: "Вопрос ассистенту" });
     await waitFor(() => expect(field).toHaveValue("Что сказано в ст. 210 НК простыми словами?"));
     expect(sent).toHaveLength(0);

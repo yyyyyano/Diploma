@@ -12,6 +12,7 @@ import { EmptyState, SkeletonText } from "../../ui/index.ts";
 import classes from "./AssistantPanel.module.css";
 import { ChatLoader } from "./ChatLoader.tsx";
 import { useInitialConversation } from "./model/use-initial-conversation.ts";
+import { useAssistantTexts } from "./model/assistant-texts.ts";
 import { useSeen } from "./model/use-seen.ts";
 
 export interface AssistantPanelProps {
@@ -20,6 +21,7 @@ export interface AssistantPanelProps {
 }
 
 export function AssistantPanel({ opened, onClose }: AssistantPanelProps) {
+  useAssistantTexts();
   const { t } = useTranslation("assistant");
   const seen = useSeen();
   const initial = useInitialConversation();

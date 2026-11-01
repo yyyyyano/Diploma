@@ -4,12 +4,21 @@ import { MantineProvider } from "@mantine/core";
 import { render, type RenderOptions, type RenderResult } from "@testing-library/react";
 import type { ReactElement, ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
+import { adminTexts, assistantTexts } from "@kosht/i18n";
 import { createI18n } from "../lib/i18n.ts";
 import { cssVariablesResolver, theme } from "../ui/theme/theme.ts";
 
+/** Словари чата и администрирования грузятся вместе с разделом; тестам компонентов они нужны сразу. */
+function createTestI18n() {
+  const i18n = createI18n();
+  i18n.addResourceBundle("ru", "assistant", assistantTexts, true, true);
+  i18n.addResourceBundle("ru", "admin", adminTexts, true, true);
+  return i18n;
+}
+
 export function TestProviders({ children }: { children: ReactNode }) {
   return (
-    <I18nextProvider i18n={createI18n()}>
+    <I18nextProvider i18n={createTestI18n()}>
       <MantineProvider
         theme={theme}
         cssVariablesResolver={cssVariablesResolver}

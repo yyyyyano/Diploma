@@ -5,8 +5,10 @@ import { ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "../../ui/index.ts";
 import classes from "./Admin.module.css";
+import { useAdminTexts } from "./use-admin-texts.ts";
 
 export function AdminLayout() {
+  useAdminTexts();
   const { t } = useTranslation("admin");
   return (
     <>

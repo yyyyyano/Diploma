@@ -20,6 +20,7 @@ import { DialogList } from "./DialogList.tsx";
 import { ModelPicker } from "./ModelPicker.tsx";
 import { useCloudGranted } from "./LocalModeBanner.tsx";
 import { useInitialConversation } from "./model/use-initial-conversation.ts";
+import { useAssistantTexts } from "./model/assistant-texts.ts";
 import { useSeen } from "./model/use-seen.ts";
 import type { AssistantSearch } from "./model/search.ts";
 
@@ -31,6 +32,7 @@ function greetingName(user: { readonly name: string; readonly email: string } | 
 }
 
 export function AssistantPage({ search }: { readonly search: AssistantSearch }) {
+  useAssistantTexts();
   const { t } = useTranslation("assistant");
   const initial = useInitialConversation(search.c);
   if (initial.status === "error") {

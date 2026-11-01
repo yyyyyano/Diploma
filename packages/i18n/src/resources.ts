@@ -1,8 +1,8 @@
 // Словари (NFR-19): ru — единственный язык MVP, be — задел. Типы ключей i18next берёт отсюда (ResourceNamespaceMap
 // — способ i18next для пакета монорепозитория): несуществующий ключ не компилируется ни здесь, ни на сайте.
 import { accounts } from "./locales/ru/accounts.ts";
-import { admin } from "./locales/ru/admin.ts";
-import { assistant } from "./locales/ru/assistant.ts";
+import type { admin } from "./locales/ru/admin.ts";
+import type { assistant } from "./locales/ru/assistant.ts";
 import { auth } from "./locales/ru/auth.ts";
 import { common } from "./locales/ru/common.ts";
 import { decisions } from "./locales/ru/decisions.ts";
@@ -41,12 +41,10 @@ export const NAMESPACES = [
   "auth",
   "setup",
   "accounts",
-  "assistant",
   "mailbox",
   "settings",
   "decisions",
   "notifications",
-  "admin",
   "profile",
   "categories",
   "operations",
@@ -76,12 +74,10 @@ export const resources = {
     auth,
     setup,
     accounts,
-    assistant,
     mailbox,
     settings,
     decisions,
     notifications,
-    admin,
     profile,
     categories,
     operations,
@@ -106,10 +102,8 @@ declare module "i18next" {
     auth: typeof auth;
     setup: typeof setup;
     accounts: typeof accounts;
-    assistant: typeof assistant;
     mailbox: typeof mailbox;
     settings: typeof settings;
-    admin: typeof admin;
     profile: typeof profile;
     categories: typeof categories;
     operations: typeof operations;
@@ -120,6 +114,10 @@ declare module "i18next" {
     laws: typeof laws;
     decisions: typeof decisions;
     notifications: typeof notifications;
+    // Подгружается с администрированием (adminTexts), в `resources` не входит: бюджет первой загрузки сайта (T-043).
+    admin: typeof admin;
+    // Подгружается с чатом (assistantTexts), в `resources` не входит: бюджет первой загрузки сайта (T-043).
+    assistant: typeof assistant;
     // Подгружается со страницей «Таблицы ставок» (ratesTexts), в `resources` не входит: бюджет первой загрузки сайта.
     rates: typeof rates;
     // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.

@@ -19,19 +19,27 @@ export interface Seen {
   readonly context: PageContext;
 }
 
+/**
+ * Запоминает страницу, пока человек не в чате: чат (на телефоне — уже другая страница) откроет её контекст. Без текстов:
+ * живёт в каркасе, то есть в первой загрузке сайта.
+ */
+export function useRememberPage(): PageInfo {
+  const current = usePageInfo();
+  const onChat = current.page === "assistant";
+  useEffect(() => {
+    if (!onChat) assistantBridge.rememberPage(current);
+  }, [onChat, current]);
+  return current;
+}
+
 export function useSeen(): Seen {
   const { t } = useTranslation(["assistant", "shell", "dashboard"]);
-  const current = usePageInfo();
+  const current = useRememberPage();
   const remembered = useSyncExternalStore(
     assistantBridge.subscribe,
     () => assistantBridge.getState().lastPage,
   );
   const onChat = current.page === "assistant";
-
-  // Запоминаем страницу, пока человек не в чате: чат откроет её контекст.
-  useEffect(() => {
-    if (!onChat) assistantBridge.rememberPage(current);
-  }, [onChat, current]);
 
   const effective: PageInfo = onChat && remembered !== undefined ? remembered : current;
   const nav = navKeyOf(effective.page);

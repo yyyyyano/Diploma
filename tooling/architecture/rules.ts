@@ -472,6 +472,20 @@ function libraryRules(): ForbiddenRule[] {
       { path: npmPattern(["unpdf", "xlsx", "papaparse"]) },
     ),
     rule(
+      "exceljs-only-in-xls-export-infrastructure",
+      "ExcelJS (запись книги Excel) — только в xls-export/infrastructure: остальной код получает готовые байты " +
+        "файла от сценария xls-export (XLS-01…04, ADR-0012); читают файлы пользователя только парсеры statements.",
+      { path: `^${SERVER}/`, pathNot: [`^${MOD}/xls-export/infrastructure/`, ...TEST_CODE] },
+      { path: npmPattern(["exceljs"]) },
+    ),
+    rule(
+      "hyperformula-only-in-tests",
+      "HyperFormula (GPL-3.0, dev-зависимость) — только в тестах: тест КП XLS пересчитывает выгруженный файл независимым " +
+        "движком; в код, который едет в сборку, он не попадает (ADR-0012).",
+      { pathNot: TEST_CODE },
+      { path: npmPattern(["hyperformula"]) },
+    ),
+    rule(
       "transformers-only-in-llm-masking",
       "Локальная NER-модель (@huggingface/transformers, onnxruntime) — только в llm/infrastructure/masking: " +
         "остальной код получает маскирование через порт Masker шлюза llm (PRIV-03, ADR-0009).",

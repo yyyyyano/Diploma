@@ -159,6 +159,8 @@ const EXPECTED: Record<string, string[]> = {
     `${M}/receipts/application/recognize.ts → unpdf`,
     `${M}/receipts/application/recognize.ts → xlsx`,
   ],
+  "exceljs-only-in-xls-export-infrastructure": [`${M}/receipts/application/recognize.ts → exceljs`],
+  "hyperformula-only-in-tests": [`${M}/xls-export/infrastructure/workbook.ts → hyperformula`],
   "transformers-only-in-llm-masking": [`${M}/agent/application/run.ts → @huggingface/transformers`],
   "ai-only-in-web-assistant": [
     `${W}/features/accounts/AccountsPage.tsx → @ai-sdk/react`,

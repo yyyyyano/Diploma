@@ -116,7 +116,7 @@ export function AffordPage({ search }: { readonly search: AffordSearch }) {
                 ))}
               </fieldset>
               <Slider
-                aria-label={t("afford:form.slider")}
+                thumbLabel={t("afford:form.slider")}
                 min={0}
                 max={SLIDER_MAX}
                 step={100}

@@ -4,7 +4,7 @@
   "steps": [
     {
       "kind": "stream",
-      "fingerprint": "d04617783f171ca1",
+      "fingerprint": "f194981ca8e0b989",
       "parts": [
         {
           "delayMs": 0,
@@ -14,7 +14,7 @@
           }
         },
         {
-          "delayMs": 2,
+          "delayMs": 1,
           "part": {
             "type": "tool-input-start",
             "id": "call-1",
@@ -37,7 +37,7 @@
           }
         },
         {
-          "delayMs": 1,
+          "delayMs": 0,
           "part": {
             "type": "tool-call",
             "toolCallId": "call-1",
@@ -46,7 +46,7 @@
           }
         },
         {
-          "delayMs": 3,
+          "delayMs": 1,
           "part": {
             "type": "finish",
             "finishReason": {
@@ -54,8 +54,8 @@
             },
             "usage": {
               "inputTokens": {
-                "total": 394,
-                "noCache": 394
+                "total": 468,
+                "noCache": 468
               },
               "outputTokens": {
                 "total": 1,
@@ -107,7 +107,7 @@
           }
         },
         {
-          "delayMs": 300,
+          "delayMs": 301,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -131,7 +131,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -139,7 +139,7 @@
           }
         },
         {
-          "delayMs": 301,
+          "delayMs": 300,
           "part": {
             "type": "text-delta",
             "id": "text-1",
@@ -178,8 +178,8 @@
             },
             "usage": {
               "inputTokens": {
-                "total": 556,
-                "noCache": 556
+                "total": 631,
+                "noCache": 631
               },
               "outputTokens": {
                 "total": 13,

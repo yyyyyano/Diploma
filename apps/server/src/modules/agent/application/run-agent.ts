@@ -5,7 +5,7 @@
 // чисел, правовой ответ через `finalizeAnswer`, график, пометки (answer-stream.ts). Данные — только ctx.s из scope запуска.
 import type { PageContext } from "@kosht/contract";
 import { createAgentT, type AgentT } from "@kosht/i18n";
-import type { Clock } from "@kosht/kernel";
+import { LocalDate, type Clock } from "@kosht/kernel";
 import {
   createUIMessageStream,
   isStepCount,
@@ -201,10 +201,11 @@ export function makeRunAgent(d: RunAgentDeps) {
     const ledger = new NumberLedger();
     for (const message of run.messages)
       if (message.role === "user") ledger.addText(textOf(message));
-    ledger.addText(today);
+    const yesterday = LocalDate.addDays(today, -1);
+    ledger.addText(`${today} ${yesterday}`);
     ledger.addText(Object.values(run.page?.params ?? {}).join(" "));
     const state = newRunState();
-    const block = contextBlock({ today, page: run.page, recordedFact });
+    const block = contextBlock({ today, yesterday, page: run.page, recordedFact });
     if (block.neutralized > 0)
       d.log.warn({ count: block.neutralized }, "agent.context-neutralized");
     const prompt = await modelHistory(run.messages, { window, contextBlock: block.text });

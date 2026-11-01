@@ -12,11 +12,18 @@ export interface ContextBlock {
 
 export function contextBlock(input: {
   readonly today: string;
+  /** Вчера: самый частый относительный день («удали траты за вчера») — модели не нужен лишний вызов калькулятора. */
+  readonly yesterday: string;
   readonly page?: PageContext | undefined;
   /** Ключ факта, который код только что записал из ответа на дозапрос (AGT-06): повторно его сохранять не нужно. */
   readonly recordedFact?: string | undefined;
 }): ContextBlock {
-  const lines = [`today: ${input.today}`];
+  // Язык ответа — в динамической части у самого вопроса: подсказка в префиксе для белорусского вопроса весила меньше.
+  const lines = [
+    `today: ${input.today}`,
+    `yesterday: ${input.yesterday}`,
+    "reply-language: Russian only (never Belarusian or Ukrainian words, even if the question is in Belarusian)",
+  ];
   let neutralized = 0;
   if (input.page !== undefined) {
     const prepared = prepareDocument(JSON.stringify(input.page));

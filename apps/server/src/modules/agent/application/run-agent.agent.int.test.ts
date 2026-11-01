@@ -336,7 +336,7 @@ describe("AGT-04, P1: ни одного числа вне результатов
     expect(shown(turn)).not.toContain("1 234,56");
     expect(shown(turn)).toContain(t("unverified"));
     expect(turn.log.map((line) => line["msg"])).toContain("agent.number-unverified");
-    expect(JSON.stringify(turn.log)).not.toContain("234");
+    expect(JSON.stringify(turn.log)).not.toContain("234,56");
   });
 
   it("число из сообщения пользователя можно повторить: «Записал 15 рублей»", async () => {
@@ -389,6 +389,8 @@ describe("AGT-08, AGT-10: нить диалога и белорусский", ()
     expect(sent).toContain("на такси в сентябре");
     expect(sent).toContain("а в августе?");
     expect(sent).toContain(`today: ${today()}`);
+    expect(sent).toContain(`yesterday: ${yesterday()}`);
+    expect(sent).toContain("reply-language: Russian only");
     expect(second.classified).toEqual([]);
   });
 

@@ -16,6 +16,9 @@ import {
 import type { HttpContext } from "../../../platform/http/procedures.ts";
 
 const SCENARIO = "chat/accounts";
+// Кассета ключуется последним сообщением, а в нём — блок <context> с сегодняшним днём и «вчера» (AGT-03): без
+// замороженной даты запись «устаревает» на следующий день. Замораживаем только Date: таймеры и сокеты БД идут как идут.
+const RECORDED_AT = new Date("2026-10-31T09:00:00Z");
 const QUESTION = "Какие у меня счета?";
 
 let db: TestDb;
@@ -48,6 +51,7 @@ async function seed(n: number): Promise<{ scope: Scope; accountId: string }> {
 }
 
 beforeAll(async () => {
+  vi.useFakeTimers({ toFake: ["Date"], now: RECORDED_AT });
   db = await createTestDb();
   a = await seed(1);
   b = await seed(2);
@@ -63,6 +67,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  vi.useRealTimers();
   await fast.close();
   await paced.close().catch(() => undefined);
   await db.drop();

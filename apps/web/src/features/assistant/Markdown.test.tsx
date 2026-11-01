@@ -79,3 +79,28 @@ describe("SEC-05: вредная разметка в ответе модели",
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
   });
 });
+
+describe("CHAT-05: ссылки на цитаты правового ответа", () => {
+  it("без renderCite адрес cite:… — запрещённая ссылка: в обычном ответе модели чипов нет", () => {
+    renderWithProviders(<Markdown>{"Срок [14 дней](cite:1)."}</Markdown>);
+    expect(screen.queryByRole("link")).toBeNull();
+    expect(screen.getByText("14 дней")).toBeInTheDocument();
+  });
+
+  it("с renderCite метка рисуется чипом внутри строки; номер вне списка — ничего", () => {
+    renderWithProviders(
+      <Markdown renderCite={(n) => (n === 1 ? <b data-testid="chip">ст. 28</b> : null)}>
+        {"Срок [1](cite:1) и [9](cite:9) идёт."}
+      </Markdown>,
+    );
+    expect(screen.getByTestId("chip")).toHaveTextContent("ст. 28");
+    expect(screen.getByTestId("chip").closest("p")).toHaveTextContent("Срок ст. 28 и идёт.");
+  });
+
+  it("с renderCite обычные ссылки по-прежнему проверяются: чужой адрес остаётся текстом", () => {
+    renderWithProviders(
+      <Markdown renderCite={() => null}>{"[сюда](https://evil.example/)"}</Markdown>,
+    );
+    expect(screen.queryByRole("link")).toBeNull();
+  });
+});

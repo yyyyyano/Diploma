@@ -1,0 +1,81 @@
+/* .as-card, .row-btns, .as-stack из design/screens/Assistant.dc.html: карточки ответа ассистента. */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  padding: var(--s-14);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-8);
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.ok {
+  flex: none;
+  color: var(--income);
+}
+
+.warn {
+  flex: none;
+  color: var(--warn);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--danger);
+}
+
+/* Ссылка, оформленная как кнопка `default` Mantine: переход — это ссылка, а не кнопка (клавиатура, «открыть в новой вкладке»). */
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  min-height: 36px;
+  padding: 0 var(--s-14);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.linkButton:hover {
+  background: var(--surface-2);
+}
+
+.linkButton:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}

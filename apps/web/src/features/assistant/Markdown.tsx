@@ -2,7 +2,7 @@
 // только внутренние (`/…`) и https://pravo.by. Всё остальное (чужие адреса, `javascript:`, `data:`, `//host`) остаётся
 // текстом без ссылки: модель могла повторить приказ из документа, а картинка по чужому адресу — канал утечки (SEC-10).
 import { useRouter } from "@tanstack/react-router";
-import type { MouseEvent } from "react";
+import { createContext, useContext, type MouseEvent, type ReactNode } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import classes from "./Markdown.module.css";
 
@@ -84,18 +84,60 @@ const COMPONENTS: Components = {
   h3: ({ children }) => <h4>{children}</h4>,
 };
 
-export function Markdown({ children }: { readonly children: string }) {
+/** Ссылка на цитату правового ответа (`cite:3`, CHAT-05): сервер ставит их вместо меток, чип рисует `renderCite`. */
+const CITE = /^cite:(\d{1,3})$/;
+
+type RenderCite = (n: number) => ReactNode;
+
+/**
+ * Чипы рисует функция из контекста, а не замыкание в `components`: у `components` постоянные компоненты, и чип (его
+ * раскрытая цитата) не теряет состояние, когда ответ перерисовывается по мере потока.
+ */
+const CiteContext = createContext<RenderCite | undefined>(undefined);
+
+function CiteAnchor({
+  href,
+  children,
+}: {
+  readonly href?: string | undefined;
+  readonly children?: ReactNode;
+}) {
+  const renderCite = useContext(CiteContext);
+  const match = href === undefined ? null : CITE.exec(href);
+  if (renderCite !== undefined && match?.[1] !== undefined)
+    return <>{renderCite(Number(match[1]))}</>;
+  return <Anchor href={href}>{children}</Anchor>;
+}
+
+const COMPONENTS_WITH_CITES: Components = { ...COMPONENTS, a: CiteAnchor };
+
+const transformWithCites = (url: string): string | null =>
+  CITE.test(url) ? url : transformUrl(url);
+
+export interface MarkdownProps {
+  readonly children: string;
+  /**
+   * Правовой ответ: `[3](cite:3)` рисуется чипом статьи. Без этого свойства адрес `cite:…` — запрещённая ссылка, как
+   * любая чужая схема: в обычном ответе модели чипов быть не может.
+   */
+  readonly renderCite?: RenderCite | undefined;
+}
+
+export function Markdown({ children, renderCite }: MarkdownProps) {
+  const cites = renderCite !== undefined;
   return (
-    <div className={classes.md}>
-      <ReactMarkdown
-        skipHtml
-        disallowedElements={["img"]}
-        unwrapDisallowed
-        urlTransform={transformUrl}
-        components={COMPONENTS}
-      >
-        {children}
-      </ReactMarkdown>
-    </div>
+    <CiteContext value={renderCite}>
+      <div className={classes.md}>
+        <ReactMarkdown
+          skipHtml
+          disallowedElements={["img"]}
+          unwrapDisallowed
+          urlTransform={cites ? transformWithCites : transformUrl}
+          components={cites ? COMPONENTS_WITH_CITES : COMPONENTS}
+        >
+          {children}
+        </ReactMarkdown>
+      </div>
+    </CiteContext>
   );
 }

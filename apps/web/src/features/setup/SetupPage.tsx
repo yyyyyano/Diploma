@@ -203,25 +203,28 @@ function PrepareStep({ onContinue }: { readonly onContinue: () => void }) {
           {t("prepare.models")}
         </h2>
         {progress.isError && <output className={classes.note}>{t("prepare.error")}</output>}
-        {data !== undefined && (data.state === "downloading" || data.state === "failed") && (
-          <>
-            <progress
-              className={classes.bar}
-              value={data.bytesDone}
-              max={Math.max(1, data.bytesTotal)}
-              aria-label={t("prepare.modelsProgressLabel")}
-            />
-            <p className={classes.note}>
-              {t("prepare.modelsProgress", {
-                done: formatFileSize(data.bytesDone),
-                total: formatFileSize(data.bytesTotal),
-              })}
-            </p>
-          </>
-        )}
+        {data !== undefined &&
+          (data.state === "downloading" || data.state === "pending" || data.state === "failed") && (
+            <>
+              <progress
+                className={classes.bar}
+                value={data.bytesDone}
+                max={Math.max(1, data.bytesTotal)}
+                aria-label={t("prepare.modelsProgressLabel")}
+              />
+              <p className={classes.note}>
+                {t("prepare.modelsProgress", {
+                  done: formatFileSize(data.bytesDone),
+                  total: formatFileSize(data.bytesTotal),
+                })}
+              </p>
+            </>
+          )}
         {data?.state === "downloading" && <p className={classes.hint}>{t("prepare.modelsNote")}</p>}
         {data?.state === "ready" && <p className={classes.hint}>{t("prepare.modelsDone")}</p>}
-        {data?.state === "absent" && <p className={classes.hint}>{t("prepare.modelsAbsent")}</p>}
+        {(data?.state === "absent" || data?.state === "pending") && (
+          <p className={classes.hint}>{t("prepare.modelsAbsent")}</p>
+        )}
         {data?.state === "failed" && (
           <p className={classes.error} role="alert">
             <AlertCircle size={18} strokeWidth={1.8} aria-hidden />

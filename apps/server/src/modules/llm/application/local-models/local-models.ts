@@ -149,9 +149,11 @@ export function makeLocalModels(d: LocalModelsDeps) {
       ? "ready"
       : states.includes("failed")
         ? "failed"
-        : states.some((s) => s === "downloading" || s === "pending")
+        : states.some((s) => s === "downloading" || s === "verifying")
           ? "downloading"
-          : "absent";
+          : states.includes("pending")
+            ? "pending"
+            : "absent";
     const test = rows.get(SELF_TEST_KEY);
     return {
       state,

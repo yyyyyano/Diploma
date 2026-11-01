@@ -13,7 +13,7 @@ import { LocalModelsCard } from "./LocalModelsCard.tsx";
 const file = (
   path: string,
   size: number,
-  state: "ready" | "absent" | "downloading" | "failed",
+  state: "ready" | "absent" | "pending" | "downloading" | "failed",
   done = 0,
 ) => ({
   path,
@@ -150,6 +150,32 @@ describe("ADM-50: «Скачать» и «Проверить модели»", ()
     await userEvent.click(within(region).getByRole("button", { name: "Скачать" }));
     expect(await within(region).findByText(/Скачивание запущено/)).toBeInTheDocument();
     expect(sent).toEqual(["download"]);
+  });
+
+  it("докачка прервана (состояние «ожидает»): «Продолжить скачивание» активна и шлёт запрос — качать некому, блокировать нечего", async () => {
+    const sent: string[] = [];
+    server.use(
+      http.get("*/api/admin/ai/local-models", () =>
+        HttpResponse.json(
+          overview({
+            state: "pending",
+            models: overview().models.map((m) =>
+              m.id === "qwen3.5-4b" ? { ...m, state: "pending" as const } : m,
+            ),
+          }),
+        ),
+      ),
+      http.post("*/api/admin/ai/local-models/download", () => {
+        sent.push("download");
+        return HttpResponse.json(overview());
+      }),
+    );
+    renderCard();
+    const region = await card();
+    const button = within(region).getByRole("button", { name: "Продолжить скачивание" });
+    expect(button).toBeEnabled();
+    await userEvent.click(button);
+    await waitFor(() => expect(sent).toEqual(["download"]));
   });
 
   it("ошибка скачивания — «Повторить» и текст по коду («Не хватает места»)", async () => {

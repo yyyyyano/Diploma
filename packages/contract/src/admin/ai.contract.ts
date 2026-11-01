@@ -137,9 +137,11 @@ export const LocalModelState = z.enum([
 ]);
 export type LocalModelState = z.infer<typeof LocalModelState>;
 
-/** Общее состояние набора: код ошибки — машинный (`HTTP_404`, `NO_SPACE`…), текст подставляет сайт. */
+/**
+ * Общее состояние набора: «скачивается» — только живая загрузка; `pending` — докачка прервана (worker умер, abort),
+ * её никто не ведёт и её можно продолжить. Код ошибки — машинный (`HTTP_404`, `NO_SPACE`…), текст подставляет сайт. */
 const LocalModelsTotals = {
-  state: z.enum(["absent", "downloading", "ready", "failed"]),
+  state: z.enum(["absent", "pending", "downloading", "ready", "failed"]),
   bytesDone: Count,
   bytesTotal: Count,
 };

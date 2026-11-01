@@ -261,9 +261,11 @@ describe("NFR-25: скачивание набора моделей", () => {
       `insert into llm_local_models (file, model, status, bytes_done, bytes_total, updated_at)
        values ('llm/big.bin', 'qwen3.5-4b', 'downloading', 1000, ${String(BIG.length)}, '2026-10-29T08:59:50Z')`,
     );
-    expect((await models.view()).models[0]?.state).toBe("downloading");
+    expect(await models.view()).toMatchObject({ state: "downloading" });
     clock.advance(61_000);
     expect((await models.view()).models[0]?.state).toBe("pending");
+    // общее «скачивается» — только живая загрузка: иначе кнопка «Продолжить скачивание» заблокирована, а качать некому
+    expect(await models.view()).toMatchObject({ state: "pending", bytesDone: 1000 });
   });
 });
 

@@ -16,12 +16,7 @@ import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logg
 import type { AgentFacade } from "../../agent/index.ts";
 import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import type { ReceiptsFacade } from "../../receipts/index.ts";
-import { deleteReceipt, insertReceipt } from "../../receipts/infrastructure/db/receipts.repo.ts";
 import type { StatementsFacade } from "../../statements/index.ts";
-import {
-  deleteImportRow,
-  insertImport,
-} from "../../statements/infrastructure/db/statement-imports.repo.ts";
 import { insertMessage } from "../infrastructure/db/chat.repo.ts";
 import { RATE_PER_MINUTE } from "../settings.ts";
 import {
@@ -484,12 +479,20 @@ describe("CHAT-03, SEC-04: вложение — только из своего �
 
   async function ownReceiptAndImport(app: ReturnType<typeof chat>, owner: Scope) {
     const s = app.scoped(owner);
-    const receipt = await insertReceipt(s, { fileId, status: "ok" });
-    const imported = await insertImport(s, { fileId, status: "ready" });
+    // Строки чека и импорта — напрямую владельцем БД: репозитории чужих модулей тесту chat закрыты (ADR-0003).
+    const household = owner.householdId;
+    const receipt = await db.owner.query<{ id: string }>(
+      "insert into receipts (household_id, user_id, file_id, status) values ($1, $3, $2, 'ok') returning id",
+      [household, fileId, owner.userId],
+    );
+    const imported = await db.owner.query<{ id: string }>(
+      "insert into statement_imports (household_id, user_id, file_id, status) values ($1, $3, $2, 'ready') returning id",
+      [household, fileId, owner.userId],
+    );
     return {
       s,
-      receipt: { kind: "receipt" as const, id: receipt.id as never },
-      statement: { kind: "statement" as const, id: imported.id as never },
+      receipt: { kind: "receipt" as const, id: receipt.rows[0]?.id as never },
+      statement: { kind: "statement" as const, id: imported.rows[0]?.id as never },
     };
   }
 
@@ -528,8 +531,8 @@ describe("CHAT-03, SEC-04: вложение — только из своего �
       app.send(mine.s, { text: "?", attachments: [mine.receipt, other.receipt] }, "r"),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
 
-    await mine.s.transaction((tx) => deleteReceipt(tx, mine.receipt.id));
-    await mine.s.transaction((tx) => deleteImportRow(tx, mine.statement.id));
+    await db.owner.query("delete from receipts where id = $1", [mine.receipt.id]);
+    await db.owner.query("delete from statement_imports where id = $1", [mine.statement.id]);
     for (const attachment of [mine.receipt, mine.statement]) {
       await expect(
         app.send(mine.s, { text: "?", attachments: [attachment] }, "r"),

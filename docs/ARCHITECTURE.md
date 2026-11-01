@@ -224,7 +224,7 @@ export function makeRecognizeReceipt(d: RecognizeDeps) {
 |---|---|---|---|
 | Groq, Z.ai, llama-server | `ProviderAdapter` (реестр провайдеров) | `llm/infrastructure/providers/*` | кассеты (`ReplayModel`), `MockLanguageModelV4` |
 | Эмбеддинги (bge-m3 на llama-server) | `Embedder` | `llm/infrastructure/embedder-llama.ts` | детерминированный «хэш-эмбеддер» |
-| Речь (Groq Whisper, whisper.cpp) | `Transcriber` | `llm/infrastructure/transcribers/*` | фиксированный текст |
+| Речь (Groq Whisper, whisper.cpp) | `Transcriber` (порт поверх шлюза: цепочка `transcribe` идёт до первой ответившей модели) | `llm/application/transcriber.ts`; адаптер whisper.cpp — `llm/infrastructure/providers/whisper.ts` (`/inference`, multipart) | фиксированный текст тестового провайдера |
 | NER для маскирования | `NameRecognizer` | `llm/infrastructure/masking/ner.ts` | словарный распознаватель |
 | pravo.by | `LegalSource` (+ PoliteFetcher, robots) | `legal-base/infrastructure/pravo-by/` | сохранённые страницы `__fixtures__/pravo-by/*.html` |
 | НБРБ | `FxRatesSource` | `fx-rates/infrastructure/nbrb.ts` | фиксированные курсы |
@@ -513,6 +513,8 @@ type ToolDef<I, O> =
 ответил» (`answeredBy`: модель и недоступные, LLM-10). Правовой ответ (набор `legal`, был поиск по законам) по ходу
 показывает только шаги, текст приходит целиком одной частью `data-law-answer` после `finalizeAnswer`. Ответ на «да»
 идёт без модели: `data-action-result` с токеном «Отменить».
+
+Диалоги и состояние ответа (T-043): `chat.conversations` (список с началом последнего ответа), `history({ conversationId })`, `rename`, `remove`; название диалога сервер ставит по первому сообщению без модели (до 60 знаков по границе слова). Строка ответа «идёт» хранится в БД; реестр живых ответов процесса (`chat/application/live-runs.ts`) знает, какие из них пишутся сейчас: при чтении «идёт» без живого запуска сохраняется как «оборван» (процесс упал), а живая видна сайту как «ещё отвечает» и обновляется по сигналу `chat-message`. Сбой посреди потока (flush у `TransformStream` при ошибке не вызывается) тоже доводит ответ до «оборван». Частота вопросов ограничена на пользователя (`chat.rate-per-minute`, `chat.rate-per-day`, SEC-02).
 
 ---
 

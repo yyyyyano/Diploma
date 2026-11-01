@@ -62,6 +62,19 @@
   запущен». Самотест идёт после скачивания и по кнопке «Проверить модели»; при старте процесса отдельного хука у модуля нет.
 - **NER** — см. ADR-0009, дополнение T-024.
 
+## Дополнение T-043: whisper.cpp в реестре и голос на сайте
+
+- **Адаптер** — `llm/infrastructure/providers/whisper.ts`: AI SDK умеет транскрипцию только у облачных пакетов, поэтому модель
+  написана по спецификации `TranscriptionModelV4`: `POST {llm.whisper-base-url}/inference` (multipart `file`,
+  `response_format=json`) → `{ text }`. Запись реестра `whisper/large-v3-turbo-q5_0` и вторая ступень цепочки `transcribe`
+  (после Groq Whisper) — миграция `…_llm-whisper`. Шлюз идёт по цепочке до первой ответившей модели без повторов
+  (VOICE-03): недоступное облако не задерживает локальную.
+- **Формат записи.** whisper-server без ffmpeg понимает WAV, MP3 и FLAC, и WAV строго 16 кГц; `MediaRecorder` даёт webm/opus
+  (Chrome, Firefox) или mp4 (Safari). Сайт сам декодирует запись (`decodeAudioData`), пересчитывает в 16 кГц моно через
+  `OfflineAudioContext` и пишет WAV ≤ 60 с; сервер проверяет заголовок (SEC-03). ffmpeg в образе не нужен.
+- **Язык.** В `compose.yaml` — `-l auto` (по умолчанию whisper-server считает речь английской): русский и белорусский.
+- Проверка модели на живой речи и замер времени — ручные, после `make up WITH_MODELS=1` (T-055).
+
 ## Ссылки
 
 `research/architecture/05-local-inference.md`, `10-consensus.md`; ADR-0009, ADR-0015.

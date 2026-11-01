@@ -145,6 +145,10 @@ export const TRACE_KEYS = [
   "afford.rate",
   "afford.term",
   "afford.maxLoan",
+  // WEEK-02: итоги недели — среднее за прошлые недели, число недель, отклонение, платежи недели.
+  "weekly.average",
+  "weekly.weeks",
+  "weekly.deviation",
   // AGT-03: калькулятор агента — слагаемое, сумма, разность, произведение на дробь, доля и календарный промежуток.
   "calculator.operand",
   "calculator.sum",

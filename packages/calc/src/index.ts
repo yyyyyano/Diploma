@@ -80,4 +80,5 @@ export {
   type SavingsPlan,
   type ScenarioBalancesInput,
 } from "./afford/afford.ts";
+export { deviationPercent, weeklyAverage, weeksNode } from "./weekly/weekly.ts";
 export { TRACE_KEYS, type TraceKey } from "./trace-keys.ts";

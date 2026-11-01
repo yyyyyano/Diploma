@@ -210,18 +210,21 @@ describe("LAW-33: новая редакция закона с другим чи�
     // Остальные вычеты ст. 209 на месте: число 63, 120, 306, 860 в тексте есть.
     expect((await rowOf("ndfl.std-deduction.child"))?.drift).toBe(false);
     // T-045: числа ставок ст. 214 и 381² тоже найдены в тексте своего пункта — источник привязан к версии фрагмента, расхождения нет.
-    for (const param of [
-      "ndfl.rate.base",
-      "ndfl.rate.high-from",
-      "ip.rate.high-from",
-      "npd.rate.high-from",
-    ]) {
-      expect([param, (await rowOf(param))?.source.linked, (await rowOf(param))?.drift]).toEqual([
-        param,
-        true,
-        false,
-      ]);
-    }
+    // Сверка идёт по строкам по очереди: когда помечена ст. 209, остальные могут ещё ждать своей очереди — ждём, а не гадаем.
+    await vi.waitFor(
+      async () => {
+        for (const param of [
+          "ndfl.rate.base",
+          "ndfl.rate.high-from",
+          "ip.rate.high-from",
+          "npd.rate.high-from",
+        ]) {
+          const row = await rowOf(param);
+          expect([param, row?.source.linked, row?.drift]).toEqual([param, true, false]);
+        }
+      },
+      { timeout: 60_000, interval: 300 },
+    );
     // Значение 2025 года (5800) в сверке не участвует: действующая редакция отвечает за числа сегодняшнего периода.
     expect(
       (await table()).items.find((r) => r.validFrom === "2025-01-01" && r.status === "confirmed")

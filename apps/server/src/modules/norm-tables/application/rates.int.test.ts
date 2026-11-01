@@ -49,7 +49,7 @@ describe("TAX-03: начальное наполнение — умолчания
       expect(items.find((r) => r.param === seed.param)).toMatchObject({
         value: seed.value,
         validFrom: "2026-01-01",
-        validTo: "2026-12-31",
+        validTo: seed.validTo,
         status: seed.verified ? "confirmed" : "pending",
       });
     }

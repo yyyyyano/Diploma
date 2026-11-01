@@ -3,7 +3,7 @@
 // редакции нормы числа не нашлось (значение само не менялось). Числа считает сервер, сайт показывает их и читает ввод. Словарь
 // страницы подгружается вместе с ней (не входит в первую загрузку сайта).
 import { type RateRow, type RatesTable } from "@kosht/contract";
-import { formatDate, formatMoney, formatScaled, parseMoney, ratesTexts } from "@kosht/i18n";
+import { formatDate, formatMoney, formatScaled, ratesTexts } from "@kosht/i18n";
 import { LocalDate, Money } from "@kosht/kernel";
 import { Button, Modal, Select, TextInput } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,15 +14,22 @@ import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
 import { SkeletonCard, StatusBadge } from "../../ui/index.ts";
 import classes from "./Admin.module.css";
+import { parseRateValue, rateValueInput } from "./rates-value.ts";
 
 const day = (iso: string): string => formatDate(LocalDate.parse(iso));
 
 type T = ReturnType<typeof useTranslation<["rates", "errors"]>>["t"];
 type Unit = RateRow["unit"];
 
-/** Значение словами: деньги — «216,00 BYN», проценты — «13 %»; вычеты ст. 209 — «в месяц». */
+/**
+ * Значение словами: деньги — «216,00 BYN», проценты — «13 %»; вычеты ст. 209 — «в месяц»; гарантия — «24 мес.»; срок налога —
+ * «15.11» (день и месяц) или «22-е число».
+ */
 function valueText(row: RateRow, t: T): string {
   if (row.unit === "percent-bp") return `${formatScaled(row.value, 2).replace(/,00$/u, "")} %`;
+  if (row.unit === "months") return t("rates:inMonths", { count: row.value });
+  if (row.unit === "month-day") return rateValueInput(row.unit, row.value);
+  if (row.unit === "day-of-month") return t("rates:ofMonth", { day: row.value });
   const money = formatMoney(Money.of(row.value, "BYN"));
   return row.group === "std-deduction" && row.param !== "ndfl.std-deduction.base-income-limit"
     ? t("rates:perMonth", { value: money })
@@ -280,6 +287,15 @@ interface Draft {
   readonly sourceUrl: string;
 }
 
+/** Подпись поля значения по единице параметра. */
+const VALUE_LABELS = {
+  "byn-minor": "rates:form.valueMoney",
+  "percent-bp": "rates:form.valuePercent",
+  months: "rates:form.valueMonths",
+  "month-day": "rates:form.valueMonthDay",
+  "day-of-month": "rates:form.valueDayOfMonth",
+} as const satisfies Record<Unit, string>;
+
 const BLANK: Draft = {
   param: "",
   validFrom: "",
@@ -297,7 +313,7 @@ function draftOf(row: RateRow): Draft {
     param: row.param,
     validFrom: row.validFrom,
     validTo: row.validTo ?? "",
-    value: formatScaled(row.value, 2).replace(/,00$/u, ""),
+    value: rateValueInput(row.unit, row.value),
     sourceAct: row.source.act ?? "",
     sourceArticle: row.source.article ?? "",
     sourcePoint: row.source.point ?? "",
@@ -352,8 +368,8 @@ function ProposeDialog({
         className={classes.fields}
         onSubmit={(event) => {
           event.preventDefault();
-          const parsed = parseMoney(form.value, "BYN");
-          if (parsed === undefined || Number(parsed.minor) < 0) {
+          const parsed = parseRateValue(unit, form.value);
+          if (parsed === undefined) {
             setValueInvalid(true);
             return;
           }
@@ -362,7 +378,7 @@ function ProposeDialog({
             param: form.param,
             validFrom: form.validFrom,
             validTo: form.validTo === "" ? null : form.validTo,
-            value: Number(parsed.minor),
+            value: parsed,
             sourceAct: form.sourceAct === "" ? null : form.sourceAct,
             sourceArticle: form.sourceArticle === "" ? null : form.sourceArticle,
             sourcePoint: form.sourcePoint === "" ? null : form.sourcePoint,
@@ -391,7 +407,7 @@ function ProposeDialog({
           onChange={(e) => set({ validTo: e.currentTarget.value })}
         />
         <TextInput
-          label={unit === "percent-bp" ? t("rates:form.valuePercent") : t("rates:form.valueMoney")}
+          label={t(VALUE_LABELS[unit])}
           inputMode="decimal"
           autoComplete="off"
           value={form.value}

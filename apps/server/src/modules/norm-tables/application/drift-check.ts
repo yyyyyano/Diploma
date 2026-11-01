@@ -8,7 +8,7 @@ import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { Logger } from "../../../platform/logging/logger.ts";
 import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import type { NotificationsFacade } from "../../notifications/index.ts";
-import { numberText, paramDef, textHasNumber } from "../domain/params.ts";
+import { paramDef, valueInText } from "../domain/params.ts";
 import { checkableRates, markCheck } from "../infrastructure/db/rates.repo.ts";
 
 export interface DriftCheckDeps {
@@ -34,8 +34,7 @@ export function makeDriftCheck(d: DriftCheckDeps) {
       const fragments = await d.legalBase.fragmentsUnder(rate.sourceAct, rate.sourcePath);
       if (fragments.length === 0) continue;
       checked += 1;
-      const needle = numberText(unit, rate.value);
-      const holder = fragments.find((f) => textHasNumber(f.text, needle));
+      const holder = fragments.find((f) => valueInText(unit, rate.value, f.text));
       if (holder !== undefined) {
         // Число на месте: пометку снимаем, версию запоминаем (она же — «источник: редакция»).
         if (rate.driftAt !== null || rate.sourceVersionId !== holder.versionId) {

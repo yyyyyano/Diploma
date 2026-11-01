@@ -7,6 +7,8 @@
 export interface SeedRate {
   readonly param: string;
   readonly value: number;
+  /** Конец периода: календарный 2026 год; у параметров, чьё значение действует до смены нормы (срок гарантии), — null. */
+  readonly validTo: string | null;
   readonly sourceAct: string | null;
   /** Ключ фрагмента `legal_fragments.path_key` (сам и вложенные): сверка LAW-33 ищет число в их текстах. */
   readonly sourcePath: string | null;
@@ -20,12 +22,15 @@ export interface SeedRate {
 }
 
 export const SEED_PERIOD = { from: "2026-01-01", to: "2026-12-31" } as const;
+/** День сохранения страницы Закона № 90-З «О защите прав потребителей» (`H10200090.html`): по ней сверен срок гарантии (T-047). */
+export const CONSUMER_LAW_VERIFIED_ON = "2026-10-30";
 /** День сохранения страницы НК, по которой сверены вычеты ст. 209. */
 export const SEED_VERIFIED_ON = "2026-10-30";
 /** День, когда сохранён полный текст НК: по нему сверены ставки ст. 214 и 381² (T-045). */
 export const NK_VERIFIED_ON = "2026-11-01";
 
 const NK = "Hk0900071";
+const CONSUMER_LAW = "H10200090";
 const verified = (
   param: string,
   value: number,
@@ -33,10 +38,13 @@ const verified = (
   point: string,
   path: string,
   verifiedOn: string = SEED_VERIFIED_ON,
+  act: string = NK,
+  validTo: string | null = SEED_PERIOD.to,
 ): SeedRate => ({
   param,
   value,
-  sourceAct: NK,
+  validTo,
+  sourceAct: act,
   sourcePath: path,
   sourceArticle: article,
   sourcePoint: point,
@@ -51,6 +59,7 @@ const unverified = (
 ): SeedRate => ({
   param,
   value,
+  validTo: SEED_PERIOD.to,
   sourceAct: null,
   sourcePath: null,
   sourcePoint: null,
@@ -89,4 +98,16 @@ export const SEED_RATES: readonly SeedRate[] = [
   // Пределы ПДН (SPEC §9.3): источник вне pravo.by.
   unverified("pdn.limit.default", 4000, { sourceArticle: "ПДН", sourceUrl: NBRB }),
   unverified("pdn.limit.domestic-goods", 5000, { sourceArticle: "ПДН", sourceUrl: NBRB }),
+  // CAL-04: гарантийный срок по умолчанию — «в течение двух лет со дня передачи» (ст. 21, п. 1 Закона № 90-З), 24 месяца. Действует,
+  // пока норма не изменится (конца периода нет): календарь берёт значение на дату покупки.
+  verified(
+    "warranty.default-months",
+    24,
+    "21",
+    "1",
+    "a21/p1",
+    CONSUMER_LAW_VERIFIED_ON,
+    CONSUMER_LAW,
+    null,
+  ),
 ];

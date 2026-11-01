@@ -140,4 +140,26 @@ describe("LAW-33: сверка с новой редакцией закона", (
     await rates().confirm(adminScope(), id ?? "");
     expect((await check(unchanged)()).drifted).toBe(baseline);
   });
+
+  it("CAL-04: срок гарантии сверяется словами — «двух лет» = 24 месяца; «трех лет» — расхождение", async () => {
+    const warranty = (text: string) => ({ ...unchanged, "a21/p1": [text] });
+    const warrantyId = (await ids("warranty.default-months", "confirmed"))[0] ?? "";
+    const warrantyNotices = () => notified.filter((n) => n.key.includes(warrantyId));
+    await check(
+      warranty("потребитель вправе предъявить требования в течение двух лет со дня передачи"),
+    )();
+    expect(
+      (await rates().table()).items.find((r) => r.param === "warranty.default-months"),
+    ).toMatchObject({ drift: false, source: { linked: true } });
+    expect(warrantyNotices()).toEqual([]);
+
+    await check(
+      warranty("потребитель вправе предъявить требования в течение трех лет со дня передачи"),
+    )();
+    expect(
+      (await rates().table()).items.find((r) => r.param === "warranty.default-months"),
+    ).toMatchObject({ drift: true, value: 24 });
+    expect(warrantyNotices().map((n) => n.kind)).toEqual(["rates-mismatch"]);
+    await check(unchanged)();
+  });
 });

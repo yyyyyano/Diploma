@@ -7,7 +7,7 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { LegalBaseFacade } from "../../legal-base/index.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
-import { numberText, paramDef, textHasNumber, type RateUnit } from "../domain/params.ts";
+import { paramDef, valueInText, type RateUnit } from "../domain/params.ts";
 import { pathKeyOf } from "../domain/source.ts";
 import {
   allRates,
@@ -93,8 +93,8 @@ export function makeRates(d: RatesDeps) {
     let versionId = row.sourceVersionId;
     if (versionId === null && row.sourceAct !== null && row.sourcePath !== null) {
       const fragments = await d.legalBase.fragmentsUnder(row.sourceAct, row.sourcePath);
-      const needle = numberText(def.unit, row.value);
-      versionId = fragments.find((f) => textHasNumber(f.text, needle))?.versionId ?? null;
+      versionId =
+        fragments.find((f) => valueInText(def.unit, row.value, f.text))?.versionId ?? null;
     }
     return {
       found: true,

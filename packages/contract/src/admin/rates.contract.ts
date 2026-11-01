@@ -8,10 +8,20 @@ export const RATE_STATUSES = ["pending", "confirmed", "superseded"] as const;
 export const RateStatus = z.enum(RATE_STATUSES);
 export type RateStatus = z.infer<typeof RateStatus>;
 
-export const RateUnit = z.enum(["byn-minor", "percent-bp"]);
+/** Копейки BYN, сотые доли процента, месяцы, день года (месяц × 100 + день), число месяца — единицы значения (CAL-02, CAL-04). */
+export const RateUnit = z.enum(["byn-minor", "percent-bp", "months", "month-day", "day-of-month"]);
 export type RateUnit = z.infer<typeof RateUnit>;
 
-export const RateGroup = z.enum(["std-deduction", "ndfl-rate", "ip", "npd", "fszn", "pdn"]);
+export const RateGroup = z.enum([
+  "std-deduction",
+  "ndfl-rate",
+  "ip",
+  "npd",
+  "fszn",
+  "pdn",
+  "warranty",
+  "deadline",
+]);
 export type RateGroup = z.infer<typeof RateGroup>;
 
 export const RateRow = z.strictObject({

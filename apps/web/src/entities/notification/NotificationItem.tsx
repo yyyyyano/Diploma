@@ -104,6 +104,15 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
       spent: formatMoney(Money.of(num("spent"), "BYN")),
       limit: formatMoney(Money.of(num("limit"), "BYN")),
     });
+  } else if (notification.kind === "deduction") {
+    // TAX-20: текст по виду вычета; сумма в параметрах — копейки BYN (у жилья суммы нет).
+    const variants: Record<string, string> = {
+      education: "textEducation",
+      children: "textChildren",
+      housing: "textHousing",
+    };
+    textKey = `notifications:kinds.deduction.${variants[String(notification.params["kind"] ?? "")] ?? "text"}`;
+    Object.assign(params, { amount: formatMoney(Money.of(num("amount"), "BYN")) });
   } else if (notification.kind === "goal") {
     const reason = String(notification.params["reason"] ?? "");
     const variants: Record<string, string> = {

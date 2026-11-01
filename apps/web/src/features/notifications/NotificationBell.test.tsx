@@ -94,6 +94,30 @@ describe("NOTIF-01: колокольчик", () => {
     );
   });
 
+  it("TAX-20: «найден вычет» — текст по виду и сумме из параметров (копейки → «260,00 BYN»), «Показать» ведёт в «Налоговые вычеты»", async () => {
+    server.use(
+      http.get("*/api/notifications", () =>
+        HttpResponse.json({
+          items: [
+            n(ID(3), {
+              kind: "deduction",
+              params: { kind: "education", amount: 26_000 },
+              objectRef: { entity: "deduction", id: ID(9) },
+            }),
+          ],
+          nextCursor: null,
+          unread: 1,
+        }),
+      ),
+    );
+    renderBell();
+    await userEvent.click(await screen.findByRole("button", { name: /Уведомления/ }));
+    expect(
+      await screen.findByText(/Найден вычет на обучение: можно вернуть до 260,00/u),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Показать" })).toHaveAttribute("href", "/deductions");
+  });
+
   it("Escape закрывает список и возвращает фокус колокольчику (NFR-20)", async () => {
     server.use(
       http.get("*/api/notifications", () =>

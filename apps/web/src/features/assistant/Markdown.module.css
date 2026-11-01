@@ -1,0 +1,59 @@
+/* Типографика ответа: .as-lead и абзацы макета; моноширинного шрифта в системе нет (DES) — код выделен подложкой. */
+.md {
+  overflow-wrap: anywhere;
+  line-height: 1.55;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p,
+.md ul,
+.md ol,
+.md blockquote {
+  margin: 0 0 var(--s-8);
+}
+
+.md ul,
+.md ol {
+  padding-left: var(--s-20);
+}
+
+.md h3,
+.md h4 {
+  margin: var(--s-12) 0 var(--s-6);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.md a {
+  color: var(--brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.md code {
+  padding: var(--s-2) var(--s-4);
+  border-radius: var(--r-xs);
+  background: var(--surface-2);
+  font-family: inherit;
+}
+
+.md pre {
+  margin: 0 0 var(--s-8);
+  padding: var(--s-10) var(--s-12);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  white-space: pre-wrap;
+}
+
+.md blockquote {
+  padding-left: var(--s-12);
+  border-left: 3px solid var(--line-2);
+  color: var(--ink-2);
+}

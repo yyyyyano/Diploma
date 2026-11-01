@@ -1,0 +1,78 @@
+/* .as-u, .as-msg, .as-msg-c из design/screens/Assistant.dc.html; DES-10 — вопрос справа тёмным пузырём,
+   DES-11 — ответ на подложке --surface-2 с рамкой --line и аватаром --brand. */
+.user {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bubble {
+  margin: 0;
+  max-width: 80%;
+  padding: var(--s-10) var(--s-14);
+  border-radius: var(--r-md);
+  background: var(--brand-ink);
+  color: var(--kit-on-dark);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.answer {
+  display: flex;
+  gap: var(--s-10);
+  align-items: flex-start;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: var(--brand);
+  color: var(--kit-on-dark);
+}
+
+.parts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  flex: 1;
+  min-width: 0;
+  padding: var(--s-12) var(--s-14);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2);
+}
+
+.step,
+.muted {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--s-12);
+}

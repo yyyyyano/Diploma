@@ -10,6 +10,8 @@ export { CONSENT_VERSIONS } from "./locales/ru/policy.ts";
 export { LANGUAGES, NAMESPACES, resources, type Language, type Namespace } from "./resources.ts";
 // Словарь «Таблицы ставок»: не входит в `resources`, страница регистрирует его при показе (ленивый чанк сайта).
 export { rates as ratesTexts } from "./locales/ru/rates.ts";
+export { createWeeklyT, type WeeklyT } from "./create-weekly-t.ts";
+export { weekly as weeklyTexts } from "./locales/ru/weekly.ts";
 export { afford as affordTexts } from "./locales/ru/afford.ts";
 export { calendar as calendarTexts } from "./locales/ru/calendar.ts";
 export { deductions as deductionsTexts } from "./locales/ru/deductions.ts";

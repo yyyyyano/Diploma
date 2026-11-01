@@ -28,6 +28,7 @@ import { laws } from "./locales/ru/laws.ts";
 import type { agent } from "./locales/ru/agent.ts";
 import type { legal } from "./locales/ru/legal.ts";
 import type { rates } from "./locales/ru/rates.ts";
+import type { weekly } from "./locales/ru/weekly.ts";
 import type { afford } from "./locales/ru/afford.ts";
 import type { calendar } from "./locales/ru/calendar.ts";
 import type { deductions } from "./locales/ru/deductions.ts";
@@ -129,6 +130,8 @@ declare module "i18next" {
     calendar: typeof calendar;
     // Подгружается со страницей «Могу ли я позволить покупку?», карточкой сценариев в чате и карточкой главной (affordTexts), в `resources` не входит.
     afford: typeof afford;
+    // Подгружается с карточкой «Итоги недели» и настройками (weeklyTexts), серверу — `createWeeklyT`; в `resources` не входит.
+    weekly: typeof weekly;
     // Только серверу (`createLegalT`): тексты под правовым ответом; сайт словарь не грузит.
     legal: typeof legal;
     // Только серверу (`createAgentT`): отказы стражей, пометки о числах и пределе шагов; сайт словарь не грузит.

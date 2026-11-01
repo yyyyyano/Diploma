@@ -4,6 +4,7 @@
 // int-тесты `main/tax.int.test.ts`; здесь — что человек видит.
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+import { holdUndoToast } from "./support/undo-toast.ts";
 
 const WCAG_TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
 const VIEWPORTS = [
@@ -158,7 +159,7 @@ test("найденный вычет: оплата обучения → карт�
 
   // «Это не моё» — сразу, с «Отменить»; отклонённое уходит с главной и остаётся на странице вычетов.
   await page.getByRole("button", { name: "Это не моё" }).click();
-  await expect(page.getByRole("button", { name: "Отменить" })).toBeVisible();
+  await holdUndoToast(page, /Больше не предлагаю этот вычет/);
   await expect(page.getByText("Кошт нашёл налоговый вычет")).toBeHidden();
   await page.goto("/deductions");
   await page.getByText(/Отклонённые \(1\)/).click();

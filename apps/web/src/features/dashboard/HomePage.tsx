@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 import { UndoActionToast } from "../../entities/action/index.ts";
 import { useAccountName } from "../../entities/account/index.ts";
 import { categoryRefOf, useCategoryLookup } from "../../entities/category/index.ts";
-import { FoundBanner } from "../../entities/deduction/index.ts";
+import { FoundBanner, useFoundChange } from "../../entities/deduction/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
 import { ContributeDialog, GoalCard } from "../../entities/goal/index.ts";
 import { orpc } from "../../lib/api.ts";
@@ -58,6 +58,7 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
       input: custom ? { from: search.from, to: search.to } : {},
     }),
   );
+  const found = useFoundChange();
   const [traceId, setTraceId] = useState<TraceId | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -143,7 +144,12 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
           />
         )}
         {data !== undefined && data.foundDeductions.length > 0 && (
-          <FoundBanner items={data.foundDeductions} />
+          <FoundBanner
+            items={data.foundDeductions}
+            change={found.change}
+            pending={found.pending}
+            failed={found.failed}
+          />
         )}
         {data !== undefined && data.hasData && (
           <>
@@ -554,6 +560,7 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
           }}
         />
       )}
+      {found.toast}
     </>
   );
 }

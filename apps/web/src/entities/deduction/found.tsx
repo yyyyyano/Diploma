@@ -275,11 +275,24 @@ export function FoundCard({
   );
 }
 
-/** Янтарная карточка главной (DASH-02): первая находка и «Ещё: …»; «Это не моё» — с «Отменить». */
-export function FoundBanner({ items }: { readonly items: readonly FoundDeduction[] }) {
+/**
+ * Янтарная карточка главной (DASH-02): первая находка и «Ещё: …»; «Это не моё» — с «Отменить». Действия (`useFoundChange`) и
+ * уведомление «Отменить» принадлежат странице: после «Не моё» карточка уходит из ответа главной, а вместе с ней ушло бы и
+ * уведомление, если бы оно жило внутри карточки.
+ */
+export function FoundBanner({
+  items,
+  change,
+  pending,
+  failed,
+}: {
+  readonly items: readonly FoundDeduction[];
+  readonly change: (id: FoundDeduction["id"], status: "dismissed" | "filed" | "shown") => void;
+  readonly pending: boolean;
+  readonly failed: boolean;
+}) {
   useDeductionTexts();
   const { t } = useTranslation("deductions");
-  const { change, pending, failed, toast } = useFoundChange();
   const [traceId, setTraceId] = useState<TraceId | null>(null);
   useMarkShown(items);
   const [first, ...rest] = items;
@@ -314,7 +327,6 @@ export function FoundBanner({ items }: { readonly items: readonly FoundDeduction
           {t("found.changeError")}
         </p>
       )}
-      {toast}
       {traceId !== null && (
         <ExplanationSheet traceId={traceId} opened onClose={() => setTraceId(null)} />
       )}

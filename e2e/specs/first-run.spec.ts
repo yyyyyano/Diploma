@@ -155,7 +155,8 @@ test("первый запуск → администратор → вход → 
   // Запуск не привязан к вкладке: вопрос отправлен, вкладку закрыли — ответ дописан и виден при новом открытии.
   await page.getByRole("textbox", { name: "Вопрос ассистенту" }).fill("Какие у меня счета?");
   await page.getByRole("button", { name: "Отправить" }).click();
-  await expect(feed.getByText("Смотрю ваши счета…")).toBeVisible();
+  // В ленте шаг первого вопроса остаётся, у второго он появляется: считаем оба, а не «видимый» из нескольких (строгий режим).
+  await expect(feed.getByText("Смотрю ваши счета…")).toHaveCount(2);
   const context = page.context();
   await page.close();
   page = await context.newPage();

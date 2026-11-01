@@ -509,6 +509,30 @@ describe("TAX-20, DASH-02, P5: найденный вычет — янтарна�
     expect(sent).toEqual([{ id: FOUND.id, status: "dismissed" }]);
   });
 
+  it("после «Это не моё» карточка уходит из ответа главной, а «Отменить» остаётся: уведомление принадлежит странице, не карточке", async () => {
+    let dismissed = false;
+    server.use(
+      http.get("*/api/dashboard", () =>
+        HttpResponse.json({
+          ...OVERVIEW,
+          foundDeductions: dismissed ? [] : [{ ...FOUND, status: "shown" }],
+        }),
+      ),
+      http.post("*/api/tax/found/status", () => {
+        dismissed = true;
+        return HttpResponse.json({
+          found: { ...FOUND, status: "dismissed" },
+          undoToken: "0190f0a0-0000-7000-8000-0000000000f9",
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+    await user.click(await screen.findByRole("button", { name: "Это не моё" }));
+    await waitFor(() => expect(screen.queryByText("Кошт нашёл налоговый вычет")).toBeNull());
+    expect(screen.getByRole("button", { name: "Отменить" })).toBeInTheDocument();
+  });
+
   it("находок нет — карточки нет", async () => {
     server.use(overview({ foundDeductions: [] }));
     renderPage();

@@ -60,6 +60,14 @@ export const LLM_LLAMA_BASE_URL = defineSetting({
   env: "LLAMA_BASE_URL",
 });
 
+/** Адрес whisper-server (whisper.cpp, VOICE-03): в make dev — порт на этом компьютере, в контейнерах — сервис whisper. */
+export const LLM_WHISPER_BASE_URL = defineSetting({
+  key: "llm.whisper-base-url",
+  schema: z.url({ protocol: /^https?$/ }).max(512),
+  default: "http://127.0.0.1:8143",
+  env: "WHISPER_BASE_URL",
+});
+
 /**
  * Скачивать ли локальные модели (NFR-25): по умолчанию да — после первого запуска и кнопкой в админке. Тесты и стенд
  * e2e выключают (LLM_MODELS_DOWNLOAD=0): гигабайты из интернета в тестах недопустимы (NFR-11).

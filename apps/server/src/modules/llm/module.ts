@@ -28,6 +28,7 @@ import {
   createZaiAdapter,
 } from "./infrastructure/providers/openai-compatible.ts";
 import { createProviderRegistry } from "./infrastructure/providers/providers.ts";
+import { createWhisperAdapter } from "./infrastructure/providers/whisper.ts";
 import { createNerRecognizer, loadTransformersClassifier } from "./infrastructure/masking/ner.ts";
 import { createLangfuseTraceDeleter } from "./infrastructure/telemetry/langfuse-traces.ts";
 import { createLangfuseTracing } from "./infrastructure/telemetry/langfuse-tracing.ts";
@@ -37,6 +38,7 @@ import {
   LLM_CASSETTE,
   LLM_CASSETTE_DELAYS,
   LLM_LLAMA_BASE_URL,
+  LLM_WHISPER_BASE_URL,
   LLM_MODE,
   LLM_MODELS_DOWNLOAD,
   LLM_TIMEOUT_CLOUD_MS,
@@ -85,6 +87,7 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
     createGroqAdapter({ key: async () => platform.secrets.reveal(GROQ_API_KEY) }),
     createZaiAdapter({ key: async () => platform.secrets.reveal(ZAI_API_KEY) }),
     createLlamaAdapter({ baseUrl: async () => platform.settings.get(LLM_LLAMA_BASE_URL) }),
+    createWhisperAdapter({ baseUrl: async () => platform.settings.get(LLM_WHISPER_BASE_URL) }),
   ]);
   const gateway: LlmGateway = createLlmGateway({
     system: platform.system,
@@ -145,6 +148,7 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
       LLM_TIMEOUT_CLOUD_MS,
       LLM_TIMEOUT_LOCAL_MS,
       LLM_LLAMA_BASE_URL,
+      LLM_WHISPER_BASE_URL,
       LLM_MODELS_DOWNLOAD,
       LLM_USAGE_RETENTION_DAYS,
       LLM_TRACE_RETENTION_DAYS,

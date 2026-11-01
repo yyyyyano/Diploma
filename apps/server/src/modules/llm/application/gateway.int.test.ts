@@ -1,6 +1,6 @@
 // LLM-01, LLM-06, LLM-09, PRIV-02, PRIV-09, NFR-05, NFR-11: шлюз на настоящем Postgres — цепочка из реестра моделей
 // по возможностям и согласию, журнал расхода без текстов, запрет вызова в транзакции, кассеты replay/record.
-import type { LanguageModelV4 } from "@ai-sdk/provider";
+import type { LanguageModelV4, TranscriptionModelV4 } from "@ai-sdk/provider";
 import type { Scope } from "@kosht/kernel";
 import { FakeClock, MockLanguageModelV4, testScope } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
@@ -45,8 +45,13 @@ beforeEach(async () => {
 const scope = testScope();
 
 /** Облачная модель «cloud/mock» — MockLanguageModelV4 с заданным ответом. */
-function cloudProvider(model: LanguageModelV4): ProviderAdapter {
-  return { id: "cloud", cloud: true, languageModel: () => model };
+function cloudProvider(model: LanguageModelV4, speech?: TranscriptionModelV4): ProviderAdapter {
+  return {
+    id: "cloud",
+    cloud: true,
+    languageModel: () => model,
+    ...(speech === undefined ? {} : { transcriptionModel: () => speech }),
+  };
 }
 
 async function addCloudModel(priority = 1) {
@@ -75,6 +80,8 @@ function textModel(text: string) {
 function gateway(
   options: {
     cloud?: LanguageModelV4;
+    /** Облачная модель речи («cloud/stt» в реестре — добавляет сам тест). */
+    cloudSpeech?: TranscriptionModelV4;
     consent?: (scope: Scope) => Promise<boolean>;
     cassettes?: CassetteConfig;
     telemetry?: Telemetry;
@@ -82,7 +89,9 @@ function gateway(
   } = {},
 ) {
   const adapters = [createTestProvider()];
-  if (options.cloud !== undefined) adapters.push(cloudProvider(options.cloud));
+  if (options.cloud !== undefined || options.cloudSpeech !== undefined) {
+    adapters.push(cloudProvider(options.cloud ?? textModel(""), options.cloudSpeech));
+  }
   const memory = memoryLogger();
   return {
     memory,
@@ -326,6 +335,59 @@ describe("NFR-05: векторы и речь", () => {
     expect(await gateway().llm.transcribe(scope, new Uint8Array([82, 73, 70, 70]))).toBe(
       TRANSCRIPT,
     );
+  });
+
+  it("VOICE-03: облачная модель речи не ответила — расшифрует локальная, обе попытки в журнале", async () => {
+    await db.owner.query(
+      `insert into llm_models (id, provider, model_id, cloud, capabilities, priority, context_tokens)
+       values ('cloud/stt', 'cloud', 'stt', true, array['speech'], 1, 0)`,
+    );
+    const broken: TranscriptionModelV4 = {
+      specificationVersion: "v4",
+      provider: "cloud",
+      modelId: "stt",
+      doGenerate: async () => {
+        throw new Error("лимит исчерпан");
+      },
+    };
+    const { llm } = gateway({ cloudSpeech: broken, consent: async () => true });
+    expect(await llm.transcribe(scope, new Uint8Array([82, 73, 70, 70]))).toBe(TRANSCRIPT);
+    const rows = await usageRows();
+    expect(rows.map((row) => [row["provider"], row["error_code"] === null])).toEqual([
+      ["cloud", false],
+      ["test", true],
+    ]);
+  });
+
+  it("VOICE-03, PRIV-02: без облачного согласия облачная модель речи не зовётся", async () => {
+    await db.owner.query(
+      `insert into llm_models (id, provider, model_id, cloud, capabilities, priority, context_tokens)
+       values ('cloud/stt', 'cloud', 'stt', true, array['speech'], 1, 0)`,
+    );
+    let called = false;
+    const spy: TranscriptionModelV4 = {
+      specificationVersion: "v4",
+      provider: "cloud",
+      modelId: "stt",
+      doGenerate: async () => {
+        called = true;
+        throw new Error("не должна звониться");
+      },
+    };
+    const { llm } = gateway({ cloudSpeech: spy, consent: async () => false });
+    expect(await llm.transcribe(scope, new Uint8Array([82, 73, 70, 70]))).toBe(TRANSCRIPT);
+    expect(called).toBe(false);
+  });
+
+  it("VOICE-03: ни одна модель речи не ответила — UNAVAILABLE", async () => {
+    await db.owner.query("update llm_models set enabled = false where id = 'test/scripted'");
+    try {
+      await expect(
+        gateway().llm.transcribe(scope, new Uint8Array([82, 73, 70, 70])),
+      ).rejects.toMatchObject({ code: "UNAVAILABLE" });
+    } finally {
+      await db.owner.query("update llm_models set enabled = true where id = 'test/scripted'");
+    }
   });
 });
 

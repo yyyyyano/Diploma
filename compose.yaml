@@ -42,6 +42,7 @@ x-app: &app
     ZAI_API_KEY: ${ZAI_API_KEY:-}
     # Локальные модели — сервис llama этого Compose (профиль models), а не порт хоста.
     LLAMA_BASE_URL: http://llama:8080/v1
+    WHISPER_BASE_URL: http://whisper:8080
   secrets: [db_password, db_app_password, master_key, langfuse_public_key, langfuse_secret_key]
   # Те же ./data/…, что у make dev (DATA_DIR=data); папки создаёт make up от имени пользователя.
   volumes:
@@ -190,8 +191,7 @@ services:
   whisper:
     profiles: [models]
     image: ghcr.io/ggml-org/whisper.cpp:main-vulkan-d1be6fde11ac6e0407606b4e42fe72d34add8037@sha256:32b43cf553e373cc517752dd14de4a25bdd39c979393f007a56cc51776579377
-    command:
-      [
+    command: [
         "whisper-server",
         "--host",
         "0.0.0.0",
@@ -199,6 +199,9 @@ services:
         "8080",
         "--model",
         "/models/whisper/ggml-large-v3-turbo-q5_0.bin",
+        # Язык — по звуку (русский и белорусский, VOICE-03); без этого whisper-server считает речь английской.
+        "-l",
+        "auto",
       ]
     devices: ["/dev/dri:/dev/dri"]
     group_add: ["${RENDER_GID:-992}"]

@@ -20,6 +20,15 @@ export interface Embedder {
   embed(texts: readonly string[]): Promise<number[][]>;
 }
 
+/**
+ * Распознавание речи (VOICE-02/03): облако при согласии, иначе или при его недоступности — whisper.cpp. Модуль, которому
+ * нужен текст из записи (`voice`), зависит от порта; в тестах шлюз отдаёт фиксированный текст тестового провайдера.
+ */
+export interface Transcriber {
+  /** Текст записи; ни одна модель цепочки не ответила — AppError UNAVAILABLE. */
+  transcribe(audio: Uint8Array): Promise<string>;
+}
+
 /** Распознаватель имён и адресов в свободном тексте (NER, ADR-0009); в тестах — словарный. */
 export interface NameRecognizer {
   /** Отрезки kind `name` и `address`; модель не скачана — пусто (режим деградации: правила и словарь). */

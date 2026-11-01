@@ -358,23 +358,29 @@ export function createLlmGateway(d: GatewayDeps): LlmGateway {
     },
     async transcribe(caller, audio) {
       assertOutsideTransaction();
-      const [record] = await chainFor(caller, "transcribe");
-      const model =
-        record === undefined ? undefined : adapterOf(record).transcriptionModel?.(record.modelId);
-      if (record === undefined || model === undefined) throw new AppError("UNAVAILABLE");
-      const started = performance.now();
-      try {
-        const { text } = await transcribe({
-          model,
-          audio,
-          ...telemetryOf(caller, "transcribe"),
-        });
-        await recordSide("transcribe", record, started, 0, undefined);
-        return text;
-      } catch (error) {
-        await recordSide("transcribe", record, started, 0, error);
-        throw error;
+      // VOICE-03: облако при согласии, при его недоступности — локальная модель: цепочка идёт до первой, что ответила.
+      let failure: unknown;
+      for (const record of await chainFor(caller, "transcribe")) {
+        const model = adapterOf(record).transcriptionModel?.(record.modelId);
+        if (model === undefined) continue;
+        const started = performance.now();
+        try {
+          // Без повторов: недоступное облако не должно задерживать запасную локальную модель.
+          const { text } = await transcribe({
+            model,
+            audio,
+            maxRetries: 0,
+            ...telemetryOf(caller, "transcribe"),
+          });
+          await recordSide("transcribe", record, started, 0, undefined);
+          return text;
+        } catch (error) {
+          await recordSide("transcribe", record, started, 0, error);
+          failure = error;
+        }
       }
+      // Ни одна модель цепочки не ответила: причину видно в журнале расхода, пользователю — «сервис недоступен».
+      throw new AppError("UNAVAILABLE", {}, failure === undefined ? {} : { cause: failure });
     },
   };
 }

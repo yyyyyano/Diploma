@@ -5,6 +5,7 @@ import type { BudgetsFacade } from "../../budgets/index.ts";
 import type { ExplainFacade } from "../../explain/index.ts";
 import type { FinFacade } from "../../fin/index.ts";
 import type { RecurringFacade } from "../../recurring/index.ts";
+import type { TaxFacade } from "../../tax/index.ts";
 import type { TransactionsFacade } from "../../transactions/index.ts";
 
 export interface Deps {
@@ -14,5 +15,6 @@ export interface Deps {
   readonly fin: Pick<FinFacade, "freeBalance">;
   readonly budgets: Pick<BudgetsFacade, "overview">;
   readonly recurring: Pick<RecurringFacade, "upcoming">;
+  readonly tax: Pick<TaxFacade, "activeFound">;
   readonly explain: Pick<ExplainFacade, "saveMany">;
 }

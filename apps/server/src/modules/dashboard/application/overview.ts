@@ -4,7 +4,7 @@
 // независимо от периода), ближайшие платежи (`recurring`). Все показываемые числа — `Calc`; их трассы сохраняются двумя
 // пачками `explain.saveMany` (повтор — те же traceId, таблица не растёт), сайт получает числа и traceId готовыми (P1, P2).
 import { node, sum, totalOf, type Calc } from "@kosht/calc";
-import { MAX_CATEGORY_ROWS, type DashboardOverview } from "@kosht/contract";
+import { MAX_CATEGORY_ROWS, MAX_FOUND_ON_HOME, type DashboardOverview } from "@kosht/contract";
 import { LocalDate, Money, TraceId, type TraceValue } from "@kosht/kernel";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
@@ -48,7 +48,7 @@ export function makeOverview(d: Deps) {
     const months = monthsEndingAt(monthOfDay(to), MONTHS);
     const firstMonth = months[0] ?? monthOfDay(to);
 
-    const [byCategory, byMonth, budgets, balances, free, upcoming] = await Promise.all([
+    const [byCategory, byMonth, budgets, balances, free, upcoming, found] = await Promise.all([
       d.transactions.aggregate(s, { from, to, groupBy: "category" }),
       d.transactions.aggregate(s, {
         from: monthStart(firstMonth),
@@ -59,6 +59,7 @@ export function makeOverview(d: Deps) {
       d.accounts.balances(s),
       d.fin.freeBalance(s),
       d.recurring.upcoming(s, { from: today, to: addDays(today, UPCOMING_DAYS) }),
+      d.tax.activeFound(s),
     ]);
 
     // Категории: до шести рядов, остальное — одной суммой с трассой.
@@ -187,6 +188,8 @@ export function makeOverview(d: Deps) {
         reason: free.reason,
       },
       // Ближайшие платежи — расходы (зарплата в «платежи» не входит); не больше пяти.
+      // Найденные вычеты (TAX-20) — акцентом; суммы «до» уже посчитал калькулятор налогов с traceId, дашборд не пересчитывает.
+      foundDeductions: found.slice(0, MAX_FOUND_ON_HOME),
       upcoming: upcoming
         .filter((payment) => payment.flow === "expense")
         .slice(0, UPCOMING_MAX)

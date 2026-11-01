@@ -14,6 +14,17 @@ export const LAN_ADDRESS = defineSetting({
   default: "",
 });
 
+/**
+ * Адрес локального входа для ссылок в письмах. В контейнере слушатель привязан к «любому адресу» (0.0.0.0, «::», иначе
+ * проброс порта не работает), но браузер, открыв http://0.0.0.0:порт, шлёт Host: 0.0.0.0, и isAllowedHost отвергает
+ * его (403) — поэтому вместо «любого адреса» в ссылку идёт 127.0.0.1. IPv6 в URL пишется в скобках.
+ */
+export function localLoginOrigin(host: string, port: number): string {
+  const bare = host.replace(/^\[|\]$/g, "");
+  if (bare === "0.0.0.0" || bare === "::") return `http://127.0.0.1:${String(port)}`;
+  return `http://${bare.includes(":") ? `[${bare}]` : bare}:${String(port)}`;
+}
+
 export interface LinkOriginOptions {
   readonly allowLan: boolean;
   readonly lanAddress: string;

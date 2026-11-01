@@ -296,3 +296,22 @@ describe("ARCHITECTURE §5: обработчики действий и кана�
     ]);
   });
 });
+
+describe("NFR-24: адрес локального входа в контейнере", () => {
+  it("слушатель на 0.0.0.0 (make up): localOrigin платформы — 127.0.0.1, иначе ссылки писем ведут на Host: 0.0.0.0 и получают 403", async () => {
+    let ports: ModulePorts | undefined;
+    const composition = await compose(
+      { ...config, listeners: { ...config.listeners, local: { host: "0.0.0.0", port: 8140 } } },
+      "api",
+      {
+        log: memoryLogger().log,
+        createModules: (given) => {
+          ports = given;
+          return [];
+        },
+      },
+    );
+    opened.push(composition);
+    expect(ports?.systemPlatform.localOrigin).toBe("http://127.0.0.1:8140");
+  });
+});

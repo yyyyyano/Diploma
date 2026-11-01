@@ -18,6 +18,7 @@ import { listenConnector } from "../platform/db/listen.ts";
 import { createScopedDb } from "../platform/db/scoped-db.ts";
 import { createSystemDb } from "../platform/db/system-db.ts";
 import { ALLOW_LAN } from "../platform/http/allow-lan.ts";
+import { localLoginOrigin } from "../platform/http/link-origin.ts";
 import {
   createSessionRegistry,
   openSession,
@@ -227,7 +228,7 @@ export async function compose(
     ...platform,
     system,
     deriveKey: (purpose) => config.masterKey.derive(purpose),
-    localOrigin: `http://${config.listeners.local.host}:${String(config.listeners.local.port)}`,
+    localOrigin: localLoginOrigin(config.listeners.local.host, config.listeners.local.port),
     modelsDir: join(config.dataDir, "models"),
   };
   // Слушает канал только api (ADR-0008): одно соединение на процесс. Без него сайт не узнаёт об изменениях —

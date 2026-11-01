@@ -1,0 +1,131 @@
+/* Найденные вычеты: карточка экрана «Налоговые вычеты» и янтарная карточка главной (design/screens/Deductions.dc.html, Main.dc.html). */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14);
+  padding: var(--s-20);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s-12);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-sm);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+
+.headText {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8);
+  margin: var(--s-4) 0 0;
+}
+
+.lead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.amount {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-6);
+  margin: 0;
+}
+
+.amountLabel {
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+.basis {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8);
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  padding: var(--s-14);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-md);
+}
+
+.questionTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.error {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--danger);
+}
+
+/* Янтарная карточка главной: акцент найденного вычета (DASH-02). */
+.banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  padding: var(--s-20);
+  background: var(--amber-soft);
+  border: 1px solid var(--amber);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+
+.bannerKicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--amber-ink);
+}
+
+.bannerTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.more {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}

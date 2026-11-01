@@ -2440,7 +2440,7 @@
 - Зависимости: T-044, T-040, T-041
 
 ### T-046 · Найденные вычеты: поиск оснований по операциям, карточка на главной, «Не моё»
-- Статус: todo
+- Статус: done · e5db64a..30d2893
 - Модули: `tax`, `profile`, `notifications`, `dashboard` (`overview` получает блок вычетов), `actions` (отмена «Не моё»),
   `contract`, `i18n`, `features/deductions`, `features/dashboard`
 - SPEC: TAX-20, DASH-02, NOTIF-02, AGT-06, AGT-03

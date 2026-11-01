@@ -35,6 +35,21 @@ describe("selectToolset: слова", () => {
     expect(selectToolset({ text }).toolset).toBe(toolset);
   });
 
+  // AFF-01: оба примера SPEC и слова «позвол…», «безопасный платёж», «ПДН», «долговая нагрузка» — планирование (сценарии покупки).
+  it.each([
+    ["Могу ли я купить ноутбук за 3 000?", "planning"],
+    ["Потяну ли машину за 40 000?", "planning"],
+    ["Могу ли я позволить себе отпуск?", "planning"],
+    ["Что позволяет мой бюджет?", "planning"],
+    ["Какой безопасный платёж по кредиту?", "planning"],
+    ["Сколько я могу платить с учётом ПДН", "planning"],
+    ["Какая у меня долговая нагрузка?", "planning"],
+    // Слова права точнее «позвол…»: вопрос о законе остаётся в legal.
+    ["Что мне позволяет закон о защите прав потребителей?", "legal"],
+  ])("«%s» → %s", (text, toolset) => {
+    expect(selectToolset({ text }).toolset).toBe(toolset);
+  });
+
   it("совпали слова двух наборов — приоритет у права: «налог» и «лимит»", () => {
     expect(selectToolset({ text: "Налог и лимит" }).toolset).toBe("legal");
   });
@@ -56,6 +71,8 @@ describe("selectToolset: страница", () => {
     ["/budget", "planning"],
     ["/recurring", "planning"],
     ["/accounts", "planning"],
+    // T-049: на «Могу ли я позволить покупку?» вопрос идёт в набор с afford_scenarios и safe_loan_payment.
+    ["/afford", "planning"],
     ["/documents", "reports"],
     ["/operations", "core"],
     ["/home", "core"],

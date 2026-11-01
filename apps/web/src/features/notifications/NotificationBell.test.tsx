@@ -118,6 +118,44 @@ describe("NOTIF-01: колокольчик", () => {
     expect(screen.getByRole("link", { name: "Показать" })).toHaveAttribute("href", "/deductions");
   });
 
+  it("CAL-07: напоминание календаря — текст по типу и дням, время «сегодня, чч:мм», «Показать» ведёт в календарь", async () => {
+    server.use(
+      http.get("*/api/notifications", () =>
+        HttpResponse.json({
+          items: [
+            n(ID(4), {
+              kind: "calendar-reminder",
+              params: { type: "warranty", title: "Наушники", days: 7, on: "2026-11-18" },
+              objectRef: { entity: "calendar-event", id: ID(8) },
+              createdAt: new Date().toISOString(),
+            }),
+            n(ID(5), {
+              kind: "calendar-reminder",
+              params: { type: "own", title: "Оплатить садик", days: 1, on: "2026-12-01" },
+              objectRef: { entity: "calendar-event", id: ID(7) },
+              read: true,
+            }),
+          ],
+          nextCursor: null,
+          unread: 1,
+        }),
+      ),
+    );
+    renderBell();
+    await userEvent.click(await screen.findByRole("button", { name: /Уведомления/ }));
+    expect(
+      await screen.findByText(
+        "Гарантия на «Наушники» заканчивается через 7 дней — проверьте, всё ли работает.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Напоминание: «Оплатить садик» — завтра.")).toBeInTheDocument();
+    expect(screen.getByText(/^сегодня, \d{2}:\d{2}$/u)).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Показать" })[0]).toHaveAttribute(
+      "href",
+      "/calendar",
+    );
+  });
+
   it("Escape закрывает список и возвращает фокус колокольчику (NFR-20)", async () => {
     server.use(
       http.get("*/api/notifications", () =>

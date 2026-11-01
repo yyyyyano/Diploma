@@ -120,6 +120,7 @@ const OVERVIEW = {
     reason: null,
   },
   foundDeductions: [],
+  events: [],
   upcoming: [
     {
       id: ID(5),
@@ -229,6 +230,7 @@ describe("DES-16: состояния «Главной»", () => {
         limits: [],
         goals: [],
         foundDeductions: [],
+        events: [],
         upcoming: [],
       }),
     );
@@ -538,5 +540,42 @@ describe("TAX-20, DASH-02, P5: найденный вычет — янтарна�
     renderPage();
     await screen.findByText("Главная");
     expect(screen.queryByText("Кошт нашёл налоговый вычет")).toBeNull();
+  });
+});
+
+describe("CAL-01, DASH-02: события календаря на главной", () => {
+  const EVENT = {
+    id: "0190f0a0-0000-7000-8000-0000000000f1",
+    type: "warranty",
+    title: "Наушники",
+    rule: null,
+    on: "2026-10-30",
+    amount: null,
+    approx: false,
+    direction: null,
+    traceId: null,
+    stored: true,
+    remindDays: [30, 7, 1],
+    canDelete: false,
+    origin: {
+      kind: "warranty",
+      params: { store: "Электросила", purchasedOn: "2024-10-30", months: 24 },
+    },
+    ref: null,
+  };
+
+  it("ближайшие события — со значком типа, днём и «через N дней»; ссылка ведёт в календарь на карточку события", async () => {
+    server.use(overview({ today: "2026-10-28", events: [EVENT] }));
+    renderPage();
+    expect(await screen.findByRole("heading", { name: "События календаря" })).toBeInTheDocument();
+    const row = screen.getByRole("link", { name: /Наушники, 30\.10\.2026/u });
+    expect(row).toHaveAttribute("href", `/calendar?event=${EVENT.id}`);
+    expect(row).toHaveTextContent("Гарантия · пятница · через 2 дня");
+  });
+
+  it("событий нет — одна строка вместо пустого блока", async () => {
+    server.use(overview({ events: [] }));
+    renderPage();
+    expect(await screen.findByText("Ближайших событий нет.")).toBeInTheDocument();
   });
 });

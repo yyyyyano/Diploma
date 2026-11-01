@@ -114,6 +114,34 @@ export function NotificationItem({ notification, onRead }: NotificationItemProps
     };
     textKey = `notifications:kinds.deduction.${variants[String(notification.params["kind"] ?? "")] ?? "text"}`;
     Object.assign(params, { amount: formatMoney(Money.of(num("amount"), "BYN")) });
+  } else if (notification.kind === "calendar-reminder") {
+    // CAL-07: «когда» — по числу дней до события; гарантия и срок по правилу — свои тексты, прочее — название события.
+    const days = num("days");
+    const base = "notifications:kinds.calendar-reminder";
+    const when =
+      days <= 0
+        ? t(`${base}.when.today`)
+        : days === 1
+          ? t(`${base}.when.tomorrow`)
+          : t(`${base}.when.days`, { count: days });
+    const type = String(notification.params["type"] ?? "own");
+    const title = String(notification.params["title"] ?? "");
+    const rule = String(notification.params["rule"] ?? "");
+    const ruleName = t(`${base}.rules.${rule}` as never, { defaultValue: "" });
+    Object.assign(params, {
+      when,
+      title,
+      type: t(`${base}.types.${type}` as never),
+      rule: ruleName,
+    });
+    textKey =
+      type === "warranty" && title !== ""
+        ? `${base}.textWarranty`
+        : rule !== "" && ruleName !== ""
+          ? `${base}.textRule`
+          : title !== ""
+            ? `${base}.textEvent`
+            : `${base}.textType`;
   } else if (notification.kind === "goal") {
     const reason = String(notification.params["reason"] ?? "");
     const variants: Record<string, string> = {

@@ -15,6 +15,7 @@ import { lazy, Suspense, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { UndoActionToast } from "../../entities/action/index.ts";
 import { useAccountName } from "../../entities/account/index.ts";
+import { EventRow, useCalendarTexts } from "../../entities/calendar-event/index.ts";
 import { categoryRefOf, useCategoryLookup } from "../../entities/category/index.ts";
 import { FoundBanner, useFoundChange } from "../../entities/deduction/index.ts";
 import { ExplanationSheet } from "../../entities/explanation/index.ts";
@@ -47,7 +48,8 @@ const PeriodBar = lazy(() =>
 type Toast = { readonly token: string; readonly message: string };
 
 export function HomePage({ search }: { readonly search: HomeSearch }) {
-  const { t } = useTranslation(["dashboard", "budget", "accounts", "categories"]);
+  useCalendarTexts();
+  const { t } = useTranslation(["dashboard", "budget", "accounts", "categories", "calendar"]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const lookup = useCategoryLookup();
@@ -470,6 +472,32 @@ export function HomePage({ search }: { readonly search: HomeSearch }) {
                 )}
               </section>
             </div>
+
+            <section className={classes.card} aria-labelledby="home-events">
+              <div className={classes.cardHead}>
+                <h2 id="home-events" className={classes.heading}>
+                  {t("calendar:home.title")}
+                </h2>
+                <Link to="/calendar" className={classes.link}>
+                  {t("calendar:home.link")}
+                </Link>
+              </div>
+              {data.events.length === 0 ? (
+                <p className={classes.muted}>{t("calendar:home.empty")}</p>
+              ) : (
+                <ul className={classes.list}>
+                  {data.events.map((event) => (
+                    <li key={event.id}>
+                      <EventRow
+                        entry={event}
+                        today={data.today}
+                        href={`/calendar?event=${encodeURIComponent(event.id)}`}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
             <div className={classes.columns}>
               <section className={classes.card} aria-labelledby="home-upcoming">

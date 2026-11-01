@@ -145,6 +145,7 @@ describe("дерево процедур", () => {
       "chat.send",
       "chat.stop",
       "voice.transcribe",
+      "xlsExport.download",
       "llm.localModelsProgress",
       "llm.models",
       "llm.setPreferredModel",

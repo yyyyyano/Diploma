@@ -180,6 +180,8 @@ export {
   ChatMessage,
   chatContract,
   ConversationId,
+  ConversationItem,
+  ConversationTitle,
   MessageStatus,
   RunId,
   RunMetadata,

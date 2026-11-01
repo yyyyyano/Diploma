@@ -6,6 +6,8 @@
 import { eventIterator, oc } from "@orpc/contract";
 import { z } from "zod";
 import { pickErrors } from "../errors.ts";
+import { AnswerMetadata } from "./agent-parts.ts";
+import { PageContext } from "./page-context.ts";
 
 export const ConversationId = z.uuid().brand<"ConversationId">();
 export type ConversationId = z.infer<typeof ConversationId>;
@@ -28,6 +30,8 @@ export const ChatMessage = z.strictObject({
   role: z.enum(["user", "assistant"]),
   parts: z.array(UiMessagePart).max(500),
   status: MessageStatus,
+  /** Кто ответил (LLM-10): сохраняется с ответом, чтобы пометка «Модель X недоступна, ответила Y» пережила перезагрузку. */
+  answeredBy: AnswerMetadata.shape.answeredBy.optional(),
 });
 export type ChatMessage = z.infer<typeof ChatMessage>;
 
@@ -35,26 +39,64 @@ export type ChatMessage = z.infer<typeof ChatMessage>;
 export const RunMetadata = z.strictObject({ runId: RunId, conversationId: ConversationId });
 export type RunMetadata = z.infer<typeof RunMetadata>;
 
+/** Название диалога (CHAT-01): по первому сообщению без модели, пользователь может переименовать. */
+export const ConversationTitle = z.string().trim().min(1).max(100);
+
+/** Строка списка диалогов: название, время последнего сообщения и его начало. */
+export const ConversationItem = z.strictObject({
+  id: ConversationId,
+  title: z.string().nullable(),
+  /** Время последнего сообщения, ISO UTC; день и час сайт показывает по поясу пользователя. */
+  updatedAt: z.iso.datetime(),
+  /** Начало последнего сообщения (текст без разметки) для строки списка. */
+  preview: z.string().max(120),
+});
+export type ConversationItem = z.infer<typeof ConversationItem>;
+
 export const SendInput = z.strictObject({
   /** Нет — новый диалог. */
   conversationId: ConversationId.optional(),
   text: z.string().trim().min(1).max(4000),
+  /** Что пользователь видит сейчас (CHAT-08): агент получает это блоком данных, а не инструкцией. */
+  page: PageContext.optional(),
 });
 
 export const chatContract = {
-  /** Последний диалог и его сообщения (список диалогов — T-043). */
-  history: oc.route({ method: "GET", path: "/chat/history" }).output(
-    z.strictObject({
-      conversationId: ConversationId.nullable(),
-      messages: z.array(ChatMessage).max(500),
-    }),
-  ),
+  /** Диалог и его сообщения; без `conversationId` — последний. Чужой или несуществующий — NOT_FOUND. */
+  history: oc
+    .route({ method: "GET", path: "/chat/history" })
+    .input(z.strictObject({ conversationId: ConversationId.optional() }))
+    .output(
+      z.strictObject({
+        conversationId: ConversationId.nullable(),
+        title: z.string().nullable(),
+        messages: z.array(ChatMessage).max(500),
+      }),
+    )
+    .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
+  /** Список диалогов, свежие сверху (CHAT-01). */
+  conversations: oc
+    .route({ method: "GET", path: "/chat/conversations" })
+    .output(z.strictObject({ items: z.array(ConversationItem).max(200) }))
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Переименовать диалог. */
+  rename: oc
+    .route({ method: "POST", path: "/chat/rename" })
+    .input(z.strictObject({ conversationId: ConversationId, title: ConversationTitle }))
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("UNAUTHORIZED", "VALIDATION", "NOT_FOUND")),
+  /** Удалить диалог с сообщениями; идущий в нём ответ останавливается. */
+  remove: oc
+    .route({ method: "POST", path: "/chat/remove" })
+    .input(z.strictObject({ conversationId: ConversationId }))
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND")),
   /** Сообщение ассистенту: поток ответа (куски UI-сообщения); первый кусок несёт RunMetadata. */
   send: oc
     .route({ method: "POST", path: "/chat/send" })
     .input(SendInput)
     .output(eventIterator(UiMessageChunk))
-    .errors(pickErrors("UNAUTHORIZED", "VALIDATION", "NOT_FOUND", "UNAVAILABLE")),
+    .errors(pickErrors("UNAUTHORIZED", "VALIDATION", "NOT_FOUND", "UNAVAILABLE", "RATE_LIMITED")),
   /** «Стоп»: запуск своего домохозяйства останавливается, модель освобождается; чужой или законченный — NOT_FOUND. */
   stop: oc
     .route({ method: "POST", path: "/chat/stop" })

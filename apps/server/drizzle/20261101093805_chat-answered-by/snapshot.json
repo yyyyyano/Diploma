@@ -1,0 +1,37 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "c436ca36-d542-48a3-ac5d-2f7f56c3e915",
+  "prevIds": ["36aab0e9-52d8-4e12-9419-070213a09c0a"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "chat_messages", "answered_by"],
+      "writes": [
+        "s|col|public.chat_messages.answered_by",
+        "n|col|public.chat_messages.answered_by",
+        "e|col|public.chat_messages.answered_by"
+      ],
+      "reads": ["n|tbl|public.chat_messages", "n|sch|public"]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "chat_messages",
+        "name": "answered_by",
+        "type": "jsonb",
+        "typeSchema": null,
+        "notNull": false,
+        "dimensions": 0,
+        "default": null,
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    }
+  ]
+}

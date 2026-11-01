@@ -14,8 +14,16 @@ import type { VoiceFacade } from "../voice/index.ts";
 import type { LegalBaseFacade } from "../legal-base/index.ts";
 import type { LegalConsultFacade } from "../legal-consult/index.ts";
 import { chatRouter } from "./api/router.ts";
+import {
+  makeConversations,
+  makeHistory,
+  makeRemoveConversation,
+  makeRenameConversation,
+} from "./application/dialogs.ts";
+import { createLiveRuns } from "./application/live-runs.ts";
 import { createRunRegistry } from "./application/runs.ts";
-import { makeHistory, makeSendMessage, makeStopRun } from "./application/send-message.ts";
+import { makeSendMessage, makeStopRun } from "./application/send-message.ts";
+import { CHAT_SETTINGS } from "./settings.ts";
 import { chatUserData } from "./user-data.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -37,13 +45,18 @@ export const RUNS_GRACE_MS = 6_000;
 
 export function createChatModule({ platform, facades }: ModuleDeps<ChatFacades, Platform>) {
   const runs = createRunRegistry(platform.log);
+  const live = createLiveRuns();
   return defineModule({
     id: "chat",
     router: chatRouter({
-      history: makeHistory(),
-      send: makeSendMessage({ agent: facades.agent, runs, platform }),
+      history: makeHistory({ live }),
+      conversations: makeConversations(),
+      rename: makeRenameConversation(),
+      remove: makeRemoveConversation({ live }),
+      send: makeSendMessage({ agent: facades.agent, runs, live, platform }),
       stop: makeStopRun({ runs }),
     }),
+    settings: CHAT_SETTINGS,
     userData: chatUserData,
     stop: () => runs.shutdown(RUNS_GRACE_MS),
   });

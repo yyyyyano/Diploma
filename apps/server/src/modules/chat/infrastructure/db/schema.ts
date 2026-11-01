@@ -7,7 +7,7 @@ import { check, index, jsonb, text, uuid } from "drizzle-orm/pg-core";
 import { ownedFk, userOwnedTable } from "../../../../platform/db/tables.ts";
 
 export const chatConversations = userOwnedTable("chat_conversations", {
-  /** Название по первому сообщению — T-043; пока null. */
+  /** CHAT-01: первое сообщение, обрезанное по слову (без модели); у диалогов до T-043 — null. */
   title: text(),
 });
 
@@ -18,6 +18,8 @@ export const chatMessages = userOwnedTable(
     role: text().notNull(),
     parts: jsonb().notNull(),
     status: text().notNull().default("complete"),
+    /** LLM-10: `{ model, unavailable }` — кто ответил; пометка «Модель X недоступна» переживает перезагрузку. */
+    answeredBy: jsonb(),
   },
   (t) => [
     ...ownedFk(t, t.conversationId, chatConversations, { onDelete: "cascade" }),

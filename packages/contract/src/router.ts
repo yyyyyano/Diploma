@@ -22,6 +22,7 @@ import { privacyContract } from "./privacy/privacy.contract.ts";
 import { profileContract } from "./profile/profile.contract.ts";
 import { receiptsContract } from "./receipts/receipts.contract.ts";
 import { statementsContract } from "./statements/statements.contract.ts";
+import { taxContract } from "./tax/tax.contract.ts";
 import { transactionsContract } from "./transactions/transactions.contract.ts";
 import { systemContract } from "./system/system.contract.ts";
 import { voiceContract } from "./voice/voice.contract.ts";
@@ -41,6 +42,7 @@ export const contract = {
   recurring: recurringContract,
   fin: finContract,
   budgets: budgetsContract,
+  tax: taxContract,
   dashboard: dashboardContract,
   categories: categoriesContract,
   transactions: transactionsContract,

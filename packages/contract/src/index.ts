@@ -355,4 +355,18 @@ export {
   UpdateTransactionPatch,
   Visibility,
 } from "./transactions/transactions.contract.ts";
+export {
+  CalculateDeductionInput,
+  DEDUCTION_FLAGS,
+  DEDUCTION_KINDS,
+  DEDUCTION_WAYS,
+  DeductionAmount,
+  DeductionFlag,
+  DeductionIncome,
+  DeductionKind,
+  DeductionReason,
+  DeductionResult,
+  DeductionTerm,
+  taxContract,
+} from "./tax/tax.contract.ts";
 export { contract } from "./router.ts";

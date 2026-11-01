@@ -92,6 +92,7 @@ describe("дерево процедур", () => {
       "budgets.contribute",
       "budgets.requestDeleteGoal",
       "budgets.previewGoal",
+      "tax.calculate",
       "dashboard.overview",
       "categories.list",
       "categories.create",

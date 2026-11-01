@@ -55,6 +55,10 @@ test("«Ассистент»: панель с контекстом страни�
   await page.getByRole("button", { name: "Продолжить" }).click();
   await page.getByRole("button", { name: "Пропустить анкету" }).click();
   await expect(page).toHaveURL(/\/home$/);
+  // «Наличные» новому пользователю создаёт worker (STMT-01): ждём счёт, иначе вопрос про счета уйдёт раньше него.
+  await page.goto("/accounts");
+  await expect(page.getByRole("article", { name: "Наличные" })).toBeVisible({ timeout: 15_000 });
+  await page.goto("/home");
 
   // CHAT-08: плавающая кнопка на любой странице — панель справа, «Вижу: Главная · месяц год».
   await page.getByRole("button", { name: "Спросить ассистента" }).click();

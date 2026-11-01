@@ -173,7 +173,7 @@ describe("AFF-02, AFF-03: три сценария по данным пользо
 
   it("желаемый день покупки в будущем: «сейчас» — это он, после следующего дохода — первый доход после него", async () => {
     const { a, s } = await setup();
-    const result = await a.scenarios(s, { price: byn(100_000), on: "2026-11-10" });
+    const result = await a.scenarios(s, { price: byn(100_000), on: LocalDate.parse("2026-11-10") });
     expect(result.purchaseOn).toBe("2026-11-10");
     expect(scenario(result, "now").on).toBe("2026-11-10");
     expect(scenario(result, "after-income").on).toBe("2026-12-05");
@@ -290,7 +290,7 @@ describe("AFF-08: регулярного дохода нет", () => {
     const result = await a.scenarios(s, {
       price: byn(100_000),
       expectedIncome: byn(240_000),
-      expectedIncomeOn: "2026-11-05",
+      expectedIncomeOn: LocalDate.parse("2026-11-05"),
     });
     expect(result.needs).toEqual([]);
     expect(result.estimate).toBe(true);

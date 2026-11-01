@@ -24,7 +24,10 @@ export async function findImport(s: ScopedDb, id: string): Promise<ImportRow | u
 }
 
 /** Какие из id — импорты этого домохозяйства; чужие и удалённые в список не попадают (CHAT-03). */
-export async function existingImportIds(s: ScopedDb, ids: readonly string[]): Promise<string[]> {
+export async function existingImportIds(
+  s: ScopedDb,
+  ids: readonly string[],
+): Promise<readonly string[]> {
   if (ids.length === 0) return [];
   const rows = await s.db
     .select({ id: statementImports.id })

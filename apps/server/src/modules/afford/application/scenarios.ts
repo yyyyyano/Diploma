@@ -28,6 +28,7 @@ import type {
   ScenarioReason,
 } from "@kosht/contract";
 import { LocalDate, Money, TraceId, type TraceValue } from "@kosht/kernel";
+import type { z } from "zod";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { addMonths, monthlyDays } from "../domain/dates.ts";
@@ -63,8 +64,11 @@ function unpricedOf(entries: readonly CalendarEntry[]): AffordResult["unpriced"]
   );
 }
 
+/** Вход после разбора схемой: дни — `LocalDate`. */
+type Input = z.output<typeof AffordInput>;
+
 export function makeScenarios(d: Deps) {
-  return async function scenarios(s: ScopedDb, input: AffordInput): Promise<AffordResult> {
+  return async function scenarios(s: ScopedDb, input: Input): Promise<AffordResult> {
     const today = d.platform.clock.today();
     const horizonDays = await d.platform.settings.get(AFFORD_HORIZON_DAYS);
     const to = LocalDate.addDays(today, horizonDays);

@@ -1,0 +1,117 @@
+/* .as-list, .as-grp, .as-row, .as-dlg, .as-ren из design/screens/Assistant.dc.html. */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding: var(--s-18) var(--s-14);
+  min-height: 0;
+}
+
+.group {
+  margin: 0;
+  padding: var(--s-8) var(--s-8) var(--s-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+}
+
+.row:hover {
+  background: var(--kit-hover-soft);
+}
+
+.on {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--kit-shadow-card);
+}
+
+.open {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--s-8) var(--s-4) var(--s-8) var(--s-12);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.title {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rename {
+  display: flex;
+  flex: 1;
+  gap: var(--s-6);
+  padding: var(--s-6);
+}
+
+.empty {
+  margin: 0;
+  padding: 0 var(--s-8);
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
+.error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-6);
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.error > svg {
+  flex: none;
+}
+
+.cloudNote {
+  display: flex;
+  gap: var(--s-6);
+  margin: auto 0 0;
+  padding: var(--s-12) var(--s-8) 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.cloudNote > svg {
+  flex: none;
+  margin-top: var(--s-2);
+}

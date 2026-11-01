@@ -1,0 +1,37 @@
+/* Подсказка вместо микрофона по сети (MobileChat): --law-soft «информация». */
+.hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-10);
+  max-width: 780px;
+  margin: 0 auto;
+  padding: var(--s-10) var(--s-12);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--law-soft);
+  color: var(--law);
+  font-size: 14px;
+}
+
+.hint > svg {
+  flex: none;
+  margin-top: var(--s-2);
+}
+
+.hint p {
+  flex: 1;
+  margin: 0;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  margin: calc(var(--s-10) * -1) calc(var(--s-12) * -1) calc(var(--s-10) * -1) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}

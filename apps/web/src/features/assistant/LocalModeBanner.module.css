@@ -1,0 +1,25 @@
+/* .as-local из design/screens/Assistant.dc.html: янтарная плашка «внимание» (--warn на --warn-soft). */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-10);
+  padding: var(--s-10) var(--s-24);
+  border-bottom: 1px solid var(--line);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.link {
+  margin-left: auto;
+  color: var(--warn);
+  font-weight: 700;
+}
+
+@media (max-width: 860px) {
+  .banner {
+    padding-inline: var(--s-16);
+  }
+}

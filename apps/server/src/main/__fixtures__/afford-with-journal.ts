@@ -6,7 +6,9 @@ import type { TestDb } from "@kosht/testing/db";
 import { testScope } from "@kosht/testing";
 import { createScopedDb, type ScopedDb } from "../../platform/db/scoped-db.ts";
 import { createSystemDb } from "../../platform/db/system-db.ts";
+import { makeScenarios } from "../../modules/afford/application/scenarios.ts";
 import { makeSafeLoan } from "../../modules/afford/application/safe-loan.ts";
+import { affordTools } from "../../modules/afford/agent/tools.ts";
 import type { Deps } from "../../modules/afford/application/deps.ts";
 import { makeGoals } from "../../modules/budgets/application/goals.ts";
 import { makeOverview } from "../../modules/budgets/application/overview.ts";
@@ -60,6 +62,7 @@ export function affordWithJournal(db: TestDb) {
     normTables: { rate: rates.value },
     explain: r.t.explain,
   } as unknown as Deps;
+  const scenarios = makeScenarios(deps);
   const safeLoan = makeSafeLoan(deps);
 
   /** Подтверждает пределы ПДН (строки миграции ждут «Подтвердить», ADM-11): как администратор через `norm-tables`. */
@@ -78,7 +81,9 @@ export function affordWithJournal(db: TestDb) {
     r,
     s: r.s,
     goals,
+    scenarios,
     safeLoan,
     confirmPdn,
+    tools: affordTools(scenarios, safeLoan),
   };
 }

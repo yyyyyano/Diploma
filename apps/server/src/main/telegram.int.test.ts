@@ -4,7 +4,6 @@
 import { CONSENT_VERSIONS, createTelegramT } from "@kosht/i18n";
 import { makeScope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import type { UserFromGetMe } from "grammy/types";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import type { ActionsFacade } from "../modules/actions/index.ts";
@@ -26,7 +25,7 @@ const BOT = {
   is_bot: true,
   first_name: "Кошт",
   username: "kosht_stack_bot",
-} as UserFromGetMe;
+};
 
 let db: TestDb;
 let stack: HttpStack;
@@ -63,7 +62,7 @@ function bot() {
     TOKEN,
     { handler: telegram().handler, log: memoryLogger().log },
     {
-      botInfo: BOT,
+      botInfo: BOT as never,
     },
   );
   let messageId = 0;

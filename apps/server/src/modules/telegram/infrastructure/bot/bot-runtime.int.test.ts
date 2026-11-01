@@ -31,7 +31,7 @@ function runtime(token: () => string | undefined) {
   const instance = createBotRuntime({
     system,
     secrets: { reveal: async () => token() },
-    settings: { get: async () => 1 },
+    settings: { get: (async () => 1) as never },
     log: log.log,
     handler: { handle: async () => undefined },
     now: () => new Date(),

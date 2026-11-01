@@ -4,20 +4,18 @@ import { LocalDate, HouseholdId, makeScope, UserId } from "@kosht/kernel";
 import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { CONSENT_VERSIONS, createTelegramT, formatMoney } from "@kosht/i18n";
-import type { UIMessageChunk } from "ai";
-import type { UserFromGetMe } from "grammy/types";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { createScopedDb } from "../../../../platform/db/scoped-db.ts";
-import { createSystemDb } from "../../../../platform/db/system-db.ts";
-import { AppError } from "../../../../platform/errors/app-error.ts";
-import { memoryLogger } from "../../../../platform/logging/__fixtures__/memory-logger.ts";
-import { encodeCallback } from "../../domain/callback-data.ts";
-import type { TelegramDeps } from "../../application/deps.ts";
-import { makeBotHandler } from "../../application/handler.ts";
-import { makeLinkOps } from "../../application/link.ts";
-import { FileTooLargeError } from "../../application/ports.ts";
-import { saveBotName } from "../db/telegram.repo.ts";
-import { createBot } from "./bot-runtime.ts";
+import { createScopedDb } from "../../../platform/db/scoped-db.ts";
+import { createSystemDb } from "../../../platform/db/system-db.ts";
+import { AppError } from "../../../platform/errors/app-error.ts";
+import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
+import { encodeCallback } from "../domain/callback-data.ts";
+import type { TelegramDeps } from "./deps.ts";
+import { makeBotHandler } from "./handler.ts";
+import { makeLinkOps } from "./link.ts";
+import { FileTooLargeError } from "./ports.ts";
+import { saveBotName } from "../infrastructure/db/telegram.repo.ts";
+import { createBot } from "../infrastructure/bot/bot-runtime.ts";
 
 const t = createTelegramT();
 const TOKEN = "111111:test-token";
@@ -26,7 +24,7 @@ const BOT = {
   is_bot: true,
   first_name: "Кошт",
   username: "kosht_test_bot",
-} as UserFromGetMe;
+};
 
 let db: TestDb;
 beforeAll(async () => {
@@ -73,7 +71,7 @@ function harness() {
     fileSize: 1000,
   };
   const stream = (text: string) =>
-    new ReadableStream<UIMessageChunk>({
+    new ReadableStream<{ type: string; id?: string; delta?: string }>({
       start(controller) {
         controller.enqueue({ type: "start" });
         for (const part of text.match(/.{1,7}/gsu) ?? []) {
@@ -207,7 +205,7 @@ function harness() {
         return new Uint8Array(state.fileSize);
       },
     },
-    { botInfo: BOT },
+    { botInfo: BOT as never },
   );
   let messageId = 100;
   bot.api.config.use(async (_prev, method, payload) => {

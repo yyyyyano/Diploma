@@ -29,6 +29,7 @@ describe("defineModule: пустой, но живой модуль", () => {
       settings: [],
       secrets: [],
       rateRules: [],
+      start: {},
     });
   });
 

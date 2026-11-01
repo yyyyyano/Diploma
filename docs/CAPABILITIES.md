@@ -84,7 +84,7 @@
 | `telegram` | TG-01…11, PRIV-08 (подключение), AUTH-05 (сброс через бот) | бот: привязка, команды, фото/файлы/голос, канал доставки уведомлений | files, chat, agent, identity, privacy, notifications, actions, receipts, statements, voice, dashboard, budgets, weekly | system | — |
 | `demo` | DEMO-01…04 | демо-пользователь и связный набор данных от текущей даты (воспроизводимо) | identity, privacy, profile, files, accounts, transactions, receipts, categories, recurring, budgets, calendar, weekly | — | — |
 | `quality` | QA-10…16, ADM-40 | eval-прогоны с бюджетом токенов, результаты, сравнение с прошлыми | llm, receipts, statements, categories, legal-base, legal-consult, agent | system | — |
-| `admin` | ADM-01…60 (экраны) | раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет | identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, quality, demo | — | — |
+| `admin` | ADM-01…60 (экраны) | раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет | identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, telegram, quality, demo | — | — |
 <!-- /capabilities:tier-4 -->
 
 ## Кто слушает события

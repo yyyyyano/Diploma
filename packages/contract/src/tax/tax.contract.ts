@@ -6,7 +6,8 @@ import { TraceId } from "@kosht/kernel";
 import { oc } from "@orpc/contract";
 import { z } from "zod";
 import { LawCitationData } from "../chat/agent-parts.ts";
-import { Money } from "../common.ts";
+import { UndoToken } from "../actions/actions.contract.ts";
+import { LocalDate, Money } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 import { CHECKLIST_IDS } from "../legal-consult/legal-consult.contract.ts";
 import { EmploymentType } from "../profile/profile.contract.ts";
@@ -133,7 +134,60 @@ export const DeductionResult = z.strictObject({
 });
 export type DeductionResult = z.infer<typeof DeductionResult>;
 
+export const FoundDeductionId = z.uuid().brand<"FoundDeductionId">();
+export type FoundDeductionId = z.infer<typeof FoundDeductionId>;
+
+/** Состояния найденного вычета (TAX-20): новый → показан → «Не моё» (отклонён, больше не предлагается) | оформлен. */
+export const FOUND_STATUSES = ["new", "shown", "dismissed", "filed"] as const;
+export const FoundStatus = z.enum(FOUND_STATUSES);
+export type FoundStatus = z.infer<typeof FoundStatus>;
+
+/**
+ * Найденный по операциям вычет (TAX-20): одна запись на основание — оплату обучения (операция), детей в профиле, платежи по кредиту
+ * при учёте нуждающихся. `reason` у жилья: `ask-queue` — один вопрос об учёте нуждающихся (ответ — факт `housingQueue`), `check` —
+ * учёт есть, проверьте условия. Сумма «до» — результат калькулятора (T-045) с `traceId`; у жилья без расчёта — `null`.
+ */
+export const FoundDeduction = z.strictObject({
+  id: FoundDeductionId,
+  kind: DeductionKind,
+  status: FoundStatus,
+  reason: z.enum(["ask-queue", "check"]).nullable(),
+  year: z.int().min(2000).max(2100),
+  amount: DeductionAmount.nullable(),
+  /** Получатель платежа («БГУ»); у основания-факта — null. */
+  payee: z.string().max(120).nullable(),
+  /** Операция-основание: открывается в «Операциях»; день и сумма — снимок на момент находки. */
+  operation: z
+    .strictObject({ id: z.uuid(), on: LocalDate.schema, amount: Money.schema })
+    .nullable(),
+  foundOn: LocalDate.schema,
+});
+export type FoundDeduction = z.infer<typeof FoundDeduction>;
+
+export const FoundList = z.strictObject({ items: z.array(FoundDeduction) });
+export type FoundList = z.infer<typeof FoundList>;
+
+/** Куда можно перевести найденный вычет вручную: «Не моё», «Оформлено», «Вернуть» (снова показан). */
+export const SettableFoundStatus = z.enum(["dismissed", "filed", "shown"]);
+
 export const taxContract = {
+  /** Найденные вычеты пользователя: активные, оформленные и отклонённые (их можно вернуть) — свежие первыми. */
+  found: oc
+    .route({ method: "GET", path: "/tax/found" })
+    .output(FoundList)
+    .errors(pickErrors("UNAUTHORIZED")),
+  /** Человек увидел новые находки: «новый» → «показан». Остальные состояния не меняются. */
+  markFoundShown: oc
+    .route({ method: "POST", path: "/tax/found/shown" })
+    .input(z.strictObject({ ids: z.array(FoundDeductionId).min(1).max(50) }))
+    .output(z.strictObject({ ok: z.literal(true) }))
+    .errors(pickErrors("UNAUTHORIZED", "VALIDATION")),
+  /** «Это не моё», «Оформлено», «Вернуть» — сразу, с «Отменить» (P5). */
+  setFoundStatus: oc
+    .route({ method: "POST", path: "/tax/found/status" })
+    .input(z.strictObject({ id: FoundDeductionId, status: SettableFoundStatus }))
+    .output(z.strictObject({ found: FoundDeduction, undoToken: UndoToken }))
+    .errors(pickErrors("UNAUTHORIZED", "NOT_FOUND", "VALIDATION")),
   /** Расчёт вычета «Обучение / Жильё / Дети» на сегодня; значения — только подтверждённые из таблицы ставок. */
   calculate: oc
     .route({ method: "POST", path: "/tax/calculate" })

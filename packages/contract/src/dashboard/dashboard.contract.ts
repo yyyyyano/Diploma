@@ -10,6 +10,7 @@ import { LocalDate, Money } from "../common.ts";
 import { pickErrors } from "../errors.ts";
 import { FreeBalanceReason } from "../fin/fin.contract.ts";
 import { RecurringId, RecurringSection } from "../recurring/recurring.contract.ts";
+import { FoundDeduction } from "../tax/tax.contract.ts";
 
 /** Число с расчётом: сумма и traceId её трассы. */
 export const Amount = z.strictObject({ amount: Money.schema, traceId: TraceId });
@@ -17,6 +18,8 @@ export type Amount = z.infer<typeof Amount>;
 
 /** DASH-02: траты по категориям — не больше стольких рядов, остальное — «Остальное». */
 export const MAX_CATEGORY_ROWS = 6;
+/** Найденных вычетов на главной — не больше: карточка не вытесняет остальное (DASH-02). */
+export const MAX_FOUND_ON_HOME = 3;
 
 export const DashboardPeriod = z
   .strictObject({ from: LocalDate.schema, to: LocalDate.schema })
@@ -96,6 +99,8 @@ export const DashboardOverview = z.strictObject({
   }),
   /** Ближайшие регулярные платежи на 30 дней вперёд (не больше пяти). */
   upcoming: z.array(DashboardUpcoming).max(5),
+  /** Найденные вычеты (TAX-20, DASH-02): новые и показанные, свежие первыми, не больше трёх — янтарная карточка. */
+  foundDeductions: z.array(FoundDeduction).max(MAX_FOUND_ON_HOME),
 });
 export type DashboardOverview = z.infer<typeof DashboardOverview>;
 

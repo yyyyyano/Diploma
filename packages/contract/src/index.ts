@@ -23,6 +23,7 @@ export {
   DashboardUpcoming,
   dashboardContract,
   MAX_CATEGORY_ROWS,
+  MAX_FOUND_ON_HOME,
 } from "./dashboard/dashboard.contract.ts";
 export {
   BudgetGoal,
@@ -368,6 +369,12 @@ export {
   DeductionReason,
   DeductionResult,
   DeductionTerm,
+  FOUND_STATUSES,
+  FoundDeduction,
+  FoundDeductionId,
+  FoundList,
+  FoundStatus,
+  SettableFoundStatus,
   taxContract,
 } from "./tax/tax.contract.ts";
 export { contract } from "./router.ts";

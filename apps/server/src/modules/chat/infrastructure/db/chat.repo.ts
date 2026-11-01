@@ -1,7 +1,7 @@
 // Запросы к таблицам chat: первый аргумент — s: ScopedDb, у каждого обращения свой s.own (ADR-0006).
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
-import { chatConversations, chatMessages } from "./schema.ts";
+import { chatConversations, chatMessages, type ChatChannel } from "./schema.ts";
 
 /**
  * Порядок сообщений: время, затем вопрос раньше ответа, затем id. Вопрос и строка ответа «идёт» пишутся одной транзакцией, а `now()` —
@@ -31,30 +31,38 @@ export interface ConversationRow {
 }
 
 /** Название — null у диалога, начатого одними вложениями (текста, из которого его сделать, нет). */
-export async function createConversation(s: ScopedDb, title: string | null): Promise<string> {
+export async function createConversation(
+  s: ScopedDb,
+  title: string | null,
+  channel: ChatChannel = "web",
+  at?: Date,
+): Promise<string> {
   const [row] = await s
     .insert(chatConversations)
-    .values({ title })
+    .values({ title, channel, ...(at === undefined ? {} : { createdAt: at, updatedAt: at }) })
     .returning({ id: chatConversations.id });
   if (row === undefined) throw new Error("Диалог не создан.");
   return row.id;
 }
 
-/** Диалог своего домохозяйства есть (чужой id неотличим от несуществующего). */
+/** Диалог сайта в своём домохозяйстве есть (чужой id и диалог бота неотличимы от несуществующего). */
 export async function conversationExists(s: ScopedDb, id: string): Promise<boolean> {
   const rows = await s.db
     .select({ id: chatConversations.id })
     .from(chatConversations)
-    .where(and(s.own(chatConversations), eq(chatConversations.id, id)));
+    .where(and(s.own(chatConversations), eq(chatConversations.id, id), webOnly));
   return rows.length === 1;
 }
 
-/** Последний диалог домохозяйства или undefined. */
+/** Диалоги сайта: диалоги бота здесь не видны (TG-05). */
+const webOnly = eq(chatConversations.channel, "web");
+
+/** Последний диалог сайта или undefined. */
 export async function latestConversation(s: ScopedDb): Promise<string | undefined> {
   const rows = await s.db
     .select({ id: chatConversations.id })
     .from(chatConversations)
-    .where(s.own(chatConversations))
+    .where(and(s.own(chatConversations), webOnly))
     .orderBy(desc(chatConversations.createdAt), desc(chatConversations.id))
     .limit(1);
   return rows[0]?.id;
@@ -69,7 +77,7 @@ export async function listConversations(s: ScopedDb, limit: number): Promise<Con
       createdAt: chatConversations.createdAt,
     })
     .from(chatConversations)
-    .where(s.own(chatConversations))
+    .where(and(s.own(chatConversations), webOnly))
     .orderBy(desc(chatConversations.createdAt), desc(chatConversations.id))
     .limit(limit);
   if (conversations.length === 0) return [];
@@ -114,14 +122,14 @@ export async function conversationTitleOf(
   const rows = await s.db
     .select({ title: chatConversations.title })
     .from(chatConversations)
-    .where(and(s.own(chatConversations), eq(chatConversations.id, id)));
+    .where(and(s.own(chatConversations), eq(chatConversations.id, id), webOnly));
   return rows[0];
 }
 
 /** Переименовать; false — диалога нет (или он чужой). */
 export async function renameConversation(s: ScopedDb, id: string, title: string): Promise<boolean> {
   const rows = await s
-    .update(chatConversations, eq(chatConversations.id, id))
+    .update(chatConversations, sql`${eq(chatConversations.id, id)} and ${webOnly}`)
     .set({ title })
     .returning({ id: chatConversations.id });
   return rows.length === 1;
@@ -130,7 +138,7 @@ export async function renameConversation(s: ScopedDb, id: string, title: string)
 /** Удалить диалог (сообщения уходят каскадом); false — диалога нет. */
 export async function deleteConversation(s: ScopedDb, id: string): Promise<boolean> {
   const rows = await s
-    .delete(chatConversations, eq(chatConversations.id, id))
+    .delete(chatConversations, sql`${eq(chatConversations.id, id)} and ${webOnly}`)
     .returning({ id: chatConversations.id });
   return rows.length === 1;
 }
@@ -144,6 +152,8 @@ export async function insertMessage(
     readonly role: MessageRole;
     readonly parts: unknown;
     readonly status: MessageStatus;
+    /** Момент сообщения: бот ставит время отправки в Telegram (TG-10), по умолчанию — «сейчас» базы. */
+    readonly createdAt?: Date;
   },
 ): Promise<string> {
   const [row] = await s.insert(chatMessages).values(message).returning({ id: chatMessages.id });
@@ -177,4 +187,29 @@ export async function finishMessage(
   await s
     .update(chatMessages, eq(chatMessages.id, id))
     .set({ parts, status, ...(answeredBy === undefined ? {} : { answeredBy }) });
+}
+
+/**
+ * Последний диалог канала и момент последней активности (последнее сообщение, иначе создание диалога): по нему бот решает,
+ * продолжать ли разговор или начать новый после тишины (TG-05).
+ */
+export async function latestChannelConversation(
+  s: ScopedDb,
+  channel: ChatChannel,
+): Promise<{ readonly id: string; readonly lastAt: Date } | undefined> {
+  const rows = await s.db
+    .select({ id: chatConversations.id, createdAt: chatConversations.createdAt })
+    .from(chatConversations)
+    .where(and(s.own(chatConversations), eq(chatConversations.channel, channel)))
+    .orderBy(desc(chatConversations.createdAt), desc(chatConversations.id))
+    .limit(1);
+  const conversation = rows[0];
+  if (conversation === undefined) return undefined;
+  const last = await s.db
+    .select({ createdAt: chatMessages.createdAt })
+    .from(chatMessages)
+    .where(and(s.own(chatMessages), eq(chatMessages.conversationId, conversation.id)))
+    .orderBy(desc(chatMessages.createdAt))
+    .limit(1);
+  return { id: conversation.id, lastAt: last[0]?.createdAt ?? conversation.createdAt };
 }

@@ -73,6 +73,8 @@ export interface AgentRun {
   readonly onFinish: (message: UIMessage, aborted: boolean) => Promise<void>;
   /** Откуда запуск (AGT-11): сайт — по умолчанию; Telegram передаёт свой. */
   readonly channel?: ToolChannel;
+  /** «Сегодня» запуска: бот — по времени отправки сообщения, а не обработки (TG-10); по умолчанию — часы системы. */
+  readonly today?: LocalDate;
   /** Что пользователь видит на сайте (CHAT-08); идёт блоком данных в конце вопроса. */
   readonly page?: PageContext;
 }
@@ -193,7 +195,7 @@ export function makeRunAgent(d: RunAgentDeps) {
     recordedFact: string | undefined,
   ): Promise<void> {
     const [maxSteps, window] = await Promise.all([d.maxSteps(), d.historyMessages()]);
-    const today = d.clock.today();
+    const today = run.today ?? d.clock.today();
     const choice = selectToolset({ text: question, route: run.page?.route });
     d.log.info({ reason: `${choice.toolset}:${choice.reason}` }, "agent.toolset");
     // P1: числа ответа — из результатов инструментов, сообщений диалога, сегодняшней даты и параметров страницы.

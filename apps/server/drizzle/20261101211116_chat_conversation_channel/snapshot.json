@@ -1,0 +1,62 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "969e6dff-4791-45ad-b783-771ccbc273ee",
+  "prevIds": ["2f04810a-ee6e-4f61-9d32-c4887d405d2f"],
+  "footprints": [
+    {
+      "statementType": "add_column",
+      "statementTarget": ["column", "public", "chat_conversations", "channel"],
+      "writes": [
+        "s|col|public.chat_conversations.channel",
+        "n|col|public.chat_conversations.channel",
+        "e|col|public.chat_conversations.channel"
+      ],
+      "reads": ["n|tbl|public.chat_conversations", "n|sch|public"]
+    },
+    {
+      "statementType": "add_check",
+      "statementTarget": ["table", "public", "chat_conversations"],
+      "writes": [
+        "s|ck|public.chat_conversations.chat_conversations_channel_check",
+        "n|ck|public.chat_conversations.chat_conversations_channel_check",
+        "e|ck|public.chat_conversations.chat_conversations_channel_check",
+        "n|con|public.chat_conversations.chat_conversations_channel_check"
+      ],
+      "reads": [
+        "n|tbl|public.chat_conversations",
+        "n|sch|public",
+        "n|col|public.chat_conversations.channel"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "chat_conversations",
+        "name": "channel",
+        "type": "text",
+        "typeSchema": null,
+        "notNull": true,
+        "dimensions": 0,
+        "default": "'web'",
+        "generated": null,
+        "identity": null,
+        "entityType": "columns"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "chat_conversations",
+        "name": "chat_conversations_channel_check",
+        "value": "\"channel\" in ('web', 'telegram')",
+        "entityType": "checks"
+      }
+    }
+  ]
+}

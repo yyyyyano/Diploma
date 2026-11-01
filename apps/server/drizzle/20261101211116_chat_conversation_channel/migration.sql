@@ -1,0 +1,2 @@
+ALTER TABLE "chat_conversations" ADD COLUMN "channel" text DEFAULT 'web' NOT NULL;--> statement-breakpoint
+ALTER TABLE "chat_conversations" ADD CONSTRAINT "chat_conversations_channel_check" CHECK ("channel" in ('web', 'telegram'));

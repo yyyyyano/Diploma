@@ -11,9 +11,11 @@ import {
   type RunMetadata,
 } from "@kosht/contract";
 import type { UIMessage, UIMessageChunk } from "ai";
+import { LocalDate } from "@kosht/kernel";
 import { randomUUID } from "node:crypto";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
+import { TIME_ZONE } from "../../../platform/settings/time-zone.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import type { AgentFacade } from "../../agent/index.ts";
 import type { ReceiptsFacade } from "../../receipts/index.ts";
@@ -24,18 +26,29 @@ import {
   createConversation,
   finishMessage,
   insertMessage,
+  latestChannelConversation,
   listMessages,
   type MessageRow,
 } from "../infrastructure/db/chat.repo.ts";
+import type { ChatChannel } from "../infrastructure/db/schema.ts";
 import type { LiveRuns } from "./live-runs.ts";
 import { enforceChatRate } from "./rate-limit.ts";
 import type { RunRegistry } from "./runs.ts";
+
+/** Канал сообщения: сайт — по умолчанию; бот (TG-05) ведёт один непрерывный диалог и знает время отправки (TG-10). */
+export interface ChannelInput {
+  readonly channel?: ChatChannel | undefined;
+  /** Момент отправки в Telegram: от него «сегодня» агента и время сообщений; по умолчанию — «сейчас». */
+  readonly sentAt?: Date | undefined;
+  /** Тишина, после которой бот начинает новый диалог (6 часов, TG-05), мс. */
+  readonly idleMs?: number | undefined;
+}
 
 export interface SendDeps {
   readonly agent: AgentFacade;
   readonly runs: RunRegistry;
   readonly live: LiveRuns;
-  readonly platform: Pick<Platform, "realtime" | "log" | "rateLimiter" | "settings">;
+  readonly platform: Pick<Platform, "realtime" | "log" | "rateLimiter" | "settings" | "clock">;
   /** CHAT-03: вложение — только чек и выписка своего домохозяйства. */
   readonly receipts: Pick<ReceiptsFacade, "existing">;
   readonly statements: Pick<StatementsFacade, "existing">;
@@ -152,10 +165,27 @@ function guarded(
   });
 }
 
+/**
+ * Диалог канала (бот, TG-05): последний, если тишина не дольше `idleMs`; иначе — новый. «Тишина» — от последнего сообщения до
+ * момента отправки этого (а не до обработки): сообщения, пролежавшие в Telegram, не склеивают и не рвут разговор.
+ */
+async function channelConversation(
+  tx: ScopedDb,
+  channel: ChatChannel,
+  input: ChannelInput,
+  at: Date | undefined,
+): Promise<string> {
+  const latest = await latestChannelConversation(tx, channel);
+  const idle = input.idleMs ?? 0;
+  const now = at ?? new Date();
+  if (latest !== undefined && now.getTime() - latest.lastAt.getTime() <= idle) return latest.id;
+  return createConversation(tx, null, channel, at);
+}
+
 export function makeSendMessage(d: SendDeps) {
   return async function sendMessage(
     s: ScopedDb,
-    input: {
+    input: ChannelInput & {
       readonly conversationId?: ConversationId | undefined;
       readonly text: string;
       readonly page?: PageContext | undefined;
@@ -170,12 +200,17 @@ export function makeSendMessage(d: SendDeps) {
     const assistantId = randomUUID();
     const householdId = s.scope.householdId;
     const attached = attachmentParts(input.attachments ?? []);
+    const channel = input.channel ?? "web";
+    // Время сообщений бота — время отправки (TG-10); сайт — «сейчас» базы, как раньше.
+    const at = input.channel === undefined ? undefined : input.sentAt;
     let conversationId: string;
     try {
       conversationId = await s.transaction(async (tx) => {
         const id =
           input.conversationId ??
-          (await createConversation(tx, input.text === "" ? null : conversationTitle(input.text)));
+          (channel === "web"
+            ? await createConversation(tx, input.text === "" ? null : conversationTitle(input.text))
+            : await channelConversation(tx, channel, input, at));
         if (input.conversationId !== undefined && !(await conversationExists(tx, id))) {
           throw new AppError("NOT_FOUND");
         }
@@ -186,6 +221,7 @@ export function makeSendMessage(d: SendDeps) {
           role: "user",
           parts: input.text === "" ? [] : [{ type: "text", text: input.text }],
           status: "complete",
+          ...(at === undefined ? {} : { createdAt: at }),
         });
         await insertMessage(tx, {
           id: assistantId,
@@ -193,6 +229,7 @@ export function makeSendMessage(d: SendDeps) {
           role: "assistant",
           parts: [],
           status: "streaming",
+          ...(at === undefined ? {} : { createdAt: at }),
         });
         return id;
       });
@@ -253,6 +290,15 @@ export function makeSendMessage(d: SendDeps) {
         messageId: assistantId,
         metadata,
         ...(input.page === undefined ? {} : { page: input.page }),
+        ...(channel === "web"
+          ? {}
+          : {
+              channel,
+              today: LocalDate.fromInstant(
+                input.sentAt ?? d.platform.clock.now(),
+                await d.platform.settings.get(TIME_ZONE),
+              ),
+            }),
         onFinish: (message, aborted) =>
           save(
             [...attached, ...message.parts],

@@ -6,10 +6,19 @@ import { sql } from "drizzle-orm";
 import { check, index, jsonb, text, uuid } from "drizzle-orm/pg-core";
 import { ownedFk, userOwnedTable } from "../../../../platform/db/tables.ts";
 
-export const chatConversations = userOwnedTable("chat_conversations", {
-  /** CHAT-01: первое сообщение, обрезанное по слову (без модели); у диалогов до T-043 — null. */
-  title: text(),
-});
+export const CHAT_CHANNELS = ["web", "telegram"] as const;
+export type ChatChannel = (typeof CHAT_CHANNELS)[number];
+
+export const chatConversations = userOwnedTable(
+  "chat_conversations",
+  {
+    /** CHAT-01: первое сообщение, обрезанное по слову (без модели); у диалогов до T-043 — null. */
+    title: text(),
+    /** TG-05, AGT-11: у каналов своя история — диалоги бота на сайте не показываются. */
+    channel: text().$type<ChatChannel>().notNull().default("web"),
+  },
+  (t) => [check("chat_conversations_channel_check", sql`${t.channel} in ('web', 'telegram')`)],
+);
 
 export const chatMessages = userOwnedTable(
   "chat_messages",

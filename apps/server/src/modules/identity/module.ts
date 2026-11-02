@@ -28,7 +28,7 @@ import { makeTargetUserScope } from "./application/target-user-scope.ts";
 import { makeScopeVerifier } from "./application/verify-scope.ts";
 import { systemInitialized, userRegistered } from "./events.ts";
 import { createAuth, createAuthGateway } from "./infrastructure/auth.ts";
-import { memberState, readLoaderContact } from "./infrastructure/db/identity.repo.ts";
+import { activeOwners, memberState, readLoaderContact } from "./infrastructure/db/identity.repo.ts";
 import { IDENTITY_SETTINGS } from "./settings.ts";
 
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
@@ -81,6 +81,11 @@ export function createIdentityModule({
        */
       memberState: (candidate: { userId: UserId; householdId: HouseholdId }) =>
         memberState(platform.system, candidate),
+      /**
+       * Активные пользователи для обходов «для всех» (WEEK-01): `(id, householdId, userId)` одним сквозным запросом — db даёт
+       * `crossTenant`; тексты, роли и адреса наружу не выходят.
+       */
+      activeOwners: (db: ScopedDb["db"]) => activeOwners(db),
       /** Email вошедшего (тестовое письмо админки — на него). */
       emailOf: async (s: ScopedDb) => (await me(s)).email,
       /** Контакт загрузчика законов с первого запуска (LAW-36): legal-base сохраняет его в своей настройке. */

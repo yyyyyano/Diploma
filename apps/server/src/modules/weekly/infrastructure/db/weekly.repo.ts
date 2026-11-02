@@ -1,8 +1,6 @@
-// Запросы weekly: первый аргумент — s: ScopedDb, у каждого обращения к таблице — свой s.own (ADR-0006). Обход «для всех» — один
-// сквозной SELECT владельцев включённых сводок (`findOwners`, только id, household_id, user_id).
+// Запросы weekly: первый аргумент — s: ScopedDb, у каждого обращения к таблице — свой s.own (ADR-0006).
 import { and, desc, eq } from "drizzle-orm";
 import type { InsertValue, ScopedDb } from "../../../../platform/db/scoped-db.ts";
-import type { SweepFind } from "../../../../platform/jobs/sweep.ts";
 import { weeklyPreferences, weeklySummaries } from "./schema.ts";
 
 export type PreferencesRow = typeof weeklyPreferences.$inferSelect;
@@ -70,15 +68,3 @@ export async function listSummaries(s: ScopedDb, limit: number): Promise<Summary
     .orderBy(desc(weeklySummaries.weekStart))
     .limit(limit);
 }
-
-/** Владельцы включённых сводок: срок сверяет задача по часам под scope владельца (часы теста и боевые — не часы базы). */
-export const findOwners: SweepFind = async (db) =>
-  db
-    .select({
-      id: weeklyPreferences.id,
-      householdId: weeklyPreferences.householdId,
-      userId: weeklyPreferences.userId,
-    })
-    .from(weeklyPreferences)
-    .where(eq(weeklyPreferences.enabled, true))
-    .orderBy(weeklyPreferences.householdId, weeklyPreferences.userId);

@@ -8,7 +8,6 @@ import { makeScope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { buildJob } from "../modules/weekly/jobs/build.job.ts";
-import { findOwners } from "../modules/weekly/infrastructure/db/weekly.repo.ts";
 import { registerUser, startHttpStack, type HttpStack } from "./__fixtures__/http-stack.ts";
 
 let db: TestDb;
@@ -82,18 +81,18 @@ describe("WEEK-01, NFR-22: обход и задача на настоящем wo
       },
       { timeout: 15_000, interval: 200 },
     );
-    const owners = await crossTenant(db.pool, "weekly.build-summary-sweep", findOwners);
+    const weekly = stack.api.modules.find((m) => m.id === "weekly");
+    const sweep = weekly?.sweeps.find((item) => item.name === "weekly.build-summary-sweep");
+    const job = (weekly?.jobs ?? []).find((item) => item.name === "weekly.build-summary");
+    expect(job).toBeDefined();
+    expect(sweep).toBeDefined();
+    const owners = await crossTenant(db.pool, "weekly.build-summary-sweep", sweep!.find);
     const mine = owners.find((row) => row.userId === user.userId);
     expect(mine).toMatchObject({ householdId: user.householdId });
 
-    const weekly = stack.api.modules.find((m) => m.id === "weekly");
-    const job = (weekly?.jobs ?? []).find((item) => item.name === "weekly.build-summary");
-    expect(job).toBeDefined();
     const scoped = stack.api.platform.scoped(makeScope(user));
     await scoped.transaction((tx) =>
-      stack.api.platform.jobs.enqueue(tx, job as ReturnType<typeof buildJob>, {
-        preferenceId: mine?.id ?? "",
-      }),
+      stack.api.platform.jobs.enqueue(tx, job as ReturnType<typeof buildJob>, {}),
     );
     await vi.waitFor(
       async () => {
@@ -110,5 +109,39 @@ describe("WEEK-01, NFR-22: обход и задача на настоящем wo
       [user.userId],
     );
     expect(notices.rows).toHaveLength(0);
+  }, 40_000);
+
+  it("WEEK-03: пользователь без строки настроек (зарегистрирован до T-050) всё равно в обходе — отсутствующая строка считается умолчанием", async () => {
+    const user = await newUser();
+    await vi.waitFor(
+      async () => {
+        const rows = await db.owner.query("select id from weekly_preferences where user_id = $1", [
+          user.userId,
+        ]);
+        expect(rows.rows).toHaveLength(1);
+      },
+      { timeout: 15_000, interval: 200 },
+    );
+    await db.owner.query("delete from weekly_preferences where user_id = $1", [user.userId]);
+    const weekly = stack.api.modules.find((m) => m.id === "weekly");
+    const sweep = weekly?.sweeps.find((item) => item.name === "weekly.build-summary-sweep");
+    const owners = await crossTenant(db.pool, "weekly.build-summary-sweep", sweep!.find);
+    expect(owners.map((row) => row.userId)).toContain(user.userId);
+
+    const job = (weekly?.jobs ?? []).find((item) => item.name === "weekly.build-summary");
+    const scoped = stack.api.platform.scoped(makeScope(user));
+    await scoped.transaction((tx) =>
+      stack.api.platform.jobs.enqueue(tx, job as ReturnType<typeof buildJob>, {}),
+    );
+    await vi.waitFor(
+      async () => {
+        const rows = await db.owner.query<{ status: string }>(
+          "select status from weekly_summaries where user_id = $1",
+          [user.userId],
+        );
+        expect(rows.rows).toHaveLength(1);
+      },
+      { timeout: 20_000, interval: 200 },
+    );
   }, 40_000);
 });

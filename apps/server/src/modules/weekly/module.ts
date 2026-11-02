@@ -55,7 +55,7 @@ export function createWeeklyModule({ platform, facades }: ModuleDeps<WeeklyFacad
     router: weeklyRouter(read),
     settings: [...WEEKLY_SETTINGS],
     jobs: [build],
-    sweeps: [buildSweep(build)],
+    sweeps: [buildSweep(build, facades.identity)],
     subscriptions: [onUserRegistered()],
     userData: weeklyUserData,
   });

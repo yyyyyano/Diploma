@@ -164,6 +164,22 @@ export async function memberState(
   return status === "active" || status === "blocked" ? status : "absent";
 }
 
+/**
+ * Активные пользователи для обходов «для всех» (WEEK-01): только (id, household_id, user_id) — ровно то, что пропускает crossTenant.
+ * У identity есть строка каждого пользователя, поэтому обход не зависит от того, создал ли соседний модуль свою строку настроек.
+ */
+export async function activeOwners(db: IdentityDb) {
+  return db
+    .select({
+      id: identityUsers.id,
+      householdId: identityUsers.householdId,
+      userId: identityUsers.id,
+    })
+    .from(identityUsers)
+    .where(eq(identityUsers.status, "active"))
+    .orderBy(identityUsers.householdId, identityUsers.id);
+}
+
 /** Карточка пользователя для каркаса сайта и настроек. */
 export interface UserCard {
   readonly email: string;

@@ -117,6 +117,6 @@ test("согласие, архив и удаление аккаунта; axe 0 �
   await expect(page).toHaveURL(/\/login$/);
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByLabel("Пароль", { exact: true }).fill(password);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("Неверный email или пароль");
 });

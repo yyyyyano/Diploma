@@ -99,10 +99,10 @@ test("забыл пароль → письмо в ящике → новый па
   await page.goto("/login");
   await page.getByRole("textbox", { name: "Email" }).fill(email);
   await page.getByLabel("Пароль", { exact: true }).fill(oldPassword);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText("Неверный email или пароль");
   await page.getByLabel("Пароль", { exact: true }).fill(newPassword);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
   // AUTH-07: после первого входа — анкета на 1 минуту; её можно пропустить.
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.getByRole("button", { name: "Пропустить анкету" }).click();

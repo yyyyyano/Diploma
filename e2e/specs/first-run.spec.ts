@@ -88,7 +88,7 @@ test("первый запуск → администратор → вход → 
   });
   await expect(page.getByText("Загружено 28 из 28 актов")).toBeVisible();
   expect(await accessibleAtBothWidths(page)).toEqual([]);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
 
   // Администратор создан — вход с пометкой.
   await expect(page).toHaveURL(/\/login\?created=true$/);
@@ -102,7 +102,7 @@ test("первый запуск → администратор → вход → 
   // AUTH-08: вход.
   await page.getByRole("textbox", { name: "Email" }).fill(admin.email);
   await page.getByLabel("Пароль", { exact: true }).fill(admin.password);
-  await page.getByRole("button", { name: "Войти" }).click();
+  await page.getByRole("button", { name: "Войти", exact: true }).click();
 
   // AUTH-07, PROF-02: после первого входа — анкета на 1 минуту: ответ на первый вопрос, остальные пропущены, итог
   // «Вот что я запомнил»; axe на вопросе и на итоге.

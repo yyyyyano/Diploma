@@ -13,6 +13,7 @@ import { identityRouter } from "./api/router.ts";
 import { makeAdminGuard } from "./application/admins.ts";
 import { makeAdminResetNotice, makeAdminUsers } from "./application/admin-users.ts";
 import { makeChangePassword } from "./application/change-password.ts";
+import { makeDemoUser } from "./application/demo-user.ts";
 import { makeDeleteAccount } from "./application/delete-account.ts";
 import { makeEmailVerification } from "./application/email-verification.ts";
 import { makeEraseUser } from "./application/erase-user.ts";
@@ -66,6 +67,7 @@ export function createIdentityModule({
     targetUserScope: makeTargetUserScope(platform),
   });
   const me = makeMe(platform);
+  const demoUser = makeDemoUser({ platform, auth, privacy: facades.privacy });
   return defineModule({
     id: "identity",
     facade: {
@@ -86,6 +88,12 @@ export function createIdentityModule({
        * `crossTenant`; тексты, роли и адреса наружу не выходят.
        */
       activeOwners: (db: ScopedDb["db"]) => activeOwners(db),
+      /**
+       * Демо-пользователь (DEMO-04): `ensureDemoUser()` → `{ scope, created }` (нет — создаётся с облачным согласием; scope отдаёт identity,
+       * модуль demo его не собирает); `signInDemo(headers)` → `{ user, cookies }` — вход без пароля человека (маршрут — localOnly, в demo).
+       */
+      ensureDemoUser: demoUser.ensure,
+      signInDemo: demoUser.signIn,
       /** Email вошедшего (тестовое письмо админки — на него). */
       emailOf: async (s: ScopedDb) => (await me(s)).email,
       /** Контакт загрузчика законов с первого запуска (LAW-36): legal-base сохраняет его в своей настройке. */

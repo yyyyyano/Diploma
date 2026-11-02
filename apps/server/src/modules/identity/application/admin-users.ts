@@ -13,6 +13,7 @@ import type { MailFacade } from "../../mail/index.ts";
 import {
   accountOf,
   adminResetMarkOf,
+  isDemoUser,
   listAccounts,
   setAdminResetMark,
   type AccountRow,
@@ -55,6 +56,10 @@ export function makeAdminUsers(d: AdminUsersDeps) {
   /** Удалить пользователя; email — подтверждение: не совпал с адресом удаляемого — VALIDATION, ничего не удалено. */
   async function remove(actor: Scope, targetId: string, email: string): Promise<void> {
     const { scope, account } = await d.targetUserScope(actor, targetId);
+    // DEMO-03: демо-пользователя не удаляют — его данные пересоздаёт кнопка «Пересоздать демо-данные».
+    if (await isDemoUser(platform.system, targetId)) {
+      throw new AppError("CONFLICT", { reason: "demo-user" });
+    }
     if (email.trim().toLowerCase() !== account.email) {
       throw new AppError("VALIDATION", { field: "email" });
     }

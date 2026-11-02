@@ -83,6 +83,8 @@ export async function insertUser(
     readonly email: string;
     readonly role: UserRole;
     readonly passwordHash: string;
+    /** Встроенный демо-пользователь (DEMO-04): отметка в админке, вход кнопкой на локальном адресе. */
+    readonly demo?: boolean;
   },
 ): Promise<void> {
   await db.insert(identityHouseholds).values({ id: user.householdId });
@@ -93,6 +95,7 @@ export async function insertUser(
       name: "",
       email: user.email,
       role: user.role,
+      demo: user.demo ?? false,
       householdId: user.householdId,
     })
     .onConflictDoNothing({ target: identityUsers.email })
@@ -422,6 +425,30 @@ export async function accountOf(
     role: row.role === "admin" ? "admin" : "user",
     status: row.status === "active" ? "active" : "blocked",
   };
+}
+
+/** Демо-пользователь (DEMO-04): учётная запись с отметкой demo; нет — undefined. Он один: email уникален. */
+export async function findDemoUser(
+  db: IdentityDb,
+): Promise<{ readonly userId: UserId; readonly householdId: HouseholdId } | undefined> {
+  const rows = await db
+    .select({ id: identityUsers.id, householdId: identityUsers.householdId })
+    .from(identityUsers)
+    .where(eq(identityUsers.demo, true))
+    .limit(1);
+  const row = rows[0];
+  return row === undefined
+    ? undefined
+    : { userId: row.id as UserId, householdId: row.householdId as HouseholdId };
+}
+
+/** Признак demo учётной записи (DEMO-03: демо не удаляют, его данные пересоздают). */
+export async function isDemoUser(db: IdentityDb, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ demo: identityUsers.demo })
+    .from(identityUsers)
+    .where(eq(identityUsers.id, userId));
+  return rows[0]?.demo === true;
 }
 
 /** Когда администратор сбросил пароль пользователя (AUTH-05); не сбрасывал или отметка погашена — null. */

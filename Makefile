@@ -33,7 +33,7 @@ FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
 	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
-	test-int logs log-find new-module new-table synth-statements synth-receipts e2e e2e-install new-feature ai-record coverage-baseline \
+	test-int logs log-find new-module new-table synth-statements synth-receipts synth-demo-photos e2e e2e-install new-feature ai-record coverage-baseline \
 	langfuse-secrets doctor dev up down restart ps build db-reset backup restore confirm audit check-full
 
 help: ## Показать команды
@@ -306,6 +306,9 @@ new-feature: need-node ## Экран сайта: make new-feature id=<id> (па�
 
 synth-statements: need-node ## Пересоздать синтетические выписки datasets/statements (tooling/synth, T-025; детерминированно)
 	@node tooling/synth/statements/generate.ts
+
+synth-demo-photos: need-node ## Пересоздать фото чеков демо apps/server/src/modules/demo/domain/photos.ts (tooling/synth, T-054; детерминированно)
+	@node tooling/synth/demo/generate-photos.ts
 
 synth-receipts: need-node ## Пересоздать синтетические чеки datasets/receipts (tooling/synth, T-027; нужен ffmpeg с libx265 для HEIC)
 	@node tooling/synth/receipts/generate.ts

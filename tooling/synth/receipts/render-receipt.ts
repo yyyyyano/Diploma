@@ -63,7 +63,7 @@ interface Row {
   readonly strong?: boolean;
 }
 
-function rowsOf(spec: ReceiptSpec, printed: PrintedReceipt): Row[] {
+function rowsOf(spec: ReceiptSpec, printed: PrintedReceipt, dateLabel?: string): Row[] {
   const [year = "", month = "", day = ""] = spec.date.split("-");
   const rows: Row[] = [
     { center: spec.shop.title, strong: true },
@@ -72,7 +72,7 @@ function rowsOf(spec: ReceiptSpec, printed: PrintedReceipt): Row[] {
     { center: "КАССОВЫЙ ЧЕК" },
     {
       left: `№ ${String(spec.number).padStart(4, "0")}`,
-      right: `${day}.${month}.${year} ${spec.time}`,
+      right: `${dateLabel ?? `${day}.${month}.${year}`} ${spec.time}`,
     },
     { center: "-".repeat(40) },
   ];
@@ -106,6 +106,8 @@ export interface PaperOptions {
   readonly coverQr?: boolean;
   /** Служебная строка внизу — например, приказ, напечатанный на чеке (RCPT-14). */
   readonly footer?: string;
+  /** Подпись вместо даты («ДЕМО»): фото демо-чека не должно спорить с днём, который показывает карточка (DEMO-02). */
+  readonly dateLabel?: string;
 }
 
 /** Содержимое QR: ссылка с УИ — формат придуман (реального образца нет), приложение ищет в нём 24 символа. */
@@ -118,7 +120,7 @@ export async function renderPaper(
   printed: PrintedReceipt,
   options: PaperOptions,
 ): Promise<{ png: Uint8Array; width: number; height: number }> {
-  const rows = rowsOf(spec, printed);
+  const rows = rowsOf(spec, printed, options.dateLabel);
   const parts: string[] = [];
   let y = 54;
   for (const row of rows) {

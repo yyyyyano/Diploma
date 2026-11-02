@@ -228,7 +228,13 @@ export function AdminUsersPage() {
                         <Menu.Item
                           color="var(--danger)"
                           leftSection={<Trash2 size={16} aria-hidden />}
-                          onClick={() => setDeleting(user)}
+                          onClick={() => {
+                            // DEMO-03: демо не удаляют — его данные пересоздаёт кнопка во вкладке «Система».
+                            if (user.demo) {
+                              setDone(undefined);
+                              setFailure(t("users.demoNoDelete"));
+                            } else setDeleting(user);
+                          }}
                         >
                           {t("users.delete")}
                         </Menu.Item>

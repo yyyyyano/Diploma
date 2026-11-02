@@ -3,7 +3,7 @@
 // доступ из сети вместе с адресом, Langfuse со ссылкой; ошибка загрузки — понятный текст.
 import type { SystemOverview } from "@kosht/contract";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -212,5 +212,58 @@ describe("ADM-60, NFR-16: токен Telegram-бота", () => {
     await userEvent.type(await screen.findByLabelText("Токен бота"), "не токен");
     expect(screen.getByRole("button", { name: "Сохранить токен" })).toBeDisabled();
     expect(screen.getByText(/Токен выглядит иначе/)).toBeInTheDocument();
+  });
+});
+
+describe("DEMO-03, ADM-60: «Пересоздать демо-данные»", () => {
+  it("кнопка спрашивает подтверждение с адресом демо-пользователя; «Отмена» ничего не отправляет", async () => {
+    let called = 0;
+    server.use(
+      http.post("*/api/admin/system/demo", () => {
+        called += 1;
+        return HttpResponse.json({ operations: 1, receipts: 1, limits: 1, goals: 1, weeks: 1 });
+      }),
+    );
+    renderSystem();
+    await userEvent.click(await screen.findByRole("button", { name: "Пересоздать демо-данные" }));
+    const dialog = await screen.findByRole("dialog", { name: "Пересоздать демо-данные?" });
+    expect(dialog).toHaveTextContent("irina.k@example.by");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Отмена" }));
+    expect(called).toBe(0);
+  });
+
+  it("подтверждение — запрос, итог с числами записанного", async () => {
+    server.use(
+      http.post("*/api/admin/system/demo", () =>
+        HttpResponse.json({ operations: 312, receipts: 5, limits: 4, goals: 2, weeks: 8 }),
+      ),
+    );
+    renderSystem();
+    await userEvent.click(await screen.findByRole("button", { name: "Пересоздать демо-данные" }));
+    const dialog = await screen.findByRole("dialog", { name: "Пересоздать демо-данные?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Пересоздать" }));
+    expect(await screen.findByText(/Демо-данные пересозданы: 312 операций, 5 чеков/)).toBeVisible();
+  });
+
+  it("сбой — текст ошибки в role=alert", async () => {
+    server.use(
+      http.post("*/api/admin/system/demo", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "UNAVAILABLE",
+            status: 503,
+            message: "x",
+            data: { requestId: "r", params: {} },
+          },
+          { status: 503 },
+        ),
+      ),
+    );
+    renderSystem();
+    await userEvent.click(await screen.findByRole("button", { name: "Пересоздать демо-данные" }));
+    const dialog = await screen.findByRole("dialog", { name: "Пересоздать демо-данные?" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Пересоздать" }));
+    expect(await screen.findByText(/временно недоступен/)).toBeVisible();
   });
 });

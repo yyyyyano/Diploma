@@ -179,7 +179,11 @@ describe("ARCHITECTURE §3: 36 модулей в корне композиции
         shutdownSignal: new AbortController().signal,
       },
     }) as unknown as ContractRouterClient<typeof contract>;
-    expect(await client.identity.status()).toEqual({ initialized: false, setupAvailable: true });
+    expect(await client.identity.status()).toEqual({
+      initialized: false,
+      setupAvailable: true,
+      demoAvailable: true,
+    });
   });
 });
 

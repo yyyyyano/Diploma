@@ -8,7 +8,8 @@ import { AppError } from "../../../platform/errors/app-error.ts";
 export function makeStatus(d: Pick<SystemPlatform, "system">) {
   return async function status(local: boolean) {
     const initialized = await isInitialized(d.system);
-    return { initialized, setupAvailable: !initialized && local };
+    // DEMO-04: демо-вход — как и первый запуск, только на локальном слушателе.
+    return { initialized, setupAvailable: !initialized && local, demoAvailable: local };
   };
 }
 

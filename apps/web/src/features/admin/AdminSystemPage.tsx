@@ -1,7 +1,7 @@
 // «Система» (ADM-60, NFR-22, NFR-23, NFR-24, OBS-05, OBS-07; Admin.dc.html — Admin--system): фоновые задачи (что
 // выполняется, расписания с последним запуском, последние ошибки — только журнал), почта (поля только для записи,
 // тестовое письмо — на адрес администратора), часовой пояс (экран говорит, что расписания перейдут на него после
-// перезапуска), доступ с других устройств и адрес для ссылок, Langfuse. Токен бота — T-052, демо-данные — T-054.
+// перезапуска), доступ с других устройств и адрес для ссылок, Langfuse, токен бота (T-052), «Пересоздать демо-данные» (DEMO-03).
 import type { JobRun, SystemOverview } from "@kosht/contract";
 import { formatRelativeDay } from "@kosht/i18n";
 import { DEFAULT_TIME_ZONE, LocalDate } from "@kosht/kernel";
@@ -16,12 +16,20 @@ import {
   TextInput,
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Clock3, Mail, MinusCircle, Send } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  Mail,
+  MinusCircle,
+  RefreshCw,
+  Send,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
-import { SkeletonCard, StatusBadge, type StatusTone } from "../../ui/index.ts";
+import { ConfirmDialog, SkeletonCard, StatusBadge, type StatusTone } from "../../ui/index.ts";
 import classes from "./Admin.module.css";
 
 /** День запуска относительно сегодня («сегодня», «вчера», дата): формата времени суток в @kosht/i18n нет. */
@@ -64,6 +72,7 @@ export function AdminSystemPage() {
         <TimeCard overview={system.data} />
       </div>
       <TelegramCard telegram={system.data.telegram} />
+      <DemoCard />
     </>
   );
 }
@@ -491,6 +500,59 @@ function TimeCard({ overview }: { readonly overview: SystemOverview }) {
           {t("admin:system.time.langfuseHint")}
         </p>
       )}
+    </section>
+  );
+}
+
+/** DEMO-03: «Пересоздать демо-данные» — данные только демо-пользователя, после подтверждения. */
+function DemoCard() {
+  const { t } = useTranslation(["admin", "errors"]);
+  const [asking, setAsking] = useState(false);
+  const recreate = useMutation(
+    orpc.admin.recreateDemo.mutationOptions({ onSettled: () => setAsking(false) }),
+  );
+  return (
+    <section className={classes.card} aria-labelledby="admin-demo">
+      <div className={classes.cardHead}>
+        <h2 id="admin-demo" className={classes.cardTitle}>
+          {t("admin:system.demo.title")}
+        </h2>
+      </div>
+      <p className={classes.hint}>{t("admin:system.demo.text")}</p>
+      <div className={classes.actions}>
+        <Button
+          variant="default"
+          color="var(--danger)"
+          leftSection={<RefreshCw size={16} strokeWidth={1.8} aria-hidden />}
+          loading={recreate.isPending}
+          onClick={() => setAsking(true)}
+        >
+          {t("admin:system.demo.button")}
+        </Button>
+      </div>
+      {recreate.isSuccess && (
+        <output className={classes.ok}>
+          <CheckCircle2 size={18} strokeWidth={1.8} aria-hidden />
+          {t("admin:system.demo.done", recreate.data)}
+        </output>
+      )}
+      {recreate.isError && (
+        <p className={classes.error} role="alert">
+          <AlertCircle size={18} strokeWidth={1.8} aria-hidden />
+          {t(`errors:${errorCodeOf(recreate.error)}`, errorParamsOf(recreate.error))}
+        </p>
+      )}
+      <ConfirmDialog
+        opened={asking}
+        title={t("admin:system.demo.dialogTitle")}
+        confirmLabel={t("admin:system.demo.confirm")}
+        tone="danger"
+        pending={recreate.isPending}
+        onCancel={() => setAsking(false)}
+        onConfirm={() => recreate.mutate(undefined)}
+      >
+        <p className={classes.hint}>{t("admin:system.demo.dialogText")}</p>
+      </ConfirmDialog>
     </section>
   );
 }

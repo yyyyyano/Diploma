@@ -16,10 +16,10 @@ import { renderWithProviders } from "../../test/render.tsx";
 import { LoginPage } from "./LoginPage.tsx";
 import type { LoginSearch } from "./model/search.ts";
 
-function renderLogin(search: LoginSearch = {}, setupAvailable = false) {
+function renderLogin(search: LoginSearch = {}, setupAvailable = false, demoAvailable = true) {
   server.use(
     http.get("*/api/identity/status", () =>
-      HttpResponse.json({ initialized: !setupAvailable, setupAvailable }),
+      HttpResponse.json({ initialized: !setupAvailable, setupAvailable, demoAvailable }),
     ),
   );
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -167,5 +167,66 @@ describe("AUTH-08: вход", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toHaveTextContent("Слишком много попыток входа.");
     expect(alert).toHaveTextContent("Попробуйте через 7 мин.");
+  });
+});
+
+describe("DEMO-04: «Войти как демо-пользователь»", () => {
+  it("на локальном входе кнопка есть и подписана, что работает только на этом компьютере", async () => {
+    renderLogin();
+    expect(
+      await screen.findByRole("button", { name: "Войти как демо-пользователь" }),
+    ).toBeVisible();
+    expect(screen.getByText("Работает только на этом компьютере (localhost).")).toBeVisible();
+  });
+
+  it("с сетевого входа кнопки нет — демо-вход там невозможен", async () => {
+    renderLogin({}, false, false);
+    await screen.findByRole("button", { name: "Войти" });
+    expect(screen.queryByRole("button", { name: "Войти как демо-пользователь" })).toBeNull();
+  });
+
+  it("нажатие — демо-вход без пароля, кэш прежних данных очищен, переход на стартовый маршрут", async () => {
+    let called = 0;
+    server.use(
+      http.post("*/api/demo/sign-in", () => {
+        called += 1;
+        return HttpResponse.json({
+          email: "irina.k@example.by",
+          name: "",
+          role: "user",
+          emailVerified: false,
+        });
+      }),
+    );
+    const { queryClient } = renderLogin();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Войти как демо-пользователь" }),
+    );
+    expect(await screen.findByText("Стартовый")).toBeInTheDocument();
+    expect(called).toBe(1);
+    expect(queryClient.getQueryData(["прежний", "пользователь"])).toBeUndefined();
+  });
+
+  it("сбой демо-входа — текст ошибки в role=alert, остаёмся на входе", async () => {
+    server.use(
+      http.post("*/api/demo/sign-in", () =>
+        HttpResponse.json(
+          {
+            defined: true,
+            code: "UNAVAILABLE",
+            status: 503,
+            message: "x",
+            data: { requestId: "r", params: {} },
+          },
+          { status: 503 },
+        ),
+      ),
+    );
+    renderLogin();
+    await userEvent.click(
+      await screen.findByRole("button", { name: "Войти как демо-пользователь" }),
+    );
+    expect(await screen.findByRole("alert")).toBeVisible();
+    expect(screen.queryByText("Стартовый")).toBeNull();
   });
 });

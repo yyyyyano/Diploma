@@ -3,13 +3,14 @@
 // пароль» без уточнения, что именно. После входа кэш запросов очищается целиком (данные прежнего пользователя не
 // должны мелькнуть) и стартовый маршрут ведёт в раздел. Ссылки на регистрацию и политику — всегда, «Первый запуск» —
 // только пока он доступен; «Забыли пароль?» и «Войти с кодом восстановления» ведут на /recovery. Заблокированному и
-// при превышении частоты — заголовок и текст из словаря («попробуйте через N мин.»). Демо-вход — T-054.
+// при превышении частоты — заголовок и текст из словаря («попробуйте через N мин.»). «Войти как демо-пользователь» (DEMO-04) — только
+// на локальном входе (`status.demoAvailable`): сервер создаёт демо при первом нажатии и ставит cookie без пароля.
 import { SignInInput } from "@kosht/contract";
 import { Button, PasswordInput, TextInput } from "@mantine/core";
 import { schemaResolver, useForm } from "@mantine/form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { orpc } from "../../lib/api.ts";
 import { errorCodeOf, errorParamsOf } from "../../lib/errors.ts";
@@ -35,7 +36,16 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
       },
     }),
   );
-  const serverError = signIn.error === null ? undefined : errorCodeOf(signIn.error);
+  const demo = useMutation(
+    orpc.demo.signIn.mutationOptions({
+      onSuccess: async () => {
+        queryClient.clear();
+        await navigate({ to: "/" });
+      },
+    }),
+  );
+  const failure = signIn.error ?? demo.error;
+  const serverError = failure === null ? undefined : errorCodeOf(failure);
 
   return (
     <AuthLayout>
@@ -60,7 +70,7 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
               {serverError === "RATE_LIMITED" && (
                 <strong>{t("auth:login.rateLimitedTitle")} </strong>
               )}
-              {t(`errors:${serverError}`, errorParamsOf(signIn.error))}
+              {t(`errors:${serverError}`, errorParamsOf(failure))}
             </span>
           </p>
         )}
@@ -100,6 +110,25 @@ export function LoginPage({ search }: { readonly search: LoginSearch }) {
             {t("auth:login.withCode")}
           </Link>
         </nav>
+        {status.data?.demoAvailable === true && (
+          <>
+            <div className={classes.divider}>{t("auth:login.or")}</div>
+            <div className={classes.demo}>
+              <Button
+                type="button"
+                variant="default"
+                size="md"
+                fullWidth
+                leftSection={<Sparkles size={18} strokeWidth={1.8} aria-hidden />}
+                loading={demo.isPending}
+                onClick={() => demo.mutate(undefined)}
+              >
+                {t("auth:login.demo")}
+              </Button>
+              <p className={classes.hint}>{t("auth:login.demoHint")}</p>
+            </div>
+          </>
+        )}
         <p className={classes.switch}>
           {t("auth:login.noAccount")} <Link to="/register">{t("auth:login.register")}</Link>
         </p>

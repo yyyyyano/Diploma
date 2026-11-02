@@ -169,3 +169,25 @@ describe("ADM-30: удаление с подтверждением email", () =>
     expect(sent).toEqual([{ id: ID(2), email: "Irina@Example.test" }]);
   });
 });
+
+describe("DEMO-03: демо-пользователя не удаляют", () => {
+  it("«Удалить…» у демо — пояснение «пересоздайте демо-данные во вкладке «Система»», диалога и запроса нет", async () => {
+    let sent = 0;
+    server.use(
+      http.post("*/api/admin/users/delete", () => {
+        sent += 1;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+    renderUsers([rootUser, user(3, { email: "irina.k@example.by", demo: true })]);
+    await openMenu("irina.k@example.by");
+    await userEvent.click(await screen.findByRole("menuitem", { name: "Удалить…" }));
+    expect(
+      await screen.findByText(
+        /Демо-пользователя не удалить\. Вместо удаления пересоздайте демо-данные/,
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(sent).toBe(0);
+  });
+});

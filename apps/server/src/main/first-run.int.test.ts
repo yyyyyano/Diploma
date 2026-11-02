@@ -113,10 +113,13 @@ describe("AUTH-10, NFR-24: первый запуск — только локал
     expect(await (await call("local", "/identity/status")).json()).toEqual({
       initialized: false,
       setupAvailable: true,
+      demoAvailable: true,
     });
+    // DEMO-04: кнопка «Войти как демо-пользователь» — только на локальном входе, по сети её нет.
     expect(await (await call("lan", "/identity/status")).json()).toEqual({
       initialized: false,
       setupAvailable: false,
+      demoAvailable: false,
     });
     const fromLan = await call("lan", "/identity/setup", { body: admin });
     expect(fromLan.status).toBe(404);
@@ -138,6 +141,7 @@ describe("AUTH-10, NFR-24: первый запуск — только локал
     expect(await (await call("local", "/identity/status")).json()).toEqual({
       initialized: true,
       setupAvailable: false,
+      demoAvailable: true,
     });
     const again = await call("local", "/identity/setup", {
       body: { ...admin, email: "second@example.test" },

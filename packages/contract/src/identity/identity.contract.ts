@@ -83,9 +83,14 @@ export const identityContract = {
    * Состояние системы для стартового маршрута: initialized — первый запуск пройден; setupAvailable — экран первого
    * запуска доступен этому запросу (не инициализирована и локальный вход).
    */
-  status: oc
-    .route({ method: "GET", path: "/identity/status" })
-    .output(z.strictObject({ initialized: z.boolean(), setupAvailable: z.boolean() })),
+  status: oc.route({ method: "GET", path: "/identity/status" }).output(
+    z.strictObject({
+      initialized: z.boolean(),
+      setupAvailable: z.boolean(),
+      /** Кнопка «Войти как демо-пользователь» (DEMO-04): только на локальном слушателе. */
+      demoAvailable: z.boolean(),
+    }),
+  ),
   /**
    * Первый запуск: администратор и его домохозяйство; повтор или параллельный второй — CONFLICT. В ответе — код
    * восстановления администратора (AUTH-05): показать один раз.

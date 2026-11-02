@@ -22,6 +22,8 @@ export interface BotRuntimeDeps {
   readonly log: Logger;
   readonly handler: UpdateHandler;
   readonly now: () => Date;
+  /** Меню команд бота (TG-07): `setMyCommands` при старте опроса; не вышло — в лог, бот работает и без меню. */
+  readonly commands?: readonly { readonly command: string; readonly description: string }[];
   /** Сборка бота для токена: в тестах — бот с готовой `botInfo` и записывающим трансформером (сети нет). */
   readonly makeBot?: (token: string) => Bot;
 }
@@ -93,6 +95,11 @@ export function createBotRuntime(d: BotRuntimeDeps) {
       await bot.init();
       await saveBotName(d.system, bot.botInfo.username, d.now());
       d.log.info({ bot: bot.botInfo.username }, "telegram.started");
+      if (d.commands !== undefined) {
+        await bot.api.setMyCommands([...d.commands]).catch((error: unknown) => {
+          d.log.warn({ err: error }, "telegram.commands-failed");
+        });
+      }
       const polling = bot.start({ allowed_updates: ["message", "callback_query"] });
       await Promise.race([polling, lock.lost, tokenChanged, onAbort(stopping.signal)]);
       await bot.stop();

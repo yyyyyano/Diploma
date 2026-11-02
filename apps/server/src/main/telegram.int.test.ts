@@ -7,6 +7,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { memoryLogger } from "../platform/logging/__fixtures__/memory-logger.ts";
 import type { ActionsFacade } from "../modules/actions/index.ts";
+import type { NotificationsFacade } from "../modules/notifications/index.ts";
 import { encodeCallback } from "../modules/telegram/domain/callback-data.ts";
 import { createBot } from "../modules/telegram/infrastructure/bot/bot-runtime.ts";
 import type { TelegramFacade } from "../modules/telegram/index.ts";
@@ -197,6 +198,61 @@ describe("TG-02, PRIV-08: подключение с сайта", () => {
     }
     expect(await statusOf(user.cookie)).toMatchObject({ linked: null });
     expect((await consentHistory(user.cookie))[0]).toEqual({ kind: "telegram", granted: false });
+  });
+});
+
+describe("TG-06, NOTIF-04: канал доставки уведомлений", () => {
+  const notifications = () => {
+    const module = stack.api.modules.find((m) => m.id === "notifications");
+    if (module === undefined) throw new Error("нет модуля notifications");
+    return module.facade as NotificationsFacade;
+  };
+  const queued = async (userId: string) =>
+    (
+      await db.owner.query<{ n: string }>(
+        "select count(*)::text as n from pgboss.job where name = 'telegram.deliver-notification' and data -> 'scope' ->> 'userId' = $1",
+        [userId],
+      )
+    ).rows[0]?.n;
+
+  it("канал `telegram` есть в реестре доставки; уведомление ставит задачу воркеру в транзакции источника", async () => {
+    expect([...stack.api.platform.deliveryChannels().keys()].toSorted()).toEqual([
+      "telegram",
+      "web",
+    ]);
+    const user = await registerUser(stack, db, "tg-notify@example.test");
+    const s = stack.api.platform.scoped(makeScope(user));
+    await notifications().notify(s, {
+      kind: "limit",
+      key: "tg:limit:1",
+      params: { category: "system:cafes", threshold: 80 },
+    });
+    expect(await queued(user.userId)).toBe("1");
+    // Повтор того же ключа — не второе уведомление и не вторая задача.
+    await notifications().notify(s, {
+      kind: "limit",
+      key: "tg:limit:1",
+      params: { category: "system:cafes", threshold: 80 },
+    });
+    expect(await queued(user.userId)).toBe("1");
+  });
+
+  it("вид отключён в Telegram (NOTIF-04) — задачи нет, на сайте уведомление есть", async () => {
+    const user = await registerUser(stack, db, "tg-notify-off@example.test");
+    const off = await stack.call("local", "/notifications/preferences", {
+      cookie: user.cookie,
+      body: { kind: "limit", channel: "telegram", enabled: false },
+    });
+    expect(off.status).toBe(200);
+    const s = stack.api.platform.scoped(makeScope(user));
+    await notifications().notify(s, { kind: "limit", key: "tg:limit:off", params: {} });
+    expect(await queued(user.userId)).toBe("0");
+    const feed = (await (
+      await stack.call("local", "/notifications", { cookie: user.cookie })
+    ).json()) as {
+      items: unknown[];
+    };
+    expect(feed.items).toHaveLength(1);
   });
 });
 

@@ -3,13 +3,14 @@
 import { LocalDate, HouseholdId, makeScope, UserId } from "@kosht/kernel";
 import { FakeClock } from "@kosht/testing";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
-import { CONSENT_VERSIONS, createTelegramT, formatMoney } from "@kosht/i18n";
+import { CONSENT_VERSIONS, createT, createTelegramT, formatMoney } from "@kosht/i18n";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createScopedDb } from "../../../platform/db/scoped-db.ts";
 import { createSystemDb } from "../../../platform/db/system-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { memoryLogger } from "../../../platform/logging/__fixtures__/memory-logger.ts";
-import { encodeCallback } from "../domain/callback-data.ts";
+import { decodeCallback, encodeCallback, modelTag } from "../domain/callback-data.ts";
+import { makeNotificationDelivery } from "./notification-channel.ts";
 import type { TelegramDeps } from "./deps.ts";
 import { makeBotHandler } from "./handler.ts";
 import { makeLinkOps } from "./link.ts";
@@ -58,6 +59,9 @@ function harness() {
     receipts: [] as string[],
     answers: [] as { id: string; reply: string; channel: string }[],
     cancelledReceipts: [] as string[],
+    undone: [] as string[],
+    chosen: [] as (string | null)[],
+    charts: [] as unknown[],
   };
   const state = {
     member: new Map<string, "active" | "blocked" | "absent">(),
@@ -69,7 +73,17 @@ function harness() {
     ownReceipts: new Set<string>(),
     statementStatus: "ready" as "ready" | "parsing" | "failed",
     fileSize: 1000,
+    streamExtra: [] as { type: string; data?: unknown }[],
+    limits: [] as { categoryKey: string; percent: number; spent: unknown; limit: unknown }[],
+    undoable: undefined as string | undefined,
+    undoResult: "undone" as "undone" | "already-undone" | "conflict",
+    answerUndoToken: null as string | null,
+    models: [] as { id: string; provider: string; model: string; cloud: boolean }[],
+    selectedModel: null as string | null,
+    weekly: null as null | Record<string, unknown>,
+    resetLinks: 0,
   };
+  const byn = (minor: number) => ({ minor, currency: "BYN" });
   const stream = (text: string) =>
     new ReadableStream<{ type: string; id?: string; delta?: string }>({
       start(controller) {
@@ -77,6 +91,7 @@ function harness() {
         for (const part of text.match(/.{1,7}/gsu) ?? []) {
           controller.enqueue({ type: "text-delta", id: "t", delta: part });
         }
+        for (const extra of state.streamExtra) controller.enqueue(extra as never);
         controller.close();
       },
     });
@@ -89,6 +104,8 @@ function harness() {
       secrets: { status: async () => "set", reveal: async () => TOKEN },
       consent: { cloudAllowed: async () => state.cloud },
       events: { publish: async () => undefined },
+      rateLimiter: { enforce: async () => undefined },
+      jobs: { enqueue: async () => undefined },
     } as never,
     neighbours: {
       files: {
@@ -115,6 +132,10 @@ function harness() {
       identity: {
         memberState: async (owner: { userId: string }) =>
           state.member.get(owner.userId) ?? "active",
+        issueResetLink: async () => {
+          state.resetLinks += 1;
+          return { link: "http://127.0.0.1:8140/recovery?token=abc", minutes: 60 };
+        },
       },
       privacy: {
         setTelegramConsent: async (s: { scope: { userId: string } }, d: { granted: boolean }) => {
@@ -127,7 +148,13 @@ function harness() {
       actions: {
         answer: async (_s: unknown, id: string, reply: string, channel: string) => {
           spy.answers.push({ id, reply, channel });
-          return { status: reply, undoToken: null };
+          return { status: reply, undoToken: state.answerUndoToken };
+        },
+        lastUndoable: async () => state.undoable,
+        undo: async (_s: unknown, token: string) => {
+          spy.undone.push(token);
+          if (state.undoResult === "conflict") throw new AppError("CONFLICT");
+          return state.undoResult;
         },
       },
       receipts: {
@@ -173,6 +200,31 @@ function harness() {
         }),
         cancel: async () => ({ id: uuid(600) }),
       },
+      dashboard: {
+        overview: async () => ({
+          accounts: {
+            items: [{ name: "Наличные", bank: null, mask: null, balance: byn(12_000) }],
+            total: { amount: byn(12_000) },
+          },
+          freeBalance: { amount: byn(84_000), months: 3 },
+          limits: state.limits,
+          daysLeft: 10,
+        }),
+      },
+      weekly: { latest: async () => state.weekly },
+      categories: {
+        list: async () => ({ items: [{ ref: { type: "system", code: "cafes" }, name: null }] }),
+      },
+      llm: {
+        modelChoice: {
+          view: async () => ({ items: state.models, selected: state.selectedModel }),
+          choose: async (_s: unknown, modelId: string | null) => {
+            spy.chosen.push(modelId);
+            state.selectedModel = modelId;
+          },
+        },
+      },
+      notifications: { get: async () => [] },
       voice: {
         transcribe: async () => {
           spy.transcribed += 1;
@@ -189,6 +241,11 @@ function harness() {
         }),
       ),
     t,
+    nt: createT(),
+    renderChart: async (chart) => {
+      spy.charts.push(chart);
+      return new Uint8Array([137, 80, 78, 71]);
+    },
     siteOrigin: async () => "http://127.0.0.1:8140",
     sender: async () => undefined,
     sleep: async () => undefined,
@@ -249,6 +306,7 @@ function harness() {
     links,
     log,
     handler,
+    deps,
     text: (chatId: number, text: string) => send({ ...base(chatId), text }),
     raw: (chatId: number, extra: Record<string, unknown>, type = "private", fromId = chatId) =>
       send({ ...base(chatId, type, fromId), ...extra }),
@@ -627,6 +685,391 @@ describe("TG-03: карточка чека присылается один ра�
     await h.raw(chatId, { photo: [{ file_id: "p", file_unique_id: "p", width: 10, height: 10 }] });
     expect(h.sent().at(-1)).toBe(t("bot.receipt.failed"));
     expect(keyboardOf(h.calls.filter((c) => c.method === "sendMessage").at(-1))).toEqual([]);
+  });
+});
+
+describe("TG-07, TG-08: быстрые команды", () => {
+  const linked = async () => {
+    const h = harness();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    return { h, chatId };
+  };
+  const plain = (text: string) => text.replaceAll("\u00A0", " ");
+
+  it("/balance — остатки и свободный остаток, ссылка на сайт текстом (адрес локальный)", async () => {
+    const { h, chatId } = await linked();
+    await h.text(chatId, "/balance");
+    const text = plain(h.sent().at(-1) ?? "");
+    expect(text).toContain("На счетах: 120,00 BYN");
+    expect(text).toContain("Свободный остаток: 840,00 BYN");
+    expect(text).toContain("Открыть на сайте: http://127.0.0.1:8140/home");
+  });
+
+  it("/limits — строки с названиями категорий и картинка графика с подписью; подписи — в тексте", async () => {
+    const { h, chatId } = await linked();
+    h.state.limits = [
+      {
+        categoryKey: "system:cafes",
+        percent: 84,
+        spent: { minor: 42_000, currency: "BYN" },
+        limit: { minor: 50_000, currency: "BYN" },
+      },
+    ];
+    await h.text(chatId, "/limits");
+    expect(plain(h.sent().at(-1) ?? "")).toContain(
+      "«Кафе, рестораны и доставка»: 84% — 420,00 BYN из 500,00 BYN",
+    );
+    const photo = h.calls.find((c) => c.method === "sendPhoto");
+    expect(String(photo?.payload["caption"])).toContain("Кафе, рестораны и доставка — 84%");
+    expect(h.spy.charts).toHaveLength(1);
+  });
+
+  it("/week — заголовок недели и текст сводки; сводки нет — подсказка", async () => {
+    const { h, chatId } = await linked();
+    await h.text(chatId, "/week");
+    expect(h.sent().at(-1)).toBe(t("bot.week.empty"));
+    h.state.weekly = {
+      weekStart: "2026-10-26",
+      weekEnd: "2026-11-01",
+      text: "Вы потратили 412,30 BYN.",
+      spent: { amount: { minor: 41_230, currency: "BYN" } },
+      categories: [{ name: "Такси", amount: { amount: { minor: 12_000, currency: "BYN" } } }],
+    };
+    await h.text(chatId, "/week");
+    expect(h.sent().at(-1)).toContain(
+      "Итоги недели 26.10.2026 — 01.11.2026\nВы потратили 412,30 BYN.",
+    );
+    expect(h.methods()).toContain("sendPhoto");
+  });
+
+  it("/undo: последнее действие бота отменяется; нечего — подсказка; позже правили — отказ с причиной", async () => {
+    const { h, chatId } = await linked();
+    await h.text(chatId, "/undo");
+    expect(h.sent().at(-1)).toBe(t("bot.undo.nothing"));
+    h.state.undoable = uuid(70);
+    await h.text(chatId, "/undo");
+    expect(h.spy.undone).toEqual([uuid(70)]);
+    expect(h.sent().at(-1)).toBe(t("bot.undo.done"));
+    h.state.undoResult = "conflict";
+    await h.text(chatId, "/undo");
+    expect(h.sent().at(-1)).toBe(t("bot.undo.conflict"));
+  });
+
+  it("/password — ссылка сброса присылается в чат; в /help есть кнопка «Сбросить пароль»", async () => {
+    const { h, chatId } = await linked();
+    await h.text(chatId, "/help");
+    const help = h.calls.filter((c) => c.method === "sendMessage").at(-1);
+    expect(keyboardOf(help)[0]?.map((b) => b.text)).toEqual(["Сбросить пароль"]);
+    await h.text(chatId, "/password");
+    expect(h.state.resetLinks).toBe(1);
+    expect(h.sent().at(-1)).toContain("http://127.0.0.1:8140/recovery?token=abc");
+    await h.press(chatId, encodeCallback({ action: "command", id: "password" }));
+    expect(h.state.resetLinks).toBe(2);
+  });
+
+  it("/model: «Авто» и разрешённые модели; выбор по метке меняет модель и правит сообщение", async () => {
+    const { h, chatId } = await linked();
+    await h.text(chatId, "/model");
+    expect(h.sent().at(-1)).toBe(t("bot.model.empty"));
+    h.state.models = [
+      { id: "groq/openai/gpt-oss-120b", provider: "groq", model: "gpt-oss-120b", cloud: true },
+      { id: "local/qwen", provider: "llama", model: "qwen", cloud: false },
+    ];
+    await h.text(chatId, "/model");
+    const menu = h.calls.filter((c) => c.method === "sendMessage").at(-1);
+    expect(keyboardOf(menu).map((row) => row[0]?.text)).toEqual([
+      "Авто",
+      "gpt-oss-120b — облако",
+      "qwen — на этом компьютере",
+    ]);
+    const gpt = keyboardOf(menu)[1]?.[0] as unknown as { callback_data: string } | undefined;
+    await h.press(chatId, gpt?.callback_data ?? "");
+    expect(h.spy.chosen).toEqual(["groq/openai/gpt-oss-120b"]);
+    expect(h.calls.filter((c) => c.method === "editMessageText").at(-1)?.payload["text"]).toBe(
+      t("bot.model.chosen", { name: "gpt-oss-120b" }),
+    );
+    await h.press(chatId, encodeCallback({ action: "model", id: "auto" }));
+    expect(h.spy.chosen.at(-1)).toBeNull();
+  });
+
+  it("/model: метка модели, которой уже нет в списке (отозвано облако), — «выберите заново», выбор не меняется", async () => {
+    const { h, chatId } = await linked();
+    h.state.models = [{ id: "local/qwen", provider: "llama", model: "qwen", cloud: false }];
+    await h.press(
+      chatId,
+      encodeCallback({ action: "model", id: modelTag("groq/openai/gpt-oss-120b") }),
+    );
+    expect(h.spy.chosen).toEqual([]);
+    expect(h.calls.filter((c) => c.method === "editMessageText").at(-1)?.payload["text"]).toBe(
+      t("bot.model.unavailable"),
+    );
+  });
+});
+
+describe("TG-08, TG-06: кнопки уведомлений и графики в ответах", () => {
+  it("«Отменить» под уведомлением отменяет действие и убирает кнопки; «Да» с отменой — кнопка «Отменить»", async () => {
+    const h = harness();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    await h.press(chatId, encodeCallback({ action: "undo", id: uuid(71) }), "Лимит");
+    expect(h.spy.undone).toEqual([uuid(71)]);
+    expect(h.sent().at(-1)).toBe(t("bot.undo.done"));
+
+    h.state.answerUndoToken = uuid(72);
+    await h.press(
+      chatId,
+      encodeCallback({ action: "decision-yes", id: uuid(73) }),
+      "Перенести 13 операций?",
+    );
+    const edit = h.calls.filter((c) => c.method === "editMessageText").at(-1);
+    expect(edit?.payload["text"]).toBe(`Перенести 13 операций?\n\n${t("bot.decision.yes")}`);
+    const markup = edit?.payload["reply_markup"] as { inline_keyboard: { text: string }[][] };
+    expect(markup.inline_keyboard[0]?.[0]?.text).toBe("Отменить");
+  });
+
+  it("график из ответа агента присылается картинкой с подписью текстом; больше двух — остальные на сайте", async () => {
+    const h = harness();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    const chart = (title: string) => ({
+      type: "data-chart",
+      data: {
+        kind: "bar",
+        title,
+        unit: "count",
+        currency: null,
+        labels: ["а", "б"],
+        series: [{ name: "n", values: [1, 2] }],
+      },
+    });
+    h.state.streamExtra = [chart("Первый"), chart("Второй"), chart("Третий")];
+    await h.text(chatId, "Покажи график");
+    const photos = h.calls.filter((c) => c.method === "sendPhoto");
+    expect(photos).toHaveLength(2);
+    expect(String(photos[0]?.payload["caption"])).toContain("Первый\nа — 1\nб — 2");
+    expect(String(photos[1]?.payload["caption"])).toContain(
+      "Открыть на сайте: http://127.0.0.1:8140/assistant",
+    );
+  });
+});
+
+describe("TG-06: канал доставки уведомлений", () => {
+  const OWNER = OWNER_A;
+  const notification = (extra: Record<string, unknown>) => ({
+    id: uuid(80),
+    kind: "limit",
+    params: {
+      category: "system:cafes",
+      threshold: 80,
+      percent: 84,
+      spent: 42_000,
+      limit: 50_000,
+      daysLeft: 10,
+    },
+    objectRef: null,
+    decisionId: null,
+    undoToken: null,
+    read: false,
+    createdAt: "2026-11-01T09:00:00.000Z",
+    ...extra,
+  });
+
+  async function delivery(items: unknown[], options: { token?: boolean } = {}) {
+    await db.owner.query("delete from telegram_links");
+    await db.owner.query("delete from telegram_link_codes");
+    const h = harness();
+    await link(h, OWNER, nextChat());
+    const sentMessages: {
+      chatId: number;
+      text: string;
+      keyboard: { text: string; data?: string }[][];
+    }[] = [];
+    const jobs: unknown[] = [];
+    const deps = {
+      ...h.deps,
+      sender: async () =>
+        options.token === false
+          ? undefined
+          : {
+              send: async (chatId: number, text: string, keyboard?: never) => {
+                sentMessages.push({ chatId, text, keyboard: (keyboard ?? []) as never });
+                return 1;
+              },
+              edit: async () => undefined,
+            },
+      neighbours: { ...h.deps.neighbours, notifications: { get: async () => items } },
+      platform: {
+        ...h.deps.platform,
+        jobs: {
+          enqueue: async (_s: unknown, _job: unknown, payload: unknown) => void jobs.push(payload),
+        },
+      },
+    } as never;
+    const channel = makeNotificationDelivery(deps);
+    const s = h.deps.scopedFor(OWNER);
+    return { h, channel, s, sentMessages, jobs };
+  }
+
+  it("канал `telegram` только ставит задачу с id уведомлений (нагрузка — id, без текстов)", async () => {
+    const { channel, s, jobs } = await delivery([]);
+    expect(channel.channel.name).toBe("telegram");
+    await channel.channel.deliver(s, [uuid(80)]);
+    expect(jobs).toEqual([{ ids: [uuid(80)] }]);
+  });
+
+  it("лимит: текст с названием категории и суммами, кнопка «Показать лимиты»", async () => {
+    const { channel, s, sentMessages } = await delivery([notification({})]);
+    await channel.deliver(s, [uuid(80)]);
+    const message = sentMessages[0];
+    expect(message?.text.replaceAll("\u00A0", " ")).toContain(
+      "Вы потратили 84% лимита на «Кафе, рестораны и доставка»: 420,00 BYN из 500,00 BYN",
+    );
+    expect(message?.keyboard[0]?.[0]?.text).toBe("Показать лимиты");
+  });
+
+  it("вопрос «Да / Нет» — кнопки с id решения (≤ 64 байт), «Отменить» — с токеном отмены", async () => {
+    const { channel, s, sentMessages } = await delivery([
+      notification({
+        kind: "receipt-match",
+        params: { store: "Евроопт", date: "12.10", bankDate: "13.10" },
+        decisionId: uuid(81),
+        undoToken: uuid(82),
+      }),
+    ]);
+    await channel.deliver(s, [uuid(80)]);
+    const rows = sentMessages[0]?.keyboard ?? [];
+    expect(rows[0]?.map((b) => b.text)).toEqual(["Да", "Нет"]);
+    expect(rows[1]?.[0]?.text).toBe("Это разные покупки");
+    for (const row of rows)
+      for (const button of row)
+        expect(Buffer.byteLength(button.data ?? "")).toBeLessThanOrEqual(64);
+    expect(decodeCallback(rows[0]?.[0]?.data ?? "")).toEqual({
+      action: "decision-yes",
+      id: uuid(81),
+    });
+  });
+
+  it("итоги недели — текст сводки и ссылка на сайт", async () => {
+    const { h, channel, s, sentMessages } = await delivery([
+      notification({ kind: "weekly-summary", params: {} }),
+    ]);
+    h.state.weekly = {
+      weekStart: "2026-10-26",
+      weekEnd: "2026-11-01",
+      text: "Вы потратили 412,30 BYN.",
+    };
+    await channel.deliver(s, [uuid(80)]);
+    expect(sentMessages[0]?.text).toContain(
+      "Итоги недели 26.10.2026 — 01.11.2026\nВы потратили 412,30 BYN.",
+    );
+    expect(sentMessages[0]?.text).toContain("Открыть на сайте: http://127.0.0.1:8140/home");
+  });
+
+  it("заблокированному, без согласия на Telegram и без токена — не отправляется", async () => {
+    for (const setup of ["blocked", "no-consent", "no-token"] as const) {
+      const { h, channel, s, sentMessages } = await delivery([notification({})], {
+        token: setup !== "no-token",
+      });
+      if (setup === "blocked") h.state.member.set(OWNER.userId, "blocked");
+      if (setup === "no-consent") h.state.consent.delete(OWNER.userId);
+      await channel.deliver(s, [uuid(80)]);
+      expect({ setup, sentMessages }).toEqual({ setup, sentMessages: [] });
+    }
+  });
+
+  it("сбой отправки одного уведомления не роняет доставку остальных и не бросает наружу", async () => {
+    const { h, channel, s, sentMessages } = await delivery([
+      notification({ id: uuid(80) }),
+      notification({ id: uuid(83) }),
+    ]);
+    let calls = 0;
+    const original = h.deps.sender;
+    void original;
+    const failing = makeNotificationDelivery({
+      ...h.deps,
+      sender: async () => ({
+        send: async (chatId: number, text: string) => {
+          calls += 1;
+          if (calls === 1) throw new Error("Forbidden: bot was blocked by the user");
+          sentMessages.push({ chatId, text, keyboard: [] });
+          return 1;
+        },
+        edit: async () => undefined,
+      }),
+      neighbours: {
+        ...h.deps.neighbours,
+        notifications: {
+          get: async () => [notification({ id: uuid(80) }), notification({ id: uuid(83) })],
+        },
+      },
+    } as never);
+    await failing.deliver(s, [uuid(80), uuid(83)]);
+    expect(sentMessages).toHaveLength(1);
+    void channel;
+  });
+});
+
+describe("AUTH-05, TG-09: ссылка сброса из админки — в бот", () => {
+  async function resetSetup(options: { token?: boolean } = {}) {
+    await db.owner.query("delete from telegram_links");
+    await db.owner.query("delete from telegram_link_codes");
+    const h = harness();
+    const sent: { chatId: number; text: string }[] = [];
+    const ops = makeLinkOps({
+      ...h.deps,
+      sender: async () =>
+        options.token === false
+          ? undefined
+          : {
+              send: async (chatId: number, text: string) => (sent.push({ chatId, text }), 1),
+              edit: async () => undefined,
+            },
+    });
+    return { h, ops, sent };
+  }
+
+  it("подключён, активен, согласие есть — ссылка уходит в чат владельца", async () => {
+    const { h, ops, sent } = await resetSetup();
+    const chatId = nextChat();
+    await link(h, OWNER_A, chatId);
+    expect(
+      await ops.sendResetLink(OWNER_A.userId, "http://127.0.0.1:8140/recovery?token=x", 60),
+    ).toBe(true);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.chatId).toBe(chatId);
+    expect(sent[0]?.text).toContain("http://127.0.0.1:8140/recovery?token=x");
+  });
+
+  it("Telegram не подключён, заблокирован, согласие отозвано, токена нет, отправка упала — false (ссылку покажут администратору)", async () => {
+    const none = await resetSetup();
+    expect(await none.ops.sendResetLink(OWNER_B.userId, "http://x/", 60)).toBe(false);
+
+    const blocked = await resetSetup();
+    await link(blocked.h, OWNER_A, nextChat());
+    blocked.h.state.member.set(OWNER_A.userId, "blocked");
+    expect(await blocked.ops.sendResetLink(OWNER_A.userId, "http://x/", 60)).toBe(false);
+
+    const revoked = await resetSetup();
+    await link(revoked.h, OWNER_A, nextChat());
+    revoked.h.state.consent.delete(OWNER_A.userId);
+    expect(await revoked.ops.sendResetLink(OWNER_A.userId, "http://x/", 60)).toBe(false);
+
+    const noToken = await resetSetup({ token: false });
+    await link(noToken.h, OWNER_A, nextChat());
+    expect(await noToken.ops.sendResetLink(OWNER_A.userId, "http://x/", 60)).toBe(false);
+    expect(noToken.sent).toEqual([]);
+
+    const failing = await resetSetup();
+    await link(failing.h, OWNER_A, nextChat());
+    const broken = makeLinkOps({
+      ...failing.h.deps,
+      sender: async () => ({
+        send: async () => Promise.reject(new Error("Forbidden")),
+        edit: async () => undefined,
+      }),
+    });
+    expect(await broken.sendResetLink(OWNER_A.userId, "http://x/", 60)).toBe(false);
   });
 });
 

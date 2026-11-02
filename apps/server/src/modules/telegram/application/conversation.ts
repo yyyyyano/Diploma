@@ -2,30 +2,46 @@
 // Ответ уходит потоком (черновики Telegram) обычным текстом без разметки — Markdown модели очищается (SEC-05).
 // Голос: распознаёт облачный Whisper при согласии; без согласия или при сбое облака — честный отказ, локальный whisper.cpp
 // в этой фазе не запускается.
+import { ChartData } from "@kosht/contract";
 import { randomUUID } from "node:crypto";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
+import { chartCaption } from "../domain/chart-svg.ts";
 import { createPlainTextStream } from "../domain/plain-text.ts";
 import { IDLE_HOURS, VOICE_MAX_SECONDS, MAX_FILE_MB } from "../settings.ts";
 import type { TelegramDeps } from "./deps.ts";
+import { makeSiteLink } from "./site.ts";
 import type { BotApi, Origin } from "./ports.ts";
 
 /** Кусок потока ответа агента: нужен только текст (в поток UI-сообщения AI SDK входят и другие виды кусков). */
 interface AnswerChunk {
   readonly type: string;
   readonly delta?: unknown;
+  /** Данные-часть ответа (`data-chart`): мини-график агента (AGT-02). */
+  readonly data?: unknown;
 }
+
+/** Сколько графиков одного ответа бот присылает картинками: остальные — на сайте (TG-08: кратко). */
+const MAX_CHARTS = 2;
 
 export function makeConversation(d: TelegramDeps) {
   const { t, platform, neighbours } = d;
+  const siteLink = makeSiteLink(d);
 
   /** Текстовые куски ответа без Markdown; пустой ответ — вежливая фраза; сбой до первого знака — ошибка (ответ — «не получилось»). */
-  async function* answerText(stream: AsyncIterable<AnswerChunk>): AsyncGenerator<string> {
+  async function* answerText(
+    stream: AsyncIterable<AnswerChunk>,
+    charts: ChartData[],
+  ): AsyncGenerator<string> {
     const plain = createPlainTextStream();
     let sent = false;
     let failed = false;
     for await (const chunk of stream) {
       if (chunk.type === "error") failed = true;
+      if (chunk.type === "data-chart") {
+        const chart = ChartData.safeParse(chunk.data);
+        if (chart.success && charts.length < MAX_CHARTS) charts.push(chart.data);
+      }
       if (chunk.type !== "text-delta" || typeof chunk.delta !== "string") continue;
       const out = plain.push(chunk.delta);
       if (out !== "") {
@@ -52,7 +68,19 @@ export function makeConversation(d: TelegramDeps) {
       { text, channel: "telegram", sentAt: origin.sentAt, idleMs: idleHours * 3_600_000 },
       randomUUID(),
     );
-    await api.stream(origin.chatId, answerText(stream));
+    const charts: ChartData[] = [];
+    await api.stream(origin.chatId, answerText(stream, charts));
+    // TG-08: график — картинкой (подписи текстом в подписи), под последней — «Открыть на сайте».
+    const site = await siteLink("/assistant");
+    for (const [at, chart] of charts.entries()) {
+      const last = at === charts.length - 1;
+      await api.sendPhoto(
+        origin.chatId,
+        await d.renderChart(chart),
+        chartCaption(chart) + (last ? site.suffix : ""),
+        last ? site.row : [],
+      );
+    }
   }
 
   /** Голосовое сообщение → текст → тот же путь, что у текста. Длинное — отказ по `voice.duration` до скачивания. */

@@ -2,7 +2,12 @@
 // чат и прочее, кроме сообщений и нажатий кнопок, — не событие бота. Тексты команд и вложения разбираются здесь, чтобы
 // сценарии не зависели от формы Update.
 import type { Update } from "grammy/types";
-import type { BotEvent, Incoming } from "../../application/ports.ts";
+import {
+  BOT_COMMANDS,
+  type BotCommand,
+  type BotEvent,
+  type Incoming,
+} from "../../application/ports.ts";
 
 const COMMAND = /^\/([A-Za-z0-9_]+)(?:@[A-Za-z0-9_]+)?(?:\s+([\s\S]*))?$/u;
 
@@ -11,7 +16,8 @@ function commandEvent(text: string): BotEvent | undefined {
   if (match === null) return undefined;
   const name = match[1]?.toLowerCase();
   if (name === "start") return { kind: "start", argument: match[2] ?? "" };
-  if (name === "new" || name === "unlink" || name === "help") return { kind: "command", name };
+  const known = BOT_COMMANDS.find((command: BotCommand) => command === name);
+  if (known !== undefined) return { kind: "command", name: known };
   // Неизвестная команда (в т. ч. команды следующих задач) — подсказка, а не вопрос агенту.
   return { kind: "command", name: "help" };
 }

@@ -1,7 +1,7 @@
 // BotApi поверх grammY `Api` (TG-03…05, SEC-05): обычный текст без parse_mode, кнопки — встроенная клавиатура. Ответ потоком —
 // `streamMessage` официального плагина `@grammyjs/stream` (черновики `sendMessageDraft`, деление на сообщения по 4096 знаков)
 // поверх auto-retry; ошибка черновика — ответ уходит одним сообщением (куски по 4096). Токен в логи и ошибки не попадает.
-import { InlineKeyboard, type Api } from "grammy";
+import { InlineKeyboard, InputFile, type Api } from "grammy";
 import { streamApi } from "@grammyjs/stream";
 import type { Logger } from "../../../../platform/logging/logger.ts";
 import { FileTooLargeError, type BotApi, type Keyboard } from "../../application/ports.ts";
@@ -72,6 +72,15 @@ export function createBotApi(options: GrammyApiOptions): BotApi {
       await api.editMessageText(chatId, messageId, text.slice(0, MESSAGE_LIMIT), {
         reply_markup: markup(keyboard) as never,
       });
+    },
+    async sendPhoto(chatId, png, caption, keyboard) {
+      const options = {
+        caption: caption.slice(0, MESSAGE_LIMIT / 4),
+        ...(keyboard !== undefined && keyboard.length > 0
+          ? { reply_markup: markup(keyboard) }
+          : {}),
+      };
+      await api.sendPhoto(chatId, new InputFile(png, "chart.png"), options);
     },
     async stream(chatId, text) {
       const iterator = text[Symbol.asyncIterator]();

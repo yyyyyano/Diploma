@@ -13,7 +13,7 @@ import { makeLlmAdmin, type LlmAdmin } from "./application/admin.ts";
 import { createMasker } from "./application/masking/masker.ts";
 import { createRedactions } from "./application/masking/redactions.ts";
 import { createTraceMask } from "./application/masking/trace-mask.ts";
-import { makePreferences } from "./application/preferences.ts";
+import { makePreferences, type Preferences } from "./application/preferences.ts";
 import { makeProviderAlerts } from "./application/provider-alerts.ts";
 import { makeRetention } from "./application/retention.ts";
 import { makeTraceDeletion } from "./application/trace-deletion.ts";
@@ -175,5 +175,10 @@ export function scenarioOf(file: string): string {
 /** Что модуль даёт соседям: шлюз к моделям. */
 export type LlmFacade = LlmGateway;
 
-/** Фасад для админки (модуль admin): шлюз и `admin` — цепочки, реестр, ключи, расход; тексты запросов не хранятся. */
-export type LlmAdminFacade = LlmFacade & { readonly admin: LlmAdmin };
+/** Выбор модели пользователем (LLM-10) для бота (`/model`, T-053): список разрешённых и выбор («Авто» — `null`). */
+export interface LlmChoiceFacade {
+  readonly modelChoice: Pick<Preferences, "view" | "choose">;
+}
+
+/** Фасад модуля целиком: шлюз, `admin` (админка: цепочки, реестр, ключи, расход; тексты запросов не хранятся) и `modelChoice`. */
+export type LlmAdminFacade = LlmFacade & { readonly admin: LlmAdmin } & LlmChoiceFacade;

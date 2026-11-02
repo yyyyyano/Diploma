@@ -37,7 +37,7 @@ export function adminRouter(d: {
   >;
   readonly system: SystemFacade;
   /** Токен Telegram-бота (ADM-60): только статус и запись. */
-  readonly telegram: Pick<TelegramFacade["admin"], "tokenStatus" | "setToken">;
+  readonly telegram: Pick<TelegramFacade["admin"], "tokenStatus" | "setToken" | "sendResetLink">;
   readonly mail: Pick<MailFacade, "smtp">;
   /** Админка ИИ (ADM-20, ADM-50): цифры и настройки — без текстов запросов (ADM-22). */
   readonly llm: LlmAdminFacade["admin"];
@@ -89,7 +89,10 @@ export function adminRouter(d: {
       return { ok: true as const };
     }),
     resetUserPassword: admin.admin.resetUserPassword.handler(({ input, context }) =>
-      d.identity.resetUserPassword(context.s.scope, input.id),
+      // AUTH-05: нет подтверждённой почты, но подключён Telegram — ссылка уходит в бот, а не администратору.
+      d.identity.resetUserPassword(context.s.scope, input.id, ({ userId, link, minutes }) =>
+        d.telegram.sendResetLink(userId, link, minutes),
+      ),
     ),
     system: admin.admin.system.handler(() => overview()),
     setMail: admin.admin.setMail.handler(async ({ input }) => {

@@ -1,7 +1,7 @@
 // Модуль telegram (паспорт — CLAUDE.md): бот «Кошт» — привязка с согласием (TG-02, PRIV-08), фото чеков и файлы выписок
 // (TG-03, TG-04), вопросы ассистенту текстом и голосом (TG-05, VOICE-01), группы не поддерживаются (TG-11). grammY — только
 // в infrastructure/bot; опрос — в процессе `bot` под консультативным замком Postgres (TG-10).
-import { createTelegramT } from "@kosht/i18n";
+import { createT, createTelegramT } from "@kosht/i18n";
 import {
   defineModule,
   type ModuleDeps,
@@ -12,7 +12,7 @@ import type { ChatFacade } from "../chat/index.ts";
 import type { AgentFacade } from "../agent/index.ts";
 import type { CategoriesFacade } from "../categories/index.ts";
 import type { FilesFacade } from "../files/index.ts";
-import type { LlmFacade } from "../llm/index.ts";
+import type { LlmChoiceFacade } from "../llm/index.ts";
 import type { IdentityFacade } from "../identity/index.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
@@ -27,6 +27,9 @@ import { telegramRouter } from "./api/router.ts";
 import type { TelegramDeps } from "./application/deps.ts";
 import { makeBotHandler } from "./application/handler.ts";
 import { makeLinkOps } from "./application/link.ts";
+import { makeNotificationDelivery } from "./application/notification-channel.ts";
+import { BOT_COMMANDS } from "./application/ports.ts";
+import { renderChartPng } from "./infrastructure/bot/chart-png.ts";
 import { createBotRuntime } from "./infrastructure/bot/bot-runtime.ts";
 import { createSenderProvider } from "./infrastructure/bot/sender.ts";
 import { linkedUserIds } from "./infrastructure/db/telegram.repo.ts";
@@ -38,7 +41,7 @@ import { telegramUserData } from "./user-data.ts";
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface TelegramFacades {
   readonly files: FilesFacade;
-  readonly llm: LlmFacade;
+  readonly llm: LlmChoiceFacade;
   readonly categories: CategoriesFacade;
   readonly chat: ChatFacade;
   readonly agent: AgentFacade;
@@ -61,17 +64,21 @@ export function createTelegramModule({
   facades,
 }: ModuleDeps<TelegramFacades, SystemPlatform>) {
   const sender = createSenderProvider({ secrets: platform.secrets, log: platform.log });
+  const t = createTelegramT();
   const deps: TelegramDeps = {
     system: platform.system,
     platform,
     neighbours: facades,
     scopedFor: scopedForOwner(platform),
-    t: createTelegramT(),
+    t,
+    nt: createT(),
+    renderChart: renderChartPng,
     siteOrigin: () => resolveLinkOrigin(platform.settings, platform.localOrigin),
     sender,
     sleep,
   };
   const links = makeLinkOps(deps);
+  const delivery = makeNotificationDelivery(deps);
   const handler = makeBotHandler(deps, links);
   const runtime = createBotRuntime({
     system: platform.system,
@@ -80,6 +87,10 @@ export function createTelegramModule({
     log: platform.log,
     handler,
     now: () => platform.clock.now(),
+    commands: BOT_COMMANDS.map((command) => ({
+      command,
+      description: t(`bot.commands.${command}`),
+    })),
   });
   return defineModule({
     id: "telegram",
@@ -89,6 +100,7 @@ export function createTelegramModule({
       /** Админка (ADM-30, ADM-60): у кого подключён Telegram (только флаг) и токен бота — поле только для записи. */
       admin: {
         linkedUsers: () => linkedUserIds(platform.system),
+        sendResetLink: links.sendResetLink,
         tokenStatus: () => platform.secrets.status(TELEGRAM_TOKEN),
         setToken: async (token: string | null) => {
           if (token === null) await platform.secrets.clear(TELEGRAM_TOKEN);
@@ -97,6 +109,8 @@ export function createTelegramModule({
       },
     },
     router: telegramRouter(links),
+    jobs: [delivery.job],
+    deliveryChannels: [delivery.channel],
     subscriptions: onReceiptReady({ sender, deliver: handler.deliverReceipt }),
     userData: telegramUserData(platform.system),
     settings: TELEGRAM_SETTINGS,

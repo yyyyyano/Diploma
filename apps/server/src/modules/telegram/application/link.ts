@@ -161,7 +161,28 @@ export function makeLinkOps(d: TelegramDeps) {
     await api.send(origin.chatId, t("bot.start.linked"));
   }
 
-  return { botName, status, beginLink, cancelLink, unlink, linkFromStart };
+  /**
+   * Ссылка сброса пароля из админки — в бот (AUTH-05, R37): только подключённому, активному и давшему согласие; `false` —
+   * некуда или не вышло (тогда ссылку покажут администратору). Вызывает identity по просьбе admin.
+   */
+  async function sendResetLink(userId: string, link: string, minutes: number): Promise<boolean> {
+    const row = await findLinkByUser(system, userId);
+    if (row === undefined) return false;
+    const s = d.scopedFor(row);
+    if ((await neighbours.identity.memberState(s.scope)) !== "active") return false;
+    if (!(await neighbours.privacy.telegramConsentGiven(s))) return false;
+    const sender = await d.sender();
+    if (sender === undefined) return false;
+    try {
+      await sender.send(row.chatId, d.t("bot.reset.byAdmin", { link, minutes }));
+      return true;
+    } catch (error) {
+      platform.log.warn({ err: error }, "telegram.reset-link-failed");
+      return false;
+    }
+  }
+
+  return { botName, status, beginLink, cancelLink, unlink, linkFromStart, sendResetLink };
 }
 
 export type LinkOps = ReturnType<typeof makeLinkOps>;

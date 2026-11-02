@@ -6,14 +6,15 @@
 import { randomUUID } from "node:crypto";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import { withLogContext } from "../../../platform/logging/context.ts";
-import { decodeCallback } from "../domain/callback-data.ts";
+import { decodeCallback, encodeCallback } from "../domain/callback-data.ts";
 import { findLinkByChat } from "../infrastructure/db/telegram.repo.ts";
 import { createChatQueue } from "./chat-queue.ts";
 import type { TelegramDeps } from "./deps.ts";
+import { makeCommands } from "./commands.ts";
 import { makeConversation } from "./conversation.ts";
 import { makeDocuments } from "./documents.ts";
 import { makeLinkOps, type LinkOps } from "./link.ts";
-import { FileTooLargeError, type BotApi, type Incoming } from "./ports.ts";
+import { FileTooLargeError, type BotApi, type BotCommand, type Incoming } from "./ports.ts";
 import { MAX_FILE_MB } from "../settings.ts";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 
@@ -37,6 +38,7 @@ export function makeBotHandler(d: TelegramDeps, linkOps: LinkOps = makeLinkOps(d
 
   const documents = makeDocuments(d, spawn);
   const conversation = makeConversation(d);
+  const commands = makeCommands(d);
 
   /** Ошибка сценария → одна фраза пользователю; программные сбои — в лог без текстов (OBS-04). */
   async function failureText(error: unknown): Promise<string> {
@@ -109,11 +111,7 @@ export function makeBotHandler(d: TelegramDeps, linkOps: LinkOps = makeLinkOps(d
         await api.send(chatId, t("bot.start.already"));
         return;
       case "command":
-        if (event.name === "help") await api.send(chatId, t("bot.help"));
-        else if (event.name === "new") {
-          await neighbours.chat.startNew(s, "telegram", origin.sentAt);
-          await api.send(chatId, t("bot.newConversation"));
-        } else await linkOps.unlink(s, undefined).then(() => api.send(chatId, t("bot.unlinked")));
+        await command(s, incoming, event.name, api);
         return;
       case "text":
         await conversation.ask(s, origin, event.text, api);
@@ -141,6 +139,48 @@ export function makeBotHandler(d: TelegramDeps, linkOps: LinkOps = makeLinkOps(d
       case "unsupported":
         await api.send(chatId, t("bot.unsupported"));
         return;
+    }
+  }
+
+  /** Команда меню (TG-07, TG-09) — из текста «/…» или кнопки: одна функция на обе дороги. */
+  async function command(
+    s: ScopedDb,
+    incoming: Incoming,
+    name: BotCommand,
+    api: BotApi,
+  ): Promise<void> {
+    const { origin } = incoming;
+    switch (name) {
+      case "help":
+        await api.send(origin.chatId, t("bot.help"), [
+          [
+            {
+              text: t("bot.buttons.resetPassword"),
+              data: encodeCallback({ action: "command", id: "password" }),
+            },
+          ],
+        ]);
+        return;
+      case "new":
+        await neighbours.chat.startNew(s, "telegram", origin.sentAt);
+        await api.send(origin.chatId, t("bot.newConversation"));
+        return;
+      case "unlink":
+        await linkOps.unlink(s, undefined);
+        await api.send(origin.chatId, t("bot.unlinked"));
+        return;
+      case "balance":
+        return commands.balance(s, origin, api);
+      case "week":
+        return commands.week(s, origin, api);
+      case "limits":
+        return commands.limits(s, origin, api);
+      case "undo":
+        return commands.undo(s, origin, api);
+      case "model":
+        return commands.model(s, origin, api);
+      case "password":
+        return commands.resetPassword(s, origin, api);
     }
   }
 
@@ -183,10 +223,40 @@ export function makeBotHandler(d: TelegramDeps, linkOps: LinkOps = makeLinkOps(d
       case "decision-yes":
       case "decision-no": {
         const yes = parsed.action === "decision-yes";
-        await neighbours.actions.answer(s, parsed.id, yes ? "yes" : "no", "telegram");
-        await finish(t(yes ? "bot.decision.yes" : "bot.decision.no"));
+        const result = await neighbours.actions.answer(
+          s,
+          parsed.id,
+          yes ? "yes" : "no",
+          "telegram",
+        );
+        const status = t(yes ? "bot.decision.yes" : "bot.decision.no");
+        // «Да» могло оставить отмену (удаление операций — «Отменить» сразу после, TXN-03): кнопка вместо прежних.
+        if (result.undoToken === null) await finish(status);
+        else {
+          await api.edit(chatId, event.messageId, `${event.text}\n\n${status}`, [
+            [
+              {
+                text: t("bot.buttons.undo"),
+                data: encodeCallback({ action: "undo", id: result.undoToken }),
+              },
+            ],
+          ]);
+        }
         return;
       }
+      case "undo":
+        // Кнопки у сообщения убираем сразу: повторное нажатие всё равно безвредно (`already-undone`), но зачем звать его.
+        await api.edit(chatId, event.messageId, event.text);
+        await commands.undoToken(s, chatId, parsed.id, api);
+        return;
+      case "command":
+        if (parsed.id === "balance") return commands.balance(s, incoming.origin, api);
+        if (parsed.id === "week") return commands.week(s, incoming.origin, api);
+        if (parsed.id === "limits") return commands.limits(s, incoming.origin, api);
+        if (parsed.id === "model") return commands.model(s, incoming.origin, api);
+        return commands.resetPassword(s, incoming.origin, api);
+      case "model":
+        return commands.chooseModel(s, incoming.origin, event.messageId, parsed.id, api);
     }
   }
 

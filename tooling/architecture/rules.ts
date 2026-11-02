@@ -446,13 +446,15 @@ function libraryRules(): ForbiddenRule[] {
       "sharp-only-in-llm-images",
       "Обработка изображений (sharp) — только в llm/infrastructure/images (перед облаком изображение перекодируется " +
         "без метаданных, PRIV-04) в statements/infrastructure (картинки страниц-сканов PDF → PNG для модели, T-025) и " +
-        "в receipts/infrastructure (подготовка фото чека в изолированном потоке, T-027); остальной код получает готовые байты.",
+        "в receipts/infrastructure (подготовка фото чека в изолированном потоке, T-027) и в telegram/infrastructure (график " +
+        "для бота: свой SVG без текста → PNG, T-053); остальной код получает готовые байты.",
       {
         path: `^${SERVER}/`,
         pathNot: [
           `^${MOD}/llm/infrastructure/images/`,
           `^${MOD}/statements/infrastructure/`,
           `^${MOD}/receipts/infrastructure/`,
+          `^${MOD}/telegram/infrastructure/`,
         ],
       },
       { path: npmPattern(["sharp"]) },

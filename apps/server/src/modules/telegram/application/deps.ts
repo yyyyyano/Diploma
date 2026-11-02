@@ -1,10 +1,16 @@
 // Зависимости сценариев бота: платформа, фасады соседей и то, что даёт infrastructure (scope из привязки, отправка без
 // опроса). Сценарии не импортируют grammY и не собирают Scope сами — только `scopedFor` (ARCHITECTURE §6.4).
-import type { TelegramT } from "@kosht/i18n";
+import type { ChartData } from "@kosht/contract";
+import type { T, TelegramT } from "@kosht/i18n";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { SystemDb } from "../../../platform/db/system-db.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
 import type { ActionsFacade } from "../../actions/index.ts";
+import type { CategoriesFacade } from "../../categories/index.ts";
+import type { DashboardFacade } from "../../dashboard/index.ts";
+import type { LlmChoiceFacade } from "../../llm/index.ts";
+import type { NotificationsFacade } from "../../notifications/index.ts";
+import type { WeeklyFacade } from "../../weekly/index.ts";
 import type { ChatFacade } from "../../chat/index.ts";
 import type { FilesFacade } from "../../files/index.ts";
 import type { IdentityFacade } from "../../identity/index.ts";
@@ -18,9 +24,14 @@ import type { Sender } from "./ports.ts";
 export interface TelegramNeighbours {
   readonly files: Pick<FilesFacade, "accept">;
   readonly chat: Pick<ChatFacade, "ask" | "startNew">;
-  readonly identity: Pick<IdentityFacade, "memberState">;
+  readonly identity: Pick<IdentityFacade, "memberState" | "issueResetLink">;
   readonly privacy: Pick<PrivacyFacade, "setTelegramConsent" | "telegramConsentGiven">;
-  readonly actions: Pick<ActionsFacade, "answer">;
+  readonly actions: Pick<ActionsFacade, "answer" | "undo" | "lastUndoable">;
+  readonly llm: LlmChoiceFacade;
+  readonly categories: Pick<CategoriesFacade, "list">;
+  readonly dashboard: Pick<DashboardFacade, "overview">;
+  readonly weekly: Pick<WeeklyFacade, "latest">;
+  readonly notifications: Pick<NotificationsFacade, "get">;
   readonly receipts: Pick<ReceiptsFacade, "start" | "card" | "confirm" | "cancel">;
   readonly statements: Pick<StatementsFacade, "start" | "summary" | "confirm" | "cancel">;
   readonly voice: Pick<VoiceFacade, "transcribe">;
@@ -30,12 +41,16 @@ export interface TelegramDeps {
   readonly system: SystemDb;
   readonly platform: Pick<
     SystemPlatform,
-    "clock" | "log" | "settings" | "secrets" | "consent" | "events"
+    "clock" | "log" | "settings" | "secrets" | "consent" | "events" | "rateLimiter" | "jobs"
   >;
   readonly neighbours: TelegramNeighbours;
   /** ScopedDb владельца привязки — собирает infrastructure (вход Telegram, ARCHITECTURE §6.4). */
   readonly scopedFor: (owner: { userId: string; householdId: string }) => ScopedDb;
   readonly t: TelegramT;
+  /** Словарь уведомлений и названий сайта: тексты уведомлений в боте — те же, что в колокольчике. */
+  readonly nt: T;
+  /** График → PNG (свой SVG без текста, sharp — в infrastructure). */
+  readonly renderChart: (chart: ChartData) => Promise<Uint8Array>;
   /** Адрес сайта для ссылок «Изменить» / «Открыть на сайте»: LAN-адрес, если включён, иначе локальный вход. */
   readonly siteOrigin: () => Promise<string>;
   /** Отправка без опроса (любой процесс): `undefined` — токена нет. */

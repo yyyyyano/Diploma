@@ -21,6 +21,8 @@ export interface BotApi {
   /** Отправить сообщение (обычный текст, без разметки — SEC-05); id сообщения — чтобы потом поправить кнопки. */
   send(chatId: number, text: string, keyboard?: Keyboard): Promise<number>;
   edit(chatId: number, messageId: number, text: string, keyboard?: Keyboard): Promise<void>;
+  /** Картинка с подписью (график, TG-08): подписи — текстом в `caption`, в самой картинке текста нет. */
+  sendPhoto(chatId: number, png: Uint8Array, caption: string, keyboard?: Keyboard): Promise<void>;
   /** Ответ потоком: черновики, деление на сообщения по 4096 знаков; при ошибке черновика — одним сообщением. */
   stream(chatId: number, text: AsyncIterable<string>): Promise<void>;
   /** Скачать файл; больше `maxBytes` — `FileTooLargeError` (до скачивания, по размеру из Telegram, и по факту). */
@@ -39,9 +41,23 @@ export interface Origin {
   readonly sentAt: Date;
 }
 
+/** Команды меню бота (TG-07, TG-09). */
+export const BOT_COMMANDS = [
+  "balance",
+  "week",
+  "limits",
+  "undo",
+  "model",
+  "new",
+  "password",
+  "unlink",
+  "help",
+] as const;
+export type BotCommand = (typeof BOT_COMMANDS)[number];
+
 export type BotEvent =
   | { readonly kind: "start"; readonly argument: string }
-  | { readonly kind: "command"; readonly name: "new" | "unlink" | "help" }
+  | { readonly kind: "command"; readonly name: BotCommand }
   | { readonly kind: "text"; readonly text: string }
   | { readonly kind: "photo"; readonly fileId: string; readonly size: number | undefined }
   | {

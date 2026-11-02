@@ -17,6 +17,7 @@ import type { LlmFacade } from "../llm/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
 import type { ExplainFacade } from "../explain/index.ts";
 import { weeklyRouter } from "./api/router.ts";
+import { makeBackfill } from "./application/backfill.ts";
 import { makeFacts } from "./application/facts.ts";
 import { makeRead } from "./application/read.ts";
 import { makeRun } from "./application/run.ts";
@@ -47,11 +48,12 @@ export function createWeeklyModule({ platform, facades }: ModuleDeps<WeeklyFacad
   const text = makeText(deps);
   const run = makeRun(deps, facts, text);
   const read = makeRead(deps);
+  const backfill = makeBackfill(deps, facts, text);
   const build = buildJob(run);
   return defineModule({
     id: "weekly",
-    // Соседям: последняя сводка для карточки главной (DASH-02) и история.
-    facade: { latest: read.latest, history: read.history },
+    // Соседям: последняя сводка для карточки главной (DASH-02), история и её досоздание для демо (DEMO-01).
+    facade: { latest: read.latest, history: read.history, backfill },
     router: weeklyRouter(read),
     settings: [...WEEKLY_SETTINGS],
     jobs: [build],

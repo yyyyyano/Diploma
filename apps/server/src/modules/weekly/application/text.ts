@@ -84,7 +84,12 @@ export function makeText(d: Pick<Deps, "llm" | "platform">) {
     return { text, source: "model" };
   }
 
-  return { compose };
+  /** Только шаблон — без модели: история демо (DEMO-01) не тратит лимиты и не зависит от согласия на облако. */
+  function template(facts: WeeklyFacts): string {
+    return templateText(facts, t);
+  }
+
+  return { compose, template };
 }
 
 export type Text = ReturnType<typeof makeText>;

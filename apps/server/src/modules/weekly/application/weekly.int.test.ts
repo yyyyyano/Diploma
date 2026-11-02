@@ -309,3 +309,38 @@ describe("WEEK-03: настройки", () => {
     });
   });
 });
+
+describe("DEMO-01: история итогов недели без модели", () => {
+  it("три прошлые недели — три итога по шаблону, модель не вызывалась, уведомлений нет, у чисел есть traceId", async () => {
+    const { w, s } = await setup();
+    expect(await w.backfill(s, { weeks: 3 })).toBe(3);
+    const history = await w.read.history(s);
+    expect(history.map((x) => x.weekStart)).toEqual(["2026-10-26", "2026-10-19", "2026-10-12"]);
+    expect(history.every((x) => x.textSource === "template")).toBe(true);
+    expect(history[0]?.spent.amount).toEqual(byn(31_200));
+    expect(history[1]?.spent.amount).toEqual(byn(26_441));
+    const trace = await w.r.t.explain.get(s, history[0]?.spent.traceId as never);
+    expect(trace.trace.value).toEqual(byn(31_200));
+    expect(w.calls).toHaveLength(0);
+    expect(w.notices()).toHaveLength(0);
+  });
+
+  it("повтор не дублирует недели; недели до первой операции пропускаются", async () => {
+    const { w, s } = await setup({ history: false });
+    await w.r.seed(s, LAST_WEEK);
+    expect(await w.backfill(s, { weeks: 4 })).toBe(1);
+    expect(await w.backfill(s, { weeks: 4 })).toBe(0);
+    expect((await w.read.history(s)).map((x) => x.weekStart)).toEqual(["2026-10-26"]);
+  });
+
+  it("лимиты недели — за месяц конца этой недели: кафе 1 ноября — 85 % у недели 26.10–01.11, у недели 19–25.10 (октябрь) лимитов нет", async () => {
+    const { w, s } = await setup();
+    await w.a.limits.set(s, { categoryKey: "system:cafes", limit: byn(20_000) } as never, "web");
+    await w.backfill(s, { weeks: 2 });
+    const history = await w.read.history(s);
+    expect(history.find((x) => x.weekStart === "2026-10-26")?.limits).toMatchObject([
+      { name: "Кафе, рестораны и доставка", percent: 85 },
+    ]);
+    expect(history.find((x) => x.weekStart === "2026-10-19")?.limits).toEqual([]);
+  });
+});

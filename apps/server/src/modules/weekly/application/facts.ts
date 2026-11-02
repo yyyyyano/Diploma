@@ -29,11 +29,15 @@ export function makeFacts(d: Deps) {
     return names;
   }
 
-  /** Сводка за неделю `weekStart…weekEnd` на день `today`; `null` — до конца этой недели операций не было. */
+  /**
+   * Сводка за неделю `weekStart…weekEnd` на день `today`; `null` — до конца этой недели операций не было. `limitsMonth` —
+   * месяц лимитов «ГГГГ-ММ»; нет — текущий (история демо берёт месяц конца недели, DEMO-01).
+   */
   async function build(
     s: ScopedDb,
     week: { readonly weekStart: LocalDate; readonly weekEnd: LocalDate },
     today: LocalDate,
+    limitsMonth?: string,
   ): Promise<WeeklyFacts | null> {
     const first = await d.transactions.firstOperationOn(s);
     if (first === undefined || first > week.weekEnd) return null;
@@ -68,7 +72,7 @@ export function makeFacts(d: Deps) {
       )
       .slice(0, WEEKLY_TOP);
 
-    const limits = (await d.budgets.overview(s)).limits
+    const limits = (await d.budgets.overview(s, limitsMonth)).limits
       .filter((limit) => limit.percent >= LIMIT_WARN_PERCENT)
       .toSorted((a, b) => b.percent - a.percent || a.categoryKey.localeCompare(b.categoryKey))
       .slice(0, WEEKLY_TOP);

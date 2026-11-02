@@ -2,6 +2,7 @@
 // (названия), explain (трассы), recurring и accounts — те же, что у стенда afford; уведомления — список в памяти (идемпотентный по
 // виду и ключу, как настоящий notify). Модель — управляемая заглушка (`llm.extract`): тест решает, что она ответит или что её нет.
 // Время — FakeClock из transactions-with-journal; пояс — умолчание настроек (Минск, UTC+3: 09:00 — это 06:00Z).
+import { makeBackfill } from "../../modules/weekly/application/backfill.ts";
 import { makeFacts } from "../../modules/weekly/application/facts.ts";
 import { makeRead } from "../../modules/weekly/application/read.ts";
 import { makeRun } from "../../modules/weekly/application/run.ts";
@@ -45,6 +46,7 @@ export function weeklyWithJournal(db: TestDb) {
   const text = makeText(deps);
   const run = makeRun(deps, facts, text);
   const read = makeRead(deps);
+  const backfill = makeBackfill(deps, facts, text);
   return {
     a,
     r,
@@ -56,6 +58,7 @@ export function weeklyWithJournal(db: TestDb) {
       state.answer = answer;
     },
     run,
+    backfill,
     read,
     facts,
     notices: () => r.notices.filter((n) => n.kind === "weekly-summary"),

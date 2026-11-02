@@ -8,6 +8,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { DashboardFacade } from "../modules/dashboard/index.ts";
 import type { IdentityFacade } from "../modules/identity/index.ts";
+import { waitForAppConnectionsClosed } from "./__fixtures__/compose-on-test-db.ts";
 import { startHttpStack, type HttpStack } from "./__fixtures__/http-stack.ts";
 
 const BUDGET_MS = 300;
@@ -20,6 +21,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await stack.close();
+  await waitForAppConnectionsClosed(db);
   await db.drop();
 });
 

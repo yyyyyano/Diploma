@@ -7,6 +7,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { BudgetsFacade } from "../modules/budgets/index.ts";
 import type { IdentityFacade } from "../modules/identity/index.ts";
+import { waitForAppConnectionsClosed } from "./__fixtures__/compose-on-test-db.ts";
 import { recreateDemoData } from "./demo-reset.ts";
 import type { WeeklyFacade } from "../modules/weekly/index.ts";
 import {
@@ -28,6 +29,7 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await stack.close();
+  await waitForAppConnectionsClosed(db);
   await db.drop();
   vi.useRealTimers();
 });
@@ -331,6 +333,7 @@ describe("DEMO-02: без модели и воспроизводимо", () => {
       expect(first.transactions.length).toBeGreaterThan(200);
     } finally {
       await other.close();
+      await waitForAppConnectionsClosed(otherDb);
       await otherDb.drop();
     }
   }, 120_000);
@@ -350,6 +353,7 @@ describe("DEMO-02: без модели и воспроизводимо", () => {
       expect((range.rows[0]?.last ?? "9999") <= "2027-01-15").toBe(true);
     } finally {
       await other.close();
+      await waitForAppConnectionsClosed(shifted);
       await shifted.drop();
     }
   }, 120_000);

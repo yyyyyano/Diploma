@@ -8,6 +8,7 @@ import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { BudgetsFacade } from "../modules/budgets/index.ts";
 import type { IdentityFacade } from "../modules/identity/index.ts";
+import { recreateDemoData } from "./demo-reset.ts";
 import type { WeeklyFacade } from "../modules/weekly/index.ts";
 import {
   registerUser,
@@ -418,6 +419,18 @@ describe("DEMO-03: изоляция и пересоздание", () => {
     expect(usage.rows[0]).toEqual({ n: 0 });
     expect(await realAccounts()).toEqual(realBefore);
   }, 120_000);
+
+  it("`make demo-reset` — тот же recreate из терминала: данные заменены, пользователь один, отчёт с числами", async () => {
+    await signInDemo();
+    const s = await demoScope();
+    const before = await dump(db, s.scope.householdId);
+    await db.owner.query("delete from budget_limits where household_id = $1", [
+      s.scope.householdId,
+    ]);
+    const report = await recreateDemoData(stack.api);
+    expect(report).toMatchObject({ receipts: 5, limits: 4, goals: 2, weeks: 8 });
+    expect(await dump(db, s.scope.householdId)).toEqual(before);
+  }, 60_000);
 
   it("в «Пользователях» демо отмечен, и администратор его не удаляет — CONFLICT, учётная запись и данные на месте", async () => {
     await signInDemo();

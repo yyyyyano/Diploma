@@ -32,7 +32,7 @@ LINT_EXT := ts tsx mts cts js mjs cjs
 FILE_EXT = $(lastword $(subst ., ,$(notdir $(FILE))))
 
 .PHONY: help install init fmt fmt-check format-file lint lint-file typecheck test check check-quick \
-	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate db-generate \
+	check-commits need-node capabilities deps-check static-checks db-up db-shell migrate demo-reset db-generate \
 	test-int logs log-find new-module new-table synth-statements synth-receipts synth-demo-photos e2e e2e-install new-feature ai-record coverage-baseline \
 	langfuse-secrets doctor dev up down restart ps build db-reset backup restore confirm audit check-full
 
@@ -167,6 +167,9 @@ restore: need-node $(SECRETS) db-up ## Восстановить из копии:
 
 db-shell: db-up ## Открыть psql в базе kosht
 	$(DC) exec db psql -U kosht -d kosht
+
+demo-reset: need-node db-up secrets/db_app_password ## Пересоздать данные демо-пользователя: 6 месяцев операций до сегодня, чеки, лимиты, цели (DEMO-03; без моделей; реальных пользователей не трогает)
+	$(NODE_APP) apps/server/src/entrypoints/demo-reset.ts
 
 migrate: need-node db-up secrets/db_app_password ## Применить миграции apps/server/drizzle, поставить схему очереди pgboss и выдать права роли приложения — под владельцем БД (приложение делает то же при старте)
 	$(NODE_APP) apps/server/src/main/migrate-cli.ts

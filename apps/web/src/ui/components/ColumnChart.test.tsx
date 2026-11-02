@@ -24,19 +24,17 @@ const columns = [
   },
 ];
 
+/** Видимый столбец — вложенный элемент кнопки: область нажатия не зависит от высоты значения (WCAG 2.5.8). */
+const fillOf = (name: string) =>
+  screen.getByRole("button", { name }).firstElementChild as HTMLElement;
+
 describe("DASH-02: столбцы месяцев", () => {
   it("у каждого столбца своя подпись для диктора; высота — доля от наибольшего", () => {
     renderWithProviders(<ColumnChart columns={columns} label="Динамика по месяцам" />);
     expect(screen.getByRole("figure", { name: "Динамика по месяцам" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Доходы, сентябрь: 2 400,00 BYN" })).toHaveStyle({
-      height: "100%",
-    });
-    expect(screen.getByRole("button", { name: "Расходы, сентябрь: 1 200,00 BYN" })).toHaveStyle({
-      height: "50%",
-    });
-    expect(screen.getByRole("button", { name: "Расходы, октябрь: 600,00 BYN" })).toHaveStyle({
-      height: "25%",
-    });
+    expect(fillOf("Доходы, сентябрь: 2 400,00 BYN")).toHaveStyle({ height: "100%" });
+    expect(fillOf("Расходы, сентябрь: 1 200,00 BYN")).toHaveStyle({ height: "50%" });
+    expect(fillOf("Расходы, октябрь: 600,00 BYN")).toHaveStyle({ height: "25%" });
   });
 
   it("нулевой столбец не рисуется, непустой тонкий — виден (не меньше 3 %)", () => {
@@ -55,10 +53,8 @@ describe("DASH-02: столбцы месяцев", () => {
         label="Динамика"
       />,
     );
-    expect(screen.getByRole("button", { name: "Расходы: 1,00 BYN" })).toHaveStyle({ height: "3%" });
-    expect(screen.getByRole("button", { name: "Доходы, октябрь: 0,00 BYN" })).toHaveStyle({
-      height: "0%",
-    });
+    expect(fillOf("Расходы: 1,00 BYN")).toHaveStyle({ height: "3%" });
+    expect(fillOf("Доходы, октябрь: 0,00 BYN")).toHaveStyle({ height: "0%" });
   });
 
   it("нажатие на столбец отдаёт месяц и вид — страница ведёт в операции (DASH-03)", async () => {

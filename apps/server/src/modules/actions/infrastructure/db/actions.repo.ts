@@ -1,7 +1,7 @@
 // Запросы к журналу действий и ожидающим решениям: первый аргумент — s: ScopedDb, у каждого обращения свой s.own.
 // Строки, которые меняет ответ человека, читаются FOR UPDATE: двойное нажатие «Отменить» или «Да» ждёт первое и
 // видит уже изменённое состояние — действие не выполняется дважды.
-import { and, asc, eq, gt, ne, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ne, or } from "drizzle-orm";
 import type { ScopedDb } from "../../../../platform/db/scoped-db.ts";
 import { actionJournal, pendingDecisions } from "./schema.ts";
 
@@ -57,6 +57,32 @@ export async function lockAction(s: ScopedDb, id: string): Promise<ActionRow | u
   const row = rows[0];
   if (row === undefined) return undefined;
   return { ...row, status: row.status === "undone" ? "undone" : "done" };
+}
+
+/**
+ * Последнее не отменённое действие канала не старше `since` (TG-07 `/undo`: действие, сделанное через бот за 24 часа); токен — id
+ * строки журнала. Только свои строки: `s.own` и пользователь scope.
+ */
+export async function lastUndoableAction(
+  s: ScopedDb,
+  channel: ActionChannel,
+  since: Date,
+): Promise<string | undefined> {
+  const rows = await s.db
+    .select({ id: actionJournal.id })
+    .from(actionJournal)
+    .where(
+      and(
+        s.own(actionJournal),
+        eq(actionJournal.userId, s.scope.userId),
+        eq(actionJournal.channel, channel),
+        eq(actionJournal.status, "done"),
+        gte(actionJournal.createdAt, since),
+      ),
+    )
+    .orderBy(desc(actionJournal.createdAt), desc(actionJournal.id))
+    .limit(1);
+  return rows[0]?.id;
 }
 
 /** Есть ли после этого действия другое, не отменённое, над тем же объектом (P5: отмена не затирает правку). */

@@ -441,8 +441,11 @@ export const MODULES: readonly ModuleDef[] = [
     spec: "TG-01…11, PRIV-08 (подключение), AUTH-05 (сброс через бот)",
     responsibility: "бот: привязка, команды, фото/файлы/голос, канал доставки уведомлений",
     // files — фото чека и файл выписки из чата принимает единый вход files (тип по содержимому, лимиты, SEC-03), T-052.
+    // llm — `/model`: выбор модели из разрешённых (LLM-10); categories — названия категорий в `/limits` и в уведомлении о лимите (T-053).
     dependsOn: [
       "files",
+      "llm",
+      "categories",
       "chat",
       "agent",
       "identity",

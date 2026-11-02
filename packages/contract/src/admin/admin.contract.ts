@@ -74,6 +74,7 @@ export const AdminUserRef = z.strictObject({ id: z.uuid() });
 /** Итог «Сбросить пароль»: письмо ушло самому пользователю или ссылка показана администратору (R37). */
 export const AdminResetResult = z.discriminatedUnion("delivery", [
   z.strictObject({ delivery: z.literal("email") }),
+  z.strictObject({ delivery: z.literal("telegram") }),
   z.strictObject({ delivery: z.literal("shown"), link: z.url() }),
 ]);
 export type AdminResetResult = z.infer<typeof AdminResetResult>;

@@ -136,7 +136,12 @@ export function createLlmModule({ platform, facades }: ModuleDeps<LlmFacades, Sy
   });
   return defineModule({
     id: "llm",
-    facade: { ...gateway, admin },
+    // `modelChoice` — выбор модели пользователем (LLM-10) для бота (`/model`, T-053); сайт — процедуры `llm.models` и `llm.setPreferredModel`.
+    facade: {
+      ...gateway,
+      admin,
+      modelChoice: { view: preferences.view, choose: preferences.choose },
+    },
     router: llmRouter(preferences, localModels),
     events: [localModelsReady],
     jobs: [downloadJob],

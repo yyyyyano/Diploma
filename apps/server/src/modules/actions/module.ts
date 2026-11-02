@@ -23,6 +23,8 @@ export function createActionsModule({ platform }: ModuleDeps<ActionsFacades, Pla
     facade: {
       record: journal.record,
       undo: journal.undo,
+      // TG-07: `/undo` — последнее отменяемое действие канала за окно времени.
+      lastUndoable: journal.lastUndoable,
       propose: decisions.propose,
       answer: decisions.answer,
       decision: decisions.get,

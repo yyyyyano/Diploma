@@ -247,3 +247,32 @@ describe("AGT-07, NOTIF-05: ожидающие решения «Да/Нет»", 
     ).rejects.toThrow(/Нет обработчика подтверждения/);
   });
 });
+
+describe("TG-07: /undo — последнее отменяемое действие канала за 24 часа", () => {
+  const DAY = 24 * 3_600_000;
+  const record = (
+    journal: ReturnType<typeof setup>["journal"],
+    s: ScopedDb,
+    channel: "web" | "telegram",
+  ) =>
+    s.transaction((tx) =>
+      journal.record(tx, { handler: "test.add", payload: {}, subject: `tx:${channel}`, channel }),
+    );
+
+  it("берёт последнее действие бота; действия сайта, отменённые, чужие и старше окна — нет", async () => {
+    const { journal } = setup();
+    const s = scoped(61);
+    const first = await record(journal, s, "telegram");
+    const second = await record(journal, s, "telegram");
+    await record(journal, s, "web");
+    expect(await journal.lastUndoable(s, "telegram", DAY)).toBe(second);
+    await journal.undo(s, second);
+    expect(await journal.lastUndoable(s, "telegram", DAY)).toBe(first);
+    expect(await journal.lastUndoable(scoped(62), "telegram", DAY)).toBeUndefined();
+    await db.owner.query(
+      "update action_journal set created_at = created_at - interval '2 days' where id = $1",
+      [first],
+    );
+    expect(await journal.lastUndoable(s, "telegram", DAY)).toBeUndefined();
+  });
+});

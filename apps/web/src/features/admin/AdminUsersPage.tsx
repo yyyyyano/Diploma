@@ -61,7 +61,11 @@ export function AdminUsersPage() {
       setDone(undefined);
       setLink(result.link);
     } else {
-      succeed(t("users.resetMailed", { email: user.email }));
+      succeed(
+        t(result.delivery === "telegram" ? "users.resetTelegram" : "users.resetMailed", {
+          email: user.email,
+        }),
+      );
     }
   }
 

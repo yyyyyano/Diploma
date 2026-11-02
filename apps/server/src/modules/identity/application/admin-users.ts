@@ -2,9 +2,10 @@
 // подтверждение адреса, статус, роль; данных домохозяйства здесь нет. Действия администратора:
 // - удалить — после ввода email удаляемого (подтверждение, ConfirmDialog на сайте) тем же путём, что «Удалить аккаунт»
 //   (eraseUser), под scope удаляемого из target-user-scope.ts; последнего администратора — LAST_ADMIN;
-// - сбросить пароль — ссылка уходит самому пользователю письмом; если подтверждённой почты нет (Telegram — T-053),
-//   ссылку показывают администратору: запись в журнал (лог), отметка password_reset_by_admin_at — пользователь увидит
-//   «Пароль был сброшен администратором <дата>» и погасит её.
+// - сбросить пароль — ссылка уходит самому пользователю письмом; нет подтверждённой почты, но подключён Telegram (AUTH-05,
+//   T-053) — в бот (доставку даёт вызывающий: identity ярусом ниже бота); иначе ссылку показывают администратору: запись в
+//   журнал (лог), отметка password_reset_by_admin_at — пользователь увидит «Пароль был сброшен администратором <дата>» и
+//   погасит её.
 import type { Scope } from "@kosht/kernel";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { SystemPlatform } from "../../../platform/module/define-module.ts";
@@ -34,7 +35,15 @@ export interface AdminUsersDeps {
 /** Итог «Сбросить пароль»: письмо ушло пользователю — или ссылка показана администратору. */
 export type AdminResetResult =
   | { readonly delivery: "email" }
+  | { readonly delivery: "telegram" }
   | { readonly delivery: "shown"; readonly link: string };
+
+/** Доставка ссылки пользователю не почтой (Telegram): `true` — доставлена; `false` — некуда или не вышло. */
+export type ResetLinkDelivery = (target: {
+  readonly userId: string;
+  readonly link: string;
+  readonly minutes: number;
+}) => Promise<boolean>;
 
 export function makeAdminUsers(d: AdminUsersDeps) {
   const { platform } = d;
@@ -53,7 +62,11 @@ export function makeAdminUsers(d: AdminUsersDeps) {
     platform.log.info({ userId: actor.userId, targetId }, "identity.user-deleted-by-admin");
   }
 
-  async function resetPassword(actor: Scope, targetId: string): Promise<AdminResetResult> {
+  async function resetPassword(
+    actor: Scope,
+    targetId: string,
+    deliver?: ResetLinkDelivery,
+  ): Promise<AdminResetResult> {
     const target = await accountOf(platform.system, targetId);
     if (target === undefined) throw new AppError("NOT_FOUND");
     if (target.status !== "active") throw new AppError("ACCOUNT_BLOCKED");
@@ -62,6 +75,10 @@ export function makeAdminUsers(d: AdminUsersDeps) {
       await d.mail.send(target.email, { kind: "reset-password", link, minutes });
       platform.log.info({ userId: actor.userId, targetId }, "identity.admin-reset-mailed");
       return { delivery: "email" };
+    }
+    if (deliver !== undefined && (await deliver({ userId: targetId, link, minutes }))) {
+      platform.log.info({ userId: actor.userId, targetId }, "identity.admin-reset-telegram");
+      return { delivery: "telegram" };
     }
     // R37: ссылку видит администратор — только потому, что доставить её пользователю некуда; это в журнале.
     await setAdminResetMark(platform.system, targetId, platform.clock.now());

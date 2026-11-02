@@ -10,7 +10,9 @@ import {
 import { resolveLinkOrigin } from "../../platform/http/link-origin.ts";
 import type { ChatFacade } from "../chat/index.ts";
 import type { AgentFacade } from "../agent/index.ts";
+import type { CategoriesFacade } from "../categories/index.ts";
 import type { FilesFacade } from "../files/index.ts";
+import type { LlmFacade } from "../llm/index.ts";
 import type { IdentityFacade } from "../identity/index.ts";
 import type { PrivacyFacade } from "../privacy/index.ts";
 import type { NotificationsFacade } from "../notifications/index.ts";
@@ -36,6 +38,8 @@ import { telegramUserData } from "./user-data.ts";
 /** Фасады модулей из dependsOn (tooling/architecture/modules.ts). */
 export interface TelegramFacades {
   readonly files: FilesFacade;
+  readonly llm: LlmFacade;
+  readonly categories: CategoriesFacade;
   readonly chat: ChatFacade;
   readonly agent: AgentFacade;
   readonly identity: IdentityFacade;

@@ -313,6 +313,8 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
     platform: ports.systemPlatform,
     facades: {
       files: filesModule.facade,
+      llm: llmModule.facade,
+      categories: categoriesModule.facade,
       chat: chatModule.facade,
       agent: agentModule.facade,
       identity: identityModule.facade,

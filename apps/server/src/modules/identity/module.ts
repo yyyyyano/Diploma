@@ -73,6 +73,8 @@ export function createIdentityModule({
       listAccounts: adminUsers.list,
       removeUser: adminUsers.remove,
       resetUserPassword: adminUsers.resetPassword,
+      /** «Сбросить пароль» в боте (TG-09, AUTH-05): новая одноразовая ссылка пользователя (прежняя гаснет), адрес — по NFR-24. */
+      issueResetLink: passwordReset.issueLink,
       /**
        * Состояние пользователя для бота (AUTH-11, SEC-04): привязка Telegram даёт id, а активен ли он, не заблокирован ли и
        * в том же ли домохозяйстве — решает identity (`absent` — нет пользователя или домохозяйство другое).

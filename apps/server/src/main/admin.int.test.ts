@@ -3,8 +3,10 @@
 // блокировка завершает сессии, последний администратор защищён; удаление — только с верным email, данные удалённого
 // стёрты, другой не задет; сброс пароля — письмом самому пользователю или, без подтверждённой почты, ссылкой
 // администратору с отметкой, которую пользователь видит и гасит; «Система» — пояс, сеть, почта и тестовое письмо.
+import { makeScope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { IdentityFacade } from "../modules/identity/index.ts";
 import { loadProductionSchemas } from "../platform/db/__fixtures__/production-schemas.ts";
 import { registeredTables } from "../platform/db/tables.ts";
 import {
@@ -269,6 +271,45 @@ describe("AUTH-05, R37: сброс пароля из админки", () => {
     expect(
       await json(await stack.call("local", "/identity/admin-reset", { cookie: signedIn })),
     ).toEqual({ at: null });
+  });
+});
+
+describe("AUTH-05, TG-09: сброс пароля из админки — в Telegram", () => {
+  const identity = () => {
+    const module = stack.api.modules.find((m) => m.id === "identity");
+    if (module === undefined) throw new Error("нет модуля identity");
+    return module.facade as IdentityFacade;
+  };
+
+  it("почты нет, Telegram подключён — ссылка уходит в бот, администратору не показывается, отметки «сброшен админом» нет", async () => {
+    const user = await registerUser(stack, db, "tg-reset@example.test");
+    const delivered: { userId: string; link: string; minutes: number }[] = [];
+    const result = await identity().resetUserPassword(
+      makeScope(user),
+      user.userId,
+      async (target) => {
+        delivered.push(target);
+        return true;
+      },
+    );
+    expect(result).toEqual({ delivery: "telegram" });
+    expect(delivered).toHaveLength(1);
+    expect(new URL(delivered[0]?.link ?? "").pathname).toBe("/recovery");
+    expect(
+      await json(await stack.call("local", "/identity/admin-reset", { cookie: user.cookie })),
+    ).toEqual({
+      at: null,
+    });
+  });
+
+  it("доставить в бот не вышло — ссылка показана администратору, как раньше", async () => {
+    const user = await registerUser(stack, db, "tg-reset-fail@example.test");
+    const result = await identity().resetUserPassword(
+      makeScope(user),
+      user.userId,
+      async () => false,
+    );
+    expect(result.delivery).toBe("shown");
   });
 });
 

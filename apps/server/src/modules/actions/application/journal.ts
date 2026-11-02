@@ -8,6 +8,7 @@ import type { Platform } from "../../../platform/module/define-module.ts";
 import {
   hasLaterAction,
   insertAction,
+  lastUndoableAction,
   lockAction,
   markUndone,
   type ActionChannel,
@@ -51,5 +52,14 @@ export function makeJournal(d: Pick<Platform, "clock" | "log" | "actionHandlers"
     return status;
   }
 
-  return { record, undo };
+  /** `/undo` в боте (TG-07): токен последнего не отменённого действия канала за `withinMs`; нет такого — undefined. */
+  async function lastUndoable(
+    s: ScopedDb,
+    channel: ActionChannel,
+    withinMs: number,
+  ): Promise<string | undefined> {
+    return lastUndoableAction(s, channel, new Date(d.clock.now().getTime() - withinMs));
+  }
+
+  return { record, undo, lastUndoable };
 }

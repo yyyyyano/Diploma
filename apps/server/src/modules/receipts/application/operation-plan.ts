@@ -38,6 +38,69 @@ export interface PlanInput {
   readonly cardLast4: string | null;
 }
 
+/** Категория позиции, уже найденная: встроенная по коду или своя по id, и откуда она («Откуда эта цифра?»). */
+export interface ResolvedCategory {
+  readonly category: StoredCategoryRef;
+  readonly source: string;
+}
+
+/**
+ * План по уже известным категориям позиций — без модели и без обращения к `categories`: демо (DEMO-01) задаёт категории
+ * явно, а распознавание передаёт сюда то, что нашли правила и модель. Чек не в BYN операции не получает.
+ */
+export function composePlan(input: PlanInput, found: readonly ResolvedCategory[]): OperationPlan {
+  const { read } = input;
+  const items: PlannedItem[] = found.map((one, index) => ({
+    category: one.category,
+    warranty: hasWarranty(one.category.code ?? null, read.items[index]?.name ?? ""),
+  }));
+  const warrantyCount = items.filter((item) => item.warranty).length;
+  if (input.currency !== "BYN") return { items, operation: undefined, warrantyCount };
+
+  const refs = new Map<string, StoredCategoryRef>([[keyOf(OTHER), OTHER]]);
+  const sources = new Map<string, string>();
+  read.items.forEach((_, index) => {
+    const category = items[index]?.category;
+    if (category === undefined) return;
+    refs.set(keyOf(category), category);
+    if (!sources.has(keyOf(category)))
+      sources.set(keyOf(category), found[index]?.source ?? "fallback");
+  });
+  const parts = splitByCategory({
+    lines: read.items.flatMap((item, index) =>
+      item.lineTotal === null || item.lineTotal.minor <= 0
+        ? []
+        : [{ category: keyOf(items[index]?.category ?? OTHER), total: item.lineTotal }],
+    ),
+    total: read.total,
+    remainderKey: keyOf(OTHER),
+  });
+  const splits = parts.map((part) => ({
+    category: refs.get(part.category) ?? OTHER,
+    amount: part.amount.value,
+  }));
+  // Категория операции — самая крупная часть чека; нераспознанный остаток её не определяет.
+  const main = parts
+    .filter((part) => !part.remainder)
+    .toSorted((a, b) => b.amount.value.minor - a.amount.value.minor)[0];
+  const mainKey = main?.category ?? keyOf(OTHER);
+  return {
+    items,
+    warrantyCount,
+    operation: {
+      method: input.method,
+      cardLast4: input.cardLast4,
+      occurredOn: input.date,
+      occurredTime: input.time,
+      amount: Money.of(read.total.minor, input.currency),
+      merchantName: input.merchant.name,
+      merchantKey: input.merchant.key,
+      category: { ...(refs.get(mainKey) ?? OTHER), source: sources.get(mainKey) ?? "fallback" },
+      splits,
+    },
+  };
+}
+
 export function makeOperationPlan(d: {
   readonly categories: Pick<CategoriesFacade, "categorize">;
 }) {
@@ -52,61 +115,16 @@ export function makeOperationPlan(d: {
         item: item.name,
       })),
     );
-    const items: PlannedItem[] = categorized.map((found, index) => {
-      const category: StoredCategoryRef =
-        found.category.type === "system"
-          ? { code: found.category.code }
-          : { id: found.category.id };
-      return {
-        category,
-        warranty: hasWarranty(category.code ?? null, read.items[index]?.name ?? ""),
-      };
-    });
-    const warrantyCount = items.filter((item) => item.warranty).length;
-    if (input.currency !== "BYN") return { items, operation: undefined, warrantyCount };
-
-    const refs = new Map<string, StoredCategoryRef>([[keyOf(OTHER), OTHER]]);
-    const sources = new Map<string, string>();
-    read.items.forEach((_, index) => {
-      const category = items[index]?.category;
-      if (category === undefined) return;
-      refs.set(keyOf(category), category);
-      if (!sources.has(keyOf(category)))
-        sources.set(keyOf(category), categorized[index]?.source ?? "fallback");
-    });
-    const parts = splitByCategory({
-      lines: read.items.flatMap((item, index) =>
-        item.lineTotal === null || item.lineTotal.minor <= 0
-          ? []
-          : [{ category: keyOf(items[index]?.category ?? OTHER), total: item.lineTotal }],
-      ),
-      total: read.total,
-      remainderKey: keyOf(OTHER),
-    });
-    const splits = parts.map((part) => ({
-      category: refs.get(part.category) ?? OTHER,
-      amount: part.amount.value,
-    }));
-    // Категория операции — самая крупная часть чека; нераспознанный остаток её не определяет.
-    const main = parts
-      .filter((part) => !part.remainder)
-      .toSorted((a, b) => b.amount.value.minor - a.amount.value.minor)[0];
-    const mainKey = main?.category ?? keyOf(OTHER);
-    return {
-      items,
-      warrantyCount,
-      operation: {
-        method: input.method,
-        cardLast4: input.cardLast4,
-        occurredOn: input.date,
-        occurredTime: input.time,
-        amount: Money.of(read.total.minor, input.currency),
-        merchantName: input.merchant.name,
-        merchantKey: input.merchant.key,
-        category: { ...(refs.get(mainKey) ?? OTHER), source: sources.get(mainKey) ?? "fallback" },
-        splits,
-      },
-    };
+    return composePlan(
+      input,
+      categorized.map((found) => ({
+        category:
+          found.category.type === "system"
+            ? { code: found.category.code }
+            : { id: found.category.id },
+        source: found.source,
+      })),
+    );
   };
 }
 

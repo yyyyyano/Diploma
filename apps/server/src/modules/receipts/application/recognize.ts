@@ -3,7 +3,7 @@
 // места перепроверяются (≤ N раз, настройка) → чек сохраняется с позициями, историей попыток и статусом. Модель и файлы —
 // вне транзакции (LLM_IN_TRANSACTION), запись результата — одна короткая транзакция с событием. Текст на чеке — данные:
 // наименование остаётся наименованием, а в подсказку перепроверки попадают только цифры, посчитанные программой.
-import type { FileId } from "@kosht/kernel";
+import type { FileId, Money } from "@kosht/kernel";
 import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import { AppError } from "../../../platform/errors/app-error.ts";
 import type { JobDef } from "../../../platform/jobs/define-job.ts";
@@ -24,7 +24,7 @@ import {
   readReceipt,
   type ReadReceipt,
 } from "../domain/read-receipt.ts";
-import type { Mismatch, PrintedReceipt, ReceiptStage } from "../domain/types.ts";
+import type { Mismatch, PaymentMethod, PrintedReceipt, ReceiptStage } from "../domain/types.ts";
 import { receiptsNeedsReview, receiptsRecognized, receiptsWarrantyItemsFound } from "../events.ts";
 import {
   findByKey,
@@ -44,7 +44,7 @@ import {
   RECEIPTS_MAX_RECHECKS,
   RECEIPTS_TOLERANCE_MINOR,
 } from "../settings.ts";
-import { makeOperationPlan, type PlannedItem } from "./operation-plan.ts";
+import { makeOperationPlan, type PlanOperation, type PlannedItem } from "./operation-plan.ts";
 import { PhotoReadError, type PhotoPreparer, type PhotoType } from "./ports.ts";
 import {
   PROMPT_VERSION,
@@ -79,12 +79,33 @@ export interface RecognizeDeps {
   readonly jobs: { readonly recognize: JobDef<{ receiptId: string }> };
 }
 
-interface Attempt {
+export interface Attempt {
   readonly attempt: number;
   readonly askedLines: readonly number[];
   readonly changedLines: readonly number[];
   readonly ok: boolean;
   readonly mismatches: readonly Mismatch[];
+}
+
+/** Что нужно сохранить прочитанному чеку: чтение с проверкой, попытки, шапка и (для демо) готовые категории. */
+export interface SettleInput {
+  readonly read: ReadReceipt;
+  readonly attempts: readonly Attempt[];
+  readonly currency: string;
+  /** Название магазина как напечатано, без пробелов по краям; пусто — не прочитано. */
+  readonly store: string;
+  readonly merchant: { name: string; key: string; merchantId: string | null } | undefined;
+  readonly date: string | undefined;
+  readonly time: string | undefined;
+  readonly printedTotal: Money | undefined;
+  readonly header: {
+    readonly unp: string | null;
+    readonly address: string | null;
+    readonly payment: PaymentMethod | null;
+    readonly cardLast4: string | null;
+  };
+  /** Свой план категорий вместо `categories.categorize` (демо: категории заданы явно, модели не нужны). */
+  readonly plan?: PlanOperation;
 }
 
 export function makeRecognize(d: RecognizeDeps) {
@@ -203,6 +224,102 @@ export function makeRecognize(d: RecognizeDeps) {
     }));
   }
 
+  /**
+   * Сохранить прочитанный чек (RCPT-07…10, RCPT-13): категории позиций (модель — вне транзакции), разбивка и операция чека,
+   * затем одна транзакция — чек, позиции, попытки, трасса, операция, события, уведомление. Одинаково для чека, прочитанного
+   * моделью (`run`), и для готового чтения демо (`record-ready.ts`).
+   */
+  async function settle(s: ScopedDb, receiptId: string, input: SettleInput) {
+    const { read, attempts, currency, store, merchant, date, time, printedTotal, header } = input;
+    const disputedLines = read.mismatches.flatMap((mismatch) =>
+      mismatch.kind === "line" ? [mismatch.line] : [],
+    );
+    const status = read.ok ? "ok" : "needs-review";
+    const planned = await (input.plan ?? plan)(s, {
+      read,
+      currency,
+      merchant: {
+        name: store === "" ? null : (merchant?.name ?? store),
+        key: merchant?.key || null,
+      },
+      date: date ?? clock.today().toString(),
+      time: time ?? null,
+      method: header.payment,
+      cardLast4: header.cardLast4,
+    });
+    // RCPT-07: расхождение итога с суммой строк — «нераспознанный остаток чека» (в «Прочее»); итог, разобранный из
+    // текста, — напечатанный; не разобрался — по сумме строк.
+    const remainderMinor =
+      printedTotal !== undefined && !read.validation.total.ok
+        ? read.validation.total.difference.value.minor
+        : 0;
+    await s.transaction(async (tx) => {
+      // Повторный запуск после сбоя: чек уже сохранён — второй раз не пишем.
+      const current = await lockReceipt(tx, receiptId);
+      if (current === undefined || current.status !== "processing") return;
+      const traceId = await d.explain.save(tx, read.validation.total.difference);
+      await updateReceipt(tx, receiptId, {
+        status,
+        stage: null,
+        storeName: store === "" ? null : store,
+        storeKey: merchant?.key === "" ? null : (merchant?.key ?? null),
+        merchantId: merchant?.merchantId ?? null,
+        unp: header.unp,
+        address: header.address,
+        purchaseDate: date ?? null,
+        purchaseTime: time ?? null,
+        currency,
+        totalMinor: read.total.minor,
+        receiptDiscountMinor: read.receiptDiscount.minor,
+        paymentMethod: header.payment,
+        cardLast4: header.cardLast4,
+        disputedLines,
+        mismatches: [...read.mismatches],
+        remainderMinor,
+        rechecks: attempts.length - 1,
+        traceId,
+        promptVersion: PROMPT_VERSION,
+        errorCode: null,
+        recognizedAt: clock.now(),
+        updatedAt: clock.now(),
+      });
+      await replaceItems(tx, receiptId, itemsOf(read, new Set(disputedLines), planned.items));
+      if (planned.operation !== undefined) {
+        await d.transactions.recordFromReceipt(tx, {
+          ...planned.operation,
+          receiptId,
+          needsReview: status === "needs-review",
+        });
+      }
+      for (const attempt of attempts) {
+        await insertAttempt(tx, receiptId, {
+          attempt: attempt.attempt,
+          askedLines: [...attempt.askedLines],
+          changedLines: [...attempt.changedLines],
+          ok: attempt.ok,
+          mismatches: [...attempt.mismatches],
+        });
+      }
+      await events.publish(tx, receiptsRecognized, { ids: [receiptId] });
+      if (status === "needs-review") {
+        await events.publish(tx, receiptsNeedsReview, { ids: [receiptId] });
+        // NOTIF-02: «чек требует проверки» — одно уведомление на чек (ключ — id чека).
+        await d.notifications.notify(tx, {
+          kind: "receipt-review",
+          key: receiptId,
+          objectRef: { entity: ENTITY, id: receiptId },
+          params: {},
+        });
+      }
+      // RCPT-13: техника в чеке — календарь создаёт «конец гарантии» (CAL-04).
+      if (planned.warrantyCount > 0) {
+        await events.publish(tx, receiptsWarrantyItemsFound, { ids: [receiptId] });
+      }
+      await changed(tx, receiptId);
+    });
+    return { planned, status };
+  }
+
   /** Задача receipts.recognize (worker): ошибка чтения — статус «не вышло», а не падение задачи (повтор не поможет). */
   async function run(s: ScopedDb, receiptId: string): Promise<void> {
     const row = await findReceipt(s, receiptId);
@@ -302,92 +419,21 @@ export function makeRecognize(d: RecognizeDeps) {
         }
       }
 
-      const disputedLines = read.mismatches.flatMap((mismatch) =>
-        mismatch.kind === "line" ? [mismatch.line] : [],
-      );
-      const status = read.ok ? "ok" : "needs-review";
-      // RCPT-09, RCPT-10: категории позиций (модель — вне транзакции), разбивка и операция чека.
-      const planned = await plan(s, {
+      const { planned, status } = await settle(s, receiptId, {
         read,
+        attempts,
         currency,
-        merchant: {
-          name: store === "" ? null : (merchant?.name ?? store),
-          key: merchant?.key || null,
-        },
-        date: date ?? clock.today().toString(),
-        time: time ?? null,
-        method: extraction.payment,
-        cardLast4: extraction.payment === "card" ? extraction.cardLast4 : null,
-      });
-      // RCPT-07: расхождение итога с суммой строк — «нераспознанный остаток чека» (в «Прочее»); итог, разобранный из
-      // текста, — напечатанный; не разобрался — по сумме строк.
-      const remainderMinor =
-        printedTotal !== undefined && !read.validation.total.ok
-          ? read.validation.total.difference.value.minor
-          : 0;
-      await s.transaction(async (tx) => {
-        // Повторный запуск после сбоя: чек уже сохранён — второй раз не пишем.
-        const current = await lockReceipt(tx, receiptId);
-        if (current === undefined || current.status !== "processing") return;
-        const traceId = await d.explain.save(tx, read.validation.total.difference);
-        await updateReceipt(tx, receiptId, {
-          status,
-          stage: null,
-          storeName: store === "" ? null : store,
-          storeKey: merchant?.key === "" ? null : (merchant?.key ?? null),
-          merchantId: merchant?.merchantId ?? null,
+        store,
+        merchant,
+        date,
+        time,
+        printedTotal,
+        header: {
           unp: extraction.unp,
           address: extraction.address,
-          purchaseDate: date ?? null,
-          purchaseTime: time ?? null,
-          currency,
-          totalMinor: read.total.minor,
-          receiptDiscountMinor: read.receiptDiscount.minor,
-          paymentMethod: extraction.payment,
+          payment: extraction.payment,
           cardLast4: extraction.payment === "card" ? extraction.cardLast4 : null,
-          disputedLines,
-          mismatches: [...read.mismatches],
-          remainderMinor,
-          rechecks: attempts.length - 1,
-          traceId,
-          promptVersion: PROMPT_VERSION,
-          errorCode: null,
-          recognizedAt: clock.now(),
-          updatedAt: clock.now(),
-        });
-        await replaceItems(tx, receiptId, itemsOf(read, new Set(disputedLines), planned.items));
-        if (planned.operation !== undefined) {
-          await d.transactions.recordFromReceipt(tx, {
-            ...planned.operation,
-            receiptId,
-            needsReview: status === "needs-review",
-          });
-        }
-        for (const attempt of attempts) {
-          await insertAttempt(tx, receiptId, {
-            attempt: attempt.attempt,
-            askedLines: [...attempt.askedLines],
-            changedLines: [...attempt.changedLines],
-            ok: attempt.ok,
-            mismatches: [...attempt.mismatches],
-          });
-        }
-        await events.publish(tx, receiptsRecognized, { ids: [receiptId] });
-        if (status === "needs-review") {
-          await events.publish(tx, receiptsNeedsReview, { ids: [receiptId] });
-          // NOTIF-02: «чек требует проверки» — одно уведомление на чек (ключ — id чека).
-          await d.notifications.notify(tx, {
-            kind: "receipt-review",
-            key: receiptId,
-            objectRef: { entity: ENTITY, id: receiptId },
-            params: {},
-          });
-        }
-        // RCPT-13: техника в чеке — календарь создаёт «конец гарантии» (CAL-04).
-        if (planned.warrantyCount > 0) {
-          await events.publish(tx, receiptsWarrantyItemsFound, { ids: [receiptId] });
-        }
-        await changed(tx, receiptId);
+        },
       });
       await progress(s, receiptId, 100);
       // TXN-10: чек сохранён — ищем платёж по карте. Сбой сопоставления чек не портит: он уже учтён как есть.
@@ -417,7 +463,7 @@ export function makeRecognize(d: RecognizeDeps) {
     }
   }
 
-  return { start, run };
+  return { start, run, settle };
 }
 
 export type Recognize = ReturnType<typeof makeRecognize>;

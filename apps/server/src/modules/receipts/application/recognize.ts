@@ -234,7 +234,7 @@ export function makeRecognize(d: RecognizeDeps) {
     const disputedLines = read.mismatches.flatMap((mismatch) =>
       mismatch.kind === "line" ? [mismatch.line] : [],
     );
-    const status = read.ok ? "ok" : "needs-review";
+    const status: "ok" | "needs-review" = read.ok ? "ok" : "needs-review";
     const planned = await (input.plan ?? plan)(s, {
       read,
       currency,

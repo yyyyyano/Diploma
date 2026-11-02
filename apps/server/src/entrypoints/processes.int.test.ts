@@ -91,6 +91,9 @@ async function start(
       LISTEN_LAN_PORT: "0",
       LOG_LEVEL: "info",
       LANGFUSE_ENABLED: "false",
+      // База общая на весь файл: после первого запуска из теста SIGTERM событие `identity.system-initialized` осталось бы в очереди,
+      // и демо (DEMO-04) писало бы историю в логи следующих процессов — строка process.crashed перестала бы быть последней.
+      DEMO_AUTOSTART: "0",
       ...env,
     },
     stdio: ["ignore", "pipe", "pipe"],

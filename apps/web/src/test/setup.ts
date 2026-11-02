@@ -2,9 +2,14 @@
 // а не поход в сеть: NFR-11), и то, чего нет в jsdom, но ждёт Mantine (matchMedia, ResizeObserver). Сообщение jsdom
 // «Not implemented: …» (переход по ссылке, которого тест не отменил, и т. п.) роняет тест, а не тонет в выводе.
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll } from "vitest";
 import { server } from "./msw.ts";
+
+// Ожидание `findBy*` и `waitFor`: страницы маршрутов — ленивые чанки (`lazyPage`), и при полном прогоне `make check` (десятки
+// воркеров, холодный импорт сотен модулей) первая отрисовка экрана идёт дольше стандартной секунды (AUTH-07 «на Главную» падал
+// только под нагрузкой). Срок — с запасом, как `testTimeout` проекта int (T-011): скорость здесь не проверяется, а утверждения те же.
+configure({ asyncUtilTimeout: 5_000 });
 
 /** Сообщения jsdom о том, чего он не умеет, за текущий тест. */
 const jsdomGaps: string[] = [];

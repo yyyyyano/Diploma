@@ -3,7 +3,6 @@
 // цели, итоги недели; воспроизводимость (две базы — одни данные без id); ни одного вызова модели (llm_usage пуст); изоляция от
 // реальных пользователей; «Пересоздать демо-данные» заменяет только данные демо; администратор демо не удаляет.
 // «Сегодня» фиксируется подменой Date (часы приложения берут `new Date()`): тест не зависит от дня запуска.
-import { makeScope } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import type { BudgetsFacade } from "../modules/budgets/index.ts";
@@ -47,7 +46,7 @@ async function demoScope(onDb = stack) {
   const identity = onDb.api.modules.find((module) => module.id === "identity")
     ?.facade as IdentityFacade;
   const { scope } = await identity.ensureDemoUser();
-  return onDb.api.platform.scoped(makeScope(scope));
+  return onDb.api.platform.scoped(scope);
 }
 
 async function signInDemo(onStack: HttpStack = stack) {

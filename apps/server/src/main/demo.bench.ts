@@ -3,7 +3,7 @@
 // историей (6 месяцев, чеки, лимиты, цели, итоги недели), worker доработал события записи (регулярные платежи, календарь,
 // вычеты). Замеряется `dashboard.overview` целиком — настоящие соседи, аудит SQL, сборка ответа и `explain.saveMany`;
 // прогрев отдельно. p95 печатается из этого прогона.
-import { LocalDate, makeScope } from "@kosht/kernel";
+import { LocalDate } from "@kosht/kernel";
 import { createTestDb, type TestDb } from "@kosht/testing/db";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { DashboardFacade } from "../modules/dashboard/index.ts";
@@ -34,7 +34,7 @@ describe("DASH-01, DEMO-01: главная на демо-данных", () => {
     expect(response.status).toBe(200);
     const identity = stack.api.modules.find((m) => m.id === "identity")?.facade as IdentityFacade;
     const { scope } = await identity.ensureDemoUser();
-    const s = stack.api.platform.scoped(makeScope(scope));
+    const s = stack.api.platform.scoped(scope);
     // События записи (регулярные платежи, календарь, вычеты, пороги лимитов) доработал worker: очередь пуста.
     await vi.waitFor(
       async () => {

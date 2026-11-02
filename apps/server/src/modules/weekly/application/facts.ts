@@ -31,13 +31,14 @@ export function makeFacts(d: Deps) {
 
   /**
    * Сводка за неделю `weekStart…weekEnd` на день `today`; `null` — до конца этой недели операций не было. `limitsMonth` —
-   * месяц лимитов «ГГГГ-ММ»; нет — текущий (история демо берёт месяц конца недели, DEMO-01).
+   * месяц лимитов «ГГГГ-ММ»; нет — текущий. `forecast: false` — история (DEMO-01): без «ближайших платежей» и найденных вычетов:
+   * они зависят от фоновых расчётов соседей (регулярные платежи, поиск вычетов), а история должна быть воспроизводимой.
    */
   async function build(
     s: ScopedDb,
     week: { readonly weekStart: LocalDate; readonly weekEnd: LocalDate },
     today: LocalDate,
-    limitsMonth?: string,
+    options: { readonly limitsMonth?: string; readonly forecast?: boolean } = {},
   ): Promise<WeeklyFacts | null> {
     const first = await d.transactions.firstOperationOn(s);
     if (first === undefined || first > week.weekEnd) return null;
@@ -72,20 +73,23 @@ export function makeFacts(d: Deps) {
       )
       .slice(0, WEEKLY_TOP);
 
-    const limits = (await d.budgets.overview(s, limitsMonth)).limits
+    const limits = (await d.budgets.overview(s, options.limitsMonth)).limits
       .filter((limit) => limit.percent >= LIMIT_WARN_PERCENT)
       .toSorted((a, b) => b.percent - a.percent || a.categoryKey.localeCompare(b.categoryKey))
       .slice(0, WEEKLY_TOP);
 
-    const upcoming = await d.calendar.range(s, {
-      from: today,
-      to: LocalDate.addDays(today, UPCOMING_DAYS - 1),
-    });
+    const forecast = options.forecast !== false;
+    const upcoming = forecast
+      ? await d.calendar.range(s, {
+          from: today,
+          to: LocalDate.addDays(today, UPCOMING_DAYS - 1),
+        })
+      : { entries: [], totals: { payments: null } };
     const items = upcoming.entries
       .filter((entry) => entry.direction === "out" && entry.on !== null)
       .toSorted((a, b) => (a.on ?? "").localeCompare(b.on ?? ""))
       .slice(0, WEEKLY_UPCOMING_ITEMS);
-    const found = (await d.tax.activeFound(s)).length;
+    const found = forecast ? (await d.tax.activeFound(s)).length : 0;
 
     // Числа, которые получают traceId: порядок записи = порядок получения id.
     const calcs: Calc<TraceValue>[] = [spentWeek.expense];

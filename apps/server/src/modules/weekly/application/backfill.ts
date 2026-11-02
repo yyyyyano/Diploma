@@ -23,9 +23,12 @@ export function makeBackfill(
     for (let back = input.weeks - 1; back >= 0; back--) {
       const weekStart = LocalDate.addDays(lastStart, -7 * back);
       const week = { weekStart, weekEnd: LocalDate.addDays(weekStart, 6) };
-      // Дни «впереди» считаются от конца недели, а не от сегодня: история рассказывает о своей неделе.
+      // «Впереди» от конца недели; прогноза в истории нет вовсе (forecast: false): он зависит от фоновых расчётов соседей.
       const today = LocalDate.addDays(week.weekEnd, 1);
-      const built = await facts.build(s, week, today, week.weekEnd.slice(0, 7));
+      const built = await facts.build(s, week, today, {
+        limitsMonth: week.weekEnd.slice(0, 7),
+        forecast: false,
+      });
       if (built === null) continue;
       const inserted = await s.transaction((tx) =>
         insertSummary(tx, {

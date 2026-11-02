@@ -325,6 +325,27 @@ describe("DEMO-01: история итогов недели без модели"
     expect(w.notices()).toHaveLength(0);
   });
 
+  it("в истории нет прогноза: ни «ближайших платежей», ни найденных вычетов — они зависят от фоновых расчётов соседей и ломали бы воспроизводимость", async () => {
+    const { w, s } = await setup();
+    await w.a.c.events.create(
+      s,
+      {
+        title: "Интернет",
+        on: LocalDate.parse("2026-11-03"),
+        amount: byn(3000),
+        type: "own",
+      } as never,
+      "web",
+    );
+    w.found.push({ kind: "education", year: 2026 });
+    await w.backfill(s, { weeks: 2 });
+    for (const summary of await w.read.history(s)) {
+      expect(summary.upcoming.items).toEqual([]);
+      expect(summary.upcoming.payments).toBeNull();
+      expect(summary.foundDeductions).toBe(0);
+    }
+  });
+
   it("повтор не дублирует недели; недели до первой операции пропускаются", async () => {
     const { w, s } = await setup({ history: false });
     await w.r.seed(s, LAST_WEEK);

@@ -1,5 +1,5 @@
 // Вкладка «Уведомления» (NOTIF-04, design/screens/Settings.dc.html — Settings--notifications-settings): матрица вид ×
-// канал, сохраняется сразу. Столбец Telegram неактивен, пока бот не подключён (T-052, T-053). «Итоги недели» — свой блок ниже
+// канал, сохраняется сразу. Столбец Telegram неактивен, пока бот не подключён (`telegram.status`), потом — такой же переключатель, как «На сайте» (T-053). «Итоги недели» — свой блок ниже
 // (`WeeklySettings`, T-050, WEEK-03); напоминания календаря по умолчанию — настройки события (T-047).
 import { USER_NOTIFICATION_KINDS, type UserNotificationKind } from "@kosht/contract";
 import { Switch } from "@mantine/core";
@@ -21,15 +21,21 @@ export function NotificationSettings() {
         queryClient.invalidateQueries({ queryKey: orpc.notifications.preferences.key() }),
     }),
   );
+  const telegram = useQuery(orpc.telegram.status.queryOptions());
+  const connected = telegram.data?.linked != null;
   const web = (kind: UserNotificationKind) =>
     prefs.data?.items.find((p) => p.kind === kind)?.web ?? true;
+  const bot = (kind: UserNotificationKind) =>
+    prefs.data?.items.find((p) => p.kind === kind)?.telegram ?? true;
 
   return (
     <>
-      <p className={classes.banner}>
-        <Send size={18} strokeWidth={1.8} aria-hidden />
-        {t("preferences.telegramHint")}
-      </p>
+      {!connected && (
+        <p className={classes.banner}>
+          <Send size={18} strokeWidth={1.8} aria-hidden />
+          {t("preferences.telegramHint")}
+        </p>
+      )}
       <section className={classes.card} aria-labelledby="settings-notifications">
         <div>
           <h2 id="settings-notifications" className={classes.cardTitle}>
@@ -74,12 +80,19 @@ export function NotificationSettings() {
                     </td>
                     <td>
                       <Switch
-                        checked={false}
-                        disabled
+                        checked={connected && bot(kind)}
+                        disabled={!connected}
                         aria-label={t("preferences.toggle", {
                           kind: t(`kinds.${kind}.title`),
                           channel: t("preferences.telegram"),
                         })}
+                        onChange={(event) =>
+                          save.mutate({
+                            kind,
+                            channel: "telegram",
+                            enabled: event.currentTarget.checked,
+                          })
+                        }
                       />
                     </td>
                   </tr>

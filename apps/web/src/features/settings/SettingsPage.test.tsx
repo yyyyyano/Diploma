@@ -8,7 +8,7 @@ import {
   createRouter,
   RouterProvider,
 } from "@tanstack/react-router";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
@@ -234,6 +234,45 @@ describe("AUTH-05: код восстановления в настройках",
   });
 });
 
+const telegramStatus = (linked: boolean) => ({
+  configured: true,
+  botName: "kosht_bot",
+  linked: linked ? { since: "2026-10-21T09:00:00.000Z", username: "irina_k" } : null,
+  pending: null,
+});
+
+describe("NOTIF-04, TG-06: столбец Telegram во вкладке «Уведомления»", () => {
+  it("бот подключён — переключатели Telegram активны и сохраняются сразу; отключённый вид — выключен", async () => {
+    let saved: unknown;
+    server.use(
+      http.get("*/api/notifications/preferences", () =>
+        HttpResponse.json({
+          items: [
+            { kind: "limit", web: true, telegram: true },
+            { kind: "goal", web: true, telegram: false },
+          ],
+        }),
+      ),
+      http.post("*/api/notifications/preferences", async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+      http.get("*/api/weekly/preferences", () =>
+        HttpResponse.json({ enabled: true, weekday: 1, time: "09:00" }),
+      ),
+      http.get("*/api/telegram", () => HttpResponse.json(telegramStatus(true))),
+    );
+    renderSettings(true, null, "/settings?tab=notifications");
+    const limit = await screen.findByRole("switch", { name: "Лимит: 80% и 100% — В Telegram" });
+    await waitFor(() => expect(limit).toBeEnabled());
+    expect(limit).toBeChecked();
+    expect(screen.getByRole("switch", { name: "Прогресс цели — В Telegram" })).not.toBeChecked();
+    expect(screen.queryByText(/Telegram ещё не подключён/)).toBeNull();
+    await userEvent.click(limit);
+    await expect.poll(() => saved).toEqual({ kind: "limit", channel: "telegram", enabled: false });
+  });
+});
+
 describe("NOTIF-04: вкладка «Уведомления»", () => {
   it("матрица всех видов: сайт — переключатель сохраняется сразу, Telegram — неактивен до подключения", async () => {
     let saved: unknown;
@@ -261,6 +300,7 @@ describe("NOTIF-04: вкладка «Уведомления»", () => {
       http.get("*/api/weekly/preferences", () =>
         HttpResponse.json({ enabled: true, weekday: 1, time: "09:00" }),
       ),
+      http.get("*/api/telegram", () => HttpResponse.json(telegramStatus(false))),
     );
     renderSettings(true, null, "/settings?tab=notifications");
     expect(

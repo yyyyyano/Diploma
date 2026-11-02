@@ -17,6 +17,7 @@ import type { ExplainFacade } from "../explain/index.ts";
 import type { ScopedDb } from "../../platform/db/scoped-db.ts";
 import { findReceipts, warrantyItemsOf } from "./infrastructure/db/receipts.repo.ts";
 import { makeRecognize } from "./application/recognize.ts";
+import { makeRecordReady } from "./application/record-ready.ts";
 import { makeReview } from "./application/review.ts";
 import { receiptsTools } from "./agent/tools.ts";
 import { receiptsRouter } from "./api/router.ts";
@@ -72,6 +73,12 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
     merchants: facades.merchants,
     transactions: facades.transactions,
   });
+  const recordReady = makeRecordReady({
+    platform,
+    merchants: facades.merchants,
+    transactions: facades.transactions,
+    settle: flow.settle,
+  });
   const tools = receiptsTools(review);
   return defineModule({
     id: "receipts",
@@ -86,6 +93,8 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
       card: review.get,
       confirm: review.confirm,
       cancel: review.cancel,
+      // DEMO-01: готовое чтение чека без модели — тот же валидатор, перепроверка, операция и события, что у распознанного чека.
+      recordReady,
     },
     router: receiptsRouter(flow, review),
     tools: [tools.get, tools.status],
@@ -102,5 +111,5 @@ export function createReceiptsModule({ platform, facades }: ModuleDeps<ReceiptsF
   });
 }
 
-/** Что модуль даёт соседям: `start(s, fileId)` — чек «распознаётся» и задача receipts.recognize; `warrantyItems(s, receiptIds)` — позиции с гарантией (CAL-04); `existing(s, ids)` — id своих чеков (CHAT-03). */
+/** Что модуль даёт соседям: `start(s, fileId)` — чек «распознаётся» и задача receipts.recognize; `warrantyItems(s, receiptIds)` — позиции с гарантией (CAL-04); `existing(s, ids)` — id своих чеков (CHAT-03); `recordReady(s, { fileId, reading, rechecks, categories })` — готовое чтение без модели (DEMO-01). */
 export type ReceiptsFacade = ReturnType<typeof createReceiptsModule>["facade"];

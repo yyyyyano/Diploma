@@ -2,3 +2,4 @@
 export { createReceiptsModule, type ReceiptsFacade, type ReceiptsFacades } from "./module.ts";
 export type { WarrantyItem } from "./domain/warranty.ts";
 export { receiptsNeedsReview, receiptsRecognized, receiptsWarrantyItemsFound } from "./events.ts";
+export type { ReadyReceipt } from "./application/record-ready.ts";

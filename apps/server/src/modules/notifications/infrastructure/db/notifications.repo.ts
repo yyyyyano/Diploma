@@ -88,6 +88,31 @@ export async function feedPage(
     .limit(limit + 1);
 }
 
+/** Уведомления пользователя scope по id (доставка в Telegram): чужие и неизвестные id в ответ не попадают. */
+export async function byIds(s: ScopedDb, ids: readonly string[]): Promise<FeedRow[]> {
+  if (ids.length === 0) return [];
+  return s.db
+    .select({
+      id: notifications.id,
+      kind: notifications.kind,
+      params: notifications.params,
+      objectRef: notifications.objectRef,
+      decisionId: notifications.decisionId,
+      undoToken: notifications.undoToken,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(
+      and(
+        s.own(notifications),
+        eq(notifications.userId, s.scope.userId),
+        inArray(notifications.id, [...ids]),
+      ),
+    )
+    .orderBy(notifications.id);
+}
+
 export async function countUnread(s: ScopedDb): Promise<number> {
   const rows = await s.db
     .select({ n: count() })

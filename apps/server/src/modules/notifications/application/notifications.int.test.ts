@@ -98,6 +98,21 @@ describe("NOTIF-01, BUD-03: уведомление один раз на ключ
   });
 });
 
+describe("TG-06: уведомления по id для доставки в Telegram", () => {
+  it("get отдаёт свои уведомления по id; чужой и неизвестный id в ответ не попадают", async () => {
+    const mine = scoped(41);
+    const other = scoped(42);
+    const { notify, feed } = setup();
+    const own = await notify(mine, { kind: "limit", key: "tg:own", params: { percent: 80 } });
+    const foreign = await notify(other, { kind: "limit", key: "tg:foreign" });
+    const unknown = "0199f0a0-0000-7000-8000-0000000000ff";
+    const found = await feed.get(mine, [own ?? "", foreign ?? "", unknown]);
+    expect(found.map((item) => item.id)).toEqual([own]);
+    expect(found[0]).toMatchObject({ kind: "limit", params: { percent: 80 } });
+    expect(await feed.get(mine, [])).toEqual([]);
+  });
+});
+
 describe("NOTIF-04: вид × канал", () => {
   it.each<[string, number, UserNotificationKind, { web: boolean; telegram: boolean }]>([
     ["всё включено — сайт и Telegram", 11, "goal", { web: true, telegram: true }],

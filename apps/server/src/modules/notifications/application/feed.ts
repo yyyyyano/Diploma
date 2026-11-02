@@ -5,6 +5,7 @@ import type { ScopedDb } from "../../../platform/db/scoped-db.ts";
 import type { Platform } from "../../../platform/module/define-module.ts";
 import {
   countUnread,
+  byIds,
   disabledPairs,
   feedPage,
   markRead,
@@ -36,6 +37,11 @@ export function makeFeed(d: Pick<Platform, "clock" | "realtime">) {
     };
   }
 
+  /** Уведомления по id для канала доставки Telegram (T-053): тот же вид, что в ленте. */
+  async function get(s: ScopedDb, ids: readonly string[]): Promise<UserNotification[]> {
+    return (await byIds(s, ids)).map(toDto);
+  }
+
   async function read(s: ScopedDb, ids: readonly string[] | "all"): Promise<void> {
     await markRead(s, ids, d.clock.now());
     // Счётчик в других вкладках того же пользователя обновится сам.
@@ -62,5 +68,5 @@ export function makeFeed(d: Pick<Platform, "clock" | "realtime">) {
     await savePreference(s, pref, d.clock.now());
   }
 
-  return { list, read, preferences, setPreference };
+  return { list, get, read, preferences, setPreference };
 }

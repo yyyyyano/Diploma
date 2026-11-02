@@ -28,15 +28,16 @@ export function createNotificationsModule({
 }: ModuleDeps<NotificationsFacades, SystemPlatform>) {
   const admins = makeAdminNotifications(platform);
   const notify = makeNotify(platform);
+  const feed = makeFeed(platform);
   return defineModule({
     id: "notifications",
-    facade: { notify, notifyAdmins: admins.notifyAdmins },
+    facade: { notify, notifyAdmins: admins.notifyAdmins, get: feed.get },
     subscriptions: [onExportReady(facades.privacy, notify)],
-    router: notificationsRouter({ feed: makeFeed(platform), admin: admins }),
+    router: notificationsRouter({ feed, admin: admins }),
     deliveryChannels: [webChannel(platform)],
     userData: notificationsUserData(admins),
   });
 }
 
-/** Что модуль даёт соседям: notify(s, { kind, key, … }) и notifyAdmins({ kind, key, … }). */
+/** Что модуль даёт соседям: notify(s, { kind, key, … }), notifyAdmins({ kind, key, … }) и get(s, ids) — уведомления по id для доставки в бот. */
 export type NotificationsFacade = ReturnType<typeof createNotificationsModule>["facade"];

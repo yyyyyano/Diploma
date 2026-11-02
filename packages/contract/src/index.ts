@@ -439,5 +439,6 @@ export {
 } from "./weekly/weekly.contract.ts";
 export { TelegramStatus, telegramContract } from "./telegram/telegram.contract.ts";
 export { contract } from "./router.ts";
+export { demoContract } from "./demo/demo.contract.ts";
 export { xlsExportContract } from "./xls-export/xls-export.contract.ts";
 export { XlsExportLink } from "./xls-export/xls-export.card.ts";

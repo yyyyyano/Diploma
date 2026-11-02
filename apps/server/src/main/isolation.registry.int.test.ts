@@ -87,6 +87,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "identity.status": {
     exempt: "публичная: признак первого запуска системы, данных домохозяйства нет",
   },
+  "demo.signIn": {
+    exempt:
+      "демо-вход (localOnly): сессия встроенного демо-пользователя, во входе ничего нет; с сетевого слушателя процедуры нет — demo.int.test.ts",
+  },
   "identity.setup": {
     exempt: "первый запуск (localOnly): создаёт новое домохозяйство, чужих id во входе нет",
   },
@@ -141,6 +145,10 @@ const FIXTURES: Readonly<Record<string, IsolationEntry<Household>>> = {
   "admin.resetUserPassword": {
     exempt:
       "ссылка сброса уходит самому пользователю по id (AUTH-05, R37); не админу — FORBIDDEN (admin.int.test.ts)",
+  },
+  "admin.recreateDemo": {
+    exempt:
+      "пересоздаёт данные только демо-пользователя (scope отдаёт identity), id во входе нет; не админу — FORBIDDEN (demo.int.test.ts)",
   },
   "admin.aiProviders": { input: () => undefined },
   "admin.localModels": { input: () => undefined },

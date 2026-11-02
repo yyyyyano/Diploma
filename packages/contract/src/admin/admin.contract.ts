@@ -197,6 +197,22 @@ export const adminContract = {
     .input(SetTelegramTokenInput)
     .output(SystemOverview)
     .errors(pickErrors("VALIDATION", "UNAUTHORIZED", "FORBIDDEN")),
+  /**
+   * «Пересоздать демо-данные» (DEMO-03): данные демо-пользователя очищаются и записываются заново на сегодняшний день — без модели,
+   * реальные пользователи не затронуты. Ответ — сколько записано (числа, без текстов и сумм).
+   */
+  recreateDemo: oc
+    .route({ method: "POST", path: "/admin/system/demo" })
+    .output(
+      z.strictObject({
+        operations: z.int().min(0),
+        receipts: z.int().min(0),
+        limits: z.int().min(0),
+        goals: z.int().min(0),
+        weeks: z.int().min(0),
+      }),
+    )
+    .errors(pickErrors("UNAUTHORIZED", "FORBIDDEN", "UNAVAILABLE", "INTERNAL")),
   setTimeZone: oc
     .route({ method: "POST", path: "/admin/system/time-zone" })
     .input(z.strictObject({ timeZone: z.string().min(1).max(64) }))

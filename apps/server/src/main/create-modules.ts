@@ -340,6 +340,7 @@ export function createModules(ports: ModulePorts): readonly ModuleDescriptor[] {
       transactions: transactionsModule.facade,
       receipts: receiptsModule.facade,
       categories: categoriesModule.facade,
+      merchants: merchantsModule.facade,
       recurring: recurringModule.facade,
       budgets: budgetsModule.facade,
       calendar: calendarModule.facade,

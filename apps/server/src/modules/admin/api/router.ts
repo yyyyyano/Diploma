@@ -9,6 +9,7 @@ import type { MailFacade } from "../../mail/index.ts";
 import type { NormTablesFacade } from "../../norm-tables/index.ts";
 import type { TelegramFacade } from "../../telegram/index.ts";
 import type { SystemFacade } from "../../system/index.ts";
+import type { DemoFacade } from "../../demo/index.ts";
 import { admin } from "../../../platform/http/procedures.ts";
 import type { AdminUserView } from "../application/admin-users.ts";
 
@@ -45,6 +46,8 @@ export function adminRouter(d: {
   readonly laws: LegalBaseFacade["admin"];
   /** Таблица ставок (ADM-11): значения нормы с источником, подтверждение человеком. */
   readonly rates: NormTablesFacade["admin"];
+  /** «Пересоздать демо-данные» (DEMO-03): только данные демо-пользователя. */
+  readonly demo: Pick<DemoFacade, "recreate">;
 }) {
   /** Ответил ли самотест локальной модели эмбеддингов: от него зависит «ждём модель» в прогрессе векторов. */
   async function lawsOverview() {
@@ -107,6 +110,7 @@ export function adminRouter(d: {
       await d.telegram.setToken(input.token);
       return overview();
     }),
+    recreateDemo: admin.admin.recreateDemo.handler(() => d.demo.recreate()),
     setTimeZone: admin.admin.setTimeZone.handler(async ({ input }) => {
       await d.system.setTimeZone(input.timeZone);
       return overview();

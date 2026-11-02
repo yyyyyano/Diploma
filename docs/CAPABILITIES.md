@@ -82,7 +82,7 @@
 | `agent` | AGT-01…14, SEC-10, LLM-10 (выбор в запуске) | цикл агента, реестр инструментов и наборов, подсказки, «вне темы», проверка чисел ответа, постобработка цитат | llm, actions, profile, legal-consult | — | — |
 | `chat` | CHAT-01…10 | диалоги, сообщения (`UIMessage.parts`), поток ответа, вложения, контекст страницы, «статья изменилась» | agent, files, receipts, statements, voice, legal-base, legal-consult | user | — |
 | `telegram` | TG-01…11, PRIV-08 (подключение), AUTH-05 (сброс через бот) | бот: привязка, команды, фото/файлы/голос, канал доставки уведомлений | files, llm, categories, chat, agent, identity, privacy, notifications, actions, receipts, statements, voice, dashboard, budgets, weekly | system | — |
-| `demo` | DEMO-01…04 | демо-пользователь и связный набор данных от текущей даты (воспроизводимо) | identity, privacy, profile, files, accounts, transactions, receipts, categories, recurring, budgets, calendar, weekly | — | — |
+| `demo` | DEMO-01…04 | демо-пользователь и связный набор данных от текущей даты (воспроизводимо) | identity, privacy, profile, files, accounts, transactions, receipts, categories, merchants, recurring, budgets, calendar, weekly | — | — |
 | `quality` | QA-10…16, ADM-40 | eval-прогоны с бюджетом токенов, результаты, сравнение с прошлыми | llm, receipts, statements, categories, legal-base, legal-consult, agent | system | — |
 | `admin` | ADM-01…60 (экраны) | раздел «Администрирование»: собирает admin-фасады модулей; своих данных нет | identity, privacy, notifications, mail, llm, legal-base, norm-tables, system, telegram, quality, demo | — | — |
 <!-- /capabilities:tier-4 -->

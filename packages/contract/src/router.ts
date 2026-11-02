@@ -4,6 +4,7 @@ import { accountsContract } from "./accounts/accounts.contract.ts";
 import { budgetsContract } from "./budgets/budgets.contract.ts";
 import { affordContract } from "./afford/afford.contract.ts";
 import { calendarContract } from "./calendar/calendar.contract.ts";
+import { demoContract } from "./demo/demo.contract.ts";
 import { dashboardContract } from "./dashboard/dashboard.contract.ts";
 import { finContract } from "./fin/fin.contract.ts";
 import { recurringContract } from "./recurring/recurring.contract.ts";
@@ -60,6 +61,7 @@ export const contract = {
   voice: voiceContract,
   telegram: telegramContract,
   xlsExport: xlsExportContract,
+  demo: demoContract,
   llm: llmContract,
   legalBase: legalBaseContract,
   legalConsult: legalConsultContract,

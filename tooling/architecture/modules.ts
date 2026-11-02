@@ -476,6 +476,7 @@ export const MODULES: readonly ModuleDef[] = [
       "transactions",
       "receipts",
       "categories",
+      "merchants",
       "recurring",
       "budgets",
       "calendar",

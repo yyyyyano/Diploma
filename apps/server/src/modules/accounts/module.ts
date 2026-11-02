@@ -47,6 +47,8 @@ export function createAccountsModule({ platform, facades }: ModuleDeps<AccountsF
       currencyOf: accounts.currencyOf,
       cash: accounts.cash,
       unknownCard: accounts.unknownCard,
+      // DEMO-01: счёт со своим видом, названием и начальным остатком (накопительный «Отпуск», карта в валюте) — то же, что кнопка «Добавить счёт».
+      create: accounts.create,
     },
     router: accountsRouter(accounts),
     events: [balancesChanged],

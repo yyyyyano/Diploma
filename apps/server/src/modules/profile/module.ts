@@ -31,6 +31,8 @@ export function createProfileModule({ platform, facades }: ModuleDeps<ProfileFac
       recordAnswer: facts.recordAnswer,
       // Ответ человека на вопрос системы вне чата (T-048: «У вас есть автомобиль?» в календаре): факт «подтверждён», с «Отменить».
       setFact: facts.set,
+      // DEMO-01: анкета демо-пользователя — ответы фактами «анкета» и отметка «пройдена», как после первого входа.
+      completeOnboarding: facts.completeOnboarding,
     },
     router: profileRouter(facts),
     events: [factsChanged],

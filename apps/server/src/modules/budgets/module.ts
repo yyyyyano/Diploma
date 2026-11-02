@@ -51,7 +51,13 @@ export function createBudgetsModule({ platform, facades }: ModuleDeps<BudgetsFac
   return defineModule({
     id: "budgets",
     // Соседям (dashboard, afford, weekly, telegram): лимиты месяца и цели с прогрессом и traceId.
-    facade: { overview: overview.view },
+    facade: {
+      overview: overview.view,
+      // DEMO-01: лимиты и цели демо-пользователя — те же сценарии, что у экрана «Лимиты и цели» (пороги проверяются сразу).
+      setLimit: limits.set,
+      createGoal: goals.create,
+      contribute: goals.contribute,
+    },
     router: budgetsRouter(overview, limits, goals),
     settings: [...BUDGETS_SETTINGS],
     jobs: [goalJob],
